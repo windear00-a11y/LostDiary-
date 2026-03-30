@@ -1,0 +1,85 @@
+'use client';
+
+import { useState, useRef, useEffect, startTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { Globe } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+export function LanguageSwitcher() {
+  const { i18n } = useTranslation();
+  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const language = i18n.language;
+
+  const setLanguage = (lang: string) => {
+    i18n.changeLanguage(lang).then(() => {
+      localStorage.setItem('app_language', lang);
+      document.documentElement.lang = lang;
+      document.documentElement.dir = i18n.dir(lang);
+      startTransition(() => {
+        router.refresh();
+      });
+    });
+  };
+
+  const languages = [
+    { code: 'en', label: 'English', short: 'EN' },
+    { code: 'hi', label: 'Hindi', short: 'HI' },
+    { code: 'hinglish', label: 'Hinglish', short: 'HN' },
+    { code: 'es', label: 'Spanish', short: 'ES' },
+  ] as const;
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-1.5 text-[#6B7280] hover:text-[#111827] transition-all rounded-full hover:bg-gray-100 border border-transparent hover:border-gray-200"
+        title="Change Language"
+      >
+        <Globe className="w-4 h-4" />
+        <span className="text-xs font-bold tracking-wider">
+          {languages.find(l => l.code === language)?.label || 'English'}
+        </span>
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden">
+          {languages.map((lang) => (
+            <button
+              key={lang.code}
+              onClick={() => {
+                setLanguage(lang.code);
+                setIsOpen(false);
+              }}
+              className={`w-full text-left px-4 py-2 text-sm transition-colors ${
+                language === lang.code
+                  ? 'bg-indigo-50 text-[#6366F1] font-medium'
+                  : 'text-[#374151] hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span>{lang.label}</span>
+                {language === lang.code && (
+                  <span className="text-xs font-bold text-[#6366F1]">✓</span>
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
