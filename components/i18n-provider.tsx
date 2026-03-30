@@ -28,9 +28,5 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     setIsInitialized(true);
   }, []);
 
-  if (!isInitialized) {
-    return null;
-  }
-
   return <I18nextProvider i18n={i18next}>{children}</I18nextProvider>;
 }
