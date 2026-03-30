@@ -39,6 +39,14 @@ export default function LandingPage() {
         </div>
         <div className="flex items-center gap-6">
           <LanguageSwitcher />
+          {user && (
+            <button 
+              onClick={() => router.push('/profile')}
+              className="text-sm font-medium text-[#6B7280] hover:text-[#111827] transition-colors"
+            >
+              {t('nav.profile', 'Profile')}
+            </button>
+          )}
           <button 
             onClick={handleCTA}
             className="text-sm font-medium text-[#6B7280] hover:text-[#111827] transition-colors"
