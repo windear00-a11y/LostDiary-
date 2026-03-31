@@ -1,5 +1,11 @@
 [
   {
+    "hash": "bc8a4faf2ef53d431d8f80dadc9e94a2c9cf7215",
+    "message": "feat: Add changelog and update notifications",
+    "author": "Kulwinder Singh",
+    "date": "2026-03-31T19:14:32+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
