@@ -1,5 +1,11 @@
 [
   {
+    "hash": "26733bd2f8796df1524e2f28b6c7290b91501a19",
+    "message": "fix(auth): Improve Supabase auth error handling",
+    "author": "Kulwinder Singh",
+    "date": "2026-03-31T19:35:22+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
