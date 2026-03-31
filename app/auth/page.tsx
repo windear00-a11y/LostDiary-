@@ -27,7 +27,10 @@ export default function AuthPage() {
   }, [searchParams]);
 
   const handleGoogleLogin = async () => {
-    if (!supabase) return;
+    if (!supabase) {
+      setMessage({ type: 'error', text: 'Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.' });
+      return;
+    }
     setIsSubmitting(true);
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
@@ -83,7 +86,11 @@ export default function AuthPage() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase || !email) return;
+    if (!supabase) {
+      setMessage({ type: 'error', text: 'Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.' });
+      return;
+    }
+    if (!email) return;
     setIsSubmitting(true);
     setMessage(null);
 
