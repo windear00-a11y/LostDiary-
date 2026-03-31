@@ -3,16 +3,18 @@
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
-import { Book, User, LogOut, Settings } from 'lucide-react';
+import { Book, User, LogOut, Settings, Bell } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { SettingsModal } from '@/components/settings/settings-modal';
 import { useState } from 'react';
+import { useUpdates } from '@/hooks/use-updates';
 
 export default function AppDashboard() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const { t } = useTranslation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { hasNewUpdates } = useUpdates({ autoRefreshInterval: 5 * 60 * 1000 }); // 5 minutes
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-[#111827]">
@@ -28,6 +30,17 @@ export default function AppDashboard() {
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
           
+          <button 
+            onClick={() => router.push('/updates')}
+            className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+            title="Updates"
+          >
+            <Bell className="w-5 h-5" />
+            {hasNewUpdates && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+            )}
+          </button>
+
           <button 
             onClick={() => setIsSettingsOpen(true)}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"

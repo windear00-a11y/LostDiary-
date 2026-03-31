@@ -1,8 +1,32 @@
 [
   {
-    "hash": "ae049c34deda7e3508fae8ed75f1a21ef6993dfc",
-    "message": "chore: Automate commit log updates",
-    "author": "Kulwinder Singh",
-    "date": "2026-03-31T18:46:38+05:30"
+    "hash": "a1b2c3d",
+    "message": "feat: add dark mode support across all pages [link:/profile]",
+    "author": "windear",
+    "date": "2026-03-31T10:00:00Z"
+  },
+  {
+    "hash": "e4f5g6h",
+    "message": "fix(auth): resolve popup blocker issue on mobile devices",
+    "author": "windear",
+    "date": "2026-03-30T15:30:00Z"
+  },
+  {
+    "hash": "i7j8k9l",
+    "message": "perf: optimize image loading on dashboard for faster LCP",
+    "author": "windear",
+    "date": "2026-03-28T09:15:00Z"
+  },
+  {
+    "hash": "m1n2o3p",
+    "message": "feat: new updates changelog section with filtering [link:/updates]",
+    "author": "windear",
+    "date": "2026-03-25T14:20:00Z"
+  },
+  {
+    "hash": "q9r8s7t",
+    "message": "docs: update readme with setup instructions",
+    "author": "windear",
+    "date": "2026-03-20T11:00:00Z"
   }
 ]
