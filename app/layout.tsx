@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import { Inter } from 'next/font/google';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { I18nProvider } from '@/components/i18n-provider';
 import { PageTransition } from '@/components/page-transition';
@@ -54,6 +55,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           </I18nProvider>
         </ThemeProvider>
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
