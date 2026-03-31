@@ -1,0 +1,60 @@
+name: Update Log
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  update-log:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Update JSON log
+        run: |
+          # Get latest commit info
+          COMMIT_HASH=$(git rev-parse HEAD)
+          COMMIT_MSG=$(git log -1 --pretty=%B | head -n 1)
+          COMMIT_AUTHOR=$(git log -1 --pretty=%an)
+          COMMIT_DATE=$(git log -1 --pretty=%cI)
+          
+          # Ensure public directory exists
+          mkdir -p public
+          
+          # Ensure updates.json exists and is valid JSON
+          if [ ! -f public/updates.json ] || ! jq -e . public/updates.json >/dev/null 2>&1; then
+            echo "[]" > public/updates.json
+          fi
+          
+          # Create JSON object for the new commit
+          NEW_ENTRY=$(jq -n \
+            --arg hash "$COMMIT_HASH" \
+            --arg msg "$COMMIT_MSG" \
+            --arg author "$COMMIT_AUTHOR" \
+            --arg date "$COMMIT_DATE" \
+            '{hash: $hash, message: $msg, author: $author, date: $date}')
+          
+          # Append to the array (or prepend if you prefer newest first, using "[$NEW_ENTRY] + .")
+          jq "[$NEW_ENTRY] + ." public/updates.json > public/updates.tmp.json
+          mv public/updates.tmp.json public/updates.json
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/updates.json
+          
+          # Only commit if there are changes
+          if ! git diff --staged --quiet; then
+            git commit -m "chore: update commit log in updates.json [skip ci]"
+            git push
+          else
+            echo "No changes to commit"
+          fi
