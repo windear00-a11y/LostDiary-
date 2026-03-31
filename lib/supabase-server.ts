@@ -15,6 +15,12 @@ export async function createServerSideClient() {
     url,
     key,
     {
+      cookieOptions: {
+        name: 'sb-auth-token',
+        sameSite: 'none',
+        secure: true,
+        maxAge: 31536000,
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();

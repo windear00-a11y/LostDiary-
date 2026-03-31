@@ -30,10 +30,11 @@ export default function AuthPage() {
     if (!supabase) return;
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=/app`,
+          skipBrowserRedirect: true,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',
@@ -41,11 +42,44 @@ export default function AuthPage() {
         },
       });
       if (error) throw error;
+
+      if (data?.url) {
+        const authWindow = window.open(
+          data.url,
+          'oauth_popup',
+          'width=600,height=700'
+        );
+        if (!authWindow) {
+          setMessage({ type: 'error', text: 'Please allow popups for this site to connect your account.' });
+          setIsSubmitting(false);
+        } else {
+          const timer = setInterval(() => {
+            if (authWindow.closed) {
+              clearInterval(timer);
+              setIsSubmitting(false);
+            }
+          }, 500);
+        }
+      }
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to sign in with Google' });
       setIsSubmitting(false);
     }
   };
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const origin = event.origin;
+      if (!origin.endsWith('.run.app') && !origin.includes('localhost')) {
+        return;
+      }
+      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+        window.location.href = '/app';
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [router]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();

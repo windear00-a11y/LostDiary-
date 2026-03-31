@@ -19,6 +19,12 @@ export async function middleware(request: NextRequest) {
     url,
     key,
     {
+      cookieOptions: {
+        name: 'sb-auth-token',
+        sameSite: 'none',
+        secure: true,
+        maxAge: 31536000,
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll();
