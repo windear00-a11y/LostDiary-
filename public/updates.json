@@ -1,5 +1,11 @@
 [
   {
+    "hash": "e6af368f380d9ca35d1a20b9af3b5b4f433b8421",
+    "message": "chore: Remove Vercel Analytics",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-01T00:24:01+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
