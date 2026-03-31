@@ -107,7 +107,7 @@ export function UpdatesSection() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">What&apos;s New</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">What's New</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-1">Latest updates and improvements to the platform.</p>
         </div>
         
