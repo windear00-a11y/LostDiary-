@@ -1,5 +1,11 @@
 [
   {
+    "hash": "8a7bc0c8d396ceef2b11d2334a3dbd4803e4b89d",
+    "message": "fix(auth): Strengthen origin check for OAuth messages",
+    "author": "Kulwinder Singh",
+    "date": "2026-03-31T19:48:59+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
