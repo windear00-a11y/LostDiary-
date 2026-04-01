@@ -1,11 +1,5 @@
 [
   {
-    "hash": "5e01dbf8c073f00dc9a0166c7e0b55708cb03d50",
-    "message": "feat: Refactor layout with AppLayout and Header components",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-01T23:02:12+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

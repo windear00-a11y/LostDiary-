@@ -5,6 +5,13 @@ import { useRouter } from 'next/navigation';
 import { Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
+const languages = [
+  { code: 'en', label: 'English', short: 'EN' },
+  { code: 'hi', label: 'Hindi', short: 'HI' },
+  { code: 'hinglish', label: 'Hinglish', short: 'HN' },
+  { code: 'es', label: 'Spanish', short: 'ES' },
+] as const;
+
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
   const router = useRouter();
@@ -24,13 +31,6 @@ export function LanguageSwitcher() {
       });
     });
   };
-
-  const languages = [
-    { code: 'en', label: 'English', short: 'EN' },
-    { code: 'hi', label: 'Hindi', short: 'HI' },
-    { code: 'hinglish', label: 'Hinglish', short: 'HN' },
-    { code: 'es', label: 'Spanish', short: 'ES' },
-  ] as const;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
