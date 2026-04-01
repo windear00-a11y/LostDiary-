@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
-Disallow: /app/
+Disallow: /dashboard/
 Disallow: /auth/
+Disallow: /profile/
+Disallow: /updates/
 
 Sitemap: https://windear.app/sitemap.xml

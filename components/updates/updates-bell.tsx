@@ -62,7 +62,7 @@ export function UpdatesBell() {
 
   return (
     <button
-      onClick={() => router.push('/app/updates')}
+      onClick={() => router.push('/updates')}
       className="relative p-2 text-[#6B7280] hover:text-[#111827] transition-colors"
       title="Updates"
     >

@@ -52,7 +52,7 @@ function AuthForm() {
           password,
         });
         if (error) throw error;
-        router.push('/app');
+        router.push('/dashboard');
       }
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Authentication failed' });

@@ -19,7 +19,7 @@ const parseUpdate = (message: string) => {
     const typeRaw = match[1].toLowerCase();
     const title = match[2];
     
-    if (['feat', 'feature'].includes(typeRaw)) return { type: 'feature' as const, title, link: link || '/app' };
+    if (['feat', 'feature'].includes(typeRaw)) return { type: 'feature' as const, title, link: link || '/dashboard' };
     if (['fix', 'bug'].includes(typeRaw)) return { type: 'fix' as const, title, link };
     return { type: 'improvement' as const, title, link };
   }

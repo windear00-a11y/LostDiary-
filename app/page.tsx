@@ -15,7 +15,7 @@ export default function LandingPage() {
 
   const handleCTA = () => {
     if (user) {
-      router.push('/app');
+      router.push('/dashboard');
     } else {
       router.push('/auth');
     }
