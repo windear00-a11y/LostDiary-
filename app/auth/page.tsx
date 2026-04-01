@@ -94,18 +94,22 @@ function AuthForm() {
   useEffect(() => {
     const handleMessage = async (event: MessageEvent) => {
       // Ensure the message comes from our own domain (works for localhost, run.app, vercel.app, etc.)
-      if (event.origin !== window.location.origin) {
+      if (!event.origin.endsWith('.run.app') && !event.origin.includes('localhost') && !event.origin.includes('vercel.app')) {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
+        console.log('OAUTH_AUTH_SUCCESS received');
         router.push('/app');
       } else if (event.data?.type === 'OAUTH_CALLBACK') {
+        console.log('OAUTH_CALLBACK received', event.data);
         const url = new URL(event.data.url);
         const code = url.searchParams.get('code');
+        console.log('Code:', code);
         if (code && supabase && !exchangeAttempted.current) {
           exchangeAttempted.current = true;
           setIsSubmitting(true);
           const { error } = await supabase.auth.exchangeCodeForSession(code);
+          console.log('Exchange error:', error);
           if (error) {
             setMessage({ type: 'error', text: error.message });
             setIsSubmitting(false);
