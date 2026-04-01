@@ -24,7 +24,7 @@ export default function UpdatePasswordPage() {
       });
       if (error) throw error;
       setMessage({ type: 'success', text: 'Password updated successfully!' });
-      setTimeout(() => router.push('/app'), 2000);
+      setTimeout(() => router.push('/auth'), 2000);
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to update password' });
     } finally {
