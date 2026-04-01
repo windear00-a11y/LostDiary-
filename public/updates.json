@@ -1,5 +1,11 @@
 [
   {
+    "hash": "a4ef924efe5303a8c9f3cd44775c294db19fffdf",
+    "message": "refactor: Remove outdated Supabase update entry",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-01T14:50:11+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
