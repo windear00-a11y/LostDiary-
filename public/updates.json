@@ -1,5 +1,11 @@
 [
   {
+    "hash": "757c907c6141e497bba80741b59a54f7386f38cc",
+    "message": "fix(auth): Ignore missing auth code error",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-01T13:02:38+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
