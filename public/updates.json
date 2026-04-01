@@ -1,11 +1,5 @@
 [
   {
-    "hash": "20328600d585e34983dc72ccadb0e077d938a712",
-    "message": "feat: Implement internationalization and speech input",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-01T22:52:24+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

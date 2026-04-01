@@ -18,6 +18,8 @@ import ConsistencyTracker from '@/components/diary/ConsistencyTracker';
 import { processDiaryEntry, classifyIntent, handleChat } from '@/lib/ai';
 import { ChatResponse } from '@/components/diary/ChatResponse';
 
+import { AppLayout } from '@/components/layout/AppLayout';
+
 export default function AppDashboard() {
   const { user, signOut } = useAuth();
   const router = useRouter();
@@ -136,65 +138,13 @@ export default function AppDashboard() {
 
   const handleStartWriting = () => {
     textareaRef.current?.focus();
+    // Smooth scroll to top if needed
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] pt-safe pb-safe transition-colors duration-300">
-      {/* Navbar */}
-      <nav className="bg-white dark:bg-[#0A0A0A]/80 dark:backdrop-blur-md border-b border-gray-100 dark:border-[#1A1A1A] px-4 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-50">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
-          <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl flex items-center justify-center shadow-sm border border-indigo-100 dark:border-indigo-800/30">
-            <Book className="w-4 h-4 text-[#6366F1]" />
-          </div>
-          <span className="text-xl font-serif italic tracking-tight text-[#111827] dark:text-[#F9FAFB]">WinDear</span>
-        </div>
-        
-        <div className="flex items-center gap-2 sm:gap-4">
-          <ThemeToggle />
-          <LanguageSwitcher />
-          
-          <button 
-            onClick={() => router.push('/updates')}
-            className="relative p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] rounded-full transition-colors"
-            title="Updates"
-            aria-label="Updates"
-          >
-            <Bell className="w-5 h-5" />
-            {hasNewUpdates && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0A0A0A] animate-pulse"></span>
-            )}
-          </button>
-
-          <button 
-            onClick={() => setIsSettingsOpen(true)}
-            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] rounded-full transition-colors"
-            title={t('profile.accountSettings', 'Settings')}
-            aria-label={t('profile.accountSettings', 'Settings')}
-          >
-            <Settings className="w-5 h-5" />
-          </button>
-
-          <button 
-            onClick={() => router.push('/profile')}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#1A1A1A] hover:bg-gray-100 dark:hover:bg-[#262626] border border-gray-200 dark:border-[#2E2E2E] rounded-full text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors"
-          >
-            <User className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('nav.profile', 'Profile')}</span>
-          </button>
-
-          <button 
-            onClick={signOut}
-            className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-full transition-colors"
-            title={t('dash.logout', 'Logout')}
-            aria-label={t('dash.logout', 'Logout')}
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-      </nav>
-
-      {/* Main Content Area */}
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-12 space-y-12">
+    <AppLayout onNewEntry={handleStartWriting}>
+      <div className="space-y-12">
         <div className="text-center space-y-4 pt-10">
           <h1 className="text-4xl font-serif italic text-gray-900 dark:text-[#F9FAFB]">
             {t('dash.hello', 'Hello')}, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
@@ -238,9 +188,9 @@ export default function AppDashboard() {
             <GrowthTracker entries={entries} />
           </div>
         )}
-      </main>
+      </div>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
-    </div>
+    </AppLayout>
   );
 }

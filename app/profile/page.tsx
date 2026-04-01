@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next';
 import { User, Mail, Settings, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
+import { AppLayout } from '@/components/layout/AppLayout';
+
 export default function ProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -93,8 +95,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] py-12 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
-      <div className="max-w-3xl mx-auto space-y-8">
+    <AppLayout>
+      <div className="space-y-8">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => router.back()}
@@ -227,6 +229,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }
