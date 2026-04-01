@@ -1,5 +1,11 @@
 [
   {
+    "hash": "a8deb7db5cf8fe2d18d973f8d130af85b3435de1",
+    "message": "fix: Remove stale OAuth update entry",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-01T10:04:48+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
