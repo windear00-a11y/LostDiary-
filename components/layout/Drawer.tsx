@@ -93,7 +93,7 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
             <div className="p-6 flex justify-between items-center border-b border-gray-50 dark:border-[#1A1A1A]">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center border border-indigo-100 dark:border-indigo-800/30">
-                  <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                  <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-bold text-gray-900 dark:text-[#F9FAFB] truncate max-w-[160px]">
@@ -106,24 +106,27 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
               </div>
               <button 
                 onClick={onClose}
+                aria-label="Close navigation menu"
+                title="Close menu"
                 className="p-2 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] rounded-full transition-colors text-gray-400"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
             {/* Content */}
             <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8">
               {/* Main Menu */}
-              <div className="space-y-1">
+              <nav className="space-y-1" aria-label="Main navigation">
                 {menuItems.map((item, idx) => (
                   <button
                     key={idx}
                     onClick={item.onClick}
+                    aria-label={item.label}
                     className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-all group active:scale-[0.98]"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                      <div className="text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" aria-hidden="true">
                         {item.icon}
                       </div>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -132,15 +135,15 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
                     </div>
                     <div className="flex items-center gap-2">
                       {item.badge && (
-                        <span className="w-2 h-2 bg-red-500 rounded-full" />
+                        <span className="w-2 h-2 bg-red-500 rounded-full" aria-label="New notification" />
                       )}
-                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors" />
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors" aria-hidden="true" />
                     </div>
                   </button>
                 ))}
-              </div>
+              </nav>
 
-              <div className="h-px bg-gray-50 dark:bg-[#1A1A1A] mx-2" />
+              <div className="h-px bg-gray-50 dark:bg-[#1A1A1A] mx-2" aria-hidden="true" />
 
               {/* Future Ready Section */}
               <div className="space-y-4">
@@ -148,12 +151,20 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
                   Insights & Tools
                 </h3>
                 <div className="space-y-1">
-                  <button className="w-full flex items-center gap-4 p-3 rounded-2xl text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60">
-                    <BarChart3 className="w-5 h-5" />
+                  <button 
+                    disabled 
+                    aria-label="Analytics (Coming Soon)"
+                    className="w-full flex items-center gap-4 p-3 rounded-2xl text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60"
+                  >
+                    <BarChart3 className="w-5 h-5" aria-hidden="true" />
                     <span className="text-sm font-medium">Analytics (Soon)</span>
                   </button>
-                  <button className="w-full flex items-center gap-4 p-3 rounded-2xl text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60">
-                    <Sparkles className="w-5 h-5" />
+                  <button 
+                    disabled 
+                    aria-label="AI Coach (Coming Soon)"
+                    className="w-full flex items-center gap-4 p-3 rounded-2xl text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60"
+                  >
+                    <Sparkles className="w-5 h-5" aria-hidden="true" />
                     <span className="text-sm font-medium">AI Coach (Soon)</span>
                   </button>
                 </div>
@@ -175,9 +186,10 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
                   signOut();
                   onClose();
                 }}
+                aria-label={t('dash.logout', 'Logout')}
                 className="w-full flex items-center gap-4 p-4 rounded-2xl bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/20 transition-all active:scale-[0.98]"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-5 h-5" aria-hidden="true" />
                 <span>{t('dash.logout', 'Logout')}</span>
               </button>
             </div>

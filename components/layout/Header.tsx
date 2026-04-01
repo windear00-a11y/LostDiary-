@@ -49,9 +49,10 @@ export const Header = ({ onOpenDrawer, onNewEntry, hasNewUpdates }: HeaderProps)
           {onNewEntry && (
             <button
               onClick={onNewEntry}
+              aria-label={t('dash.newEntry', 'New Entry')}
               className="flex items-center gap-2 px-4 py-2 bg-[#6366F1] hover:bg-[#4F46E5] text-white rounded-full text-sm font-bold shadow-lg shadow-indigo-500/20 transition-all active:scale-95"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4 h-4" aria-hidden="true" />
               <span className="hidden sm:inline">{t('dash.newEntry', 'New Entry')}</span>
             </button>
           )}
@@ -60,9 +61,10 @@ export const Header = ({ onOpenDrawer, onNewEntry, hasNewUpdates }: HeaderProps)
           <button
             onClick={onOpenDrawer}
             className="relative p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] rounded-full transition-colors"
-            aria-label="Open Menu"
+            aria-label={t('common.openMenu', 'Open Menu')}
+            title={t('common.openMenu', 'Open Menu')}
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-6 h-6" aria-hidden="true" />
             {hasNewUpdates && (
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0A0A0A]"></span>
             )}

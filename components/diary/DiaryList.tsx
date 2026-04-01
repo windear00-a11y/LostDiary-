@@ -26,22 +26,25 @@ export function DiaryList({
       <div className="space-y-8">
         {isLoadingEntries ? (
           Array.from({ length: 3 }).map((_, i) => (
-            <div key={`skeleton-${i}`} className="bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm animate-pulse">
+            <div key={`skeleton-${i}`} className="bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm animate-pulse min-h-[300px]">
               <div className="flex justify-between items-start mb-6">
                 <div className="space-y-3">
-                  <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded-full" />
-                  <div className="h-4 w-16 bg-gray-200 dark:bg-gray-800 rounded-full" />
+                  <div className="h-3 w-32 bg-gray-200 dark:bg-gray-800 rounded-full" />
+                  <div className="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded-full" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-8 w-8 bg-gray-200 dark:bg-gray-800 rounded-full" />
+                  <div className="h-8 w-8 bg-gray-200 dark:bg-gray-800 rounded-full" />
                 </div>
               </div>
-              <div className="space-y-3 mb-6">
+              <div className="space-y-4 mb-8">
                 <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded-full" />
-                <div className="h-4 w-5/6 bg-gray-200 dark:bg-gray-800 rounded-full" />
-                <div className="h-4 w-4/6 bg-gray-200 dark:bg-gray-800 rounded-full" />
+                <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded-full" />
+                <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-800 rounded-full" />
               </div>
               <div className="pt-6 border-t border-gray-50 dark:border-gray-800 space-y-4">
+                <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded-full" />
                 <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded-full" />
-                <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-800 rounded-full" />
-                <div className="h-3 w-48 bg-gray-200 dark:bg-gray-800 rounded-full" />
               </div>
             </div>
           ))
@@ -53,7 +56,7 @@ export function DiaryList({
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center py-24 space-y-8 text-center bg-white dark:bg-[#1A1A1A] rounded-[3rem] border border-slate-100 dark:border-[#2E2E2E] shadow-sm"
+            className="flex flex-col items-center justify-center py-24 space-y-8 text-center bg-white dark:bg-[#1A1A1A] rounded-[3rem] border border-slate-100 dark:border-[#2E2E2E] shadow-sm min-h-[400px]"
           >
             <div className="relative">
               <div className="absolute inset-0 bg-indigo-100 dark:bg-indigo-900/20 rounded-full blur-2xl opacity-40 animate-pulse" />
@@ -67,6 +70,7 @@ export function DiaryList({
             </div>
             <button
               onClick={handleStartWriting}
+              aria-label={t('dash.empty.cta')}
               className="bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] px-10 py-5 rounded-2xl text-base font-semibold hover:bg-[#1f2937] dark:hover:bg-white transition-all active:scale-95 shadow-xl shadow-indigo-100 dark:shadow-none"
             >
               {t('dash.empty.cta')}

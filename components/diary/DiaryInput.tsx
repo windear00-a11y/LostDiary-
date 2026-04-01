@@ -150,6 +150,7 @@ export function DiaryInput({
               value={newEntry}
               onChange={(e) => setNewEntry(e.target.value)}
               placeholder={t('dash.placeholder')}
+              aria-label={t('dash.placeholder')}
               className="w-full min-h-[240px] pt-6 px-6 pb-20 bg-gray-50 dark:bg-[#262626] border-none rounded-[2.5rem] text-base focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all outline-none resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600 text-[#111827] dark:text-[#F9FAFB]"
             />
             
@@ -162,7 +163,7 @@ export function DiaryInput({
                   className="mt-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100/50 dark:border-indigo-800/30 rounded-2xl flex items-start gap-3 group"
                 >
                   <div className="p-2 bg-white dark:bg-[#1A1A1A] rounded-xl shadow-sm shrink-0">
-                    <Info className="w-4 h-4 text-[#6366F1]" />
+                    <Info className="w-4 h-4 text-[#6366F1]" aria-hidden="true" />
                   </div>
                   <div className="space-y-1 flex-1">
                     <p className="text-xs font-bold text-[#6366F1] uppercase tracking-widest">
@@ -182,6 +183,7 @@ export function DiaryInput({
                         setNewEntry(spellingSuggestion.suggestion);
                         setSpellingSuggestion(null);
                       }}
+                      aria-label="Apply spelling correction"
                       className="mt-2 text-xs font-semibold text-[#6366F1] hover:text-[#4F46E5] transition-colors"
                     >
                       Apply correction
@@ -195,7 +197,7 @@ export function DiaryInput({
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
               {/* Left side: Status */}
               <div className="flex items-center gap-2 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 pointer-events-auto shadow-sm">
-                <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-red-500 animate-ping' : newEntry.length > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} />
+                <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-red-500 animate-ping' : newEntry.length > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} aria-hidden="true" />
                 <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500 dark:text-gray-400">
                   {isListening ? "Listening..." : newEntry.length > 0 ? t('dash.writingMood') : t('dash.readyToListen')}
                 </span>
@@ -244,9 +246,10 @@ export function DiaryInput({
                       ? 'bg-red-500 text-white' 
                       : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-500/20'
                   }`}
+                  aria-label={isListening ? "Stop listening" : "Hold to record"}
                   title={isListening ? "Stop listening" : "Hold to record"}
                 >
-                  {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  {isListening ? <MicOff className="w-5 h-5" aria-hidden="true" /> : <Mic className="w-5 h-5" aria-hidden="true" />}
                 </motion.button>
               </div>
             </div>
@@ -256,17 +259,18 @@ export function DiaryInput({
           <button
             type="submit"
             disabled={isSubmitting || !newEntry.trim()}
+            aria-label={isSubmitting ? t('dash.reflecting') : (isQuery ? 'Ask WinDear' : t('dash.save'))}
             className="group flex items-center gap-3 bg-slate-900 dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] px-10 py-5 rounded-full text-base font-semibold hover:bg-slate-800 dark:hover:bg-white transition-all duration-300 hover:shadow-lg active:scale-95 disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
                 {t('dash.reflecting')}
               </>
             ) : (
               <>
                 {isQuery ? 'Ask WinDear' : t('dash.save')}
-                <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" aria-hidden="true" />
               </>
             )}
           </button>

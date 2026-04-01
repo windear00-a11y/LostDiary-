@@ -144,8 +144,8 @@ export default function AppDashboard() {
 
   return (
     <AppLayout onNewEntry={handleStartWriting}>
-      <div className="space-y-12">
-        <div className="text-center space-y-4 pt-10">
+      <div className="space-y-12 min-h-screen">
+        <div className="text-center space-y-4 pt-10 min-h-[160px] flex flex-col justify-center">
           <h1 className="text-4xl font-serif italic text-gray-900 dark:text-[#F9FAFB]">
             {t('dash.hello', 'Hello')}, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
           </h1>
@@ -154,40 +154,59 @@ export default function AppDashboard() {
           </p>
         </div>
 
-        {!isLoadingEntries && entries.length > 0 && (
-          <ConsistencyTracker entries={entries} />
-        )}
+        <div className="min-h-[140px]">
+          {isLoadingEntries ? (
+            <div className="mt-12 mb-8 p-8 bg-white dark:bg-[#1A1A1A] rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm animate-pulse">
+              <div className="h-6 w-48 bg-gray-200 dark:bg-gray-800 rounded-full mb-4" />
+              <div className="flex gap-3">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div key={i} className="w-2.5 h-2.5 bg-gray-200 dark:bg-gray-800 rounded-full" />
+                ))}
+              </div>
+            </div>
+          ) : entries.length > 0 && (
+            <ConsistencyTracker entries={entries} />
+          )}
+        </div>
 
-        <ChatResponse 
-          response={chatResponse} 
-          onClose={() => setChatResponse(null)} 
-          t={t} 
-        />
+        <div className="min-h-[0px]">
+          <ChatResponse 
+            response={chatResponse} 
+            onClose={() => setChatResponse(null)} 
+            t={t} 
+          />
+        </div>
 
-        <DiaryInput 
-          newEntry={newEntry}
-          setNewEntry={setNewEntry}
-          handleSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
-          submitError={submitError}
-          t={t}
-          textareaRef={textareaRef}
-        />
+        <div className="min-h-[300px]">
+          <DiaryInput 
+            newEntry={newEntry}
+            setNewEntry={setNewEntry}
+            handleSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+            submitError={submitError}
+            t={t}
+            textareaRef={textareaRef}
+          />
+        </div>
 
-        <DiaryList 
-          entries={entries}
-          isLoadingEntries={isLoadingEntries}
-          deleteEntry={deleteEntry}
-          t={t}
-          handleStartWriting={handleStartWriting}
-        />
+        <div className="min-h-[600px]">
+          <DiaryList 
+            entries={entries}
+            isLoadingEntries={isLoadingEntries}
+            deleteEntry={deleteEntry}
+            t={t}
+            handleStartWriting={handleStartWriting}
+          />
+        </div>
 
-        {!isLoadingEntries && entries.length > 0 && (
-          <div className="space-y-16">
-            <WeeklyReflection entries={entries} />
-            <GrowthTracker entries={entries} />
-          </div>
-        )}
+        <div className="min-h-[200px]">
+          {!isLoadingEntries && entries.length > 0 && (
+            <div className="space-y-16">
+              <WeeklyReflection entries={entries} />
+              <GrowthTracker entries={entries} />
+            </div>
+          )}
+        </div>
       </div>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
