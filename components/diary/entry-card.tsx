@@ -62,6 +62,15 @@ export function EntryCard({ entry, deleteEntry, t, onTryNow }: EntryCardProps) {
             <span className="text-xs font-medium text-[#6366F1]">{entry.mood}</span>
             <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium ml-2">• {readingTime} min read</span>
           </div>
+          {entry.tags && entry.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {entry.tags.map((tag: string, i: number) => (
+                <span key={i} className="text-[9px] px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded-full font-medium">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <button

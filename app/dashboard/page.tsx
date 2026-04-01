@@ -15,7 +15,8 @@ import { DiaryList } from '@/components/diary/DiaryList';
 import GrowthTracker from '@/components/diary/GrowthTracker';
 import WeeklyReflection from '@/components/diary/WeeklyReflection';
 import ConsistencyTracker from '@/components/diary/ConsistencyTracker';
-import { processDiaryEntry } from '@/lib/ai';
+import { processDiaryEntry, classifyIntent, handleChat } from '@/lib/ai';
+import { ChatResponse } from '@/components/diary/ChatResponse';
 
 export default function AppDashboard() {
   const { user, signOut } = useAuth();
@@ -36,6 +37,7 @@ export default function AppDashboard() {
   const [newEntry, setNewEntry] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [chatResponse, setChatResponse] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const fetchEntries = useCallback(async () => {
@@ -69,9 +71,21 @@ export default function AppDashboard() {
 
     setIsSubmitting(true);
     setSubmitError(null);
+    setChatResponse(null);
 
     try {
-      // 1. Generate AI Insights (Optional but recommended for the app's core value)
+      // 1. Classify Intent
+      const intent = await classifyIntent(newEntry);
+
+      if (intent === 'recall' || intent === 'analysis') {
+        const response = await handleChat(newEntry, entries, i18n.language || 'en', intent);
+        setChatResponse(response);
+        setNewEntry('');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. Generate AI Insights (Optional but recommended for the app's core value)
       const aiResult = await processDiaryEntry(newEntry, {
         understand_language: i18n.language || 'en',
         response_language: i18n.language || 'en'
@@ -87,6 +101,8 @@ export default function AppDashboard() {
             mood: aiResult?.mood || 'Neutral',
             insight: aiResult?.insight || '',
             suggestion: aiResult?.suggestion || '',
+            summary: aiResult?.summary || '',
+            tags: aiResult?.tags || [],
             translated_content: aiResult?.translated_content || null,
             normalized_content: aiResult?.normalized_content || null
           }
@@ -191,6 +207,12 @@ export default function AppDashboard() {
         {!isLoadingEntries && entries.length > 0 && (
           <ConsistencyTracker entries={entries} />
         )}
+
+        <ChatResponse 
+          response={chatResponse} 
+          onClose={() => setChatResponse(null)} 
+          t={t} 
+        />
 
         <DiaryInput 
           newEntry={newEntry}

@@ -23,6 +23,16 @@ export function DiaryInput({
 }) {
   const [spellingSuggestion, setSpellingSuggestion] = useState<{ suggestion: string, explanation: string } | null>(null);
   const [isCheckingSpelling, setIsCheckingSpelling] = useState(false);
+  const [isQuery, setIsQuery] = useState(false);
+
+  useEffect(() => {
+    const queryPatterns = [
+      /^(how|what|when|where|why|who|can|do|did|is|are|was|were|tell|show|recall|analyze|patterns|insights|kya|kab|kaise|kyun|kaun|kahan)\b/i, 
+      /\?$/,
+      /\b(yaad|pucho|batao|analysis|pattern)\b/i
+    ];
+    setIsQuery(queryPatterns.some(p => p.test(newEntry.trim())));
+  }, [newEntry]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -149,7 +159,7 @@ export function DiaryInput({
               </>
             ) : (
               <>
-                {t('dash.save')}
+                {isQuery ? 'Ask WinDear' : t('dash.save')}
                 <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" />
               </>
             )}

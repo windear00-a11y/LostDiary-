@@ -168,7 +168,8 @@ export async function processDiaryEntry(text: string, settings: { understand_lan
        - mood: Choose ONE: Happy, Sad, Stressed, Neutral.
        - insight: A thoughtful, empathetic paragraph (2-3 sentences) in ${langName}.
        - suggestion: A small, actionable step for growth in ${langName}.
-       - summary: A short summary (2-3 lines) in ${langName}.
+       - summary: A short summary (MAX 10 WORDS) in ${langName}.
+       - tags: 2-5 meaningful tags related to the entry's content and emotions in ${langName}.
 
     Response format (JSON):
     {
@@ -178,14 +179,15 @@ export async function processDiaryEntry(text: string, settings: { understand_lan
       "mood": "string",
       "insight": "string",
       "suggestion": "string",
-      "summary": "string"
+      "summary": "string",
+      "tags": ["string"]
     }`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
-        systemInstruction: `You are WinDear, a compassionate and intelligent AI diary assistant. Your goal is to provide deep psychological insights and emotional clarity. Always respond in JSON format. You MUST write the insight, suggestion, and summary in ${langName}.`,
+        systemInstruction: `You are WinDear, a compassionate and intelligent AI diary assistant. Your goal is to provide deep psychological insights and emotional clarity. Always respond in JSON format. You MUST write the insight, suggestion, summary, and tags in ${langName}.`,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -196,9 +198,10 @@ export async function processDiaryEntry(text: string, settings: { understand_lan
             mood: { type: Type.STRING, enum: ["Happy", "Sad", "Stressed", "Neutral"] },
             insight: { type: Type.STRING },
             suggestion: { type: Type.STRING },
-            summary: { type: Type.STRING }
+            summary: { type: Type.STRING },
+            tags: { type: Type.ARRAY, items: { type: Type.STRING } }
           },
-          required: ["detected_language", "normalized_content", "translated_content", "mood", "insight", "suggestion", "summary"]
+          required: ["detected_language", "normalized_content", "translated_content", "mood", "insight", "suggestion", "summary", "tags"]
         }
       },
     });
@@ -323,5 +326,121 @@ export async function checkSpelling(text: string) {
   } catch (error) {
     console.error('Spelling check error:', error);
     return null;
+  }
+}
+
+export async function classifyIntent(userInput: string) {
+  try {
+    const ai = getGenAI();
+    const prompt = `Task:
+Classify the user's message into ONE of these:
+
+1. "entry" → user is writing a new diary entry
+2. "recall" → user is asking about past memory
+3. "analysis" → user wants patterns, insights, or behavior analysis
+
+Rules:
+- User input may be Hinglish, Hindi, or English
+- Focus on intent, not exact words
+- Output strictly JSON
+
+User Input:
+"${userInput}"`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: "You are an intent classification system for a diary application. Always respond in JSON format.",
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            type: { type: Type.STRING, enum: ["entry", "recall", "analysis"] }
+          },
+          required: ["type"]
+        }
+      },
+    });
+
+    const result = JSON.parse(response.text || '{"type": "entry"}');
+    return result.type as 'entry' | 'recall' | 'analysis';
+  } catch (error) {
+    console.error('Intent classification error:', error);
+    return 'entry';
+  }
+}
+
+export async function handleChat(query: string, entries: any[], responseLang: string, intent: 'recall' | 'analysis' = 'recall') {
+  try {
+    const ai = getGenAI();
+    const context = entries.slice(0, 20).map(e => `[Date: ${new Date(e.created_at).toLocaleDateString()}, Summary: ${e.summary || 'No summary'}] Content: ${e.content}`).join('\n\n');
+    const langName = responseLang === 'hinglish' ? 'Natural Hinglish (a casual mix of Hindi and English written in Latin script)' : `the language with ISO code '${responseLang}'`;
+
+    let prompt = "";
+    if (intent === 'analysis') {
+      prompt = `Task:
+Analyze user's past diary entries and provide behavior/pattern insights.
+
+Rules:
+1. Identify repeating behaviors, emotions, or habits from the entries.
+2. Give 2–3 clear, practical insights.
+3. Keep it practical and actionable, not overly philosophical.
+4. Use simple, natural Hinglish.
+5. Format the response clearly with bullet points for patterns.
+
+Input:
+User Query: "${query}"
+
+Relevant Entries:
+${context}
+
+Output:
+Final user-friendly response with patterns and practical suggestions.`;
+    } else {
+      prompt = `Task:
+Answer the user using their past diary entries as memory and format the response for clarity.
+
+Rules for Answering:
+1. Use the provided past entries as your memory bank.
+2. If a strong match is found:
+   - Say clearly that the user has written about this before.
+   - Mention the specific date and a short summary of that entry.
+   - Offer to show the full entry if they want (e.g., "Would you like to open this entry?").
+3. If multiple matches are found:
+   - Connect them by identifying a pattern or repetition.
+4. If a weak or no match is found:
+   - Answer the query normally/thoughtfully.
+   - Suggest that they save this new thought.
+
+Rules for Formatting:
+- Keep the response clean, readable, and well-spaced.
+- Use a light, natural Hinglish tone.
+- Ensure references (date/summary) are easy to spot.
+
+Input:
+User Message: "${query}"
+
+Relevant Past Entries:
+${context}
+
+Output:
+Final user-friendly response.`;
+    }
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: intent === 'analysis' 
+          ? `You are WinDear, a behavior and pattern analysis assistant. You identify repeating habits and emotions in a user's diary. Always respond in ${langName}.`
+          : `You are WinDear, a smart and reflective personal diary assistant with memory access. You help users navigate their past thoughts and patterns. Always respond in ${langName}.`,
+      },
+    });
+
+    return response.text || "I'm sorry, I couldn't find anything related to that in your diary.";
+  } catch (error) {
+    console.error('Chat error:', error);
+    return "I'm having trouble accessing your memories right now. Please try again later.";
   }
 }
