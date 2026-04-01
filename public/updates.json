@@ -1,5 +1,11 @@
 [
   {
+    "hash": "0ee0f010df9d6229b6fb4035bf621d5de6534182",
+    "message": "feat: Improve speech recognition initialization",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-01T23:21:38+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
