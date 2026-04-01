@@ -1,5 +1,11 @@
 [
   {
+    "hash": "ed7989327d5717dc0f6590c75a9a2946613907e0",
+    "message": "feat: Implement OAuth callback and session exchange",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-01T09:32:29+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
