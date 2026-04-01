@@ -1,5 +1,11 @@
 [
   {
+    "hash": "da5a7074670faf60d2df5a1f56a1a758d6d16f78",
+    "message": "feat: Add Hinglish to language switcher",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-01T23:12:04+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
