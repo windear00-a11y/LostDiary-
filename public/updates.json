@@ -1,11 +1,5 @@
 [
   {
-    "hash": "774922c9e20ba768db57f67c8689ce744cb6f753",
-    "message": "feat: Enhance Supabase client initialization and error handling",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-01T14:30:34+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
