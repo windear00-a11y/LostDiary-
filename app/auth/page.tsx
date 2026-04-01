@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Book, Mail, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -18,13 +18,32 @@ export default function AuthPage() {
   const { loading } = useAuth();
   const { t } = useTranslation();
   const supabase = useMemo(() => createClient(), []);
+  const exchangeAttempted = useRef(false);
 
   useEffect(() => {
     const error = searchParams.get('error');
     if (error === 'auth-code-error') {
       setMessage({ type: 'error', text: 'Authentication failed. Please try again or use a different method.' });
+    } else if (error) {
+      setMessage({ type: 'error', text: error });
     }
-  }, [searchParams]);
+
+    const code = searchParams.get('code');
+    if (code && supabase && !exchangeAttempted.current) {
+      exchangeAttempted.current = true;
+      setIsSubmitting(true);
+      supabase.auth.exchangeCodeForSession(code).then((response: any) => {
+        if (response.error) {
+          setMessage({ type: 'error', text: response.error.message });
+          setIsSubmitting(false);
+          exchangeAttempted.current = false;
+          router.replace('/auth');
+        } else {
+          window.location.href = searchParams.get('next') || '/app';
+        }
+      });
+    }
+  }, [searchParams, supabase, router]);
 
   const handleGoogleLogin = async () => {
     if (!supabase) {
@@ -71,18 +90,33 @@ export default function AuthPage() {
   };
 
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = async (event: MessageEvent) => {
       // Ensure the message comes from our own domain (works for localhost, run.app, vercel.app, etc.)
       if (event.origin !== window.location.origin) {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
         window.location.href = '/app';
+      } else if (event.data?.type === 'OAUTH_CALLBACK') {
+        const url = new URL(event.data.url);
+        const code = url.searchParams.get('code');
+        if (code && supabase && !exchangeAttempted.current) {
+          exchangeAttempted.current = true;
+          setIsSubmitting(true);
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) {
+            setMessage({ type: 'error', text: error.message });
+            setIsSubmitting(false);
+            exchangeAttempted.current = false;
+          } else {
+            window.location.href = url.searchParams.get('next') || '/app';
+          }
+        }
       }
     };
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [router]);
+  }, [router, supabase]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
