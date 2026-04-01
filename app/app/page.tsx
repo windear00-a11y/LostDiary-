@@ -6,15 +6,115 @@ import { useTranslation } from 'react-i18next';
 import { Book, User, LogOut, Settings, Bell } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { SettingsModal } from '@/components/settings/settings-modal';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useUpdates } from '@/hooks/use-updates';
+import { createClient } from '@/lib/supabase';
+import { DiaryInput } from '@/components/diary/DiaryInput';
+import { DiaryList } from '@/components/diary/DiaryList';
+import GrowthTracker from '@/components/diary/GrowthTracker';
+import WeeklyReflection from '@/components/diary/WeeklyReflection';
+import ConsistencyTracker from '@/components/diary/ConsistencyTracker';
+import { processDiaryEntry } from '@/lib/ai';
 
 export default function AppDashboard() {
   const { user, signOut } = useAuth();
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const { hasNewUpdates } = useUpdates({ autoRefreshInterval: 5 * 60 * 1000 }); // 5 minutes
+  const { hasNewUpdates } = useUpdates({ autoRefreshInterval: 5 * 60 * 1000 });
+  const supabase = createClient();
+
+  const [entries, setEntries] = useState<any[]>([]);
+  const [isLoadingEntries, setIsLoadingEntries] = useState(true);
+  const [newEntry, setNewEntry] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (user) {
+      fetchEntries();
+    }
+  }, [user]);
+
+  const fetchEntries = async () => {
+    if (!supabase || !user) return;
+    try {
+      setIsLoadingEntries(true);
+      const { data, error } = await supabase
+        .from('entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setEntries(data || []);
+    } catch (err) {
+      console.error('Error fetching entries:', err);
+    } finally {
+      setIsLoadingEntries(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEntry.trim() || !user || !supabase) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      // 1. Generate AI Insights (Optional but recommended for the app's core value)
+      const aiResult = await processDiaryEntry(newEntry, {
+        understand_language: i18n.language || 'en',
+        response_language: i18n.language || 'en'
+      });
+
+      // 2. Save to Supabase
+      const { data, error } = await supabase
+        .from('entries')
+        .insert([
+          {
+            user_id: user.id,
+            content: newEntry,
+            mood: aiResult?.mood || 'Neutral',
+            insight: aiResult?.insight || '',
+            suggestion: aiResult?.suggestion || '',
+            summary: aiResult?.summary || '',
+            translated_content: aiResult?.translated_content || null,
+            normalized_content: aiResult?.normalized_content || null
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // 3. Update local state
+      setEntries([data, ...entries]);
+      setNewEntry('');
+    } catch (err: any) {
+      console.error('Error saving entry:', err);
+      setSubmitError(err.message || 'Failed to save entry');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const deleteEntry = async (id: string) => {
+    if (!supabase) return;
+    try {
+      const { error } = await supabase.from('entries').delete().eq('id', id);
+      if (error) throw error;
+      setEntries(entries.filter(e => e.id !== id));
+    } catch (err) {
+      console.error('Error deleting entry:', err);
+    }
+  };
+
+  const handleStartWriting = () => {
+    textareaRef.current?.focus();
+  };
 
   return (
     <div className="min-h-screen bg-[#F9FAFB] text-[#111827]">
@@ -68,22 +168,44 @@ export default function AppDashboard() {
       </nav>
 
       {/* Main Content Area */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center space-y-4 py-20">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+        <div className="text-center space-y-4 pt-10">
           <h1 className="text-4xl font-serif italic text-gray-900">
             {t('dash.hello', 'Hello')}, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
           </h1>
           <p className="text-lg text-gray-500 max-w-2xl mx-auto">
             {t('dash.howAreYou', 'How are you feeling today?')}
           </p>
-          
-          {/* Placeholder for diary components */}
-          <div className="mt-12 p-12 bg-white rounded-[3rem] border border-gray-100 shadow-sm border-dashed">
-            <p className="text-gray-400 font-medium">
-              Diary components will be integrated here.
-            </p>
-          </div>
         </div>
+
+        {!isLoadingEntries && entries.length > 0 && (
+          <ConsistencyTracker entries={entries} />
+        )}
+
+        <DiaryInput 
+          newEntry={newEntry}
+          setNewEntry={setNewEntry}
+          handleSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+          submitError={submitError}
+          t={t}
+          textareaRef={textareaRef}
+        />
+
+        <DiaryList 
+          entries={entries}
+          isLoadingEntries={isLoadingEntries}
+          deleteEntry={deleteEntry}
+          t={t}
+          handleStartWriting={handleStartWriting}
+        />
+
+        {!isLoadingEntries && entries.length > 0 && (
+          <div className="space-y-16">
+            <WeeklyReflection entries={entries} />
+            <GrowthTracker entries={entries} />
+          </div>
+        )}
       </main>
 
       <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
