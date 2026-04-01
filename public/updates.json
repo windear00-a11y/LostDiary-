@@ -1,11 +1,5 @@
 [
   {
-    "hash": "9afd0f9dd7a9763199380cca7f2e8fee84f5151a",
-    "message": "feat: Implement dark mode and theme toggle",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-01T20:55:42+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

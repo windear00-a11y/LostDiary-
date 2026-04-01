@@ -46,7 +46,7 @@ export function DiaryList({
             </div>
           ))
         ) : entries.map((entry) => (
-          <EntryCard key={entry.id} entry={entry} deleteEntry={deleteEntry} t={t} />
+          <EntryCard key={entry.id} entry={entry} deleteEntry={deleteEntry} t={t} onTryNow={handleStartWriting} />
         ))}
 
         {!isLoadingEntries && entries.length === 0 && (

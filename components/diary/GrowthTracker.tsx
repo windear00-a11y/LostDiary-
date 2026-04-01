@@ -64,26 +64,26 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
   if (!stats || entries.length < 5) return null;
 
   return (
-    <section className="mt-16 pt-16 border-t border-gray-100">
+    <section className="mt-16 pt-16 border-t border-gray-100 dark:border-[#1A1A1A]">
       <div className="flex items-center gap-3 mb-10 px-4">
         <div className="w-1.5 h-1.5 bg-[#6366F1] rounded-full" />
-        <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-[#6B7280]">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-[#6B7280] dark:text-gray-500">
           Growth Journey
         </h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-8 bg-white p-10 rounded-[3rem] border border-gray-100 shadow-sm">
+        <div className="space-y-8 bg-white dark:bg-[#1A1A1A] p-10 rounded-[3rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300">
           <div className="space-y-6">
             <span className="text-[10px] uppercase tracking-widest text-[#6366F1] font-sans block">Mood Distribution</span>
             <div className="space-y-5">
               {stats.moodDistribution.slice(0, 3).map((item) => (
                 <div key={item.mood} className="space-y-2">
-                  <div className="flex justify-between text-xs text-[#6B7280] font-serif italic">
+                  <div className="flex justify-between text-xs text-[#6B7280] dark:text-gray-400 font-serif italic">
                     <span>{item.mood}</span>
                     <span>{item.percentage}%</span>
                   </div>
-                  <div className="h-1.5 w-full bg-gray-50 rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-gray-50 dark:bg-[#262626] rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       whileInView={{ width: `${item.percentage}%` }}
@@ -96,15 +96,15 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
             </div>
           </div>
 
-          <div className="pt-6 border-t border-gray-50">
+          <div className="pt-6 border-t border-gray-50 dark:border-[#2E2E2E]">
             <span className="text-[10px] uppercase tracking-widest text-[#6366F1] font-sans block mb-3">Habit Summary</span>
-            <p className="text-[#111827] font-serif text-lg leading-relaxed italic">
+            <p className="text-[#111827] dark:text-[#F9FAFB] font-serif text-lg leading-relaxed italic">
               You&apos;ve shared {stats.recentCount} reflections this month, averaging {stats.entriesPerWeek} entries per week. Your consistency is a quiet strength.
             </p>
           </div>
         </div>
 
-        <div className="bg-indigo-50/20 p-10 rounded-[3rem] border border-indigo-100/30 flex flex-col justify-between shadow-sm">
+        <div className="bg-indigo-50/20 dark:bg-indigo-900/5 p-10 rounded-[3rem] border border-indigo-100/30 dark:border-indigo-800/20 flex flex-col justify-between shadow-sm transition-colors duration-300">
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-[#6366F1]">
               <Activity className="w-4 h-4" />
@@ -120,16 +120,16 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
                   exit={{ opacity: 0 }}
                   className="space-y-3 py-4"
                 >
-                  <div className="h-4 bg-indigo-100/50 rounded animate-pulse w-full" />
-                  <div className="h-4 bg-indigo-100/50 rounded animate-pulse w-5/6" />
-                  <div className="h-4 bg-indigo-100/50 rounded animate-pulse w-4/6" />
+                  <div className="h-4 bg-indigo-100/50 dark:bg-indigo-900/20 rounded animate-pulse w-full" />
+                  <div className="h-4 bg-indigo-100/50 dark:bg-indigo-900/20 rounded animate-pulse w-5/6" />
+                  <div className="h-4 bg-indigo-100/50 dark:bg-indigo-900/20 rounded animate-pulse w-4/6" />
                 </motion.div>
               ) : growthInsight ? (
                 <motion.p 
                   key="insight"
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-[#111827] font-serif text-lg leading-relaxed italic"
+                  className="text-[#111827] dark:text-[#F9FAFB] font-serif text-lg leading-relaxed italic"
                 >
                   &ldquo;{growthInsight}&rdquo;
                 </motion.p>

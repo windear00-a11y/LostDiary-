@@ -52,11 +52,11 @@ export default function ConsistencyTracker({ entries }: ConsistencyTrackerProps)
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-12 mb-8 p-8 bg-white rounded-[2.5rem] border border-gray-100 shadow-sm"
+      className="mt-12 mb-8 p-8 bg-white dark:bg-[#1A1A1A] rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300"
     >
       <div className="flex flex-col gap-6">
         <div className="space-y-1">
-          <p className="text-[#111827] font-serif text-lg italic">
+          <p className="text-[#111827] dark:text-[#F9FAFB] font-serif text-lg italic">
             {stats.last7DaysCount === 0 
               ? "Write whenever you feel like. I'm here."
               : `You showed up ${stats.last7DaysCount} ${stats.last7DaysCount === 1 ? 'time' : 'times'} this week.`}
@@ -73,8 +73,8 @@ export default function ConsistencyTracker({ entries }: ConsistencyTrackerProps)
               title={dot.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
               className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${
                 dot.hasEntry 
-                  ? 'bg-[#6366F1] scale-110 shadow-sm shadow-indigo-100' 
-                  : 'bg-gray-100'
+                  ? 'bg-[#6366F1] scale-110 shadow-sm shadow-indigo-100 dark:shadow-none' 
+                  : 'bg-gray-100 dark:bg-[#262626]'
               }`}
             />
           ))}

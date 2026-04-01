@@ -139,26 +139,28 @@ export default function AppDashboard() {
           
           <button 
             onClick={() => router.push('/updates')}
-            className="relative p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+            className="relative p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] rounded-full transition-colors"
             title="Updates"
+            aria-label="Updates"
           >
             <Bell className="w-5 h-5" />
             {hasNewUpdates && (
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-[#0A0A0A] animate-pulse"></span>
             )}
           </button>
 
           <button 
             onClick={() => setIsSettingsOpen(true)}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors"
+            className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] rounded-full transition-colors"
             title={t('profile.accountSettings', 'Settings')}
+            aria-label={t('profile.accountSettings', 'Settings')}
           >
             <Settings className="w-5 h-5" />
           </button>
 
           <button 
             onClick={() => router.push('/profile')}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-50 dark:bg-[#1A1A1A] hover:bg-gray-100 dark:hover:bg-[#262626] border border-gray-200 dark:border-[#2E2E2E] rounded-full text-sm font-medium text-gray-700 dark:text-gray-300 transition-colors"
           >
             <User className="w-4 h-4" />
             <span className="hidden sm:inline">{t('nav.profile', 'Profile')}</span>
@@ -166,8 +168,9 @@ export default function AppDashboard() {
 
           <button 
             onClick={signOut}
-            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+            className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-full transition-colors"
             title={t('dash.logout', 'Logout')}
+            aria-label={t('dash.logout', 'Logout')}
           >
             <LogOut className="w-5 h-5" />
           </button>
@@ -177,10 +180,10 @@ export default function AppDashboard() {
       {/* Main Content Area */}
       <main className="max-w-2xl mx-auto px-4 sm:px-6 py-12 space-y-12">
         <div className="text-center space-y-4 pt-10">
-          <h1 className="text-4xl font-serif italic text-gray-900">
+          <h1 className="text-4xl font-serif italic text-gray-900 dark:text-[#F9FAFB]">
             {t('dash.hello', 'Hello')}, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
           </h1>
-          <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             {t('dash.howAreYou', 'How are you feeling today?')}
           </p>
         </div>

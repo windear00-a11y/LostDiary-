@@ -287,3 +287,41 @@ ${last30Days}` }] }],
     throw error;
   }
 }
+
+export async function checkSpelling(text: string) {
+  if (!text || text.length < 10) return null;
+  try {
+    const ai = getGenAI();
+    const prompt = `Check the following diary entry for spelling and grammar errors. 
+    If there are significant errors, provide a corrected version. 
+    If the text is mostly correct, return hasErrors: false.
+    Focus on obvious typos and clear grammatical mistakes.
+    Preserve the original tone and style.
+    
+    Text: "${text}"`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: "You are a helpful writing assistant. Your goal is to identify clear spelling and grammar errors in diary entries. Always respond in JSON format.",
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            hasErrors: { type: Type.BOOLEAN },
+            suggestion: { type: Type.STRING },
+            explanation: { type: Type.STRING }
+          },
+          required: ["hasErrors", "suggestion", "explanation"]
+        }
+      },
+    });
+    
+    const result = JSON.parse(response.text || '{"hasErrors": false}');
+    return result.hasErrors ? result : null;
+  } catch (error) {
+    console.error('Spelling check error:', error);
+    return null;
+  }
+}
