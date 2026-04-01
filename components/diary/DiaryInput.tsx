@@ -25,12 +25,10 @@ export function DiaryInput({
   const [isCheckingSpelling, setIsCheckingSpelling] = useState(false);
   const [isQuery, setIsQuery] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState<any>(null);
 
-  const toggleListening = useCallback(() => {
-    if (isListening) {
-      setIsListening(false);
-      return;
-    }
+  const startListening = useCallback(() => {
+    if (isListening) return;
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -38,40 +36,52 @@ export function DiaryInput({
       return;
     }
 
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = 'en-US'; // Default, but it often picks up Hindi/Hinglish too
+    const rec = new SpeechRecognition();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = 'en-US';
 
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onresult = (event: any) => {
-      let interimTranscript = '';
+    rec.onstart = () => setIsListening(true);
+    rec.onend = () => setIsListening(false);
+    rec.onresult = (event: any) => {
       let finalTranscript = '';
-
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
           finalTranscript += event.results[i][0].transcript;
-        } else {
-          interimTranscript += event.results[i][0].transcript;
         }
       }
-
       if (finalTranscript) {
         setNewEntry((prev: string) => prev + (prev.length > 0 ? ' ' : '') + finalTranscript);
       }
     };
 
-    recognition.start();
-
-    // Stop after 30 seconds of silence or manual stop
-    const stopListening = () => {
-      recognition.stop();
-      setIsListening(false);
-    };
-
-    if (isListening) stopListening();
+    try {
+      rec.start();
+      setRecognition(rec);
+    } catch (e) {
+      console.error("Failed to start recognition:", e);
+    }
   }, [isListening, setNewEntry]);
+
+  const stopListening = useCallback(() => {
+    if (recognition) {
+      try {
+        recognition.stop();
+      } catch (e) {
+        // Ignore errors if already stopped
+      }
+      setRecognition(null);
+    }
+    setIsListening(false);
+  }, [recognition]);
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  }, [isListening, startListening, stopListening]);
 
   useEffect(() => {
     const queryPatterns = [
@@ -134,13 +144,13 @@ export function DiaryInput({
               </button>
             ))}
           </div>
-          <div className="relative">
+          <div className="relative group/input">
             <textarea
               ref={textareaRef}
               value={newEntry}
               onChange={(e) => setNewEntry(e.target.value)}
               placeholder={t('dash.placeholder')}
-              className="w-full min-h-[200px] p-6 bg-gray-50 dark:bg-[#262626] border-none rounded-[2rem] text-base focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all outline-none resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600 text-[#111827] dark:text-[#F9FAFB]"
+              className="w-full min-h-[240px] pt-6 px-6 pb-20 bg-gray-50 dark:bg-[#262626] border-none rounded-[2.5rem] text-base focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all outline-none resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600 text-[#111827] dark:text-[#F9FAFB]"
             />
             
             <AnimatePresence>
@@ -181,28 +191,64 @@ export function DiaryInput({
               )}
             </AnimatePresence>
 
-            <div className="absolute bottom-6 left-6 flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-red-500 animate-ping' : newEntry.length > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} />
-              <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400">
-                {isListening ? "Listening..." : newEntry.length > 0 ? t('dash.writingMood') : t('dash.readyToListen')}
-              </span>
-            </div>
-            <div className="absolute bottom-6 right-6 flex items-center gap-4">
-              <button
-                type="button"
-                onClick={toggleListening}
-                className={`p-3 rounded-full transition-all active:scale-90 ${
-                  isListening 
-                    ? 'bg-red-100 text-red-600 animate-pulse' 
-                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
-                }`}
-                title={isListening ? "Stop listening" : "Start voice entry"}
-              >
-                {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-              </button>
-              <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400">
-                {newEntry.length} {t('dash.chars')}
-              </span>
+            {/* Integrated Action Bar */}
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
+              {/* Left side: Status */}
+              <div className="flex items-center gap-2 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 pointer-events-auto shadow-sm">
+                <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-red-500 animate-ping' : newEntry.length > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} />
+                <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500 dark:text-gray-400">
+                  {isListening ? "Listening..." : newEntry.length > 0 ? t('dash.writingMood') : t('dash.readyToListen')}
+                </span>
+              </div>
+
+              {/* Right side: Mic & Chars */}
+              <div className="flex items-center gap-3 pointer-events-auto">
+                <span className="hidden sm:block text-[10px] uppercase tracking-widest font-bold text-gray-400 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 shadow-sm">
+                  {newEntry.length} {t('dash.chars')}
+                </span>
+                <motion.button
+                  type="button"
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    startListening();
+                  }}
+                  onPointerUp={(e) => {
+                    e.preventDefault();
+                    stopListening();
+                  }}
+                  onPointerLeave={(e) => {
+                    e.preventDefault();
+                    stopListening();
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    // Toggle for accessibility/tap users
+                    toggleListening();
+                  }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  animate={isListening ? {
+                    scale: [1, 1.1, 1],
+                    boxShadow: [
+                      "0 0 0 0px rgba(239, 68, 68, 0.4)",
+                      "0 0 0 15px rgba(239, 68, 68, 0)",
+                      "0 0 0 0px rgba(239, 68, 68, 0)"
+                    ]
+                  } : {}}
+                  transition={isListening ? {
+                    scale: { repeat: Infinity, duration: 1 },
+                    boxShadow: { repeat: Infinity, duration: 1.5 }
+                  } : {}}
+                  className={`p-4 rounded-full transition-all shadow-lg ${
+                    isListening 
+                      ? 'bg-red-500 text-white' 
+                      : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-500/20'
+                  }`}
+                  title={isListening ? "Stop listening" : "Hold to record"}
+                >
+                  {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                </motion.button>
+              </div>
             </div>
           </div>
         </div>
