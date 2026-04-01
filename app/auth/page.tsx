@@ -24,6 +24,8 @@ function AuthForm() {
     const error = searchParams.get('error');
     if (error === 'auth-code-error') {
       setMessage({ type: 'error', text: 'Authentication failed. Please try again or use a different method.' });
+    } else if (error === 'auth-code-missing') {
+      // Ignore this error as it's not critical
     } else if (error) {
       setMessage({ type: 'error', text: error });
     }

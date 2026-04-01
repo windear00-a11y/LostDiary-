@@ -1,11 +1,5 @@
 [
   {
-    "hash": "dbc7e24350c2db2165fcb97f00f506a74450c8c6",
-    "message": "feat: Refactor auth and app navigation",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-01T12:50:00+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
