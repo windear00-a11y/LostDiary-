@@ -86,17 +86,17 @@ export function SettingsModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-[#111827]/20 backdrop-blur-sm"
+            className="absolute inset-0 bg-[#111827]/20 dark:bg-black/40 backdrop-blur-sm"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-md bg-white p-8 rounded-[2rem] shadow-2xl border border-gray-100 space-y-6"
+            className="relative w-full max-w-md bg-white dark:bg-[#1A1A1A] p-8 rounded-[2rem] shadow-2xl border border-gray-100 dark:border-[#2E2E2E] space-y-6"
           >
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-serif italic text-[#111827]">Settings</h2>
-              <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-50">
+              <h2 className="text-2xl font-serif italic text-[#111827] dark:text-[#F9FAFB]">Settings</h2>
+              <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-full hover:bg-gray-50 dark:hover:bg-[#262626]">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -108,16 +108,16 @@ export function SettingsModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">Dark Mode</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-[#D1D5DB]">Dark Mode</label>
                   <button
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    className={`w-12 h-6 rounded-full transition-colors ${theme === 'dark' ? 'bg-indigo-500' : 'bg-gray-200'}`}
+                    className={`w-12 h-6 rounded-full transition-colors ${theme === 'dark' ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-gray-800'}`}
                   >
                     <div className={`w-4 h-4 bg-white rounded-full transition-transform ${theme === 'dark' ? 'translate-x-7' : 'translate-x-1'}`} />
                   </button>
                 </div>
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700">Hinglish Mode</label>
+                  <label className="text-sm font-medium text-gray-700 dark:text-[#D1D5DB]">Hinglish Mode</label>
                   <button
                     onClick={() => {
                       const newLang = i18n.language === 'hinglish' ? 'en' : 'hinglish';
@@ -125,43 +125,43 @@ export function SettingsModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                       localStorage.setItem('app_language', newLang);
                       setResponseLanguage(newLang);
                     }}
-                    className={`w-12 h-6 rounded-full transition-colors ${i18n.language === 'hinglish' ? 'bg-indigo-500' : 'bg-gray-200'}`}
+                    className={`w-12 h-6 rounded-full transition-colors ${i18n.language === 'hinglish' ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-gray-800'}`}
                   >
                     <div className={`w-4 h-4 bg-white rounded-full transition-transform ${i18n.language === 'hinglish' ? 'translate-x-7' : 'translate-x-1'}`} />
                   </button>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">Understand language</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[#D1D5DB]">Understand language</label>
                   <select
                     value={understandLanguage}
                     onChange={(e) => setUnderstandLanguage(e.target.value)}
-                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none"
+                    className="w-full p-3 bg-gray-50 dark:bg-[#262626] border border-gray-200 dark:border-[#333333] rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 text-[#111827] dark:text-[#F9FAFB] outline-none"
                   >
                     <option value="auto">Auto (Detect from input)</option>
                     <option value="manual">Manual (Same as Response language)</option>
                   </select>
-                  <p className="text-xs text-gray-500">How the AI should interpret your diary entries.</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">How the AI should interpret your diary entries.</p>
                 </div>
 
                 <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">Response language</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[#D1D5DB]">Response language</label>
                   <select
                     value={responseLanguage}
                     onChange={(e) => setResponseLanguage(e.target.value)}
-                    className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none"
+                    className="w-full p-3 bg-gray-50 dark:bg-[#262626] border border-gray-200 dark:border-[#333333] rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 text-[#111827] dark:text-[#F9FAFB] outline-none"
                   >
                     {languages.map(lang => (
                       <option key={lang.code} value={lang.code}>{lang.label}</option>
                     ))}
                   </select>
-                  <p className="text-xs text-gray-500">The language the AI will use to reply to you.</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">The language the AI will use to reply to you.</p>
                 </div>
 
                 <button
                   onClick={saveSettings}
                   disabled={isSaving}
-                  className="w-full bg-[#111827] text-white py-3 rounded-xl font-medium hover:bg-[#1f2937] transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="w-full bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] py-3 rounded-xl font-medium hover:bg-[#1f2937] dark:hover:bg-white transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                 >
                   {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   Save Settings

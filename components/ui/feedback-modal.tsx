@@ -54,39 +54,43 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-[#111827]/20 backdrop-blur-sm"
+            className="absolute inset-0 bg-[#111827]/20 dark:bg-black/40 backdrop-blur-sm"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="relative w-full max-w-sm bg-white p-8 rounded-[2.5rem] shadow-2xl border border-gray-100 space-y-6"
+            className="relative w-full max-w-sm bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-[#2E2E2E] space-y-6"
           >
             {isSuccess ? (
               <div className="text-center py-8">
-                <p className="text-xl font-serif italic">{t('feedback.success')}</p>
+                <p className="text-xl font-serif italic text-[#111827] dark:text-[#F9FAFB]">{t('feedback.success')}</p>
               </div>
             ) : (
               <>
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-serif italic text-[#111827]">{t('feedback.title')}</h2>
-                  <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full">
-                    <X className="w-5 h-5 text-gray-400" />
+                  <h2 className="text-xl font-serif italic text-[#111827] dark:text-[#F9FAFB]">{t('feedback.title')}</h2>
+                  <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-[#262626] rounded-full">
+                    <X className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                   </button>
                 </div>
                 <div className="flex gap-4">
                   <button
                     onClick={() => setRating('loved')}
-                    className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border ${
-                      rating === 'loved' ? 'bg-indigo-50 border-indigo-200' : 'border-gray-100'
+                    className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border transition-colors ${
+                      rating === 'loved' 
+                        ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800/50' 
+                        : 'border-gray-100 dark:border-[#2E2E2E] bg-white dark:bg-[#1A1A1A]'
                     }`}
                   >
                     <ThumbsUp className="w-5 h-5 text-green-500" />
                   </button>
                   <button
                     onClick={() => setRating('improvement')}
-                    className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border ${
-                      rating === 'improvement' ? 'bg-indigo-50 border-indigo-200' : 'border-gray-100'
+                    className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border transition-colors ${
+                      rating === 'improvement' 
+                        ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800/50' 
+                        : 'border-gray-100 dark:border-[#2E2E2E] bg-white dark:bg-[#1A1A1A]'
                     }`}
                   >
                     <ThumbsDown className="w-5 h-5 text-red-500" />
@@ -96,13 +100,13 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   placeholder={t('feedback.placeholder')}
-                  className="w-full p-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-100 transition-all outline-none resize-none"
+                  className="w-full p-4 bg-gray-50 dark:bg-[#262626] border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 text-[#111827] dark:text-[#F9FAFB] transition-all outline-none resize-none"
                   rows={4}
                 />
                 <button
                   onClick={handleSubmit}
                   disabled={!rating || isSubmitting}
-                  className="w-full bg-[#111827] text-white py-4 rounded-2xl font-medium hover:bg-[#1f2937] transition-all disabled:opacity-50"
+                  className="w-full bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] py-4 rounded-2xl font-medium hover:bg-[#1f2937] dark:hover:bg-white transition-all disabled:opacity-50"
                 >
                   {t('feedback.submit')}
                 </button>

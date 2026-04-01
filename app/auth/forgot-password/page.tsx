@@ -32,7 +32,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-4">
+    <main className="min-h-screen bg-[#F9FAFB] dark:bg-[#0A0A0A] flex flex-col items-center justify-center p-4 transition-colors duration-300">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -40,37 +40,37 @@ export default function ForgotPasswordPage() {
       >
         <button 
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 text-sm text-[#6B7280] hover:text-[#111827]"
+          className="inline-flex items-center gap-2 text-sm text-[#6B7280] dark:text-gray-400 hover:text-[#111827] dark:hover:text-[#F9FAFB]"
         >
           <ArrowLeft className="w-4 h-4" />
           Back
         </button>
 
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 space-y-6">
-          <h1 className="text-2xl font-serif italic text-center">Reset Password</h1>
+        <div className="bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] shadow-xl dark:shadow-none border border-gray-100 dark:border-[#2E2E2E] space-y-6">
+          <h1 className="text-2xl font-serif italic text-center text-[#111827] dark:text-[#F9FAFB]">Reset Password</h1>
           <form onSubmit={handleReset} className="space-y-4">
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF] dark:text-gray-500" />
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none"
+                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-[#262626] border-none rounded-2xl text-sm text-[#111827] dark:text-[#F9FAFB] focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 outline-none"
               />
             </div>
             <button
               type="submit"
               disabled={isSubmitting || !email}
-              className="w-full bg-[#111827] text-white py-4 rounded-2xl font-medium hover:bg-[#1f2937] disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] py-4 rounded-2xl font-medium hover:bg-[#1f2937] dark:hover:bg-white disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Send Reset Link'}
             </button>
           </form>
 
           {message && (
-            <div className={`p-4 rounded-xl text-sm ${message.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+            <div className={`p-4 rounded-xl text-sm ${message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
               {message.type === 'error' && <AlertCircle className="w-4 h-4 inline mr-2" />}
               {message.text}
             </div>

@@ -7,6 +7,7 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { FeedbackButton } from '@/components/ui/feedback-button';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
@@ -22,22 +23,23 @@ export default function LandingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB] text-[#111827] overflow-hidden relative">
+    <main className="min-h-screen bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] overflow-hidden relative transition-colors duration-300">
       {/* Soft Background Gradient */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50 rounded-full blur-[120px] opacity-60" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-yellow-50 rounded-full blur-[120px] opacity-60" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-[120px] opacity-60" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-yellow-50 dark:bg-yellow-900/10 rounded-full blur-[120px] opacity-60" />
       </div>
 
       {/* Navbar */}
       <nav className="relative z-10 max-w-7xl mx-auto px-8 py-8 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm border border-gray-100">
+          <div className="w-8 h-8 bg-white dark:bg-[#1A1A1A] rounded-xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-[#2E2E2E]">
             <Book className="w-4 h-4 text-[#6366F1]" />
           </div>
-          <span className="text-xl font-serif italic tracking-tight text-[#111827]">WinDear</span>
+          <span className="text-xl font-serif italic tracking-tight text-[#111827] dark:text-[#F9FAFB]">WinDear</span>
         </div>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 sm:gap-6">
+          <ThemeToggle />
           <LanguageSwitcher />
           {user && (
             <button 
@@ -65,10 +67,10 @@ export default function LandingPage() {
           className="space-y-8"
         >
           <div className="space-y-6">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[#111827] leading-[1.1]">
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[#111827] dark:text-[#F9FAFB] leading-[1.1]">
               {t('hero.mainTitle')}
             </h1>
-            <p className="text-xl md:text-2xl text-[#6B7280] leading-relaxed max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed max-w-2xl mx-auto">
               {t('hero.mainSubtitle')}
             </p>
           </div>
@@ -76,7 +78,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
             <button 
               onClick={handleCTA}
-              className="w-full sm:w-auto bg-[#111827] text-white px-10 py-5 rounded-2xl text-lg font-semibold hover:bg-[#1f2937] transition-all shadow-xl shadow-indigo-200 active:scale-95"
+              className="w-full sm:w-auto bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] px-10 py-5 rounded-2xl text-lg font-semibold hover:bg-[#1f2937] dark:hover:bg-white transition-all shadow-xl shadow-indigo-200 dark:shadow-none active:scale-95"
             >
               {t('hero.startWriting')}
             </button>
@@ -85,7 +87,7 @@ export default function LandingPage() {
                 const element = document.getElementById('how-it-works');
                 element?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="w-full sm:w-auto bg-white text-[#111827] px-10 py-5 rounded-2xl text-lg font-semibold border border-gray-200 hover:bg-gray-50 transition-all active:scale-95"
+              className="w-full sm:w-auto bg-white dark:bg-transparent text-[#111827] dark:text-[#F9FAFB] px-10 py-5 rounded-2xl text-lg font-semibold border border-gray-200 dark:border-[#2E2E2E] hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-all active:scale-95"
             >
               {t('hero.viewDemo')}
             </button>

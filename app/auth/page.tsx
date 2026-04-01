@@ -62,11 +62,11 @@ function AuthForm() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-4 sm:p-6 pt-safe pb-safe relative overflow-hidden">
+    <main className="min-h-screen bg-[#F9FAFB] dark:bg-[#0A0A0A] flex flex-col items-center justify-center p-4 sm:p-6 pt-safe pb-safe relative overflow-hidden transition-colors duration-300">
       {/* Background Gradients */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50 rounded-full blur-[120px] opacity-60" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-yellow-50 rounded-full blur-[120px] opacity-60" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-[120px] opacity-60" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-yellow-50 dark:bg-yellow-900/10 rounded-full blur-[120px] opacity-60" />
       </div>
 
       <motion.div 
@@ -77,33 +77,33 @@ function AuthForm() {
         <div className="text-center space-y-6">
           <button 
             onClick={() => router.push('/')}
-            className="inline-flex items-center gap-2 text-sm text-[#6B7280] hover:text-[#111827] transition-colors group"
+            className="inline-flex items-center gap-2 text-sm text-[#6B7280] dark:text-gray-400 hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             {t('auth.back')}
           </button>
           
           <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-gray-100">
+            <div className="w-12 h-12 bg-white dark:bg-[#1A1A1A] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-[#2E2E2E]">
               <Book className="w-6 h-6 text-[#6366F1]" />
             </div>
-            <h1 className="text-3xl font-serif italic tracking-tight text-[#111827]">
+            <h1 className="text-3xl font-serif italic tracking-tight text-[#111827] dark:text-[#F9FAFB]">
               {isSignUp ? 'Create Account' : t('auth.welcome')}
             </h1>
           </div>
         </div>
 
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-xl shadow-indigo-100/20 border border-gray-100 space-y-6">
+        <div className="bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] shadow-xl shadow-indigo-100/20 dark:shadow-none border border-gray-100 dark:border-[#2E2E2E] space-y-6">
           <form onSubmit={handleAuth} className="space-y-4">
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF]" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF] dark:text-gray-500" />
               <input
                 type="email"
                 placeholder={t('auth.emailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full pl-12 pr-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-[#262626] border-none rounded-2xl text-sm text-[#111827] dark:text-[#F9FAFB] focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all outline-none"
               />
             </div>
             <div className="relative">
@@ -113,14 +113,14 @@ function AuthForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-100 transition-all outline-none"
+                className="w-full px-4 py-4 bg-gray-50 dark:bg-[#262626] border-none rounded-2xl text-sm text-[#111827] dark:text-[#F9FAFB] focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all outline-none"
               />
             </div>
             {!isSignUp && (
               <button
                 type="button"
                 onClick={() => router.push('/auth/forgot-password')}
-                className="text-sm text-[#6366F1] hover:text-[#4F46E5] w-full text-right"
+                className="text-sm text-[#6366F1] dark:text-indigo-400 hover:text-[#4F46E5] dark:hover:text-indigo-300 w-full text-right"
               >
                 Forgot password?
               </button>
@@ -128,7 +128,7 @@ function AuthForm() {
             <button
               type="submit"
               disabled={isSubmitting || loading || !email || !password}
-              className="w-full bg-[#111827] text-white py-4 rounded-2xl font-medium hover:bg-[#1f2937] transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] py-4 rounded-2xl font-medium hover:bg-[#1f2937] dark:hover:bg-white transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -141,7 +141,7 @@ function AuthForm() {
 
           <button
             onClick={() => setIsSignUp(!isSignUp)}
-            className="w-full text-center text-sm text-[#6B7280] hover:text-[#111827]"
+            className="w-full text-center text-sm text-[#6B7280] dark:text-gray-400 hover:text-[#111827] dark:hover:text-[#F9FAFB]"
           >
             {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
           </button>
@@ -155,7 +155,7 @@ function AuthForm() {
                 className="overflow-hidden"
               >
                 <div className={`flex items-center gap-3 text-sm p-4 rounded-xl ${
-                  message.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'
+                  message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
                 }`}>
                   {message.type === 'error' && <AlertCircle className="w-4 h-4 shrink-0" />}
                   <span className="flex-1">{message.text}</span>
@@ -171,7 +171,7 @@ function AuthForm() {
 
 export default function AuthPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] dark:bg-[#0A0A0A]"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>}>
       <AuthForm />
     </Suspense>
   );

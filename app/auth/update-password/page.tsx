@@ -33,14 +33,14 @@ export default function UpdatePasswordPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-4">
+    <main className="min-h-screen bg-[#F9FAFB] dark:bg-[#0A0A0A] flex flex-col items-center justify-center p-4 transition-colors duration-300">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md space-y-8"
       >
-        <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-gray-100 space-y-6">
-          <h1 className="text-2xl font-serif italic text-center">Update Password</h1>
+        <div className="bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] shadow-xl dark:shadow-none border border-gray-100 dark:border-[#2E2E2E] space-y-6">
+          <h1 className="text-2xl font-serif italic text-center text-[#111827] dark:text-[#F9FAFB]">Update Password</h1>
           <form onSubmit={handleUpdate} className="space-y-4">
             <div className="relative">
               <input
@@ -49,20 +49,20 @@ export default function UpdatePasswordPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-4 bg-gray-50 border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-100 outline-none"
+                className="w-full px-4 py-4 bg-gray-50 dark:bg-[#262626] border-none rounded-2xl text-sm text-[#111827] dark:text-[#F9FAFB] focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 outline-none"
               />
             </div>
             <button
               type="submit"
               disabled={isSubmitting || !password}
-              className="w-full bg-[#111827] text-white py-4 rounded-2xl font-medium hover:bg-[#1f2937] disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] py-4 rounded-2xl font-medium hover:bg-[#1f2937] dark:hover:bg-white disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Password'}
             </button>
           </form>
 
           {message && (
-            <div className={`p-4 rounded-xl text-sm ${message.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+            <div className={`p-4 rounded-xl text-sm ${message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'}`}>
               {message.type === 'error' && <AlertCircle className="w-4 h-4 inline mr-2" />}
               {message.text}
             </div>

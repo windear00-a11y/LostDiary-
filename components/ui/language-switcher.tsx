@@ -46,7 +46,7 @@ export function LanguageSwitcher() {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-1.5 text-[#6B7280] hover:text-[#111827] transition-all rounded-full hover:bg-gray-100 border border-transparent hover:border-gray-200"
+        className="flex items-center gap-2 px-3 py-1.5 text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-all rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A1A] border border-transparent hover:border-gray-200 dark:hover:border-[#2E2E2E]"
         title="Change Language"
       >
         <Globe className="w-4 h-4" />
@@ -56,7 +56,7 @@ export function LanguageSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-xl border border-gray-100 dark:border-[#2E2E2E] py-2 z-50 overflow-hidden">
           {languages.map((lang) => (
             <button
               key={lang.code}
@@ -66,8 +66,8 @@ export function LanguageSwitcher() {
               }}
               className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                 language === lang.code
-                  ? 'bg-indigo-50 text-[#6366F1] font-medium'
-                  : 'text-[#374151] hover:bg-gray-50'
+                  ? 'bg-indigo-50 dark:bg-indigo-900/20 text-[#6366F1] font-medium'
+                  : 'text-[#374151] dark:text-[#D1D5DB] hover:bg-gray-50 dark:hover:bg-[#262626]'
               }`}
             >
               <div className="flex items-center justify-between">

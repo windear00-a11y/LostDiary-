@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { Book, User, LogOut, Settings, Bell } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { SettingsModal } from '@/components/settings/settings-modal';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useUpdates } from '@/hooks/use-updates';
@@ -86,7 +87,6 @@ export default function AppDashboard() {
             mood: aiResult?.mood || 'Neutral',
             insight: aiResult?.insight || '',
             suggestion: aiResult?.suggestion || '',
-            summary: aiResult?.summary || '',
             translated_content: aiResult?.translated_content || null,
             normalized_content: aiResult?.normalized_content || null
           }
@@ -123,17 +123,18 @@ export default function AppDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#111827] pt-safe pb-safe">
+    <div className="min-h-screen bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] pt-safe pb-safe transition-colors duration-300">
       {/* Navbar */}
-      <nav className="bg-white border-b border-gray-100 px-4 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+      <nav className="bg-white dark:bg-[#0A0A0A]/80 dark:backdrop-blur-md border-b border-gray-100 dark:border-[#1A1A1A] px-4 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-50">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
-          <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center shadow-sm border border-indigo-100">
+          <div className="w-8 h-8 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl flex items-center justify-center shadow-sm border border-indigo-100 dark:border-indigo-800/30">
             <Book className="w-4 h-4 text-[#6366F1]" />
           </div>
-          <span className="text-xl font-serif italic tracking-tight text-[#111827]">WinDear</span>
+          <span className="text-xl font-serif italic tracking-tight text-[#111827] dark:text-[#F9FAFB]">WinDear</span>
         </div>
         
         <div className="flex items-center gap-2 sm:gap-4">
+          <ThemeToggle />
           <LanguageSwitcher />
           
           <button 
