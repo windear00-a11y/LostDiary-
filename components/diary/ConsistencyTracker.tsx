@@ -71,6 +71,7 @@ export default function ConsistencyTracker({ entries }: ConsistencyTrackerProps)
             <div 
               key={i}
               title={dot.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+              aria-label={`${dot.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}: ${dot.hasEntry ? 'Entry written' : 'No entry'}`}
               className={`w-2.5 h-2.5 rounded-full transition-all duration-500 ${
                 dot.hasEntry 
                   ? 'bg-[#6366F1] scale-110 shadow-sm shadow-indigo-100 dark:shadow-none' 

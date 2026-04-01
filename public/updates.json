@@ -1,17 +1,5 @@
 [
   {
-    "hash": "92d9e3a3a7a8ab7239db1a90a3953e6dd11bec92",
-    "message": "Merge pull request #4 from windear00-a11y/vercel/install-vercel-web-analytics-569yb5",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-02T00:11:30+05:30"
-  },
-  {
-    "hash": "f759379481af9ceae75857731c773f38a8f79cd9",
-    "message": "feat: Enhance UX and build config",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-02T00:09:56+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

@@ -6,7 +6,6 @@ import { useTranslation } from 'react-i18next';
 import { Book, User, LogOut, Settings, Bell } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { SettingsModal } from '@/components/settings/settings-modal';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useUpdates } from '@/hooks/use-updates';
 import { createClient } from '@/lib/supabase';
@@ -24,7 +23,6 @@ export default function AppDashboard() {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const { t, i18n } = useTranslation();
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { hasNewUpdates } = useUpdates({ autoRefreshInterval: 5 * 60 * 1000 });
   let supabase;
   try {
@@ -208,8 +206,6 @@ export default function AppDashboard() {
           )}
         </div>
       </div>
-
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </AppLayout>
   );
 }

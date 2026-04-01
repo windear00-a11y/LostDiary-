@@ -47,10 +47,10 @@ export default function WeeklyReflection({ entries }: WeeklyReflectionProps) {
   if (!canReflect && !reflection) return null;
 
   return (
-    <section className="mt-16 pt-16 border-t border-gray-100 dark:border-[#1A1A1A]">
+    <section className="mt-16 pt-16 border-t border-gray-100 dark:border-[#1A1A1A] min-h-[400px]">
       <div className="flex items-center justify-between mb-8 px-4">
         <div className="flex items-center gap-3">
-          <div className="w-1.5 h-1.5 bg-[#6366F1] rounded-full" />
+          <div className="w-1.5 h-1.5 bg-[#6366F1] rounded-full" aria-hidden="true" />
           <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-[#6B7280] dark:text-gray-500">
             Weekly Reflection
           </h2>
@@ -59,18 +59,20 @@ export default function WeeklyReflection({ entries }: WeeklyReflectionProps) {
         {!reflection && !loading && (
           <button 
             onClick={generateReflection}
+            aria-label="Generate Weekly Reflection"
             className="text-[10px] uppercase tracking-[0.2em] text-[#6366F1] hover:text-indigo-600 transition-colors flex items-center gap-2"
           >
-            Generate <Sparkles className="w-3 h-3" />
+            Generate <Sparkles className="w-3 h-3" aria-hidden="true" />
           </button>
         )}
 
         {reflection && !loading && (
           <button 
             onClick={generateReflection}
+            aria-label="Refresh Weekly Reflection"
             className="text-[10px] uppercase tracking-[0.2em] text-[#6366F1] hover:text-indigo-600 transition-colors flex items-center gap-2"
           >
-            Refresh <RefreshCw className="w-3 h-3" />
+            Refresh <RefreshCw className="w-3 h-3" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -82,9 +84,9 @@ export default function WeeklyReflection({ entries }: WeeklyReflectionProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="bg-indigo-50/20 dark:bg-indigo-900/5 p-12 rounded-[3rem] border border-indigo-100/30 dark:border-indigo-800/20 flex flex-col items-center justify-center space-y-4"
+            className="bg-indigo-50/20 dark:bg-indigo-900/5 p-12 rounded-[3rem] border border-indigo-100/30 dark:border-indigo-800/20 flex flex-col items-center justify-center space-y-4 min-h-[300px]"
           >
-            <div className="w-10 h-10 border-2 border-indigo-100 dark:border-indigo-900/30 border-t-[#6366F1] rounded-full animate-spin" />
+            <div className="w-10 h-10 border-2 border-indigo-100 dark:border-indigo-900/30 border-t-[#6366F1] rounded-full animate-spin" aria-hidden="true" />
             <p className="text-[#6366F1] font-serif italic">Analyzing your week...</p>
           </motion.div>
         ) : reflection ? (
@@ -92,7 +94,7 @@ export default function WeeklyReflection({ entries }: WeeklyReflectionProps) {
             key="content"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-indigo-50/10 dark:bg-indigo-900/5 p-10 md:p-16 rounded-[3rem] border border-indigo-100/20 dark:border-indigo-800/20 shadow-sm space-y-12"
+            className="bg-indigo-50/10 dark:bg-indigo-900/5 p-10 md:p-16 rounded-[3rem] border border-indigo-100/20 dark:border-indigo-800/20 shadow-sm space-y-12 min-h-[300px]"
           >
             <div className="space-y-4 text-center max-w-2xl mx-auto">
               <span className="text-[10px] uppercase tracking-[0.4em] text-[#6366F1] font-bold">The Week&apos;s Trend</span>
@@ -104,7 +106,7 @@ export default function WeeklyReflection({ entries }: WeeklyReflectionProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-indigo-100/30 dark:border-indigo-800/20">
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" />
+                  <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" aria-hidden="true" />
                   <span className="text-[10px] uppercase tracking-[0.3em] text-[#6366F1] font-bold">Observed Pattern</span>
                 </div>
                 <p className="text-[#111827] dark:text-[#F9FAFB] font-serif text-xl leading-relaxed">
@@ -114,7 +116,7 @@ export default function WeeklyReflection({ entries }: WeeklyReflectionProps) {
 
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" />
+                  <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" aria-hidden="true" />
                   <span className="text-[10px] uppercase tracking-[0.3em] text-[#6366F1] font-bold">A Gentle Suggestion</span>
                 </div>
                 <p className="text-[#111827] dark:text-[#F9FAFB] font-serif text-xl leading-relaxed">
@@ -124,9 +126,11 @@ export default function WeeklyReflection({ entries }: WeeklyReflectionProps) {
             </div>
           </motion.div>
         ) : error ? (
-          <p className="text-[#6B7280] dark:text-gray-500 font-serif italic text-center py-8">{error}</p>
+          <div className="min-h-[100px] flex items-center justify-center">
+            <p className="text-[#6B7280] dark:text-gray-500 font-serif italic text-center py-8">{error}</p>
+          </div>
         ) : (
-          <div className="bg-indigo-50/10 dark:bg-indigo-900/5 p-12 rounded-[3rem] border border-dashed border-indigo-100/50 dark:border-indigo-800/30 text-center">
+          <div className="bg-indigo-50/10 dark:bg-indigo-900/5 p-12 rounded-[3rem] border border-dashed border-indigo-100/50 dark:border-indigo-800/30 text-center min-h-[200px] flex flex-col justify-center">
             <p className="text-[#6B7280] dark:text-gray-400 font-serif italic text-lg mb-2">
               You&apos;ve shared {last7DaysEntries.length} reflections this week. No pressure, just express.
             </p>

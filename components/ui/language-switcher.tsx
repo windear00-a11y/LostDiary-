@@ -49,8 +49,9 @@ export function LanguageSwitcher() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 px-3 py-1.5 text-[#6B7280] dark:text-[#9CA3AF] hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-all rounded-full hover:bg-gray-100 dark:hover:bg-[#1A1A1A] border border-transparent hover:border-gray-200 dark:hover:border-[#2E2E2E]"
         title="Change Language"
+        aria-label="Change Language"
       >
-        <Globe className="w-4 h-4" />
+        <Globe className="w-4 h-4" aria-hidden="true" />
         <span className="text-xs font-bold tracking-wider">
           {languages.find(l => activeLang === l.code)?.label || 'English'}
         </span>

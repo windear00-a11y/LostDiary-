@@ -15,7 +15,7 @@ import {
   Sun
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 
@@ -28,6 +28,7 @@ interface DrawerProps {
 export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const { t } = useTranslation();
 
   // Close on ESC
@@ -43,6 +44,7 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
     {
       icon: <User className="w-5 h-5" />,
       label: t('nav.profile', 'Profile'),
+      path: '/profile',
       onClick: () => {
         router.push('/profile');
         onClose();
@@ -51,6 +53,7 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
     {
       icon: <Bell className="w-5 h-5" />,
       label: t('nav.updates', 'Notifications'),
+      path: '/updates',
       onClick: () => {
         router.push('/updates');
         onClose();
@@ -60,9 +63,9 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
     {
       icon: <Settings className="w-5 h-5" />,
       label: t('profile.accountSettings', 'Settings'),
+      path: '/settings',
       onClick: () => {
-        // This could open a settings modal or navigate
-        router.push('/profile'); // Fallback to profile for now or handle specifically
+        router.push('/settings');
         onClose();
       }
     }
@@ -118,29 +121,36 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
             <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8">
               {/* Main Menu */}
               <nav className="space-y-1" aria-label="Main navigation">
-                {menuItems.map((item, idx) => (
-                  <button
-                    key={idx}
-                    onClick={item.onClick}
-                    aria-label={item.label}
-                    className="w-full flex items-center justify-between p-3 rounded-2xl hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-all group active:scale-[0.98]"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors" aria-hidden="true">
-                        {item.icon}
+                {menuItems.map((item, idx) => {
+                  const isActive = pathname === item.path;
+                  return (
+                    <button
+                      key={idx}
+                      onClick={item.onClick}
+                      aria-label={item.label}
+                      className={`w-full flex items-center justify-between p-3 rounded-2xl transition-all group active:scale-[0.98] ${
+                        isActive 
+                          ? 'bg-indigo-50 dark:bg-indigo-900/10 text-indigo-600 dark:text-indigo-400' 
+                          : 'hover:bg-gray-50 dark:hover:bg-[#1A1A1A] text-gray-700 dark:text-gray-300'
+                      }`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'} transition-colors`} aria-hidden="true">
+                          {item.icon}
+                        </div>
+                        <span className={`text-sm font-medium ${isActive ? 'text-indigo-600 dark:text-indigo-400' : ''}`}>
+                          {item.label}
+                        </span>
                       </div>
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {item.label}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {item.badge && (
-                        <span className="w-2 h-2 bg-red-500 rounded-full" aria-label="New notification" />
-                      )}
-                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-400 transition-colors" aria-hidden="true" />
-                    </div>
-                  </button>
-                ))}
+                      <div className="flex items-center gap-2">
+                        {item.badge && (
+                          <span className="w-2 h-2 bg-red-500 rounded-full" aria-label="New notification" />
+                        )}
+                        <ChevronRight className={`w-4 h-4 transition-colors ${isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-300 group-hover:text-gray-400'}`} aria-hidden="true" />
+                      </div>
+                    </button>
+                  );
+                })}
               </nav>
 
               <div className="h-px bg-gray-50 dark:bg-[#1A1A1A] mx-2" aria-hidden="true" />

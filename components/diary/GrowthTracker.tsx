@@ -64,16 +64,16 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
   if (!stats || entries.length < 5) return null;
 
   return (
-    <section className="mt-16 pt-16 border-t border-gray-100 dark:border-[#1A1A1A]">
+    <section className="mt-16 pt-16 border-t border-gray-100 dark:border-[#1A1A1A] min-h-[400px]">
       <div className="flex items-center gap-3 mb-10 px-4">
-        <div className="w-1.5 h-1.5 bg-[#6366F1] rounded-full" />
+        <div className="w-1.5 h-1.5 bg-[#6366F1] rounded-full" aria-hidden="true" />
         <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-[#6B7280] dark:text-gray-500">
           Growth Journey
         </h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-8 bg-white dark:bg-[#1A1A1A] p-10 rounded-[3rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300">
+        <div className="space-y-8 bg-white dark:bg-[#1A1A1A] p-10 rounded-[3rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300 min-h-[320px]">
           <div className="space-y-6">
             <span className="text-[10px] uppercase tracking-widest text-[#6366F1] font-sans block">Mood Distribution</span>
             <div className="space-y-5">
@@ -83,7 +83,7 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
                     <span>{item.mood}</span>
                     <span>{item.percentage}%</span>
                   </div>
-                  <div className="h-1.5 w-full bg-gray-50 dark:bg-[#262626] rounded-full overflow-hidden">
+                  <div className="h-1.5 w-full bg-gray-50 dark:bg-[#262626] rounded-full overflow-hidden" aria-hidden="true">
                     <motion.div 
                       initial={{ width: 0 }}
                       whileInView={{ width: `${item.percentage}%` }}
@@ -104,10 +104,10 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
           </div>
         </div>
 
-        <div className="bg-indigo-50/20 dark:bg-indigo-900/5 p-10 rounded-[3rem] border border-indigo-100/30 dark:border-indigo-800/20 flex flex-col justify-between shadow-sm transition-colors duration-300">
+        <div className="bg-indigo-50/20 dark:bg-indigo-900/5 p-10 rounded-[3rem] border border-indigo-100/30 dark:border-indigo-800/20 flex flex-col justify-between shadow-sm transition-colors duration-300 min-h-[320px]">
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-[#6366F1]">
-              <Activity className="w-4 h-4" />
+              <Activity className="w-4 h-4" aria-hidden="true" />
               <span className="text-[10px] uppercase tracking-widest font-sans">Growth Insight</span>
             </div>
             
@@ -144,10 +144,11 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
           <button 
             onClick={generateGrowthInsightAction}
             disabled={loading}
+            aria-label={growthInsight ? 'Refresh Growth Insight' : 'Discover Growth Insight'}
             className="mt-8 self-start text-[10px] uppercase tracking-[0.2em] text-[#6366F1] hover:text-indigo-600 transition-colors flex items-center gap-2 disabled:opacity-30"
           >
             {growthInsight ? 'Refresh Insight' : 'Discover Growth'} 
-            {loading ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+            {loading ? <RefreshCw className="w-3 h-3 animate-spin" aria-hidden="true" /> : <Sparkles className="w-3 h-3" aria-hidden="true" />}
           </button>
         </div>
       </div>
