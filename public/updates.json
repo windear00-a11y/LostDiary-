@@ -1,5 +1,11 @@
 [
   {
+    "hash": "3178533b01598be7a7d7eef0556ef1b72ea964cc",
+    "message": "refactor: Rename '/app' routes to '/dashboard'",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-01T20:10:04+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
