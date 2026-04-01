@@ -1,6 +1,6 @@
 'use client';
-import { Sparkles, Loader2, Info } from 'lucide-react';
-import { RefObject, useState, useEffect } from 'react';
+import { Sparkles, Loader2, Info, Mic, MicOff } from 'lucide-react';
+import { RefObject, useState, useEffect, useCallback } from 'react';
 import { checkSpelling } from '@/lib/ai';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -14,7 +14,7 @@ export function DiaryInput({
   textareaRef
 }: {
   newEntry: string;
-  setNewEntry: (val: string) => void;
+  setNewEntry: React.Dispatch<React.SetStateAction<string>>;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   isSubmitting: boolean;
   submitError: string | null;
@@ -24,6 +24,54 @@ export function DiaryInput({
   const [spellingSuggestion, setSpellingSuggestion] = useState<{ suggestion: string, explanation: string } | null>(null);
   const [isCheckingSpelling, setIsCheckingSpelling] = useState(false);
   const [isQuery, setIsQuery] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+
+  const toggleListening = useCallback(() => {
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US'; // Default, but it often picks up Hindi/Hinglish too
+
+    recognition.onstart = () => setIsListening(true);
+    recognition.onend = () => setIsListening(false);
+    recognition.onresult = (event: any) => {
+      let interimTranscript = '';
+      let finalTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          finalTranscript += event.results[i][0].transcript;
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+        }
+      }
+
+      if (finalTranscript) {
+        setNewEntry((prev: string) => prev + (prev.length > 0 ? ' ' : '') + finalTranscript);
+      }
+    };
+
+    recognition.start();
+
+    // Stop after 30 seconds of silence or manual stop
+    const stopListening = () => {
+      recognition.stop();
+      setIsListening(false);
+    };
+
+    if (isListening) stopListening();
+  }, [isListening, setNewEntry]);
 
   useEffect(() => {
     const queryPatterns = [
@@ -134,12 +182,24 @@ export function DiaryInput({
             </AnimatePresence>
 
             <div className="absolute bottom-6 left-6 flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${newEntry.length > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} />
+              <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-red-500 animate-ping' : newEntry.length > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} />
               <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400">
-                {newEntry.length > 0 ? t('dash.writingMood') : t('dash.readyToListen')}
+                {isListening ? "Listening..." : newEntry.length > 0 ? t('dash.writingMood') : t('dash.readyToListen')}
               </span>
             </div>
             <div className="absolute bottom-6 right-6 flex items-center gap-4">
+              <button
+                type="button"
+                onClick={toggleListening}
+                className={`p-3 rounded-full transition-all active:scale-90 ${
+                  isListening 
+                    ? 'bg-red-100 text-red-600 animate-pulse' 
+                    : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100'
+                }`}
+                title={isListening ? "Stop listening" : "Start voice entry"}
+              >
+                {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </button>
               <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400">
                 {newEntry.length} {t('dash.chars')}
               </span>

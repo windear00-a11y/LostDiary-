@@ -78,7 +78,7 @@ export default function AppDashboard() {
       const intent = await classifyIntent(newEntry);
 
       if (intent === 'recall' || intent === 'analysis') {
-        const response = await handleChat(newEntry, entries, i18n.language || 'en', intent);
+        const response = await handleChat(newEntry, entries, i18n.resolvedLanguage || i18n.language || 'en', intent);
         setChatResponse(response);
         setNewEntry('');
         setIsSubmitting(false);
@@ -87,8 +87,8 @@ export default function AppDashboard() {
 
       // 2. Generate AI Insights (Optional but recommended for the app's core value)
       const aiResult = await processDiaryEntry(newEntry, {
-        understand_language: i18n.language || 'en',
-        response_language: i18n.language || 'en'
+        understand_language: i18n.resolvedLanguage || i18n.language || 'en',
+        response_language: i18n.resolvedLanguage || i18n.language || 'en'
       });
 
       // 2. Save to Supabase

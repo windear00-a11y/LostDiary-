@@ -121,5 +121,9 @@
   "profile.resetPassword": "Restablecer",
   "profile.dangerZone": "Zona de peligro",
   "profile.deleteWarning": "Una vez que elimines tu cuenta, no hay vuelta atrás. Por favor, asegúrate.",
-  "profile.deleteAccount": "Eliminar cuenta"
+  "profile.deleteAccount": "Eliminar cuenta",
+  "dash.minRead": "min de lectura",
+  "dash.translated": "Traducido",
+  "dash.original": "Original",
+  "dash.tryNow": "Probar ahora"
 }

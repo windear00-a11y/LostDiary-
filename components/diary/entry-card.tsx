@@ -60,7 +60,7 @@ export function EntryCard({ entry, deleteEntry, t, onTryNow }: EntryCardProps) {
           <div className="flex items-center gap-2">
             <span className="text-sm">{moodEmojis[entry.mood] || "😐"}</span>
             <span className="text-xs font-medium text-[#6366F1]">{entry.mood}</span>
-            <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium ml-2">• {readingTime} min read</span>
+            <span className="text-[10px] text-gray-400 dark:text-gray-500 font-medium ml-2">• {readingTime} {t('dash.minRead')}</span>
           </div>
           {entry.tags && entry.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-2">
@@ -97,7 +97,7 @@ export function EntryCard({ entry, deleteEntry, t, onTryNow }: EntryCardProps) {
               aria-label="Toggle original text"
             >
               <Languages className="w-3 h-3" />
-              {showOriginal ? 'Translated' : 'Original'}
+              {showOriginal ? t('dash.translated') : t('dash.original')}
             </button>
           )}
           <button 
@@ -150,7 +150,7 @@ export function EntryCard({ entry, deleteEntry, t, onTryNow }: EntryCardProps) {
                 className="text-[10px] uppercase tracking-widest font-bold px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-[#6366F1] rounded-full hover:bg-[#6366F1] hover:text-white transition-all active:scale-95 whitespace-nowrap"
                 aria-label={`Try this growth step now: ${entry.suggestion}`}
               >
-                Try Now
+                {t('dash.tryNow')}
               </button>
             )}
           </div>

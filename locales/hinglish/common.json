@@ -129,5 +129,9 @@
   "profile.resetPassword": "Reset",
   "profile.dangerZone": "Danger Zone",
   "profile.deleteWarning": "Ek baar account delete ho gaya, toh wapas nahi aa sakta. Please soch samajh kar karo.",
-  "profile.deleteAccount": "Account Delete Karo"
+  "profile.deleteAccount": "Account Delete Karo",
+  "dash.minRead": "min read",
+  "dash.translated": "Translated",
+  "dash.original": "Original",
+  "dash.tryNow": "Try Now"
 }

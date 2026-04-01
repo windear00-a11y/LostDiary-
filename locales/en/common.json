@@ -129,5 +129,9 @@
   "profile.resetPassword": "Reset",
   "profile.dangerZone": "Danger Zone",
   "profile.deleteWarning": "Once you delete your account, there is no going back. Please be certain.",
-  "profile.deleteAccount": "Delete Account"
+  "profile.deleteAccount": "Delete Account",
+  "dash.minRead": "min read",
+  "dash.translated": "Translated",
+  "dash.original": "Original",
+  "dash.tryNow": "Try Now"
 }

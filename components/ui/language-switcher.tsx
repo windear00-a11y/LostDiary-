@@ -11,7 +11,8 @@ export function LanguageSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const language = i18n.language;
+  const language = i18n.resolvedLanguage || i18n.language || 'en';
+  const activeLang = languages.find(l => language.startsWith(l.code))?.code || 'en';
 
   const setLanguage = (lang: string) => {
     i18n.changeLanguage(lang).then(() => {
@@ -51,7 +52,7 @@ export function LanguageSwitcher() {
       >
         <Globe className="w-4 h-4" />
         <span className="text-xs font-bold tracking-wider">
-          {languages.find(l => l.code === language)?.label || 'English'}
+          {languages.find(l => activeLang === l.code)?.label || 'English'}
         </span>
       </button>
 
@@ -65,14 +66,14 @@ export function LanguageSwitcher() {
                 setIsOpen(false);
               }}
               className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                language === lang.code
+                activeLang === lang.code
                   ? 'bg-indigo-50 dark:bg-indigo-900/20 text-[#6366F1] font-medium'
                   : 'text-[#374151] dark:text-[#D1D5DB] hover:bg-gray-50 dark:hover:bg-[#262626]'
               }`}
             >
               <div className="flex items-center justify-between">
                 <span>{lang.label}</span>
-                {language === lang.code && (
+                {activeLang === lang.code && (
                   <span className="text-xs font-bold text-[#6366F1]">✓</span>
                 )}
               </div>

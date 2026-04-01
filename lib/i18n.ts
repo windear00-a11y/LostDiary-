@@ -15,11 +15,14 @@ i18next
       es: { common: esCommon },
       hinglish: { common: hinglishCommon },
     },
-    lng: 'en',
     fallbackLng: 'en',
+    supportedLngs: ['en', 'hi', 'es', 'hinglish'],
     defaultNS: 'common',
     interpolation: {
       escapeValue: false,
+    },
+    react: {
+      useSuspense: false,
     },
   });
 

@@ -130,5 +130,9 @@
   "profile.resetPassword": "रीसेट करें",
   "profile.dangerZone": "खतरा क्षेत्र",
   "profile.deleteWarning": "एक बार जब आप अपना खाता हटा देते हैं, तो वापस जाने का कोई रास्ता नहीं है। कृपया निश्चित रहें।",
-  "profile.deleteAccount": "खाता हटाएं"
+  "profile.deleteAccount": "खाता हटाएं",
+  "dash.minRead": "मिनट का पठन",
+  "dash.translated": "अनुवादित",
+  "dash.original": "मूल",
+  "dash.tryNow": "अभी कोशिश करें"
 }
