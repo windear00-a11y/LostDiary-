@@ -1,11 +1,5 @@
 [
   {
-    "hash": "f762aeddd492304449e510080d20035cea7180a9",
-    "message": "fix(auth): Improve origin check for OAuth callbacks",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-01T13:16:08+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
