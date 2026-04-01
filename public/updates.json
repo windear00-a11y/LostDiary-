@@ -1,5 +1,11 @@
 [
   {
+    "hash": "61f2602fe0703c8fda1e6abdd90e80fb68c8e8a8",
+    "message": "feat: Redirect to auth after password update",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-01T19:23:43+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
