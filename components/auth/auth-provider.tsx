@@ -1,10 +1,10 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
 import { useRouter, usePathname } from 'next/navigation';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 interface AuthContextType {
   user: User | null;
@@ -19,44 +19,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
-  const supabase = createClient();
+  
+  const supabase = useMemo(() => {
+    try {
+      return createClient();
+    } catch (e) {
+      console.error('AuthProvider: Failed to initialize Supabase client:', e);
+      return null;
+    }
+  }, []);
 
   useEffect(() => {
-    const checkUser = async () => {
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
+    if (!supabase) {
+      setLoading(false);
+      return;
+    }
+
+    const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
         if (error) {
-          console.error('Session error:', error.message);
-          await supabase.auth.signOut();
+          console.error('AuthProvider: Error getting session:', error.message);
           setUser(null);
         } else {
           setUser(session?.user ?? null);
         }
       } catch (err) {
-        console.error('Unexpected error checking session:', err);
+        console.error('AuthProvider: Unexpected error in getSession:', err);
         setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
-    checkUser();
-
-    if (!supabase) return;
+    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      if (event === 'SIGNED_OUT') {
-        setUser(null);
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setUser(session?.user ?? null);
-      } else if (event === 'INITIAL_SESSION') {
-        setUser(session?.user ?? null);
-      }
+      console.log('AuthProvider: Auth state changed:', event);
+      setUser(session?.user ?? null);
       setLoading(false);
     });
 
@@ -93,7 +93,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, loading, signOut }}>
-      {showLoader ? (
+      {!supabase ? (
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[#F9FAFB] gap-4 p-4 text-center">
+          <AlertCircle className="w-12 h-12 text-red-500" />
+          <h2 className="text-xl font-semibold text-gray-900">Authentication Unavailable</h2>
+          <p className="text-sm text-gray-600 max-w-sm">
+            The application could not connect to the authentication service. Please check your environment configuration.
+          </p>
+        </div>
+      ) : showLoader ? (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#F9FAFB] gap-4">
           <Loader2 className="w-8 h-8 text-[#6366F1] animate-spin" />
           <p className="text-sm text-[#6B7280] font-medium animate-pulse">Checking your session...</p>

@@ -4,35 +4,22 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/app';
+
+  console.log('Auth Callback: Received request', { code: !!code, next });
+
+  if (code) {
+    console.log('Auth Callback: Redirecting to /auth with code');
+    return NextResponse.redirect(`${origin}/auth?code=${code}&next=${encodeURIComponent(next)}`);
+  }
+
   const error = searchParams.get('error');
   const error_description = searchParams.get('error_description');
 
   if (error) {
+    console.error('Auth Callback: Error received', { error, error_description });
     return NextResponse.redirect(`${origin}/auth?error=${encodeURIComponent(error_description || error)}`);
   }
 
-  if (code) {
-    return new NextResponse(`
-      <html>
-        <body>
-          <script>
-            if (window.opener && window.opener !== window) {
-              window.opener.postMessage({ 
-                type: 'OAUTH_CALLBACK', 
-                url: window.location.href 
-              }, '*');
-              window.close();
-            } else {
-              window.location.href = '/auth?code=${code}&next=${encodeURIComponent(next)}';
-            }
-          </script>
-          <p>Authentication successful. Returning to application...</p>
-        </body>
-      </html>
-    `, {
-      headers: { 'Content-Type': 'text/html' },
-    });
-  }
-
+  console.warn('Auth Callback: Missing code and error');
   return NextResponse.redirect(`${origin}/auth?error=auth-code-missing`);
 }

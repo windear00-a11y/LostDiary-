@@ -17,7 +17,13 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+    supabase = null;
+  }
 
   const handleSubmit = async () => {
     if (!rating || !supabase) return;

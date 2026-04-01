@@ -8,7 +8,13 @@ import { useAuth } from '@/components/auth/auth-provider';
 
 export function FeedbackTab() {
   const { user } = useAuth();
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+    supabase = null;
+  }
   const [feedbackList, setFeedbackList] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newFeedback, setNewFeedback] = useState('');

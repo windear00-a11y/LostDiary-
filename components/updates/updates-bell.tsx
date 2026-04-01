@@ -10,7 +10,13 @@ export function UpdatesBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const { user } = useAuth();
   const router = useRouter();
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+    supabase = null;
+  }
 
   useEffect(() => {
     if (!user || !supabase) return;

@@ -8,7 +8,13 @@ import { useAuth } from '@/components/auth/auth-provider';
 
 export function IssuesTab() {
   const { user } = useAuth();
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+    supabase = null;
+  }
   const [issues, setIssues] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);

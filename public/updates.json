@@ -1,11 +1,5 @@
 [
   {
-    "hash": "234917e386bf37927f42095c019c93ce62bc283e",
-    "message": "chore: Remove stale update entry",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-01T13:54:51+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

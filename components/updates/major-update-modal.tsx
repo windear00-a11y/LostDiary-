@@ -10,7 +10,13 @@ export function MajorUpdateModal() {
   const [update, setUpdate] = useState<any>(null);
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useAuth();
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+    supabase = null;
+  }
 
   useEffect(() => {
     if (!user || !supabase) return;

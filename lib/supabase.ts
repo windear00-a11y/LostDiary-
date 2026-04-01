@@ -9,7 +9,9 @@ export function createClient() {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !key) {
-    return null;
+    const errorMsg = 'Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY) are missing.';
+    console.error(errorMsg);
+    throw new Error(errorMsg);
   }
 
   supabaseInstance = createSupabaseClient(url, key);

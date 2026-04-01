@@ -15,7 +15,13 @@ export function SettingsModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
   const [isSaving, setIsSaving] = useState(false);
   const [understandLanguage, setUnderstandLanguage] = useState('auto');
   const [responseLanguage, setResponseLanguage] = useState(i18n.language);
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+    supabase = null;
+  }
 
   useEffect(() => {
     setMounted(true);

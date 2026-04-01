@@ -5,7 +5,13 @@ import { logger } from '@/lib/logger';
 export function useEntries(userId: string | undefined) {
   const [entries, setEntries] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+    supabase = null;
+  }
 
   const fetchEntries = useCallback(async () => {
     if (!userId || !supabase) {

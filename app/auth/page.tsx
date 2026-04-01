@@ -17,7 +17,14 @@ function AuthForm() {
   const searchParams = useSearchParams();
   const { loading } = useAuth();
   const { t } = useTranslation();
-  const supabase = useMemo(() => createClient(), []);
+  const supabase = useMemo(() => {
+    try {
+      return createClient();
+    } catch (e) {
+      console.error('Failed to initialize Supabase client:', e);
+      return null;
+    }
+  }, []);
   const exchangeAttempted = useRef(false);
 
   useEffect(() => {
@@ -49,80 +56,36 @@ function AuthForm() {
 
   const handleGoogleLogin = async () => {
     if (!supabase) {
+      console.error('handleGoogleLogin: Supabase client not initialized');
       setMessage({ type: 'error', text: 'Authentication is not configured. Please set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment variables.' });
       return;
     }
     setIsSubmitting(true);
+    const redirectTo = `${window.location.origin}/auth/callback?next=/app`;
+    console.log('handleGoogleLogin: Initiating OAuth with redirectTo:', redirectTo);
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?next=/app`,
-          skipBrowserRedirect: true,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
+          redirectTo,
+          skipBrowserRedirect: false,
         },
       });
-      if (error) throw error;
+      if (error) {
+        console.error('handleGoogleLogin: signInWithOAuth error:', error);
+        throw error;
+      }
 
       if (data?.url) {
-        const authWindow = window.open(
-          data.url,
-          'oauth_popup',
-          'width=600,height=700'
-        );
-        if (!authWindow) {
-          setMessage({ type: 'error', text: 'Please allow popups for this site to connect your account.' });
-          setIsSubmitting(false);
-        } else {
-          const timer = setInterval(() => {
-            if (authWindow.closed) {
-              clearInterval(timer);
-              setIsSubmitting(false);
-            }
-          }, 500);
-        }
+        console.log('handleGoogleLogin: Redirecting to:', data.url);
+        window.location.href = data.url;
       }
     } catch (err: any) {
+      console.error('handleGoogleLogin: Unexpected error:', err);
       setMessage({ type: 'error', text: err.message || 'Failed to sign in with Google' });
       setIsSubmitting(false);
     }
   };
-
-  useEffect(() => {
-    const handleMessage = async (event: MessageEvent) => {
-      // Ensure the message comes from our own domain (works for localhost, run.app, vercel.app, etc.)
-      if (!event.origin.endsWith('.run.app') && !event.origin.includes('localhost') && !event.origin.includes('vercel.app')) {
-        return;
-      }
-      if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-        console.log('OAUTH_AUTH_SUCCESS received');
-        router.push('/app');
-      } else if (event.data?.type === 'OAUTH_CALLBACK') {
-        console.log('OAUTH_CALLBACK received', event.data);
-        const url = new URL(event.data.url);
-        const code = url.searchParams.get('code');
-        console.log('Code:', code);
-        if (code && supabase && !exchangeAttempted.current) {
-          exchangeAttempted.current = true;
-          setIsSubmitting(true);
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          console.log('Exchange error:', error);
-          if (error) {
-            setMessage({ type: 'error', text: error.message });
-            setIsSubmitting(false);
-            exchangeAttempted.current = false;
-          } else {
-            router.push(url.searchParams.get('next') || '/app');
-          }
-        }
-      }
-    };
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [router, supabase]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();

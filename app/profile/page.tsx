@@ -12,7 +12,13 @@ export default function ProfilePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const { t } = useTranslation();
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+    supabase = null;
+  }
 
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');

@@ -8,7 +8,13 @@ import { useAuth } from '@/components/auth/auth-provider';
 
 export function IdeasTab() {
   const { user } = useAuth();
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+    supabase = null;
+  }
   const [ideas, setIdeas] = useState<any[]>([]);
   const [userVotes, setUserVotes] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);

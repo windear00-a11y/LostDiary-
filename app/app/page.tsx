@@ -22,7 +22,13 @@ export default function AppDashboard() {
   const { t, i18n } = useTranslation();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const { hasNewUpdates } = useUpdates({ autoRefreshInterval: 5 * 60 * 1000 });
-  const supabase = createClient();
+  let supabase;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+    supabase = null;
+  }
 
   const [entries, setEntries] = useState<any[]>([]);
   const [isLoadingEntries, setIsLoadingEntries] = useState(true);
