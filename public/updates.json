@@ -1,11 +1,5 @@
 [
   {
-    "hash": "05ffaf7f14d9c0e4283cf9198e14f97638606c29",
-    "message": "feat: Integrate AI diary features into dashboard",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-01T11:31:30+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Book, User, LogOut, Settings, Bell } from 'lucide-react';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { SettingsModal } from '@/components/settings/settings-modal';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useUpdates } from '@/hooks/use-updates';
 import { createClient } from '@/lib/supabase';
 import { DiaryInput } from '@/components/diary/DiaryInput';
@@ -31,13 +31,7 @@ export default function AppDashboard() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  useEffect(() => {
-    if (user) {
-      fetchEntries();
-    }
-  }, [user]);
-
-  const fetchEntries = async () => {
+  const fetchEntries = useCallback(async () => {
     if (!supabase || !user) return;
     try {
       setIsLoadingEntries(true);
@@ -54,7 +48,13 @@ export default function AppDashboard() {
     } finally {
       setIsLoadingEntries(false);
     }
-  };
+  }, [supabase, user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchEntries();
+    }
+  }, [user, fetchEntries]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,9 +117,9 @@ export default function AppDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] text-[#111827]">
+    <div className="min-h-screen bg-[#F9FAFB] text-[#111827] pt-safe pb-safe">
       {/* Navbar */}
-      <nav className="bg-white border-b border-gray-100 px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+      <nav className="bg-white border-b border-gray-100 px-4 sm:px-8 py-4 flex justify-between items-center sticky top-0 z-50">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
           <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center shadow-sm border border-indigo-100">
             <Book className="w-4 h-4 text-[#6366F1]" />
@@ -127,7 +127,7 @@ export default function AppDashboard() {
           <span className="text-xl font-serif italic tracking-tight text-[#111827]">WinDear</span>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <LanguageSwitcher />
           
           <button 
@@ -151,7 +151,7 @@ export default function AppDashboard() {
 
           <button 
             onClick={() => router.push('/profile')}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full text-sm font-medium text-gray-700 transition-colors"
           >
             <User className="w-4 h-4" />
             <span className="hidden sm:inline">{t('nav.profile', 'Profile')}</span>
@@ -168,7 +168,7 @@ export default function AppDashboard() {
       </nav>
 
       {/* Main Content Area */}
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-16">
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 py-12 space-y-12">
         <div className="text-center space-y-4 pt-10">
           <h1 className="text-4xl font-serif italic text-gray-900">
             {t('dash.hello', 'Hello')}, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}

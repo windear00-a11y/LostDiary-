@@ -1,4 +1,4 @@
-import { createBrowserClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
 let supabaseInstance: any = null;
 
@@ -12,13 +12,6 @@ export function createClient() {
     return null;
   }
 
-  supabaseInstance = createBrowserClient(url, key, {
-    cookieOptions: {
-      name: 'sb-auth-token',
-      sameSite: 'none',
-      secure: true,
-      maxAge: 31536000, // 1 year
-    }
-  });
+  supabaseInstance = createSupabaseClient(url, key);
   return supabaseInstance;
 }

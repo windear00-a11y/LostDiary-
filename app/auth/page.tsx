@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, Suspense } from 'react';
 import { createClient } from '@/lib/supabase';
 import { Book, Mail, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -9,7 +9,7 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { useTranslation } from 'react-i18next';
 import { LanguageSwitcher } from '@/components/ui/language-switcher';
 
-export default function AuthPage() {
+function AuthForm() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
@@ -39,7 +39,7 @@ export default function AuthPage() {
           exchangeAttempted.current = false;
           router.replace('/auth');
         } else {
-          window.location.href = searchParams.get('next') || '/app';
+          router.push(searchParams.get('next') || '/app');
         }
       });
     }
@@ -96,7 +96,7 @@ export default function AuthPage() {
         return;
       }
       if (event.data?.type === 'OAUTH_AUTH_SUCCESS') {
-        window.location.href = '/app';
+        router.push('/app');
       } else if (event.data?.type === 'OAUTH_CALLBACK') {
         const url = new URL(event.data.url);
         const code = url.searchParams.get('code');
@@ -109,7 +109,7 @@ export default function AuthPage() {
             setIsSubmitting(false);
             exchangeAttempted.current = false;
           } else {
-            window.location.href = url.searchParams.get('next') || '/app';
+            router.push(url.searchParams.get('next') || '/app');
           }
         }
       }
@@ -147,7 +147,7 @@ export default function AuthPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <main className="min-h-screen bg-[#F9FAFB] flex flex-col items-center justify-center p-4 sm:p-6 pt-safe pb-safe relative overflow-hidden">
       {/* Background Gradients */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50 rounded-full blur-[120px] opacity-60" />
@@ -277,5 +277,13 @@ export default function AuthPage() {
         </p>
       </motion.div>
     </main>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>}>
+      <AuthForm />
+    </Suspense>
   );
 }

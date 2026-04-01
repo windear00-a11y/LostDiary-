@@ -20,7 +20,7 @@ export function DiaryInput({
   textareaRef: RefObject<HTMLTextAreaElement | null>;
 }) {
   return (
-    <section className="bg-white p-10 rounded-3xl shadow-lg shadow-indigo-50/50 border border-slate-100 space-y-6">
+    <section className="bg-white p-6 sm:p-10 rounded-2xl sm:rounded-3xl shadow-lg shadow-indigo-50/50 border border-slate-100 space-y-6">
       {submitError && (
         <div className="p-4 bg-red-50 border border-red-100 rounded-2xl text-red-600 text-sm">
           <p className="font-bold mb-1">Error saving entry:</p>
