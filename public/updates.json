@@ -1,5 +1,11 @@
 [
   {
+    "hash": "d47f8158602b0ed6e704d9b45d70e07c5622c7a9",
+    "message": "feat: Add 'chat' intent to AI classification",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-02T17:10:30+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
