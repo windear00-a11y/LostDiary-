@@ -78,7 +78,7 @@ export default function AppDashboard() {
       // 1. Classify Intent
       const intent = await classifyIntent(newEntry);
 
-      if (intent === 'recall' || intent === 'analysis') {
+      if (intent === 'recall' || intent === 'analysis' || intent === 'chat') {
         const response = await handleChat(newEntry, entries, i18n.resolvedLanguage || i18n.language || 'en', intent);
         setChatResponse(response);
         setNewEntry('');

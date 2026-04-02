@@ -1,11 +1,5 @@
 [
   {
-    "hash": "f6f5543ebd089bb21e2f215cb0f82aa920117a34",
-    "message": "feat: Enable PostHog pageview tracking with Suspense",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-02T16:05:33+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

@@ -415,6 +415,7 @@ Classify the user's message into ONE of these:
 1. "entry" → user is writing a new diary entry
 2. "recall" → user is asking about past memory
 3. "analysis" → user wants patterns, insights, or behavior analysis
+4. "chat" → user is asking a general question, seeking advice, or just chatting (not necessarily about past entries)
 
 Rules:
 - User input may be Hinglish, Hindi, or English
@@ -433,7 +434,7 @@ User Input:
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            type: { type: Type.STRING, enum: ["entry", "recall", "analysis"] }
+            type: { type: Type.STRING, enum: ["entry", "recall", "analysis", "chat"] }
           },
           required: ["type"]
         }
@@ -441,14 +442,14 @@ User Input:
     });
 
     const result = JSON.parse(response.text || '{"type": "entry"}');
-    return result.type as 'entry' | 'recall' | 'analysis';
+    return result.type as 'entry' | 'recall' | 'analysis' | 'chat';
   } catch (error) {
     console.error('Intent classification error:', error);
     return 'entry';
   }
 }
 
-export async function handleChat(query: string, entries: any[], responseLang: string, intent: 'recall' | 'analysis' = 'recall') {
+export async function handleChat(query: string, entries: any[], responseLang: string, intent: 'recall' | 'analysis' | 'chat' = 'recall') {
   try {
     const ai = getGenAI();
     const context = entries.slice(0, 20).map(e => `[Date: ${new Date(e.created_at).toLocaleDateString()}, Summary: ${e.summary || 'No summary'}] Content: ${e.content}`).join('\n\n');
@@ -479,6 +480,23 @@ ${context}
 
 Output:
 Final user-friendly response with patterns and practical suggestions.`;
+    } else if (intent === 'chat') {
+      prompt += `Task:
+Answer the user's question or engage in conversation as a supportive, emotionally intelligent friend.
+
+Rules:
+1. If the question is general (advice, facts, philosophy, etc.), answer it thoughtfully using your general knowledge.
+2. If it relates to their well-being, be empathetic and supportive.
+3. If you can find a connection to their past entries (provided below), mention it naturally.
+4. If no connection is found, just answer the question directly and warmly.
+5. Use ${langName}.
+
+Input:
+Past Entries (for context if needed):
+${context}
+
+Output:
+Final user-friendly response.`;
     } else {
       prompt += `Task:
 Answer the user using their past diary entries as memory and format the response for clarity.
@@ -492,12 +510,12 @@ Rules for Answering:
 3. If multiple matches are found:
    - Connect them by identifying a pattern or repetition.
 4. If a weak or no match is found:
-   - Answer the query normally/thoughtfully.
+   - Answer the query normally/thoughtfully using your general knowledge as a supportive friend.
    - Suggest that they save this new thought.
+5. Use ${langName}.
 
 Rules for Formatting:
 - Keep the response clean, readable, and well-spaced.
-- Use ${langName}.
 - Ensure references (date/summary) are easy to spot.
 
 Input:
