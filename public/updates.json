@@ -1,5 +1,11 @@
 [
   {
+    "hash": "1a71cd55a992e086c4773a2e4b51cd31c85ca42b",
+    "message": "feat: Integrate PostHog for analytics",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-02T15:42:06+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
