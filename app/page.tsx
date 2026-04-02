@@ -362,8 +362,15 @@ export default function LandingPage() {
       </section>
 
       {/* Landing Footer */}
-      <footer className="relative z-10 py-12 text-center text-[10px] uppercase tracking-[0.4em] text-[#6B7280] opacity-50">
-        &copy; {new Date().getFullYear()} {t('landing.footer')}
+      <footer className="relative z-10 py-12 text-center space-y-4">
+        <div className="flex justify-center gap-6 text-[10px] uppercase tracking-[0.2em] text-[#6B7280] font-medium">
+          <button onClick={() => router.push('/privacy')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Privacy Policy</button>
+          <button onClick={() => router.push('/terms')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Terms of Service</button>
+          <button onClick={() => router.push('/support')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Support</button>
+        </div>
+        <p className="text-[10px] uppercase tracking-[0.4em] text-[#6B7280] opacity-50">
+          &copy; {new Date().getFullYear()} {t('landing.footer')}
+        </p>
       </footer>
       <FeedbackButton />
     </main>

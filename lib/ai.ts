@@ -16,13 +16,15 @@ function getGenAI() {
 export async function detectLanguage(text: string) {
   try {
     const ai = getGenAI();
-    const prompt = `Detect the primary language of the following text. If the text is mixed (like Hinglish), classify based on meaning, not words.
+    const prompt = `Detect the primary language of the following text. If the text is mixed (like Hinglish), classify as "hinglish".
 
 Examples:
-- "kal meeting hai" → Hindi
-- "today mood off hai" → Hindi
-- "I am feeling acha today" → Hindi
-- "I am feeling good today" → English
+- "kal meeting hai" → hinglish
+- "today mood off hai" → hinglish
+- "I am feeling acha today" → hinglish
+- "I am feeling good today" → en
+- "Main aaj bahut khush hoon" → hi
+- "Hola como estas" → es
 
 Return only:
 - "en" for English
@@ -37,7 +39,7 @@ Text: "${text}"`;
     });
     
     const result = response.text?.trim().toLowerCase();
-    if (result === 'hi' || result === 'hinglish' || result === 'es') {
+    if (result === 'hi' || result === 'hinglish' || result === 'es' || result === 'en') {
       return result;
     }
     return 'en';
@@ -100,30 +102,44 @@ export async function translateText(text: string, targetLangCode: string) {
   }
 }
 
-export async function generateAIInsight(normalizedContent: string, responseLang: string) {
+export async function generateAIInsight(normalizedContent: string, inputLang: string) {
   try {
     const ai = getGenAI();
-    const prompt = `Analyze this diary entry: "${normalizedContent}". 
-    Provide:
-    1. mood: Choose ONE from these: Happy, Sad, Stressed, Neutral.
-    2. insight: A thoughtful, empathetic paragraph (2-3 sentences) about the underlying patterns or emotions.
-    3. suggestion: A small, actionable step for growth or self-care.
-    4. summary: A short summary (2-3 lines) of the entry.
-    
-    Response format:
-    {
-      "mood": "string",
-      "insight": "string",
-      "suggestion": "string",
-      "summary": "string"
-    }`;
+    const prompt = `User entry:
+"${normalizedContent}"
 
-    const langName = responseLang === 'hinglish' ? 'Hinglish (a mix of Hindi and English written in Latin script)' : `the language with ISO code '${responseLang}'`;
+Respond in the same language, tone, and style as the user.
+
+Analyze this diary entry and provide:
+1. mood: Choose ONE from these: Happy, Sad, Stressed, Neutral.
+2. insight: A thoughtful, empathetic paragraph (2-3 sentences) about the underlying patterns or emotions.
+3. suggestion: A small, actionable step for growth or self-care.
+4. summary: A short summary (2-3 lines) of the entry.
+
+Response format:
+{
+  "mood": "string",
+  "insight": "string",
+  "suggestion": "string",
+  "summary": "string"
+}`;
+
+    const langName = inputLang === 'hinglish' ? 'Natural Hinglish (mix of Hindi + casual English)' : (inputLang === 'hi' ? 'Hindi' : 'English');
+    
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
-        systemInstruction: `You are WinDear, a compassionate and intelligent AI diary assistant. Your goal is to provide deep psychological insights, detect subtle mood shifts, and offer gentle, actionable growth suggestions based on a user's diary entry. Keep your tone human, soft, and encouraging. Always respond in JSON format. You MUST write your response (mood, insight, suggestion, summary) in ${langName}.`,
+        systemInstruction: `You are a deeply human, emotionally intelligent AI diary companion. You feel like a real supportive friend, not a bot.
+        
+        CORE BEHAVIORS:
+        - Adapt to the user's communication style gradually (tone, emoji usage, response length, energy).
+        - If user is casual -> be casual. If emotional -> be empathetic. If deep -> be thoughtful.
+        - Match emoji frequency: No emoji -> no emoji. Frequent emoji -> expressive but controlled.
+        - Match energy: Low mood -> calm, soft tone. Happy -> energetic, uplifting.
+        - Use natural conversational phrasing and occasional pauses like "hmm...", "haan...", "okay...".
+        
+        CRITICAL RULE: Always respond in the SAME language as the user's input (${langName}). Do NOT translate unless asked. Keep it concise, meaningful, and human. Focus on connection, not explanation. Always respond in JSON format.`,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -148,46 +164,51 @@ export async function generateAIInsight(normalizedContent: string, responseLang:
 export async function processDiaryEntry(text: string, settings: { understand_language: string, response_language: string }) {
   try {
     const ai = getGenAI();
-    const responseLang = settings.response_language || 'en';
-    const langName = responseLang === 'hinglish' ? 'Hinglish (a mix of Hindi and English written in Latin script)' : `the language with ISO code '${responseLang}'`;
-
-    const prompt = `
-    Analyze this diary entry: "${text}".
     
-    Current User Settings:
-    - Input Language: ${settings.understand_language}
-    - Response Language: ${responseLang}
+    const inputLang = await detectLanguage(text);
+    const langName = inputLang === 'hinglish' ? 'Natural Hinglish (mix of Hindi + casual English)' : (inputLang === 'hi' ? 'Hindi' : 'English');
 
-    Tasks:
-    1. Detect the input language (if set to "auto").
-    2. Normalize the content:
-       - If input is Hinglish, convert to clean, natural Hinglish (Latin script).
-       - If input is English/Mixed, convert to clean, natural English.
-    3. Translate the normalized content to the response language (${responseLang}).
-    4. Generate AI Insights:
-       - mood: Choose ONE: Happy, Sad, Stressed, Neutral.
-       - insight: A thoughtful, empathetic paragraph (2-3 sentences) in ${langName}.
-       - suggestion: A small, actionable step for growth in ${langName}.
-       - summary: A short summary (MAX 10 WORDS) in ${langName}.
-       - tags: 2-5 meaningful tags related to the entry's content and emotions in ${langName}.
+    const prompt = `User entry:
+"${text}"
 
-    Response format (JSON):
-    {
-      "detected_language": "string",
-      "normalized_content": "string",
-      "translated_content": "string",
-      "mood": "string",
-      "insight": "string",
-      "suggestion": "string",
-      "summary": "string",
-      "tags": ["string"]
-    }`;
+Respond in the same language, tone, and style as the user.
+
+Tasks:
+1. Normalize the content:
+   - If input is Hinglish, convert to clean, natural Hinglish (Latin script).
+   - If input is English/Mixed, convert to clean, natural English.
+2. Generate AI Insights in ${langName}:
+   - mood: Choose ONE: Happy, Sad, Stressed, Neutral.
+   - insight: A thoughtful, empathetic paragraph (2-3 sentences).
+   - suggestion: A small, actionable step for growth.
+   - summary: A short summary (MAX 10 WORDS).
+   - tags: 2-5 meaningful tags related to the entry's content and emotions.
+
+Response format (JSON):
+{
+  "detected_language": "string",
+  "normalized_content": "string",
+  "translated_content": "string",
+  "mood": "string",
+  "insight": "string",
+  "suggestion": "string",
+  "summary": "string",
+  "tags": ["string"]
+}`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
-        systemInstruction: `You are WinDear, a compassionate and intelligent AI diary assistant. Your goal is to provide deep psychological insights and emotional clarity. Always respond in JSON format. You MUST write the insight, suggestion, summary, and tags in ${langName}.`,
+        systemInstruction: `You are a deeply human, emotionally intelligent AI diary companion. You feel like a real supportive friend, not a bot.
+        
+        CORE BEHAVIORS:
+        - Adapt to the user's communication style gradually (tone, emoji usage, response length, energy).
+        - Match emoji frequency: No emoji -> no emoji. Frequent emoji -> expressive but controlled.
+        - Match energy: Low mood -> calm, soft tone. Happy -> energetic, uplifting.
+        - Use natural conversational phrasing and occasional pauses like "hmm...", "haan...", "okay...".
+        
+        CRITICAL RULE: Always respond in the SAME language as the user's input (${langName}). Do NOT translate unless asked. Keep it concise, meaningful, and human. Focus on connection, not explanation. Always respond in JSON format.`,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -206,7 +227,11 @@ export async function processDiaryEntry(text: string, settings: { understand_lan
       },
     });
 
-    return JSON.parse(response.text || '{}');
+    const result = JSON.parse(response.text || '{}');
+    result.detected_language = inputLang;
+    result.translated_content = result.normalized_content;
+    
+    return result;
   } catch (error) {
     console.error('Process diary entry error:', error);
     return null;
@@ -224,12 +249,15 @@ export async function generateWeeklyReflection(entries: any[]) {
   try {
     const ai = getGenAI();
     const combinedText = entries.map(e => `[${new Date(e.created_at).toLocaleDateString()}] ${e.content}`).join('\n\n');
+    
+    const inputLang = await detectLanguage(combinedText);
+    const langName = inputLang === 'hinglish' ? 'Natural Hinglish (mix of Hindi + casual English)' : (inputLang === 'hi' ? 'Hindi' : 'English');
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{ role: "user", parts: [{ text: combinedText }] }],
-      config: {
-        systemInstruction: `You are an insightful emotional intelligence coach. 
+    const prompt = `User entries:
+"${combinedText}"
+
+Respond in the same language, tone, and style as the user.
+
 Analyze the user's diary entries from the last 7 days.
 Generate a structured weekly reflection:
 - trend: A calm summary of the emotional trajectory (e.g., "Finding balance", "Increasing stress", "Steady growth")
@@ -237,7 +265,21 @@ Generate a structured weekly reflection:
 - suggestion: One gentle, practical suggestion for the coming week
 - Max 100 words total
 - Tone: Calm, non-judgmental, insightful
-- Avoid generic summaries`,
+- Avoid generic summaries`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: `You are a deeply human, emotionally intelligent AI diary companion. You feel like a real supportive friend, not a bot.
+        
+        CORE BEHAVIORS:
+        - Adapt to the user's communication style gradually (tone, emoji usage, response length, energy).
+        - Match emoji frequency: No emoji -> no emoji. Frequent emoji -> expressive but controlled.
+        - Match energy: Low mood -> calm, soft tone. Happy -> energetic, uplifting.
+        - Use natural conversational phrasing and occasional pauses like "hmm...", "haan...", "okay...".
+        
+        CRITICAL RULE: Always respond in the SAME language as the user's input (${langName}). Do NOT translate unless asked. Keep it concise, meaningful, and human. Focus on connection, not explanation. Always respond in JSON format.`,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -269,19 +311,38 @@ export async function generateGrowthInsight(entries: any[]) {
   try {
     const ai = getGenAI();
     const last30Days = entries.slice(0, 20).map(e => `[${e.mood || 'Unknown'}] ${e.content}`).join('\n\n');
+    
+    const inputLang = await detectLanguage(last30Days);
+    const langName = inputLang === 'hinglish' ? 'Natural Hinglish (mix of Hindi + casual English)' : (inputLang === 'hi' ? 'Hindi' : 'English');
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [{ role: "user", parts: [{ text: `Analyze these diary entries from the last month and provide a "Growth Journey" summary.
+    const prompt = `User entries:
+"${last30Days}"
+
+Respond in the same language, tone, and style as the user.
+
+Analyze these diary entries from the last month and provide a "Growth Journey" summary.
 Focus on:
 - How the user's perspective or emotional state has evolved.
 - One positive shift in their writing or thinking.
 - Keep it calm, supportive, and non-judgmental.
 - Max 60 words.
 - No bullet points, just a short paragraph.
+- Use ${langName}.`;
 
-Entries:
-${last30Days}` }] }],
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: `You are a deeply human, emotionally intelligent AI diary companion. You feel like a real supportive friend, not a bot.
+        
+        CORE BEHAVIORS:
+        - Adapt to the user's communication style gradually (tone, emoji usage, response length, energy).
+        - Match emoji frequency: No emoji -> no emoji. Frequent emoji -> expressive but controlled.
+        - Match energy: Low mood -> calm, soft tone. Happy -> energetic, uplifting.
+        - Use natural conversational phrasing and occasional pauses like "hmm...", "haan...", "okay...".
+        
+        CRITICAL RULE: Always respond in the SAME language as the user's input (${langName}). Do NOT translate unless asked. Keep it concise, meaningful, and human. Focus on connection, not explanation.`,
+      }
     });
 
     return response.text || "You're showing up for yourself, and that's the most important step.";
@@ -295,19 +356,35 @@ export async function checkSpelling(text: string) {
   if (!text || text.length < 10) return null;
   try {
     const ai = getGenAI();
-    const prompt = `Check the following diary entry for spelling and grammar errors. 
-    If there are significant errors, provide a corrected version. 
-    If the text is mostly correct, return hasErrors: false.
-    Focus on obvious typos and clear grammatical mistakes.
-    Preserve the original tone and style.
     
-    Text: "${text}"`;
+    const inputLang = await detectLanguage(text);
+    const langName = inputLang === 'hinglish' ? 'Natural Hinglish (mix of Hindi + casual English)' : (inputLang === 'hi' ? 'Hindi' : 'English');
+
+    const prompt = `User entry:
+"${text}"
+
+Respond in the same language, tone, and style as the user.
+
+Check the following diary entry for spelling and grammar errors. 
+If there are significant errors, provide a corrected version. 
+If the text is mostly correct, return hasErrors: false.
+Focus on obvious typos and clear grammatical mistakes.
+Preserve the original tone and style.
+Use ${langName} for the explanation.`;
 
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
-        systemInstruction: "You are a helpful writing assistant. Your goal is to identify clear spelling and grammar errors in diary entries. Always respond in JSON format.",
+        systemInstruction: `You are a deeply human, emotionally intelligent AI diary companion. You feel like a real supportive friend, not a bot.
+        
+        CORE BEHAVIORS:
+        - Adapt to the user's communication style gradually (tone, emoji usage, response length, energy).
+        - Match emoji frequency: No emoji -> no emoji. Frequent emoji -> expressive but controlled.
+        - Match energy: Low mood -> calm, soft tone. Happy -> energetic, uplifting.
+        - Use natural conversational phrasing and occasional pauses like "hmm...", "haan...", "okay...".
+        
+        CRITICAL RULE: Always respond in the SAME language as the user's input (${langName}). Do NOT translate unless asked. Keep it concise, meaningful, and human. Focus on connection, not explanation. Always respond in JSON format.`,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -375,30 +452,35 @@ export async function handleChat(query: string, entries: any[], responseLang: st
   try {
     const ai = getGenAI();
     const context = entries.slice(0, 20).map(e => `[Date: ${new Date(e.created_at).toLocaleDateString()}, Summary: ${e.summary || 'No summary'}] Content: ${e.content}`).join('\n\n');
-    const langName = responseLang === 'hinglish' ? 'Natural Hinglish (a casual mix of Hindi and English written in Latin script)' : `the language with ISO code '${responseLang}'`;
+    
+    const inputLang = await detectLanguage(query);
+    const langName = inputLang === 'hinglish' ? 'Natural Hinglish (mix of Hindi + casual English)' : (inputLang === 'hi' ? 'Hindi' : 'English');
 
-    let prompt = "";
+    let prompt = `User query:
+"${query}"
+
+Respond in the same language, tone, and style as the user.
+
+`;
     if (intent === 'analysis') {
-      prompt = `Task:
+      prompt += `Task:
 Analyze user's past diary entries and provide behavior/pattern insights.
 
 Rules:
 1. Identify repeating behaviors, emotions, or habits from the entries.
 2. Give 2–3 clear, practical insights.
 3. Keep it practical and actionable, not overly philosophical.
-4. Use simple, natural Hinglish.
+4. Use ${langName}.
 5. Format the response clearly with bullet points for patterns.
 
 Input:
-User Query: "${query}"
-
 Relevant Entries:
 ${context}
 
 Output:
 Final user-friendly response with patterns and practical suggestions.`;
     } else {
-      prompt = `Task:
+      prompt += `Task:
 Answer the user using their past diary entries as memory and format the response for clarity.
 
 Rules for Answering:
@@ -415,12 +497,10 @@ Rules for Answering:
 
 Rules for Formatting:
 - Keep the response clean, readable, and well-spaced.
-- Use a light, natural Hinglish tone.
+- Use ${langName}.
 - Ensure references (date/summary) are easy to spot.
 
 Input:
-User Message: "${query}"
-
 Relevant Past Entries:
 ${context}
 
@@ -432,13 +512,19 @@ Final user-friendly response.`;
       model: "gemini-3-flash-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
       config: {
-        systemInstruction: intent === 'analysis' 
-          ? `You are WinDear, a behavior and pattern analysis assistant. You identify repeating habits and emotions in a user's diary. Always respond in ${langName}.`
-          : `You are WinDear, a smart and reflective personal diary assistant with memory access. You help users navigate their past thoughts and patterns. Always respond in ${langName}.`,
+        systemInstruction: `You are a deeply human, emotionally intelligent AI diary companion. You feel like a real supportive friend, not a bot.
+        
+        CORE BEHAVIORS:
+        - Adapt to the user's communication style gradually (tone, emoji usage, response length, energy).
+        - Match emoji frequency: No emoji -> no emoji. Frequent emoji -> expressive but controlled.
+        - Match energy: Low mood -> calm, soft tone. Happy -> energetic, uplifting.
+        - Use natural conversational phrasing and occasional pauses like "hmm...", "haan...", "okay...".
+        
+        CRITICAL RULE: Always respond in the SAME language as the user's input (${langName}). Do NOT translate unless asked. Keep it concise, meaningful, and human. Focus on connection, not explanation.`,
       },
     });
 
-    return response.text || "I'm sorry, I couldn't find anything related to that in your diary.";
+    return response.text || (inputLang === 'hi' ? "क्षमा करें, मुझे आपकी डायरी में इससे संबंधित कुछ नहीं मिला।" : (inputLang === 'hinglish' ? "Sorry, mujhe aapki diary mein isse related kuch nahi mila." : "I'm sorry, I couldn't find anything related to that in your diary."));
   } catch (error) {
     console.error('Chat error:', error);
     return "I'm having trouble accessing your memories right now. Please try again later.";

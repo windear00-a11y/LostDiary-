@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useRef, Suspense } from 'react';
 import { createClient } from '@/lib/supabase';
+import posthog from 'posthog-js';
 import { Book, Mail, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -44,14 +45,19 @@ function AuthForm() {
           password,
         });
         if (error) throw error;
+        posthog.capture('user_signup', { email });
         setMessage({ type: 'success', text: 'Account created! You can now sign in.' });
         setIsSignUp(false);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error, data } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
         if (error) throw error;
+        if (data.user) {
+          posthog.identify(data.user.id, { email: data.user.email });
+          posthog.capture('user_signin');
+        }
         router.push('/dashboard');
       }
     } catch (err: any) {
@@ -163,6 +169,13 @@ function AuthForm() {
               </motion.div>
             )}
           </AnimatePresence>
+        </div>
+
+        {/* Footer Links */}
+        <div className="flex justify-center gap-6 text-[10px] uppercase tracking-[0.2em] text-[#6B7280] dark:text-gray-500 font-medium pt-4">
+          <button onClick={() => router.push('/privacy')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Privacy Policy</button>
+          <button onClick={() => router.push('/terms')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Terms of Service</button>
+          <button onClick={() => router.push('/support')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Support</button>
         </div>
       </motion.div>
     </main>

@@ -1,11 +1,5 @@
 [
   {
-    "hash": "4dce248d717616f4316a07c1d0f307503335d8ae",
-    "message": "refactor: Remove Vercel Analytics and improve accessibility",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-02T00:26:04+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

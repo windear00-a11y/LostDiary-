@@ -9,6 +9,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useUpdates } from '@/hooks/use-updates';
 import { createClient } from '@/lib/supabase';
+import posthog from 'posthog-js';
 import { DiaryInput } from '@/components/diary/DiaryInput';
 import { DiaryList } from '@/components/diary/DiaryList';
 import GrowthTracker from '@/components/diary/GrowthTracker';
@@ -111,6 +112,12 @@ export default function AppDashboard() {
         .single();
 
       if (error) throw error;
+
+      posthog.capture('entry_created', {
+        mood: aiResult?.mood || 'Neutral',
+        word_count: newEntry.trim().split(/\s+/).length,
+        language: i18n.resolvedLanguage || i18n.language || 'en'
+      });
 
       // 3. Update local state
       setEntries([data, ...entries]);
