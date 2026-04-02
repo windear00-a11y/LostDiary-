@@ -221,6 +221,7 @@ export default function AppDashboard() {
             showSuccess={showSuccess}
             showTranslated={showTranslated}
             setShowTranslated={setShowTranslated}
+            entries={entries}
           />
         </div>
 

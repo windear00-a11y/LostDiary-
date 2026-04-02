@@ -554,3 +554,26 @@ Final user-friendly response.`;
     return "I'm having a little trouble connecting to your memories right now. Could you try asking that again in a moment?";
   }
 }
+
+export async function generateDailyPrompt(entries: any[]) {
+  try {
+    const ai = getGenAI();
+    const context = entries.slice(0, 5).map(e => e.summary || e.content.substring(0, 50)).join(', ');
+    const prompt = `Based on these recent diary themes: "${context}", generate ONE unique, thoughtful, and open-ended writing prompt for today. 
+    If no themes are provided, generate a general self-reflection prompt.
+    Keep it under 15 words. Do not use quotes.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: "You are a supportive diary assistant. Generate a single, short, and inspiring writing prompt.",
+      }
+    });
+
+    return response.text?.trim() || "What's one thing you're grateful for today?";
+  } catch (error) {
+    console.error('Prompt generation error:', error);
+    return "What's on your mind right now?";
+  }
+}

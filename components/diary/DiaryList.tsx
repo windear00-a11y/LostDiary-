@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EntryCard } from '@/components/diary/entry-card';
-import { PenLine, Tag, Filter, LayoutGrid, List } from 'lucide-react';
+import { PenLine, Tag, Filter, LayoutGrid, List, Search, X, Download } from 'lucide-react';
 
 export function DiaryList({
   entries,
@@ -21,6 +21,19 @@ export function DiaryList({
 }) {
   const [selectedTag, setSelectedTag] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleExportData = () => {
+    const dataStr = JSON.stringify(entries, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `windear-diary-export-${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
@@ -33,11 +46,26 @@ export function DiaryList({
   }, [entries]);
 
   const filteredEntries = useMemo(() => {
-    if (selectedTag === 'All') return entries;
-    return entries.filter(entry => 
-      entry.tags && Array.isArray(entry.tags) && entry.tags.includes(selectedTag)
-    );
-  }, [entries, selectedTag]);
+    let result = entries;
+    
+    if (selectedTag !== 'All') {
+      result = result.filter(entry => 
+        entry.tags && Array.isArray(entry.tags) && entry.tags.includes(selectedTag)
+      );
+    }
+
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(entry => 
+        entry.content.toLowerCase().includes(query) || 
+        (entry.summary && entry.summary.toLowerCase().includes(query)) ||
+        (entry.insight && entry.insight.toLowerCase().includes(query)) ||
+        (entry.tags && entry.tags.some((tag: string) => tag.toLowerCase().includes(query)))
+      );
+    }
+
+    return result;
+  }, [entries, selectedTag, searchQuery]);
 
   return (
     <section className="space-y-10">
@@ -50,6 +78,25 @@ export function DiaryList({
         </div>
 
         <div className="flex items-center gap-3">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
+            <input
+              type="text"
+              placeholder="Search memories..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10 py-2 bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#2E2E2E] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all w-full md:w-64"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <X className="w-3 h-3 text-gray-400" />
+              </button>
+            )}
+          </div>
+
           <div className="flex bg-white dark:bg-[#1A1A1A] p-1 rounded-xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm">
             <button
               onClick={() => setViewMode('list')}
@@ -66,6 +113,14 @@ export function DiaryList({
               <LayoutGrid className="w-4 h-4" />
             </button>
           </div>
+
+          <button
+            onClick={handleExportData}
+            className="p-2 bg-white dark:bg-[#1A1A1A] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 border border-gray-100 dark:border-[#2E2E2E] rounded-xl shadow-sm transition-all"
+            title="Export all entries as JSON"
+          >
+            <Download className="w-4 h-4" />
+          </button>
         </div>
       </div>
 

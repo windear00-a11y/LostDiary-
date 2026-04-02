@@ -1,5 +1,5 @@
 'use client';
-import { Sparkles, Loader2, Info, Mic, MicOff, Languages } from 'lucide-react';
+import { Sparkles, Loader2, Info, Mic, MicOff, Languages, Lightbulb } from 'lucide-react';
 import { RefObject, useState, useEffect, useCallback } from 'react';
 import { checkSpelling } from '@/lib/ai';
 import { motion, AnimatePresence } from 'motion/react';
@@ -16,7 +16,8 @@ export function DiaryInput({
   setIsChatMode,
   showSuccess,
   showTranslated,
-  setShowTranslated
+  setShowTranslated,
+  entries
 }: {
   newEntry: string;
   setNewEntry: React.Dispatch<React.SetStateAction<string>>;
@@ -30,6 +31,7 @@ export function DiaryInput({
   showSuccess: boolean;
   showTranslated: boolean;
   setShowTranslated: React.Dispatch<React.SetStateAction<boolean>>;
+  entries: any[];
 }) {
   const [spellingSuggestion, setSpellingSuggestion] = useState<{ suggestion: string, explanation: string } | null>(null);
   const [isCheckingSpelling, setIsCheckingSpelling] = useState(false);
@@ -37,6 +39,21 @@ export function DiaryInput({
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+
+  const handleGetPrompt = async () => {
+    setIsGeneratingPrompt(true);
+    try {
+      const { generateDailyPrompt } = await import('@/lib/ai');
+      const prompt = await generateDailyPrompt(entries);
+      setNewEntry(prompt);
+      textareaRef.current?.focus();
+    } catch (error) {
+      console.error('Prompt error:', error);
+    } finally {
+      setIsGeneratingPrompt(false);
+    }
+  };
 
   const handleTranslateEntry = async () => {
     if (!newEntry.trim()) return;
@@ -178,6 +195,17 @@ export function DiaryInput({
             >
               <Languages className="w-3 h-3" />
               {showTranslated ? 'English View' : 'Original View'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGetPrompt}
+              disabled={isGeneratingPrompt}
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95 border bg-white dark:bg-[#262626] text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/30 hover:bg-indigo-50 disabled:opacity-50"
+              title="Get a personalized writing prompt"
+            >
+              {isGeneratingPrompt ? <Loader2 className="w-3 h-3 animate-spin" /> : <Lightbulb className="w-3 h-3" />}
+              Need a prompt?
             </button>
             
             <div className="h-4 w-[1px] bg-gray-200 dark:bg-gray-800 mx-2" />

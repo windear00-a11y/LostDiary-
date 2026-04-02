@@ -1,11 +1,5 @@
 [
   {
-    "hash": "a558c7b2d16e7ca6b09dac125980755aaaa5e448",
-    "message": "feat: Add translation and chat capabilities",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-02T23:59:37+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

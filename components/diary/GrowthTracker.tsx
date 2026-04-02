@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { TrendingUp, Activity, Sparkles, RefreshCw } from 'lucide-react';
+import { TrendingUp, Activity, Sparkles, RefreshCw, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { generateGrowthInsight } from '@/lib/ai';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 interface Entry {
   id: string;
@@ -42,10 +43,28 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
     const recentEntries = entries.filter(e => new Date(e.created_at) >= fourWeeksAgo);
     const entriesPerWeek = (recentEntries.length / 4).toFixed(1);
 
+    // Mood trend data for chart
+    const moodValues: Record<string, number> = {
+      'Happy': 4,
+      'Neutral': 3,
+      'Stressed': 2,
+      'Sad': 1
+    };
+
+    const trendData = entries
+      .slice(0, 10)
+      .reverse()
+      .map(e => ({
+        date: new Date(e.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+        value: moodValues[e.mood || 'Neutral'] || 3,
+        mood: e.mood || 'Neutral'
+      }));
+
     return {
       moodDistribution,
       entriesPerWeek,
-      recentCount: recentEntries.length
+      recentCount: recentEntries.length,
+      trendData
     };
   }, [entries]);
 
@@ -75,6 +94,53 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-8 bg-white dark:bg-[#1A1A1A] p-10 rounded-[3rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300 min-h-[320px]">
           <div className="space-y-6">
+            <span className="text-[10px] uppercase tracking-widest text-[#6366F1] font-sans block">Mood Trend</span>
+            <div className="h-48 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats.trendData}>
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366F1" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="date" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                    dy={10}
+                  />
+                  <YAxis hide domain={[0, 5]} />
+                  <Tooltip 
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-white dark:bg-[#1A1A1A] p-3 rounded-xl border border-gray-100 dark:border-[#2E2E2E] shadow-xl">
+                            <p className="text-[10px] font-bold text-[#6366F1] uppercase tracking-widest mb-1">{payload[0].payload.date}</p>
+                            <p className="text-sm font-serif italic text-gray-900 dark:text-white">{payload[0].payload.mood}</p>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="#6366F1" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorValue)" 
+                    animationDuration={1500}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="space-y-6 pt-6 border-t border-gray-50 dark:border-[#2E2E2E]">
             <span className="text-[10px] uppercase tracking-widest text-[#6366F1] font-sans block">Mood Distribution</span>
             <div className="space-y-5">
               {stats.moodDistribution.slice(0, 3).map((item) => (
