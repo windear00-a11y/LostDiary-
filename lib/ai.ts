@@ -410,17 +410,14 @@ export async function classifyIntent(userInput: string) {
   try {
     const ai = getGenAI();
     const prompt = `Task:
-Classify the user's message into ONE of these:
+Classify the user's message into ONE of these categories:
 
-1. "entry" → user is writing a new diary entry
-2. "recall" → user is asking about past memory
-3. "analysis" → user wants patterns, insights, or behavior analysis
-4. "chat" → user is asking a general question, seeking advice, or just chatting (not necessarily about past entries)
+1. "entry" → User is sharing their feelings, describing their day, or writing a personal reflection. (e.g., "Aaj ka din bahut achha tha", "I'm feeling sad today")
+2. "recall" → User is asking about a specific past event or memory. (e.g., "Last week kya hua tha?", "When did I go to the park?")
+3. "analysis" → User wants to know about their patterns, habits, or emotional trends. (e.g., "Mera mood kaisa raha hai?", "Analyze my behavior")
+4. "chat" → User is asking a question (general or about the app), seeking advice, or just talking to the AI. (e.g., "How do you work?", "Kya tum help kar sakte ho?", "What is the capital of France?")
 
-Rules:
-- User input may be Hinglish, Hindi, or English
-- Focus on intent, not exact words
-- Output strictly JSON
+CRITICAL RULE: If the input ends with a question mark (?) or is phrased as a question (Kya, How, Why, When, Where, etc.), it should ALMOST ALWAYS be classified as "chat", "recall", or "analysis", NOT "entry".
 
 User Input:
 "${userInput}"`;
@@ -542,7 +539,7 @@ Final user-friendly response.`;
       },
     });
 
-    return response.text || (inputLang === 'hi' ? "क्षमा करें, मुझे आपकी डायरी में इससे संबंधित कुछ नहीं मिला।" : (inputLang === 'hinglish' ? "Sorry, mujhe aapki diary mein isse related kuch nahi mila." : "I'm sorry, I couldn't find anything related to that in your diary."));
+    return response.text || (inputLang === 'hi' ? "क्षमा करें, मैं अभी इसका उत्तर नहीं दे पा रहा हूँ।" : (inputLang === 'hinglish' ? "Sorry, main abhi iska jawab nahi de pa raha hoon." : "I'm sorry, I'm having trouble answering that right now."));
   } catch (error) {
     console.error('Chat error:', error);
     return "I'm having trouble accessing your memories right now. Please try again later.";

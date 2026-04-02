@@ -40,6 +40,13 @@ export default function AppDashboard() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [chatResponse, setChatResponse] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const chatResponseRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatResponse && chatResponseRef.current) {
+      chatResponseRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [chatResponse]);
 
   const fetchEntries = useCallback(async () => {
     if (!supabase || !user) return;
@@ -76,7 +83,18 @@ export default function AppDashboard() {
 
     try {
       // 1. Classify Intent
-      const intent = await classifyIntent(newEntry);
+      let intent = await classifyIntent(newEntry);
+      
+      // Manual safety check for common question indicators
+      const lowerEntry = newEntry.toLowerCase().trim();
+      const questionIndicators = ['?', 'kya', 'how', 'why', 'when', 'where', 'kaise', 'kab', 'kyun', 'kahan', 'who', 'kaun'];
+      const isLikelyQuestion = questionIndicators.some(indicator => 
+        indicator === '?' ? lowerEntry.endsWith('?') : lowerEntry.startsWith(indicator) || lowerEntry.includes(` ${indicator} `)
+      );
+
+      if (isLikelyQuestion && intent === 'entry') {
+        intent = 'chat';
+      }
 
       if (intent === 'recall' || intent === 'analysis' || intent === 'chat') {
         const response = await handleChat(newEntry, entries, i18n.resolvedLanguage || i18n.language || 'en', intent);
@@ -174,7 +192,7 @@ export default function AppDashboard() {
           )}
         </div>
 
-        <div className="min-h-[0px]">
+        <div className="min-h-[0px]" ref={chatResponseRef}>
           <ChatResponse 
             response={chatResponse} 
             onClose={() => setChatResponse(null)} 

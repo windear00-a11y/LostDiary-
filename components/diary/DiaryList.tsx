@@ -1,7 +1,8 @@
 'use client';
+import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EntryCard } from '@/components/diary/entry-card';
-import { PenLine, Sparkles } from 'lucide-react';
+import { PenLine, Tag, Filter, LayoutGrid, List } from 'lucide-react';
 
 export function DiaryList({
   entries,
@@ -16,14 +17,82 @@ export function DiaryList({
   t: (key: string) => string;
   handleStartWriting: () => void;
 }) {
+  const [selectedTag, setSelectedTag] = useState<string>('All');
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    entries.forEach(entry => {
+      if (entry.tags && Array.isArray(entry.tags)) {
+        entry.tags.forEach((tag: string) => tags.add(tag));
+      }
+    });
+    return ['All', ...Array.from(tags).sort()];
+  }, [entries]);
+
+  const filteredEntries = useMemo(() => {
+    if (selectedTag === 'All') return entries;
+    return entries.filter(entry => 
+      entry.tags && Array.isArray(entry.tags) && entry.tags.includes(selectedTag)
+    );
+  }, [entries, selectedTag]);
+
   return (
     <section className="space-y-10">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-serif italic tracking-tight text-slate-900 dark:text-[#F9FAFB]">{t('dash.past')}</h2>
-        <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">{entries.length} {t('dash.entries')}</span>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="space-y-1">
+          <h2 className="text-3xl font-serif italic tracking-tight text-slate-900 dark:text-[#F9FAFB]">{t('dash.past')}</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+            {filteredEntries.length} {t('dash.entries')} {selectedTag !== 'All' && `in #${selectedTag}`}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <div className="flex bg-white dark:bg-[#1A1A1A] p-1 rounded-xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              title="List View"
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
+              title="Grid View"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* Category Filter Bar */}
+      {!isLoadingEntries && entries.length > 0 && (
+        <div className="relative">
+          <div className="flex items-center gap-3 overflow-x-auto pb-4 no-scrollbar scroll-smooth">
+            <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#1A1A1A] rounded-full border border-gray-100 dark:border-[#2E2E2E] shadow-sm shrink-0">
+              <Tag className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Categories</span>
+            </div>
+            {allTags.map((tag) => (
+              <button
+                key={tag}
+                onClick={() => setSelectedTag(tag)}
+                className={`px-6 py-2.5 rounded-full text-xs font-semibold transition-all shrink-0 border ${
+                  selectedTag === tag
+                    ? 'bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] border-[#111827] dark:border-[#F9FAFB] shadow-lg shadow-indigo-100 dark:shadow-none scale-105'
+                    : 'bg-white dark:bg-[#1A1A1A] text-gray-500 dark:text-gray-400 border-gray-100 dark:border-[#2E2E2E] hover:border-indigo-200 dark:hover:border-indigo-800/50 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10'
+                }`}
+              >
+                {tag === 'All' ? 'All Entries' : `#${tag}`}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       
-      <div className="space-y-8">
+      <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-8' : 'space-y-8'}>
         {isLoadingEntries ? (
           Array.from({ length: 3 }).map((_, i) => (
             <div key={`skeleton-${i}`} className="bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm animate-pulse min-h-[300px]">
@@ -42,21 +111,30 @@ export function DiaryList({
                 <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded-full" />
                 <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-800 rounded-full" />
               </div>
-              <div className="pt-6 border-t border-gray-50 dark:border-gray-800 space-y-4">
-                <div className="h-3 w-24 bg-gray-200 dark:bg-gray-800 rounded-full" />
-                <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded-full" />
-              </div>
             </div>
           ))
-        ) : entries.map((entry) => (
-          <EntryCard key={entry.id} entry={entry} deleteEntry={deleteEntry} t={t} onTryNow={handleStartWriting} />
-        ))}
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {filteredEntries.map((entry) => (
+              <motion.div
+                key={entry.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+              >
+                <EntryCard entry={entry} deleteEntry={deleteEntry} t={t} onTryNow={handleStartWriting} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
 
         {!isLoadingEntries && entries.length === 0 && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center py-24 space-y-8 text-center bg-white dark:bg-[#1A1A1A] rounded-[3rem] border border-slate-100 dark:border-[#2E2E2E] shadow-sm min-h-[400px]"
+            className="flex flex-col items-center justify-center py-24 space-y-8 text-center bg-white dark:bg-[#1A1A1A] rounded-[3rem] border border-slate-100 dark:border-[#2E2E2E] shadow-sm min-h-[400px] col-span-full"
           >
             <div className="relative">
               <div className="absolute inset-0 bg-indigo-100 dark:bg-indigo-900/20 rounded-full blur-2xl opacity-40 animate-pulse" />
@@ -70,21 +148,17 @@ export function DiaryList({
             </div>
             <button
               onClick={handleStartWriting}
-              aria-label={t('dash.empty.cta')}
               className="bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] px-10 py-5 rounded-2xl text-base font-semibold hover:bg-[#1f2937] dark:hover:bg-white transition-all active:scale-95 shadow-xl shadow-indigo-100 dark:shadow-none"
             >
               {t('dash.empty.cta')}
             </button>
-            
-            {/* Demo Card */}
-            <div className="w-full max-w-sm px-6">
-              <div className="bg-gray-50 dark:bg-[#262626] p-6 rounded-2xl border border-gray-100 dark:border-[#333333] text-left opacity-60 hover:opacity-100 transition-opacity cursor-default group">
-                <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400 dark:text-gray-500 mb-2">{t('dash.empty.demoLabel')}</p>
-                <p className="font-serif italic text-[#111827] dark:text-[#F9FAFB] mb-1">&ldquo;{t('dash.empty.demoTitle')}&rdquo;</p>
-                <p className="text-sm text-[#6B7280] dark:text-[#9CA3AF] line-clamp-1">{t('dash.empty.demoText')}</p>
-              </div>
-            </div>
           </motion.div>
+        )}
+
+        {!isLoadingEntries && entries.length > 0 && filteredEntries.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-20 text-center col-span-full">
+            <p className="text-gray-500 dark:text-gray-400 italic font-serif">No entries found in this category.</p>
+          </div>
         )}
       </div>
     </section>
