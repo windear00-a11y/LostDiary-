@@ -39,6 +39,9 @@ export default function AppDashboard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [chatResponse, setChatResponse] = useState<string | null>(null);
+  const [isChatMode, setIsChatMode] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [showTranslated, setShowTranslated] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatResponseRef = useRef<HTMLDivElement>(null);
 
@@ -83,17 +86,19 @@ export default function AppDashboard() {
 
     try {
       // 1. Classify Intent
-      let intent = await classifyIntent(newEntry);
+      let intent: 'entry' | 'recall' | 'analysis' | 'chat' = isChatMode ? 'chat' : await classifyIntent(newEntry);
       
       // Manual safety check for common question indicators
-      const lowerEntry = newEntry.toLowerCase().trim();
-      const questionIndicators = ['?', 'kya', 'how', 'why', 'when', 'where', 'kaise', 'kab', 'kyun', 'kahan', 'who', 'kaun'];
-      const isLikelyQuestion = questionIndicators.some(indicator => 
-        indicator === '?' ? lowerEntry.endsWith('?') : lowerEntry.startsWith(indicator) || lowerEntry.includes(` ${indicator} `)
-      );
-
-      if (isLikelyQuestion && intent === 'entry') {
-        intent = 'chat';
+      if (!isChatMode) {
+        const lowerEntry = newEntry.toLowerCase().trim();
+        const questionIndicators = ['?', 'kya', 'how', 'why', 'when', 'where', 'kaise', 'kab', 'kyun', 'kahan', 'who', 'kaun'];
+        const isLikelyQuestion = questionIndicators.some(indicator => 
+          indicator === '?' ? lowerEntry.endsWith('?') : lowerEntry.startsWith(indicator) || lowerEntry.includes(` ${indicator} `)
+        );
+  
+        if (isLikelyQuestion && intent === 'entry') {
+          intent = 'chat';
+        }
       }
 
       if (intent === 'recall' || intent === 'analysis' || intent === 'chat') {
@@ -140,6 +145,8 @@ export default function AppDashboard() {
       // 3. Update local state
       setEntries([data, ...entries]);
       setNewEntry('');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
     } catch (err: any) {
       console.error('Error saving entry:', err);
       setSubmitError(err.message || 'Failed to save entry');
@@ -209,6 +216,11 @@ export default function AppDashboard() {
             submitError={submitError}
             t={t}
             textareaRef={textareaRef}
+            isChatMode={isChatMode}
+            setIsChatMode={setIsChatMode}
+            showSuccess={showSuccess}
+            showTranslated={showTranslated}
+            setShowTranslated={setShowTranslated}
           />
         </div>
 
@@ -219,6 +231,7 @@ export default function AppDashboard() {
             deleteEntry={deleteEntry}
             t={t}
             handleStartWriting={handleStartWriting}
+            showTranslated={showTranslated}
           />
         </div>
 

@@ -7,11 +7,14 @@ interface EntryCardProps {
   deleteEntry: (id: string) => void;
   t: any;
   onTryNow?: () => void;
+  showTranslatedGlobal?: boolean;
 }
 
-export function EntryCard({ entry, deleteEntry, t, onTryNow }: EntryCardProps) {
-  const [showOriginal, setShowOriginal] = useState(false);
+export function EntryCard({ entry, deleteEntry, t, onTryNow, showTranslatedGlobal = false }: EntryCardProps) {
+  const [localShowOriginal, setLocalShowOriginal] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
+  
+  const showOriginal = localShowOriginal !== null ? localShowOriginal : !showTranslatedGlobal;
   
   const hasTranslation = entry.translated_content && entry.translated_content !== entry.content;
   const readingTime = Math.max(1, Math.ceil(entry.content.split(/\s+/).length / 200));
@@ -91,7 +94,7 @@ export function EntryCard({ entry, deleteEntry, t, onTryNow }: EntryCardProps) {
           </button>
           {hasTranslation && (
             <button
-              onClick={() => setShowOriginal(!showOriginal)}
+              onClick={() => setLocalShowOriginal(showOriginal ? false : true)}
               className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-600 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors bg-indigo-50/50 hover:bg-indigo-50 dark:bg-indigo-900/10 dark:hover:bg-indigo-900/20 px-3 py-1.5 rounded-full"
               title={showOriginal ? t('dash.translated') : t('dash.original')}
               aria-label={showOriginal ? t('dash.translated') : t('dash.original')}

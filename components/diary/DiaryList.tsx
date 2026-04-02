@@ -9,13 +9,15 @@ export function DiaryList({
   isLoadingEntries,
   deleteEntry,
   t,
-  handleStartWriting
+  handleStartWriting,
+  showTranslated
 }: {
   entries: any[];
   isLoadingEntries: boolean;
   deleteEntry: (id: string) => Promise<void>;
   t: (key: string) => string;
   handleStartWriting: () => void;
+  showTranslated: boolean;
 }) {
   const [selectedTag, setSelectedTag] = useState<string>('All');
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -124,7 +126,13 @@ export function DiaryList({
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
               >
-                <EntryCard entry={entry} deleteEntry={deleteEntry} t={t} onTryNow={handleStartWriting} />
+                <EntryCard 
+                  entry={entry} 
+                  deleteEntry={deleteEntry} 
+                  t={t} 
+                  onTryNow={handleStartWriting} 
+                  showTranslatedGlobal={showTranslated}
+                />
               </motion.div>
             ))}
           </AnimatePresence>

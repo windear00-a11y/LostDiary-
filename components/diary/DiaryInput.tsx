@@ -1,5 +1,5 @@
 'use client';
-import { Sparkles, Loader2, Info, Mic, MicOff } from 'lucide-react';
+import { Sparkles, Loader2, Info, Mic, MicOff, Languages } from 'lucide-react';
 import { RefObject, useState, useEffect, useCallback } from 'react';
 import { checkSpelling } from '@/lib/ai';
 import { motion, AnimatePresence } from 'motion/react';
@@ -11,7 +11,12 @@ export function DiaryInput({
   isSubmitting,
   submitError,
   t,
-  textareaRef
+  textareaRef,
+  isChatMode,
+  setIsChatMode,
+  showSuccess,
+  showTranslated,
+  setShowTranslated
 }: {
   newEntry: string;
   setNewEntry: React.Dispatch<React.SetStateAction<string>>;
@@ -20,12 +25,34 @@ export function DiaryInput({
   submitError: string | null;
   t: (key: string) => string;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
+  isChatMode: boolean;
+  setIsChatMode: React.Dispatch<React.SetStateAction<boolean>>;
+  showSuccess: boolean;
+  showTranslated: boolean;
+  setShowTranslated: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [spellingSuggestion, setSpellingSuggestion] = useState<{ suggestion: string, explanation: string } | null>(null);
   const [isCheckingSpelling, setIsCheckingSpelling] = useState(false);
   const [isQuery, setIsQuery] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  const handleTranslateEntry = async () => {
+    if (!newEntry.trim()) return;
+    setIsTranslating(true);
+    try {
+      const { translateText } = await import('@/lib/ai');
+      const translated = await translateText(newEntry, 'en');
+      if (translated && translated !== newEntry) {
+        setNewEntry(translated);
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   const startListening = useCallback(() => {
     if (isListening) return;
@@ -108,16 +135,53 @@ export function DiaryInput({
   }, [newEntry]);
 
   return (
-    <section className="bg-white dark:bg-[#1A1A1A] p-6 sm:p-10 rounded-2xl sm:rounded-3xl shadow-lg shadow-indigo-50/50 dark:shadow-none border border-slate-100 dark:border-[#2E2E2E] space-y-6 transition-colors duration-300">
+    <section className={`p-6 sm:p-10 rounded-2xl sm:rounded-3xl shadow-lg shadow-indigo-50/50 dark:shadow-none border space-y-6 transition-all duration-500 ${isChatMode ? 'bg-indigo-50/30 dark:bg-indigo-900/5 border-indigo-200 dark:border-indigo-800/30' : 'bg-white dark:bg-[#1A1A1A] border-slate-100 dark:border-[#2E2E2E]'}`}>
       {submitError && (
         <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-2xl text-red-600 dark:text-red-400 text-sm">
           <p className="font-bold mb-1">Error saving entry:</p>
           <p>{submitError}</p>
         </div>
       )}
+
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="p-4 bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20 rounded-2xl text-green-600 dark:text-green-400 text-sm flex items-center gap-3"
+          >
+            <div className="w-8 h-8 bg-white dark:bg-[#1A1A1A] rounded-full flex items-center justify-center shadow-sm border border-green-100 dark:border-green-900/20">
+              <Sparkles className="w-4 h-4 text-green-500" />
+            </div>
+            <p className="font-medium">Entry saved successfully! Your memory is safe with WinDear.</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-3">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <button
+              type="button"
+              onClick={() => setIsChatMode(!isChatMode)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95 border ${isChatMode ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200' : 'bg-white dark:bg-[#262626] text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/30 hover:bg-indigo-50'}`}
+            >
+              <Sparkles className={`w-3 h-3 ${isChatMode ? 'animate-pulse' : ''}`} />
+              {isChatMode ? 'Chat Mode Active' : 'Switch to Chat'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowTranslated(!showTranslated)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95 border ${showTranslated ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200' : 'bg-white dark:bg-[#262626] text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/30 hover:bg-indigo-50'}`}
+              title="Toggle English translation for all entries"
+            >
+              <Languages className="w-3 h-3" />
+              {showTranslated ? 'English View' : 'Original View'}
+            </button>
+            
+            <div className="h-4 w-[1px] bg-gray-200 dark:bg-gray-800 mx-2" />
+
             <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400 whitespace-nowrap mr-2">
               {t('dash.prompts')}
             </span>
@@ -149,9 +213,9 @@ export function DiaryInput({
               ref={textareaRef}
               value={newEntry}
               onChange={(e) => setNewEntry(e.target.value)}
-              placeholder={t('dash.placeholder')}
-              aria-label={t('dash.placeholder')}
-              className="w-full min-h-[240px] pt-6 px-6 pb-20 bg-gray-50 dark:bg-[#262626] border-none rounded-[2.5rem] text-base focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all outline-none resize-none placeholder:text-gray-400 dark:placeholder:text-gray-600 text-[#111827] dark:text-[#F9FAFB]"
+              placeholder={isChatMode ? "Ask WinDear anything about your day, patterns, or for advice..." : t('dash.placeholder')}
+              aria-label={isChatMode ? "Ask WinDear anything" : t('dash.placeholder')}
+              className={`w-full min-h-[240px] pt-6 px-6 pb-20 border-none rounded-[2.5rem] text-base focus:ring-2 transition-all outline-none resize-none text-[#111827] dark:text-[#F9FAFB] ${isChatMode ? 'bg-white dark:bg-[#1A1A1A] focus:ring-indigo-200 dark:focus:ring-indigo-900/50 placeholder:text-indigo-300 dark:placeholder:text-indigo-800/50' : 'bg-gray-50 dark:bg-[#262626] focus:ring-indigo-100 dark:focus:ring-indigo-900/30 placeholder:text-gray-400 dark:placeholder:text-gray-600'}`}
             />
             
             <AnimatePresence>
@@ -199,12 +263,23 @@ export function DiaryInput({
               <div className="flex items-center gap-2 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 pointer-events-auto shadow-sm">
                 <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-red-500 animate-ping' : newEntry.length > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} aria-hidden="true" />
                 <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500 dark:text-gray-400">
-                  {isListening ? "Listening..." : newEntry.length > 0 ? t('dash.writingMood') : t('dash.readyToListen')}
+                  {isListening ? "Listening..." : newEntry.length > 0 ? (isChatMode ? "Thinking..." : t('dash.writingMood')) : (isChatMode ? "Ask me anything" : t('dash.readyToListen'))}
                 </span>
               </div>
 
-              {/* Right side: Mic & Chars */}
+              {/* Right side: Mic & Chars & Translate */}
               <div className="flex items-center gap-3 pointer-events-auto">
+                {newEntry.length > 5 && (
+                  <button
+                    type="button"
+                    onClick={handleTranslateEntry}
+                    disabled={isTranslating}
+                    className="p-2 bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-full border border-gray-100 dark:border-white/10 shadow-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all disabled:opacity-50"
+                    title="Translate current text to English"
+                  >
+                    {isTranslating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Languages className="w-4 h-4" />}
+                  </button>
+                )}
                 <span className="hidden sm:block text-[10px] uppercase tracking-widest font-bold text-gray-400 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 shadow-sm">
                   {newEntry.length} {t('dash.chars')}
                 </span>
@@ -258,18 +333,23 @@ export function DiaryInput({
         <div className="flex justify-end">
           <button
             type="submit"
-            disabled={isSubmitting || !newEntry.trim()}
-            aria-label={isSubmitting ? t('dash.reflecting') : (isQuery ? 'Ask WinDear' : t('dash.save'))}
-            className="group flex items-center gap-3 bg-slate-900 dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] px-10 py-5 rounded-full text-base font-semibold hover:bg-slate-800 dark:hover:bg-white transition-all duration-300 hover:shadow-lg active:scale-95 disabled:opacity-50"
+            disabled={isSubmitting || (!newEntry.trim() && !showSuccess)}
+            aria-label={isSubmitting ? t('dash.reflecting') : (showSuccess ? 'Saved!' : (isChatMode ? 'Ask WinDear' : (isQuery ? 'Ask WinDear' : t('dash.save'))))}
+            className={`group flex items-center gap-3 px-10 py-5 rounded-full text-base font-semibold transition-all duration-300 hover:shadow-lg active:scale-95 disabled:opacity-50 ${showSuccess ? 'bg-green-500 text-white' : (isChatMode ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-900 dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] hover:bg-slate-800 dark:hover:bg-white')}`}
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
                 {t('dash.reflecting')}
               </>
+            ) : showSuccess ? (
+              <>
+                Saved!
+                <Sparkles className="w-5 h-5 animate-bounce" aria-hidden="true" />
+              </>
             ) : (
               <>
-                {isQuery ? 'Ask WinDear' : t('dash.save')}
+                {isChatMode ? 'Ask WinDear' : (isQuery ? 'Ask WinDear' : t('dash.save'))}
                 <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" aria-hidden="true" />
               </>
             )}

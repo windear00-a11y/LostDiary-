@@ -1,6 +1,7 @@
 'use client';
 import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, X, MessageCircle } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatResponseProps {
   response: string | null;
@@ -41,9 +42,18 @@ export function ChatResponse({ response, onClose, t }: ChatResponseProps) {
           </div>
 
           <div className="prose prose-indigo dark:prose-invert max-w-none">
-            <p className="text-[#374151] dark:text-[#D1D5DB] leading-relaxed text-lg italic font-serif">
-              &ldquo;{response}&rdquo;
-            </p>
+            <div className="text-[#374151] dark:text-[#D1D5DB] leading-relaxed text-lg italic font-serif">
+              <ReactMarkdown 
+                components={{
+                  p: ({ children }) => <p className="mb-4 last:mb-0">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc list-inside mb-4 space-y-2">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-inside mb-4 space-y-2">{children}</ol>,
+                  li: ({ children }) => <li className="ml-4">{children}</li>,
+                }}
+              >
+                {response}
+              </ReactMarkdown>
+            </div>
           </div>
 
           <div className="mt-8 flex items-center gap-2 text-[10px] font-bold text-[#6366F1] uppercase tracking-widest">

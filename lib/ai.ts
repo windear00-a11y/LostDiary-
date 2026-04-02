@@ -449,7 +449,8 @@ User Input:
 export async function handleChat(query: string, entries: any[], responseLang: string, intent: 'recall' | 'analysis' | 'chat' = 'recall') {
   try {
     const ai = getGenAI();
-    const context = entries.slice(0, 20).map(e => `[Date: ${new Date(e.created_at).toLocaleDateString()}, Summary: ${e.summary || 'No summary'}] Content: ${e.content}`).join('\n\n');
+    const safeEntries = Array.isArray(entries) ? entries : [];
+    const context = safeEntries.slice(0, 20).map(e => `[Date: ${new Date(e.created_at).toLocaleDateString()}, Summary: ${e.summary || 'No summary'}] Content: ${e.content}`).join('\n\n');
     
     const inputLang = await detectLanguage(query);
     const langName = inputLang === 'hinglish' ? 'Natural Hinglish (mix of Hindi + casual English)' : (inputLang === 'hi' ? 'Hindi' : 'English');
@@ -539,9 +540,17 @@ Final user-friendly response.`;
       },
     });
 
-    return response.text || (inputLang === 'hi' ? "क्षमा करें, मैं अभी इसका उत्तर नहीं दे पा रहा हूँ।" : (inputLang === 'hinglish' ? "Sorry, main abhi iska jawab nahi de pa raha hoon." : "I'm sorry, I'm having trouble answering that right now."));
-  } catch (error) {
+    if (!response || !response.text) {
+      throw new Error("AI returned an empty response.");
+    }
+
+    return response.text;
+  } catch (error: any) {
     console.error('Chat error:', error);
-    return "I'm having trouble accessing your memories right now. Please try again later.";
+    const errorMessage = error?.message || "Unknown error";
+    if (errorMessage.includes("quota") || errorMessage.includes("429")) {
+      return "I'm a bit overwhelmed right now. Please give me a moment to breathe and try again.";
+    }
+    return "I'm having a little trouble connecting to your memories right now. Could you try asking that again in a moment?";
   }
 }
