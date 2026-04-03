@@ -67,10 +67,10 @@ export function WinDearAssistant({
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h3 className="text-lg font-serif italic text-gray-900 dark:text-white">WinDear Assistant</h3>
+            <h3 className="text-base sm:text-lg font-serif italic text-gray-900 dark:text-white">WinDear Assistant</h3>
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400">Always here to listen</span>
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-widest font-bold text-gray-400">Always here to listen</span>
             </div>
           </div>
         </div>

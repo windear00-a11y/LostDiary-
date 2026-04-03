@@ -31,7 +31,7 @@ export const AppLayout = ({ children, onNewEntry }: AppLayoutProps) => {
       />
 
       {/* Main Content Container */}
-      <main className="max-w-[800px] mx-auto px-4 sm:px-6 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         {children}
       </main>
 

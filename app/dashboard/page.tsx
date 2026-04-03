@@ -159,11 +159,11 @@ export default function AppDashboard() {
   return (
     <AppLayout onNewEntry={handleStartWriting}>
       <div className="space-y-12 min-h-screen">
-        <div className="text-center space-y-4 pt-10 min-h-[160px] flex flex-col justify-center">
-          <h1 className="text-4xl font-serif italic text-gray-900 dark:text-[#F9FAFB]">
+        <div className="text-center space-y-4 pt-6 sm:pt-10 min-h-[140px] sm:min-h-[160px] flex flex-col justify-center px-4">
+          <h1 className="text-3xl sm:text-4xl font-serif italic text-gray-900 dark:text-[#F9FAFB]">
             {t('dash.hello', 'Hello')}, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
           </h1>
-          <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             {t('dash.howAreYou', 'How are you feeling today?')}
           </p>
         </div>
@@ -183,8 +183,9 @@ export default function AppDashboard() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-7 space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* 1. Diary Input (Top on both) */}
+          <div className="lg:col-span-7 order-1 space-y-8">
             <div className="min-h-[300px]">
               <DiaryInput 
                 newEntry={newEntry}
@@ -200,7 +201,28 @@ export default function AppDashboard() {
                 entries={entries}
               />
             </div>
+          </div>
 
+          {/* 2. Assistant (Middle on mobile, Right on desktop) */}
+          <div className="lg:col-span-5 order-2 lg:order-3 space-y-8 lg:sticky lg:top-8">
+            <WinDearAssistant 
+              onSendMessage={handleAssistantMessage}
+              isSubmitting={isAssistantLoading}
+              t={t}
+            />
+
+            <div className="hidden lg:block">
+              {!isLoadingEntries && entries.length > 0 && (
+                <div className="space-y-8">
+                  <WeeklyReflection entries={entries} />
+                  <GrowthTracker entries={entries} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 3. Diary List (Bottom on mobile, Left on desktop) */}
+          <div className="lg:col-span-7 order-3 lg:order-2 space-y-8">
             <div className="min-h-[600px]">
               <DiaryList 
                 entries={entries}
@@ -211,24 +233,15 @@ export default function AppDashboard() {
                 showTranslated={showTranslated}
               />
             </div>
-          </div>
-
-          <div className="lg:col-span-5 space-y-8">
-            <div className="sticky top-8">
-              <WinDearAssistant 
-                onSendMessage={handleAssistantMessage}
-                isSubmitting={isAssistantLoading}
-                t={t}
-              />
-
-              <div className="mt-8">
-                {!isLoadingEntries && entries.length > 0 && (
-                  <div className="space-y-8">
-                    <WeeklyReflection entries={entries} />
-                    <GrowthTracker entries={entries} />
-                  </div>
-                )}
-              </div>
+            
+            {/* Show trackers at the very bottom on mobile */}
+            <div className="lg:hidden">
+              {!isLoadingEntries && entries.length > 0 && (
+                <div className="space-y-8">
+                  <WeeklyReflection entries={entries} />
+                  <GrowthTracker entries={entries} />
+                </div>
+              )}
             </div>
           </div>
         </div>

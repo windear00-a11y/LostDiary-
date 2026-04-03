@@ -53,7 +53,7 @@ export function EntryCard({ entry, deleteEntry, t, onTryNow, showTranslatedGloba
       layout
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className={`bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm hover:shadow-md transition-all group min-h-[200px] ${entry.suggestion ? 'hover:border-indigo-200 dark:hover:border-indigo-800/50' : ''}`}
+      className={`bg-white dark:bg-[#1A1A1A] p-6 sm:p-8 rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm hover:shadow-md transition-all group min-h-[200px] ${entry.suggestion ? 'hover:border-indigo-200 dark:hover:border-indigo-800/50' : ''}`}
     >
       <div className="flex justify-between items-start mb-6">
         <div className="space-y-1">

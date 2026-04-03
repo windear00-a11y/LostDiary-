@@ -149,7 +149,7 @@ export function DiaryInput({
   }, [newEntry]);
 
   return (
-    <section className={`p-6 sm:p-10 rounded-2xl sm:rounded-3xl shadow-lg shadow-indigo-50/50 dark:shadow-none border space-y-6 transition-all duration-500 bg-white dark:bg-[#1A1A1A] border-slate-100 dark:border-[#2E2E2E]`}>
+    <section className={`p-4 sm:p-10 rounded-2xl sm:rounded-3xl shadow-lg shadow-indigo-50/50 dark:shadow-none border space-y-6 transition-all duration-500 bg-white dark:bg-[#1A1A1A] border-slate-100 dark:border-[#2E2E2E]`}>
       {submitError && (
         <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-2xl text-red-600 dark:text-red-400 text-sm">
           <p className="font-bold mb-1">Error saving entry:</p>
@@ -272,11 +272,11 @@ export function DiaryInput({
               onChange={(e) => setNewEntry(e.target.value)}
               placeholder={t('dash.placeholder')}
               aria-label={t('dash.placeholder')}
-              className={`w-full min-h-[240px] pt-6 px-6 pb-20 border-none rounded-[2.5rem] text-base focus:ring-2 transition-all outline-none resize-none text-[#111827] dark:text-[#F9FAFB] bg-gray-50 dark:bg-[#262626] focus:ring-indigo-100 dark:focus:ring-indigo-900/30 placeholder:text-gray-400 dark:placeholder:text-gray-600`}
+              className={`w-full min-h-[240px] pt-6 px-6 pb-32 sm:pb-20 border-none rounded-[2.5rem] text-base focus:ring-2 transition-all outline-none resize-none text-[#111827] dark:text-[#F9FAFB] bg-gray-50 dark:bg-[#262626] focus:ring-indigo-100 dark:focus:ring-indigo-900/30 placeholder:text-gray-400 dark:placeholder:text-gray-600`}
             />
 
             {/* Integrated Action Bar */}
-            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
+            <div className="absolute bottom-4 left-4 right-4 flex flex-col sm:flex-row items-center sm:justify-between gap-3 pointer-events-none">
               {/* Left side: Status */}
               <div className="flex items-center gap-2 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 pointer-events-auto shadow-sm">
                 <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-red-500 animate-ping' : newEntry.length > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} aria-hidden="true" />
@@ -286,21 +286,23 @@ export function DiaryInput({
               </div>
 
               {/* Right side: Mic & Chars & Translate */}
-              <div className="flex items-center gap-3 pointer-events-auto">
-                {newEntry.length > 5 && (
-                  <button
-                    type="button"
-                    onClick={handleTranslateEntry}
-                    disabled={isTranslating}
-                    className="p-2 bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-full border border-gray-100 dark:border-white/10 shadow-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all disabled:opacity-50"
-                    title="Translate current text to English"
-                  >
-                    {isTranslating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Languages className="w-4 h-4" />}
-                  </button>
-                )}
-                <span className="hidden sm:block text-[10px] uppercase tracking-widest font-bold text-gray-400 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 shadow-sm">
-                  {newEntry.length} {t('dash.chars')}
-                </span>
+              <div className="flex items-center justify-between w-full sm:w-auto gap-3 pointer-events-auto">
+                <div className="flex items-center gap-2">
+                  {newEntry.length > 5 && (
+                    <button
+                      type="button"
+                      onClick={handleTranslateEntry}
+                      disabled={isTranslating}
+                      className="p-2 bg-white/80 dark:bg-black/40 backdrop-blur-md rounded-full border border-gray-100 dark:border-white/10 shadow-sm text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all disabled:opacity-50"
+                      title="Translate current text to English"
+                    >
+                      {isTranslating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Languages className="w-4 h-4" />}
+                    </button>
+                  )}
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 shadow-sm">
+                    {newEntry.length} {t('dash.chars')}
+                  </span>
+                </div>
                 <motion.button
                   type="button"
                   onPointerDown={(e) => {

@@ -52,7 +52,7 @@ export default function ConsistencyTracker({ entries }: ConsistencyTrackerProps)
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-12 mb-8 p-8 bg-white dark:bg-[#1A1A1A] rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300"
+      className="mt-12 mb-8 p-6 sm:p-8 bg-white dark:bg-[#1A1A1A] rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300"
     >
       <div className="flex flex-col gap-6">
         <div className="space-y-1">
