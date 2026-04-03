@@ -1,11 +1,5 @@
 [
   {
-    "hash": "81c18474ec6153de37d197a60bfbbbd5bb7da681",
-    "message": "feat: Add AI-powered daily writing prompts",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-03T00:30:55+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

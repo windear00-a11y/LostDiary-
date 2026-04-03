@@ -12,11 +12,11 @@ import { createClient } from '@/lib/supabase';
 import posthog from 'posthog-js';
 import { DiaryInput } from '@/components/diary/DiaryInput';
 import { DiaryList } from '@/components/diary/DiaryList';
+import { WinDearAssistant } from '@/components/diary/WinDearAssistant';
 import GrowthTracker from '@/components/diary/GrowthTracker';
 import WeeklyReflection from '@/components/diary/WeeklyReflection';
 import ConsistencyTracker from '@/components/diary/ConsistencyTracker';
 import { processDiaryEntry, classifyIntent, handleChat } from '@/lib/ai';
-import { ChatResponse } from '@/components/diary/ChatResponse';
 
 import { AppLayout } from '@/components/layout/AppLayout';
 
@@ -38,18 +38,10 @@ export default function AppDashboard() {
   const [newEntry, setNewEntry] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [chatResponse, setChatResponse] = useState<string | null>(null);
-  const [isChatMode, setIsChatMode] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showTranslated, setShowTranslated] = useState(false);
+  const [isAssistantLoading, setIsAssistantLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const chatResponseRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (chatResponse && chatResponseRef.current) {
-      chatResponseRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  }, [chatResponse]);
 
   const fetchEntries = useCallback(async () => {
     if (!supabase || !user) return;
@@ -76,40 +68,32 @@ export default function AppDashboard() {
     }
   }, [user, fetchEntries]);
 
+  const handleAssistantMessage = async (message: string) => {
+    if (!supabase || !user) return null;
+    setIsAssistantLoading(true);
+    try {
+      let intent = await classifyIntent(message);
+      // If the user is just writing an entry in the assistant, treat it as chat
+      const chatIntent: 'recall' | 'analysis' | 'chat' = intent === 'entry' ? 'chat' : intent;
+      const response = await handleChat(message, entries, i18n.resolvedLanguage || i18n.language || 'en', chatIntent);
+      return response;
+    } catch (err) {
+      console.error('Assistant error:', err);
+      return "I'm sorry, I'm having trouble thinking right now.";
+    } finally {
+      setIsAssistantLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEntry.trim() || !user || !supabase) return;
 
     setIsSubmitting(true);
     setSubmitError(null);
-    setChatResponse(null);
 
     try {
-      // 1. Classify Intent
-      let intent: 'entry' | 'recall' | 'analysis' | 'chat' = isChatMode ? 'chat' : await classifyIntent(newEntry);
-      
-      // Manual safety check for common question indicators
-      if (!isChatMode) {
-        const lowerEntry = newEntry.toLowerCase().trim();
-        const questionIndicators = ['?', 'kya', 'how', 'why', 'when', 'where', 'kaise', 'kab', 'kyun', 'kahan', 'who', 'kaun'];
-        const isLikelyQuestion = questionIndicators.some(indicator => 
-          indicator === '?' ? lowerEntry.endsWith('?') : lowerEntry.startsWith(indicator) || lowerEntry.includes(` ${indicator} `)
-        );
-  
-        if (isLikelyQuestion && intent === 'entry') {
-          intent = 'chat';
-        }
-      }
-
-      if (intent === 'recall' || intent === 'analysis' || intent === 'chat') {
-        const response = await handleChat(newEntry, entries, i18n.resolvedLanguage || i18n.language || 'en', intent);
-        setChatResponse(response);
-        setNewEntry('');
-        setIsSubmitting(false);
-        return;
-      }
-
-      // 2. Generate AI Insights (Optional but recommended for the app's core value)
+      // 1. Generate AI Insights
       const aiResult = await processDiaryEntry(newEntry, {
         understand_language: i18n.resolvedLanguage || i18n.language || 'en',
         response_language: i18n.resolvedLanguage || i18n.language || 'en'
@@ -199,50 +183,54 @@ export default function AppDashboard() {
           )}
         </div>
 
-        <div className="min-h-[0px]" ref={chatResponseRef}>
-          <ChatResponse 
-            response={chatResponse} 
-            onClose={() => setChatResponse(null)} 
-            t={t} 
-          />
-        </div>
-
-        <div className="min-h-[300px]">
-          <DiaryInput 
-            newEntry={newEntry}
-            setNewEntry={setNewEntry}
-            handleSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
-            submitError={submitError}
-            t={t}
-            textareaRef={textareaRef}
-            isChatMode={isChatMode}
-            setIsChatMode={setIsChatMode}
-            showSuccess={showSuccess}
-            showTranslated={showTranslated}
-            setShowTranslated={setShowTranslated}
-            entries={entries}
-          />
-        </div>
-
-        <div className="min-h-[600px]">
-          <DiaryList 
-            entries={entries}
-            isLoadingEntries={isLoadingEntries}
-            deleteEntry={deleteEntry}
-            t={t}
-            handleStartWriting={handleStartWriting}
-            showTranslated={showTranslated}
-          />
-        </div>
-
-        <div className="min-h-[200px]">
-          {!isLoadingEntries && entries.length > 0 && (
-            <div className="space-y-16">
-              <WeeklyReflection entries={entries} />
-              <GrowthTracker entries={entries} />
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-7 space-y-8">
+            <div className="min-h-[300px]">
+              <DiaryInput 
+                newEntry={newEntry}
+                setNewEntry={setNewEntry}
+                handleSubmit={handleSubmit}
+                isSubmitting={isSubmitting}
+                submitError={submitError}
+                t={t}
+                textareaRef={textareaRef}
+                showSuccess={showSuccess}
+                showTranslated={showTranslated}
+                setShowTranslated={setShowTranslated}
+                entries={entries}
+              />
             </div>
-          )}
+
+            <div className="min-h-[600px]">
+              <DiaryList 
+                entries={entries}
+                isLoadingEntries={isLoadingEntries}
+                deleteEntry={deleteEntry}
+                t={t}
+                handleStartWriting={handleStartWriting}
+                showTranslated={showTranslated}
+              />
+            </div>
+          </div>
+
+          <div className="lg:col-span-5 space-y-8">
+            <div className="sticky top-8">
+              <WinDearAssistant 
+                onSendMessage={handleAssistantMessage}
+                isSubmitting={isAssistantLoading}
+                t={t}
+              />
+
+              <div className="mt-8">
+                {!isLoadingEntries && entries.length > 0 && (
+                  <div className="space-y-8">
+                    <WeeklyReflection entries={entries} />
+                    <GrowthTracker entries={entries} />
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </AppLayout>

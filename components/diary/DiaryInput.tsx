@@ -12,8 +12,6 @@ export function DiaryInput({
   submitError,
   t,
   textareaRef,
-  isChatMode,
-  setIsChatMode,
   showSuccess,
   showTranslated,
   setShowTranslated,
@@ -26,8 +24,6 @@ export function DiaryInput({
   submitError: string | null;
   t: (key: string) => string;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
-  isChatMode: boolean;
-  setIsChatMode: React.Dispatch<React.SetStateAction<boolean>>;
   showSuccess: boolean;
   showTranslated: boolean;
   setShowTranslated: React.Dispatch<React.SetStateAction<boolean>>;
@@ -35,7 +31,6 @@ export function DiaryInput({
 }) {
   const [spellingSuggestion, setSpellingSuggestion] = useState<{ suggestion: string, explanation: string } | null>(null);
   const [isCheckingSpelling, setIsCheckingSpelling] = useState(false);
-  const [isQuery, setIsQuery] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -128,13 +123,15 @@ export function DiaryInput({
   }, [isListening, startListening, stopListening]);
 
   useEffect(() => {
-    const queryPatterns = [
-      /^(how|what|when|where|why|who|can|do|did|is|are|was|were|tell|show|recall|analyze|patterns|insights|kya|kab|kaise|kyun|kaun|kahan)\b/i, 
-      /\?$/,
-      /\b(yaad|pucho|batao|analysis|pattern)\b/i
-    ];
-    setIsQuery(queryPatterns.some(p => p.test(newEntry.trim())));
-  }, [newEntry]);
+    // Auto-scroll textarea to bottom when typing
+    if (textareaRef.current) {
+      const textarea = textareaRef.current;
+      const isAtBottom = textarea.scrollHeight - textarea.scrollTop <= textarea.clientHeight + 100;
+      if (isAtBottom) {
+        textarea.scrollTop = textarea.scrollHeight;
+      }
+    }
+  }, [newEntry, textareaRef]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -152,7 +149,7 @@ export function DiaryInput({
   }, [newEntry]);
 
   return (
-    <section className={`p-6 sm:p-10 rounded-2xl sm:rounded-3xl shadow-lg shadow-indigo-50/50 dark:shadow-none border space-y-6 transition-all duration-500 ${isChatMode ? 'bg-indigo-50/30 dark:bg-indigo-900/5 border-indigo-200 dark:border-indigo-800/30' : 'bg-white dark:bg-[#1A1A1A] border-slate-100 dark:border-[#2E2E2E]'}`}>
+    <section className={`p-6 sm:p-10 rounded-2xl sm:rounded-3xl shadow-lg shadow-indigo-50/50 dark:shadow-none border space-y-6 transition-all duration-500 bg-white dark:bg-[#1A1A1A] border-slate-100 dark:border-[#2E2E2E]`}>
       {submitError && (
         <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-2xl text-red-600 dark:text-red-400 text-sm">
           <p className="font-bold mb-1">Error saving entry:</p>
@@ -178,15 +175,6 @@ export function DiaryInput({
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-3">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <button
-              type="button"
-              onClick={() => setIsChatMode(!isChatMode)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95 border ${isChatMode ? 'bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-200' : 'bg-white dark:bg-[#262626] text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-800/30 hover:bg-indigo-50'}`}
-            >
-              <Sparkles className={`w-3 h-3 ${isChatMode ? 'animate-pulse' : ''}`} />
-              {isChatMode ? 'Chat Mode Active' : 'Switch to Chat'}
-            </button>
-
             <button
               type="button"
               onClick={() => setShowTranslated(!showTranslated)}
@@ -237,30 +225,34 @@ export function DiaryInput({
             ))}
           </div>
           <div className="relative group/input">
-            <textarea
-              ref={textareaRef}
-              value={newEntry}
-              onChange={(e) => setNewEntry(e.target.value)}
-              placeholder={isChatMode ? "Ask WinDear anything about your day, patterns, or for advice..." : t('dash.placeholder')}
-              aria-label={isChatMode ? "Ask WinDear anything" : t('dash.placeholder')}
-              className={`w-full min-h-[240px] pt-6 px-6 pb-20 border-none rounded-[2.5rem] text-base focus:ring-2 transition-all outline-none resize-none text-[#111827] dark:text-[#F9FAFB] ${isChatMode ? 'bg-white dark:bg-[#1A1A1A] focus:ring-indigo-200 dark:focus:ring-indigo-900/50 placeholder:text-indigo-300 dark:placeholder:text-indigo-800/50' : 'bg-gray-50 dark:bg-[#262626] focus:ring-indigo-100 dark:focus:ring-indigo-900/30 placeholder:text-gray-400 dark:placeholder:text-gray-600'}`}
-            />
-            
             <AnimatePresence>
               {spellingSuggestion && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
+                  initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="mt-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100/50 dark:border-indigo-800/30 rounded-2xl flex items-start gap-3 group"
+                  exit={{ opacity: 0, y: -10 }}
+                  className="mb-4 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100/50 dark:border-indigo-800/30 rounded-2xl flex items-start gap-3 group"
                 >
                   <div className="p-2 bg-white dark:bg-[#1A1A1A] rounded-xl shadow-sm shrink-0">
                     <Info className="w-4 h-4 text-[#6366F1]" aria-hidden="true" />
                   </div>
                   <div className="space-y-1 flex-1">
-                    <p className="text-xs font-bold text-[#6366F1] uppercase tracking-widest">
-                      Did you mean?
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-[#6366F1] uppercase tracking-widest">
+                        Did you mean?
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewEntry(spellingSuggestion.suggestion);
+                          setSpellingSuggestion(null);
+                        }}
+                        aria-label="Apply spelling correction"
+                        className="text-xs font-bold text-[#6366F1] hover:text-[#4F46E5] transition-colors bg-white dark:bg-[#1A1A1A] px-3 py-1 rounded-full shadow-sm border border-indigo-100 dark:border-indigo-800/30"
+                      >
+                        Apply
+                      </button>
+                    </div>
                     <p className="text-sm text-[#374151] dark:text-[#D1D5DB] leading-relaxed">
                       {spellingSuggestion.suggestion}
                     </p>
@@ -269,21 +261,19 @@ export function DiaryInput({
                         {spellingSuggestion.explanation}
                       </p>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNewEntry(spellingSuggestion.suggestion);
-                        setSpellingSuggestion(null);
-                      }}
-                      aria-label="Apply spelling correction"
-                      className="mt-2 text-xs font-semibold text-[#6366F1] hover:text-[#4F46E5] transition-colors"
-                    >
-                      Apply correction
-                    </button>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <textarea
+              ref={textareaRef}
+              value={newEntry}
+              onChange={(e) => setNewEntry(e.target.value)}
+              placeholder={t('dash.placeholder')}
+              aria-label={t('dash.placeholder')}
+              className={`w-full min-h-[240px] pt-6 px-6 pb-20 border-none rounded-[2.5rem] text-base focus:ring-2 transition-all outline-none resize-none text-[#111827] dark:text-[#F9FAFB] bg-gray-50 dark:bg-[#262626] focus:ring-indigo-100 dark:focus:ring-indigo-900/30 placeholder:text-gray-400 dark:placeholder:text-gray-600`}
+            />
 
             {/* Integrated Action Bar */}
             <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between pointer-events-none">
@@ -291,7 +281,7 @@ export function DiaryInput({
               <div className="flex items-center gap-2 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 pointer-events-auto shadow-sm">
                 <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-red-500 animate-ping' : newEntry.length > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} aria-hidden="true" />
                 <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500 dark:text-gray-400">
-                  {isListening ? "Listening..." : newEntry.length > 0 ? (isChatMode ? "Thinking..." : t('dash.writingMood')) : (isChatMode ? "Ask me anything" : t('dash.readyToListen'))}
+                  {isListening ? "Listening..." : newEntry.length > 0 ? t('dash.writingMood') : t('dash.readyToListen')}
                 </span>
               </div>
 
@@ -362,8 +352,8 @@ export function DiaryInput({
           <button
             type="submit"
             disabled={isSubmitting || (!newEntry.trim() && !showSuccess)}
-            aria-label={isSubmitting ? t('dash.reflecting') : (showSuccess ? 'Saved!' : (isChatMode ? 'Ask WinDear' : (isQuery ? 'Ask WinDear' : t('dash.save'))))}
-            className={`group flex items-center gap-3 px-10 py-5 rounded-full text-base font-semibold transition-all duration-300 hover:shadow-lg active:scale-95 disabled:opacity-50 ${showSuccess ? 'bg-green-500 text-white' : (isChatMode ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-slate-900 dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] hover:bg-slate-800 dark:hover:bg-white')}`}
+            aria-label={isSubmitting ? t('dash.reflecting') : (showSuccess ? 'Saved!' : t('dash.save'))}
+            className={`group flex items-center gap-3 px-10 py-5 rounded-full text-base font-semibold transition-all duration-300 hover:shadow-lg active:scale-95 disabled:opacity-50 ${showSuccess ? 'bg-green-500 text-white' : 'bg-slate-900 dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] hover:bg-slate-800 dark:hover:bg-white'}`}
           >
             {isSubmitting ? (
               <>
@@ -377,7 +367,7 @@ export function DiaryInput({
               </>
             ) : (
               <>
-                {isChatMode ? 'Ask WinDear' : (isQuery ? 'Ask WinDear' : t('dash.save'))}
+                {t('dash.save')}
                 <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" aria-hidden="true" />
               </>
             )}
