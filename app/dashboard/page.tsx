@@ -12,12 +12,14 @@ import { createClient } from '@/lib/supabase';
 import posthog from 'posthog-js';
 import { DiaryInput } from '@/components/diary/DiaryInput';
 import { DiaryList } from '@/components/diary/DiaryList';
-import { WinDearAssistant } from '@/components/diary/WinDearAssistant';
 import GrowthTracker from '@/components/diary/GrowthTracker';
 import WeeklyReflection from '@/components/diary/WeeklyReflection';
 import ConsistencyTracker from '@/components/diary/ConsistencyTracker';
 import Milestones from '@/components/diary/Milestones';
 import { processDiaryEntry, classifyIntent, handleChat } from '@/lib/ai';
+import { useResourceUsage } from '@/hooks/use-resource-usage';
+import { AIUsageDashboard } from '@/components/diary/AIUsageDashboard';
+import { WinDearSoulEncouragement } from '@/components/diary/WinDearSoulEncouragement';
 
 import { AppLayout } from '@/components/layout/AppLayout';
 
@@ -43,6 +45,7 @@ export default function AppDashboard() {
   const [showTranslated, setShowTranslated] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+  const { aiCalls, entryCount, trackAICall } = useResourceUsage();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const fetchEntries = useCallback(async () => {
@@ -70,23 +73,6 @@ export default function AppDashboard() {
     }
   }, [user, fetchEntries]);
 
-  const handleAssistantMessage = async (message: string) => {
-    if (!supabase || !user) return null;
-    setIsAssistantLoading(true);
-    try {
-      let intent = await classifyIntent(message);
-      // If the user is just writing an entry in the assistant, treat it as chat
-      const chatIntent: 'recall' | 'analysis' | 'chat' = intent === 'entry' ? 'chat' : intent;
-      const response = await handleChat(message, entries, i18n.resolvedLanguage || i18n.language || 'en', chatIntent);
-      return response;
-    } catch (err) {
-      console.error('Assistant error:', err);
-      return "I'm sorry, I'm having trouble thinking right now.";
-    } finally {
-      setIsAssistantLoading(false);
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newEntry.trim() || !user || !supabase) return;
@@ -95,6 +81,7 @@ export default function AppDashboard() {
     setSubmitError(null);
 
     try {
+      trackAICall();
       // 1. Generate AI Insights
       const aiResult = await processDiaryEntry(newEntry, {
         understand_language: i18n.resolvedLanguage || i18n.language || 'en',
@@ -160,8 +147,12 @@ export default function AppDashboard() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleStartChat = () => {
+    router.push('/assistant');
+  };
+
   return (
-    <AppLayout onNewEntry={handleStartWriting}>
+    <AppLayout onNewEntry={handleStartWriting} onStartChat={handleStartChat}>
       <div className="space-y-12 min-h-screen">
         <div className="text-center space-y-4 pt-6 sm:pt-10 min-h-[140px] sm:min-h-[160px] flex flex-col justify-center px-4">
           <h1 className="text-3xl sm:text-4xl font-serif italic text-gray-900 dark:text-[#F9FAFB]">
@@ -190,6 +181,11 @@ export default function AppDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* 1. Diary Input (Top on both) */}
           <div className="lg:col-span-7 order-1 space-y-8">
+            <WinDearSoulEncouragement 
+              onStartChat={handleStartChat}
+              t={t}
+            />
+            
             <div className="min-h-[300px]">
               <DiaryInput 
                 newEntry={newEntry}
@@ -209,15 +205,14 @@ export default function AppDashboard() {
             </div>
           </div>
 
-          {/* 2. Assistant (Middle on mobile, Right on desktop) */}
+          {/* 2. Insights (Middle on mobile, Right on desktop) */}
             <div className="lg:col-span-5 order-2 lg:order-3 space-y-8 lg:sticky lg:top-8">
-            <WinDearAssistant 
-              onSendMessage={handleAssistantMessage}
-              isSubmitting={isAssistantLoading}
+            <AIUsageDashboard 
+              aiCalls={aiCalls}
+              entryCount={entryCount}
               t={t}
-              entries={entries}
             />
-
+            
             <div className="hidden lg:block space-y-8">
               {!isLoadingEntries && entries.length > 0 && (
                 <div className="space-y-8">

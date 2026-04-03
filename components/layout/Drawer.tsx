@@ -12,12 +12,17 @@ import {
   Sparkles, 
   BarChart3,
   Moon,
-  Sun
+  Sun,
+  ShieldCheck,
+  Cloud,
+  Cpu
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useResourceUsage } from '@/hooks/use-resource-usage';
+import Image from 'next/image';
 
 interface DrawerProps {
   isOpen: boolean;
@@ -30,6 +35,14 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useTranslation();
+  const { aiCalls, entryCount } = useResourceUsage();
+
+  // Free tier limits for visualization
+  const AI_LIMIT = 100; // 100 calls per day
+  const DB_LIMIT = 500; // 500 entries per user
+
+  const aiPercentage = Math.min((aiCalls / AI_LIMIT) * 100, 100);
+  const dbPercentage = Math.min((entryCount / DB_LIMIT) * 100, 100);
 
   // Close on ESC
   useEffect(() => {
@@ -41,6 +54,15 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
   }, [onClose]);
 
   const menuItems = [
+    {
+      icon: <Sparkles className="w-5 h-5" />,
+      label: t('nav.assistant', 'WinDear Soul'),
+      path: '/assistant',
+      onClick: () => {
+        router.push('/assistant');
+        onClose();
+      }
+    },
     {
       icon: <User className="w-5 h-5" />,
       label: t('nav.profile', 'Profile'),
@@ -92,29 +114,100 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="fixed right-0 top-0 h-full w-full max-w-[320px] bg-white dark:bg-[#0F0F0F] shadow-2xl z-[70] flex flex-col border-l border-gray-100 dark:border-[#1A1A1A]"
           >
-            {/* Header */}
-            <div className="p-6 flex justify-between items-center border-b border-gray-50 dark:border-[#1A1A1A]">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center border border-indigo-100 dark:border-indigo-800/30">
-                  <User className="w-5 h-5 text-indigo-600 dark:text-indigo-400" aria-hidden="true" />
+            {/* Header - Google Style Profile Section */}
+            <div className="p-6 space-y-6 border-b border-gray-100 dark:border-[#1A1A1A]">
+              <div className="flex justify-between items-start">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white dark:border-[#1A1A1A] shadow-md ring-1 ring-gray-200 dark:ring-gray-800">
+                    {user?.user_metadata?.avatar_url ? (
+                      <Image 
+                        src={user.user_metadata.avatar_url} 
+                        alt="Profile" 
+                        fill 
+                        className="object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+                        {user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white dark:bg-[#1A1A1A] rounded-full border border-gray-100 dark:border-[#2E2E2E] flex items-center justify-center shadow-sm">
+                    <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
+                  </div>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-bold text-gray-900 dark:text-[#F9FAFB] truncate max-w-[160px]">
-                    {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
-                  </span>
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-widest font-bold">
-                    Member
-                  </span>
+                <button 
+                  onClick={onClose}
+                  aria-label="Close navigation menu"
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-[#1A1A1A] rounded-full transition-colors text-gray-500"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-1">
+                <h2 className="text-lg font-bold text-gray-900 dark:text-[#F9FAFB] truncate">
+                  {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
+                </h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 truncate font-medium">
+                  {user?.email}
+                </p>
+                <button 
+                  onClick={() => {
+                    router.push('/profile');
+                    onClose();
+                  }}
+                  className="mt-3 px-4 py-1.5 rounded-full border border-gray-200 dark:border-[#2E2E2E] text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-colors inline-flex items-center gap-1"
+                >
+                  Manage your WinDear Account
+                </button>
+              </div>
+
+              {/* Storage & AI Usage Bar - Google Photos Style */}
+              <div className="pt-4 space-y-5">
+                {/* AI Usage */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <Cpu className="w-3.5 h-3.5 text-indigo-500" />
+                      <span>AI Resources</span>
+                    </div>
+                    <span className="font-mono">{aiCalls} / {AI_LIMIT}</span>
+                  </div>
+                  <div className="h-2 w-full bg-gray-100 dark:bg-[#1A1A1A] rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${aiPercentage}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className={`h-full rounded-full ${
+                        aiPercentage > 80 ? 'bg-red-500' : aiPercentage > 50 ? 'bg-yellow-500' : 'bg-indigo-500'
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {/* Storage Usage */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <Cloud className="w-3.5 h-3.5 text-blue-500" />
+                      <span>Storage Used</span>
+                    </div>
+                    <span className="font-mono">{entryCount} / {DB_LIMIT}</span>
+                  </div>
+                  <div className="h-2 w-full bg-gray-100 dark:bg-[#1A1A1A] rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${dbPercentage}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className={`h-full rounded-full ${
+                        dbPercentage > 80 ? 'bg-red-500' : 'bg-blue-500'
+                      }`}
+                    />
+                  </div>
                 </div>
               </div>
-              <button 
-                onClick={onClose}
-                aria-label="Close navigation menu"
-                title="Close menu"
-                className="p-2 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] rounded-full transition-colors text-gray-400"
-              >
-                <X className="w-5 h-5" aria-hidden="true" />
-              </button>
             </div>
 
             {/* Content */}

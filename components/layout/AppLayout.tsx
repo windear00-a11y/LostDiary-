@@ -8,9 +8,10 @@ import { useUpdates } from '@/hooks/use-updates';
 interface AppLayoutProps {
   children: React.ReactNode;
   onNewEntry?: () => void;
+  onStartChat?: () => void;
 }
 
-export const AppLayout = ({ children, onNewEntry }: AppLayoutProps) => {
+export const AppLayout = ({ children, onNewEntry, onStartChat }: AppLayoutProps) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { hasNewUpdates } = useUpdates({ autoRefreshInterval: 5 * 60 * 1000 });
 
@@ -20,6 +21,7 @@ export const AppLayout = ({ children, onNewEntry }: AppLayoutProps) => {
       <Header 
         onOpenDrawer={() => setIsDrawerOpen(true)} 
         onNewEntry={onNewEntry}
+        onStartChat={onStartChat}
         hasNewUpdates={hasNewUpdates}
       />
 
