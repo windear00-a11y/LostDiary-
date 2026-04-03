@@ -1,5 +1,11 @@
 [
   {
+    "hash": "f01078c92ef7565a8d22c40cb966bb808d1df4e2",
+    "message": "feat: Refactor dashboard layout and component styling",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-03T23:15:26+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
