@@ -1,11 +1,5 @@
 [
   {
-    "hash": "71fcffc9541152b570a9fb8648dfa4dac07fe0dd",
-    "message": "refactor: Simplify translation handling in AI components",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-03T17:51:53+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

@@ -19,7 +19,6 @@ import Milestones from '@/components/diary/Milestones';
 import { processDiaryEntry, classifyIntent, handleChat } from '@/lib/ai';
 import { useResourceUsage } from '@/hooks/use-resource-usage';
 import { AIUsageDashboard } from '@/components/diary/AIUsageDashboard';
-import { WinDearSoulEncouragement } from '@/components/diary/WinDearSoulEncouragement';
 
 import { AppLayout } from '@/components/layout/AppLayout';
 
@@ -181,11 +180,6 @@ export default function AppDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* 1. Diary Input (Top on both) */}
           <div className="lg:col-span-7 order-1 space-y-8">
-            <WinDearSoulEncouragement 
-              onStartChat={handleStartChat}
-              t={t}
-            />
-            
             <div className="min-h-[300px]">
               <DiaryInput 
                 newEntry={newEntry}
