@@ -40,23 +40,81 @@ export function DiaryInput({
   const [recognition, setRecognition] = useState<any>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
-  const [moodColor, setMoodColor] = useState('indigo');
+  const [mood, setMood] = useState<'happy' | 'sad' | 'angry' | 'anxious' | 'calm' | 'neutral'>('neutral');
+  const [isIntense, setIsIntense] = useState(false);
 
-  // Simple keyword-based mood detection for real-time glow
+  // Mood detection and transition logic
   useEffect(() => {
     const text = newEntry.toLowerCase();
-    if (text.includes('happy') || text.includes('great') || text.includes('love') || text.includes('khush')) {
-      setMoodColor('yellow');
-    } else if (text.includes('sad') || text.includes('lonely') || text.includes('cry') || text.includes('dukh')) {
-      setMoodColor('blue');
-    } else if (text.includes('angry') || text.includes('hate') || text.includes('gussa')) {
-      setMoodColor('red');
-    } else if (text.includes('calm') || text.includes('peace') || text.includes('shanti')) {
-      setMoodColor('green');
-    } else {
-      setMoodColor('indigo');
+    let detectedMood: 'happy' | 'sad' | 'angry' | 'anxious' | 'calm' | 'neutral' = 'neutral';
+
+    if (text.includes('happy') || text.includes('great') || text.includes('love') || text.includes('khush') || text.includes('mazza') || text.includes('awesome') || text.includes('acha')) {
+      detectedMood = 'happy';
+    } else if (text.includes('sad') || text.includes('lonely') || text.includes('cry') || text.includes('dukh') || text.includes('udaas') || text.includes('dard') || text.includes('broken')) {
+      detectedMood = 'sad';
+    } else if (text.includes('angry') || text.includes('hate') || text.includes('gussa') || text.includes('irritated') || text.includes('chidh')) {
+      detectedMood = 'angry';
+    } else if (text.includes('anxious') || text.includes('worried') || text.includes('scared') || text.includes('dar') || text.includes('tension') || text.includes('panic')) {
+      detectedMood = 'anxious';
+    } else if (text.includes('calm') || text.includes('peace') || text.includes('shanti') || text.includes('sukoon') || text.includes('relax')) {
+      detectedMood = 'calm';
     }
-  }, [newEntry]);
+
+    if (detectedMood !== mood && detectedMood !== 'neutral') {
+      setMood(detectedMood);
+      setIsIntense(true);
+      
+      // Transition to balanced state after 2 seconds
+      const timer = setTimeout(() => {
+        setIsIntense(false);
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    } else if (newEntry.length === 0) {
+      setMood('neutral');
+      setIsIntense(false);
+    }
+  }, [newEntry, mood]);
+
+  const getMoodStyles = () => {
+    const base = "transition-all duration-[3000ms] ease-out";
+    
+    switch (mood) {
+      case 'happy':
+        return isIntense 
+          ? "border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.4)] dark:shadow-[0_0_60px_rgba(250,204,21,0.2)]" 
+          : "border-orange-200/50 shadow-[0_0_20px_rgba(251,146,60,0.1)] dark:border-orange-900/20";
+      case 'sad':
+        return isIntense 
+          ? "border-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.4)] dark:shadow-[0_0_60px_rgba(59,130,246,0.2)]" 
+          : "border-indigo-100 shadow-[0_0_20px_rgba(165,180,252,0.1)] dark:border-indigo-900/20";
+      case 'angry':
+        return isIntense 
+          ? "border-red-500 shadow-[0_0_40px_rgba(239,68,68,0.4)] dark:shadow-[0_0_60px_rgba(239,68,68,0.2)]" 
+          : "border-blue-100 shadow-[0_0_20px_rgba(191,219,254,0.1)] dark:border-blue-900/20";
+      case 'anxious':
+        return isIntense 
+          ? "border-purple-500 shadow-[0_0_40px_rgba(168,85,247,0.4)] dark:shadow-[0_0_60px_rgba(168,85,247,0.2)]" 
+          : "border-pink-100 shadow-[0_0_20px_rgba(252,231,243,0.1)] dark:border-pink-900/20";
+      case 'calm':
+        return isIntense 
+          ? "border-emerald-400 shadow-[0_0_40px_rgba(52,211,153,0.3)] dark:shadow-[0_0_60px_rgba(52,211,153,0.1)]" 
+          : "border-teal-100 shadow-[0_0_20px_rgba(204,251,241,0.1)] dark:border-teal-900/20";
+      default:
+        return "border-slate-100 dark:border-[#2E2E2E] shadow-indigo-100/30";
+    }
+  };
+
+  const getPulseColor = () => {
+    switch (mood) {
+      case 'happy': return 'bg-yellow-400';
+      case 'sad': return 'bg-blue-400';
+      case 'angry': return 'bg-red-400';
+      case 'anxious': return 'bg-purple-400';
+      case 'calm': return 'bg-emerald-400';
+      default: return 'bg-indigo-400';
+    }
+  };
 
   const handleGetPrompt = async () => {
     setIsGeneratingPrompt(true);
@@ -206,28 +264,26 @@ export function DiaryInput({
   };
 
   return (
-    <section className={`p-4 sm:p-10 rounded-2xl sm:rounded-3xl shadow-lg border space-y-6 transition-all duration-700 bg-white dark:bg-[#1A1A1A] ${
-      moodColor === 'yellow' ? 'border-yellow-200 dark:border-yellow-900/30 shadow-yellow-50/50' :
-      moodColor === 'blue' ? 'border-blue-200 dark:border-blue-900/30 shadow-blue-50/50' :
-      moodColor === 'red' ? 'border-red-200 dark:border-red-900/30 shadow-red-50/50' :
-      moodColor === 'green' ? 'border-green-200 dark:border-green-900/30 shadow-green-50/50' :
-      'border-slate-100 dark:border-[#2E2E2E] shadow-indigo-50/50'
-    }`}>
+    <section className={`p-4 sm:p-10 rounded-2xl sm:rounded-3xl border bg-white dark:bg-[#1A1A1A] relative overflow-hidden backdrop-blur-sm ${getMoodStyles()}`}>
+      {/* Background Glow Effect */}
+      <div className={`absolute inset-0 pointer-events-none transition-all duration-[3000ms] ease-out ${
+        mood === 'happy' ? (isIntense ? 'bg-yellow-400/5' : 'bg-orange-400/2') :
+        mood === 'sad' ? (isIntense ? 'bg-blue-400/5' : 'bg-indigo-400/2') :
+        mood === 'angry' ? (isIntense ? 'bg-red-400/5' : 'bg-blue-400/2') :
+        mood === 'anxious' ? (isIntense ? 'bg-purple-400/5' : 'bg-pink-400/2') :
+        mood === 'calm' ? (isIntense ? 'bg-emerald-400/5' : 'bg-teal-400/2') :
+        'bg-transparent'
+      }`} />
+
       {/* Living Pulse Indicator */}
-      <div className="flex justify-center -mt-6 mb-2">
+      <div className="flex justify-center -mt-6 mb-2 relative z-10">
         <motion.div 
           animate={newEntry.length > 0 ? {
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.6, 0.3],
           } : { scale: 1, opacity: 0.2 }}
           transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          className={`w-2 h-2 rounded-full ${
-            moodColor === 'yellow' ? 'bg-yellow-400' :
-            moodColor === 'blue' ? 'bg-blue-400' :
-            moodColor === 'red' ? 'bg-red-400' :
-            moodColor === 'green' ? 'bg-green-400' :
-            'bg-indigo-400'
-          }`}
+          className={`w-2 h-2 rounded-full ${getPulseColor()}`}
         />
       </div>
 
