@@ -19,7 +19,7 @@ export function WinDearAssistant({
 }: {
   onSendMessage: (message: string) => Promise<string | null>;
   isSubmitting: boolean;
-  t: (key: string) => string;
+  t: any;
   entries?: any[];
 }) {
   const [input, setInput] = useState('');

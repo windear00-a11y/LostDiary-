@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 
 interface WinDearSoulEncouragementProps {
   onStartChat?: () => void;
-  t: (key: string) => string;
+  t: any;
 }
 
 export function WinDearSoulEncouragement({ onStartChat, t }: WinDearSoulEncouragementProps) {

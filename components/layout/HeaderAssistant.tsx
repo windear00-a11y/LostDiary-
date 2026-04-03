@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 
 interface HeaderAssistantProps {
   onStartChat?: () => void;
-  t: (key: string) => string;
+  t: any;
 }
 
 export function HeaderAssistant({ onStartChat, t }: HeaderAssistantProps) {

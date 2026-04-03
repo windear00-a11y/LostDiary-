@@ -7,7 +7,7 @@ import { useState, useEffect } from 'react';
 interface AIUsageDashboardProps {
   aiCalls: number;
   entryCount: number;
-  t: (key: string) => string;
+  t: any;
 }
 
 export function AIUsageDashboard({ aiCalls, entryCount, t }: AIUsageDashboardProps) {

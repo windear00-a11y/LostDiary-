@@ -15,7 +15,7 @@ import { Sparkles, ArrowLeft } from 'lucide-react';
 export default function AssistantPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { aiCalls, entryCount, trackAICall } = useResourceUsage();
   
   const [entries, setEntries] = useState<any[]>([]);
@@ -54,10 +54,12 @@ export default function AssistantPage() {
       let intent = await classifyIntent(message);
       const chatIntent: 'recall' | 'analysis' | 'chat' = intent === 'entry' ? 'chat' : intent;
       
-      const response = await handleChat(message, entries, chatIntent, {
-        understand_language: 'en',
-        output_language: 'en'
-      });
+      const response = await handleChat(
+        message, 
+        entries, 
+        i18n.resolvedLanguage || i18n.language || 'en', 
+        chatIntent
+      );
       return response;
     } catch (err) {
       console.error('Assistant error:', err);

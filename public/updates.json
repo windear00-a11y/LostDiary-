@@ -1,11 +1,5 @@
 [
   {
-    "hash": "4fea14269c1ce500f303228c0a924e4b11fcede1",
-    "message": "feat: Integrate AI usage dashboard and encouragement feature",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-03T17:26:36+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
