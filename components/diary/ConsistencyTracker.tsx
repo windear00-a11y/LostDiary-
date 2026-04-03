@@ -52,11 +52,11 @@ export default function ConsistencyTracker({ entries }: ConsistencyTrackerProps)
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mt-12 mb-8 p-6 sm:p-8 bg-white dark:bg-[#1A1A1A] rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300"
+      className="mt-8 mb-6 p-5 sm:p-8 bg-white dark:bg-[#1A1A1A] rounded-[2rem] sm:rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300"
     >
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 sm:gap-6 items-center sm:items-start text-center sm:text-left">
         <div className="space-y-1">
-          <p className="text-[#111827] dark:text-[#F9FAFB] font-serif text-lg italic">
+          <p className="text-[#111827] dark:text-[#F9FAFB] font-serif text-base sm:text-lg italic">
             {stats.last7DaysCount === 0 
               ? "Write whenever you feel like. I'm here."
               : `You showed up ${stats.last7DaysCount} ${stats.last7DaysCount === 1 ? 'time' : 'times'} this week.`}
@@ -66,7 +66,7 @@ export default function ConsistencyTracker({ entries }: ConsistencyTrackerProps)
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center sm:justify-start gap-3">
           {weekDots.map((dot, i) => (
             <div 
               key={i}

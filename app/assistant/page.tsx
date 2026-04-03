@@ -73,8 +73,8 @@ export default function AssistantPage() {
     <AppLayout>
       <div className="max-w-4xl mx-auto space-y-8 pb-20">
         {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="space-y-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 text-center sm:text-left">
+          <div className="space-y-2 flex flex-col items-center sm:items-start">
             <button 
               onClick={() => router.back()}
               className="flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600 transition-colors mb-4"

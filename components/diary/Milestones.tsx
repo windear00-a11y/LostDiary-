@@ -58,7 +58,7 @@ export default function Milestones({ entries }: MilestonesProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3 px-4">
+      <div className="flex items-center justify-center sm:justify-start gap-3 px-4">
         <div className="w-1.5 h-1.5 bg-yellow-500 rounded-full" aria-hidden="true" />
         <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-[#6B7280] dark:text-gray-500">
           Achievements

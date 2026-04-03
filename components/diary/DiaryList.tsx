@@ -69,7 +69,7 @@ export function DiaryList({
 
   return (
     <section className="space-y-10">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-center md:text-left">
         <div className="space-y-1">
           <h2 className="text-3xl font-serif italic tracking-tight text-slate-900 dark:text-[#F9FAFB]">{t('dash.past')}</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
@@ -77,7 +77,7 @@ export function DiaryList({
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-3">
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
             <input

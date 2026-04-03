@@ -152,7 +152,7 @@ export default function AppDashboard() {
 
   return (
     <AppLayout onNewEntry={handleStartWriting} onStartChat={handleStartChat}>
-      <div className="space-y-12 min-h-screen">
+      <div className="space-y-12 min-h-screen w-full max-w-7xl mx-auto">
         <div className="text-center space-y-4 pt-6 sm:pt-10 min-h-[140px] sm:min-h-[160px] flex flex-col justify-center px-4">
           <h1 className="text-2xl sm:text-4xl font-serif italic text-gray-900 dark:text-[#F9FAFB]">
             {t('dash.hello', 'Hello')}, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
@@ -211,8 +211,6 @@ export default function AppDashboard() {
               {!isLoadingEntries && entries.length > 0 && (
                 <div className="space-y-8">
                   <Milestones entries={entries} />
-                  <WeeklyReflection entries={entries} />
-                  <GrowthTracker entries={entries} />
                 </div>
               )}
             </div>
@@ -236,8 +234,6 @@ export default function AppDashboard() {
               {!isLoadingEntries && entries.length > 0 && (
                 <div className="space-y-8">
                   <Milestones entries={entries} />
-                  <WeeklyReflection entries={entries} />
-                  <GrowthTracker entries={entries} />
                 </div>
               )}
             </div>

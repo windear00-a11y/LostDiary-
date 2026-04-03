@@ -1,19 +1,55 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './Header';
 import { Drawer } from './Drawer';
 import { useUpdates } from '@/hooks/use-updates';
+import { createClient } from '@/lib/supabase';
+import { useAuth } from '@/components/auth/auth-provider';
 
 interface AppLayoutProps {
   children: React.ReactNode;
   onNewEntry?: () => void;
   onStartChat?: () => void;
+  entries?: any[]; // Optional prop if already fetched
 }
 
-export const AppLayout = ({ children, onNewEntry, onStartChat }: AppLayoutProps) => {
+export const AppLayout = ({ children, onNewEntry, onStartChat, entries: initialEntries }: AppLayoutProps) => {
+  const { user } = useAuth();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [entries, setEntries] = useState<any[]>(initialEntries || []);
   const { hasNewUpdates } = useUpdates({ autoRefreshInterval: 5 * 60 * 1000 });
+
+  const fetchEntries = useCallback(async () => {
+    if (initialEntries) return; // Don't fetch if provided
+    const supabase = createClient();
+    if (!supabase || !user) return;
+    try {
+      const { data, error } = await supabase
+        .from('entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setEntries(data || []);
+    } catch (err) {
+      console.error('Error fetching entries in AppLayout:', err);
+    }
+  }, [user, initialEntries]);
+
+  useEffect(() => {
+    if (user && !initialEntries) {
+      fetchEntries();
+    }
+  }, [user, fetchEntries, initialEntries]);
+
+  // Sync entries if initialEntries changes
+  useEffect(() => {
+    if (initialEntries) {
+      setEntries(initialEntries);
+    }
+  }, [initialEntries]);
 
   return (
     <div className="min-h-screen w-full bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] transition-colors duration-300 pt-16 flex flex-col">
@@ -30,14 +66,13 @@ export const AppLayout = ({ children, onNewEntry, onStartChat }: AppLayoutProps)
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
         hasNewUpdates={hasNewUpdates}
+        entries={entries}
       />
 
       {/* Main Content Container */}
       <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-12 flex-1">
         {children}
       </main>
-
-      {/* Optional: Simple Footer or other layout elements */}
     </div>
   );
 };

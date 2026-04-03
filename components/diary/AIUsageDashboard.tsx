@@ -30,8 +30,8 @@ export function AIUsageDashboard({ aiCalls, entryCount, t }: AIUsageDashboardPro
         className="p-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-[#252525] transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
             <div className="w-10 h-10 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl flex items-center justify-center">
               <Activity className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
             </div>

@@ -14,9 +14,10 @@ interface Entry {
 
 interface WeeklyReflectionProps {
   entries: Entry[];
+  isDrawer?: boolean;
 }
 
-export default function WeeklyReflection({ entries }: WeeklyReflectionProps) {
+export default function WeeklyReflection({ entries, isDrawer = false }: WeeklyReflectionProps) {
   const [reflection, setReflection] = useState<{ trend: string; pattern: string; suggestion: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,8 +48,8 @@ export default function WeeklyReflection({ entries }: WeeklyReflectionProps) {
   if (!canReflect && !reflection) return null;
 
   return (
-    <section className="mt-16 pt-16 border-t border-gray-100 dark:border-[#1A1A1A] min-h-[400px]">
-      <div className="flex items-center justify-between mb-8 px-4">
+    <section className={`${isDrawer ? 'mt-4 pt-4' : 'mt-16 pt-16 border-t'} border-gray-100 dark:border-[#1A1A1A] min-h-[400px]`}>
+      <div className={`flex flex-col ${isDrawer ? 'items-start' : 'sm:flex-row items-center justify-between'} gap-4 mb-8 px-4`}>
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-1.5 bg-[#6366F1] rounded-full" aria-hidden="true" />
           <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-[#6B7280] dark:text-gray-500">
@@ -94,16 +95,16 @@ export default function WeeklyReflection({ entries }: WeeklyReflectionProps) {
             key="content"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-indigo-50/10 dark:bg-indigo-900/5 p-6 sm:p-10 md:p-16 rounded-[2.5rem] sm:rounded-[3rem] border border-indigo-100/20 dark:border-indigo-800/20 shadow-sm space-y-12 min-h-[300px]"
+            className={`${isDrawer ? 'p-4 rounded-2xl' : 'p-6 sm:p-10 md:p-16 rounded-[2.5rem] sm:rounded-[3rem]'} bg-indigo-50/10 dark:bg-indigo-900/5 border border-indigo-100/20 dark:border-indigo-800/20 shadow-sm space-y-12 min-h-[300px]`}
           >
             <div className="space-y-4 text-center max-w-2xl mx-auto">
               <span className="text-[10px] uppercase tracking-[0.4em] text-[#6366F1] font-bold">The Week&apos;s Trend</span>
-              <p className="text-[#111827] dark:text-[#F9FAFB] font-serif text-3xl md:text-4xl leading-tight italic">
+              <p className={`text-[#111827] dark:text-[#F9FAFB] font-serif ${isDrawer ? 'text-xl' : 'text-3xl md:text-4xl'} leading-tight italic`}>
                 &ldquo;{reflection.trend}&rdquo;
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-12 pt-12 border-t border-indigo-100/30 dark:border-indigo-800/20">
+            <div className={`grid grid-cols-1 ${isDrawer ? '' : 'md:grid-cols-2'} gap-12 pt-12 border-t border-indigo-100/30 dark:border-indigo-800/20`}>
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" aria-hidden="true" />

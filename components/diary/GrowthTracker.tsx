@@ -15,9 +15,10 @@ interface Entry {
 
 interface GrowthTrackerProps {
   entries: Entry[];
+  isDrawer?: boolean;
 }
 
-export default function GrowthTracker({ entries }: GrowthTrackerProps) {
+export default function GrowthTracker({ entries, isDrawer = false }: GrowthTrackerProps) {
   const [growthInsight, setGrowthInsight] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -83,16 +84,16 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
   if (!stats || entries.length < 5) return null;
 
   return (
-    <section className="mt-16 pt-16 border-t border-gray-100 dark:border-[#1A1A1A] min-h-[400px]">
-      <div className="flex items-center gap-3 mb-10 px-0 sm:px-4">
+    <section className={`${isDrawer ? 'mt-4 pt-4' : 'mt-16 pt-16 border-t'} border-gray-100 dark:border-[#1A1A1A] min-h-[400px]`}>
+      <div className={`flex items-center ${isDrawer ? 'justify-start' : 'justify-center sm:justify-start'} gap-3 mb-10 px-0 sm:px-4`}>
         <div className="w-1.5 h-1.5 bg-[#6366F1] rounded-full" aria-hidden="true" />
         <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] text-[#6B7280] dark:text-gray-500">
           Growth Journey
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-8 bg-white dark:bg-[#1A1A1A] p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300 min-h-[320px]">
+      <div className={`grid grid-cols-1 ${isDrawer ? '' : 'md:grid-cols-2'} gap-8`}>
+        <div className={`space-y-8 bg-white dark:bg-[#1A1A1A] ${isDrawer ? 'p-4 rounded-2xl' : 'p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem]'} border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-colors duration-300 min-h-[320px]`}>
           <div className="space-y-6">
             <span className="text-[10px] uppercase tracking-widest text-[#6366F1] font-sans block">Mood Trend</span>
             <div className="h-48 w-full">
@@ -170,7 +171,7 @@ export default function GrowthTracker({ entries }: GrowthTrackerProps) {
           </div>
         </div>
 
-        <div className="bg-indigo-50/20 dark:bg-indigo-900/5 p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem] border border-indigo-100/30 dark:border-indigo-800/20 flex flex-col justify-between shadow-sm transition-colors duration-300 min-h-[320px]">
+        <div className={`${isDrawer ? 'p-4 rounded-2xl' : 'p-6 sm:p-10 rounded-[2.5rem] sm:rounded-[3rem]'} bg-indigo-50/20 dark:bg-indigo-900/5 border border-indigo-100/30 dark:border-indigo-800/20 flex flex-col justify-between shadow-sm transition-colors duration-300 min-h-[320px]`}>
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-[#6366F1]">
               <Activity className="w-4 h-4" aria-hidden="true" />

@@ -23,14 +23,17 @@ import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useResourceUsage } from '@/hooks/use-resource-usage';
 import Image from 'next/image';
+import WeeklyReflection from '@/components/diary/WeeklyReflection';
+import GrowthTracker from '@/components/diary/GrowthTracker';
 
 interface DrawerProps {
   isOpen: boolean;
   onClose: () => void;
   hasNewUpdates?: boolean;
+  entries?: any[];
 }
 
-export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
+export const Drawer = ({ isOpen, onClose, hasNewUpdates, entries = [] }: DrawerProps) => {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -249,10 +252,21 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
               <div className="h-px bg-gray-50 dark:bg-[#1A1A1A] mx-2" aria-hidden="true" />
 
               {/* Future Ready Section */}
-              <div className="space-y-4">
+              <div className="space-y-6">
                 <h3 className="px-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
                   Insights & Tools
                 </h3>
+                
+                {/* Weekly Reflection in Drawer */}
+                <div className="px-2 scale-[0.95] origin-top">
+                  <WeeklyReflection entries={entries} isDrawer={true} />
+                </div>
+
+                {/* Growth Journey in Drawer */}
+                <div className="px-2 scale-[0.95] origin-top">
+                  <GrowthTracker entries={entries} isDrawer={true} />
+                </div>
+
                 <div className="space-y-1">
                   <button 
                     disabled 
@@ -261,14 +275,6 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates }: DrawerProps) => {
                   >
                     <BarChart3 className="w-5 h-5" aria-hidden="true" />
                     <span className="text-sm font-medium">Analytics (Soon)</span>
-                  </button>
-                  <button 
-                    disabled 
-                    aria-label="AI Coach (Coming Soon)"
-                    className="w-full flex items-center gap-4 p-3 rounded-2xl text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-60"
-                  >
-                    <Sparkles className="w-5 h-5" aria-hidden="true" />
-                    <span className="text-sm font-medium">AI Coach (Soon)</span>
                   </button>
                 </div>
               </div>
