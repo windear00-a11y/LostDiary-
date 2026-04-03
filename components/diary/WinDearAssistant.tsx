@@ -14,15 +14,43 @@ interface Message {
 export function WinDearAssistant({
   onSendMessage,
   isSubmitting,
-  t
+  t,
+  entries = []
 }: {
   onSendMessage: (message: string) => Promise<string | null>;
   isSubmitting: boolean;
   t: (key: string) => string;
+  entries?: any[];
 }) {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
+  const [dailyPrompt, setDailyPrompt] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Initial greeting and daily prompt
+  useEffect(() => {
+    const hour = new Date().getHours();
+    let greeting = "I am the soul of your WinDear diary. I'm here to hold your memories. How are you feeling in this moment?";
+    if (hour < 12) greeting = "Good morning. I've been waiting for your first thoughts of the day. What's on your mind?";
+    else if (hour < 18) greeting = "The day is unfolding. I'm listening to everything you want to share.";
+    else greeting = "The stars are out, and I'm here to reflect on the day with you. Let's talk.";
+
+    setMessages([{ id: '1', role: 'assistant', content: greeting, timestamp: new Date() }]);
+
+    // Generate daily prompt if entries exist
+    if (entries.length > 0) {
+      const generatePrompt = async () => {
+        try {
+          const { generateDailyPrompt } = await import('@/lib/ai');
+          const prompt = await generateDailyPrompt(entries);
+          setDailyPrompt(prompt);
+        } catch (error) {
+          console.error('Error generating daily prompt:', error);
+        }
+      };
+      generatePrompt();
+    }
+  }, [entries]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -63,14 +91,22 @@ export function WinDearAssistant({
       {/* Header */}
       <div className="p-6 border-b border-gray-50 dark:border-[#2E2E2E] flex items-center justify-between bg-indigo-50/30 dark:bg-indigo-900/5">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none">
-            <Bot className="w-6 h-6 text-white" />
+          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none relative overflow-hidden">
+            <Bot className="w-6 h-6 text-white relative z-10" />
+            <motion.div 
+              animate={{ 
+                scale: [1, 1.5, 1],
+                opacity: [0.1, 0.3, 0.1] 
+              }}
+              transition={{ repeat: Infinity, duration: 3 }}
+              className="absolute inset-0 bg-white rounded-full"
+            />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-serif italic text-gray-900 dark:text-white">WinDear Assistant</h3>
+            <h3 className="text-base sm:text-lg font-serif italic text-gray-900 dark:text-white">WinDear&apos;s Soul</h3>
             <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[9px] sm:text-[10px] uppercase tracking-widest font-bold text-gray-400">Always here to listen</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-widest font-bold text-gray-400 italic">Connected to your heart</span>
             </div>
           </div>
         </div>
@@ -95,6 +131,31 @@ export function WinDearAssistant({
         )}
 
         <AnimatePresence initial={false}>
+          {dailyPrompt && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-800/30 mb-4"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-3 h-3 text-indigo-500" />
+                <span className="text-[10px] font-bold text-indigo-500 uppercase tracking-widest">Daily Writing Prompt</span>
+              </div>
+              <p className="text-sm text-gray-700 dark:text-gray-300 italic">&quot;{dailyPrompt}&quot;</p>
+              <button 
+                onClick={() => {
+                  const textarea = document.querySelector('textarea');
+                  if (textarea) {
+                    textarea.value = dailyPrompt;
+                    textarea.focus();
+                  }
+                }}
+                className="mt-3 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline uppercase tracking-widest"
+              >
+                Use this prompt
+              </button>
+            </motion.div>
+          )}
           {messages.map((msg) => (
             <motion.div
               key={msg.id}

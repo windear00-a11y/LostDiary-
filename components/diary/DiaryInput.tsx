@@ -1,5 +1,5 @@
 'use client';
-import { Sparkles, Loader2, Info, Mic, MicOff, Languages, Lightbulb } from 'lucide-react';
+import { Sparkles, Loader2, Info, Mic, MicOff, Languages, Lightbulb, Image as ImageIcon, Link as LinkIcon, X as XIcon, Upload, Bold, Italic, List, ListOrdered, Type as TypeIcon, HelpCircle } from 'lucide-react';
 import { RefObject, useState, useEffect, useCallback } from 'react';
 import { checkSpelling } from '@/lib/ai';
 import { motion, AnimatePresence } from 'motion/react';
@@ -15,7 +15,9 @@ export function DiaryInput({
   showSuccess,
   showTranslated,
   setShowTranslated,
-  entries
+  entries,
+  imageUrl,
+  setImageUrl
 }: {
   newEntry: string;
   setNewEntry: React.Dispatch<React.SetStateAction<string>>;
@@ -28,13 +30,33 @@ export function DiaryInput({
   showTranslated: boolean;
   setShowTranslated: React.Dispatch<React.SetStateAction<boolean>>;
   entries: any[];
+  imageUrl: string;
+  setImageUrl: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const [spellingSuggestion, setSpellingSuggestion] = useState<{ suggestion: string, explanation: string } | null>(null);
+  const [showImageInput, setShowImageInput] = useState(false);
   const [isCheckingSpelling, setIsCheckingSpelling] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+  const [moodColor, setMoodColor] = useState('indigo');
+
+  // Simple keyword-based mood detection for real-time glow
+  useEffect(() => {
+    const text = newEntry.toLowerCase();
+    if (text.includes('happy') || text.includes('great') || text.includes('love') || text.includes('khush')) {
+      setMoodColor('yellow');
+    } else if (text.includes('sad') || text.includes('lonely') || text.includes('cry') || text.includes('dukh')) {
+      setMoodColor('blue');
+    } else if (text.includes('angry') || text.includes('hate') || text.includes('gussa')) {
+      setMoodColor('red');
+    } else if (text.includes('calm') || text.includes('peace') || text.includes('shanti')) {
+      setMoodColor('green');
+    } else {
+      setMoodColor('indigo');
+    }
+  }, [newEntry]);
 
   const handleGetPrompt = async () => {
     setIsGeneratingPrompt(true);
@@ -148,8 +170,67 @@ export function DiaryInput({
     return () => clearTimeout(timer);
   }, [newEntry]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert("Image size should be less than 2MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImageUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const insertMarkdown = (prefix: string, suffix: string = '') => {
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const before = text.substring(0, start);
+    const selection = text.substring(start, end);
+    const after = text.substring(end);
+
+    const newText = before + prefix + selection + suffix + after;
+    setNewEntry(newText);
+    
+    // Reset focus and selection
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+    }, 0);
+  };
+
   return (
-    <section className={`p-4 sm:p-10 rounded-2xl sm:rounded-3xl shadow-lg shadow-indigo-50/50 dark:shadow-none border space-y-6 transition-all duration-500 bg-white dark:bg-[#1A1A1A] border-slate-100 dark:border-[#2E2E2E]`}>
+    <section className={`p-4 sm:p-10 rounded-2xl sm:rounded-3xl shadow-lg border space-y-6 transition-all duration-700 bg-white dark:bg-[#1A1A1A] ${
+      moodColor === 'yellow' ? 'border-yellow-200 dark:border-yellow-900/30 shadow-yellow-50/50' :
+      moodColor === 'blue' ? 'border-blue-200 dark:border-blue-900/30 shadow-blue-50/50' :
+      moodColor === 'red' ? 'border-red-200 dark:border-red-900/30 shadow-red-50/50' :
+      moodColor === 'green' ? 'border-green-200 dark:border-green-900/30 shadow-green-50/50' :
+      'border-slate-100 dark:border-[#2E2E2E] shadow-indigo-50/50'
+    }`}>
+      {/* Living Pulse Indicator */}
+      <div className="flex justify-center -mt-6 mb-2">
+        <motion.div 
+          animate={newEntry.length > 0 ? {
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.6, 0.3],
+          } : { scale: 1, opacity: 0.2 }}
+          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+          className={`w-2 h-2 rounded-full ${
+            moodColor === 'yellow' ? 'bg-yellow-400' :
+            moodColor === 'blue' ? 'bg-blue-400' :
+            moodColor === 'red' ? 'bg-red-400' :
+            moodColor === 'green' ? 'bg-green-400' :
+            'bg-indigo-400'
+          }`}
+        />
+      </div>
+
       {submitError && (
         <div className="p-4 bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-2xl text-red-600 dark:text-red-400 text-sm">
           <p className="font-bold mb-1">Error saving entry:</p>
@@ -173,8 +254,138 @@ export function DiaryInput({
         )}
       </AnimatePresence>
       <form onSubmit={handleSubmit} className="space-y-6">
+        <AnimatePresence>
+          {showImageInput && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="p-4 bg-gray-50 dark:bg-[#262626] rounded-2xl border border-gray-100 dark:border-[#2E2E2E] flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ImageIcon className="w-3 h-3 text-indigo-500" />
+                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Add a Memory</span>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={() => setShowImageInput(false)}
+                    className="p-1 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition-colors"
+                  >
+                    <XIcon className="w-3 h-3 text-gray-400" />
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-xl hover:border-indigo-500 dark:hover:border-indigo-500 transition-all cursor-pointer bg-white dark:bg-[#1A1A1A] group">
+                    <Upload className="w-5 h-5 text-gray-400 group-hover:text-indigo-500 mb-2" />
+                    <span className="text-[10px] font-bold text-gray-400 group-hover:text-indigo-500 uppercase tracking-widest">Upload Photo</span>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleFileChange} 
+                      className="hidden" 
+                    />
+                  </label>
+
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2 px-2">
+                      <LinkIcon className="w-3 h-3 text-gray-400" />
+                      <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Or paste URL</span>
+                    </div>
+                    <input 
+                      type="url"
+                      value={imageUrl.startsWith('data:') ? '' : imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder="https://..."
+                      className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-xl py-2 px-4 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+                    />
+                  </div>
+                </div>
+
+                {imageUrl && (
+                  <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-[#2E2E2E]">
+                    <img 
+                      src={imageUrl} 
+                      alt="Preview" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x450?text=Invalid+Image+URL';
+                      }}
+                    />
+                    <button 
+                      type="button"
+                      onClick={() => setImageUrl('')}
+                      className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
+                    >
+                      <XIcon className="w-3 h-3" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div className="space-y-3">
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex items-center gap-1 bg-gray-50 dark:bg-[#262626] p-1 rounded-full border border-gray-100 dark:border-gray-800">
+              <button
+                type="button"
+                onClick={() => insertMarkdown('**', '**')}
+                className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-all text-gray-500 hover:text-indigo-600"
+                title="Bold (**text**)"
+              >
+                <Bold className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => insertMarkdown('*', '*')}
+                className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-all text-gray-500 hover:text-indigo-600"
+                title="Italic (*text*)"
+              >
+                <Italic className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => insertMarkdown('\n- ', '')}
+                className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-all text-gray-500 hover:text-indigo-600"
+                title="Bullet List (- item)"
+              >
+                <List className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => insertMarkdown('\n1. ', '')}
+                className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-all text-gray-500 hover:text-indigo-600"
+                title="Numbered List (1. item)"
+              >
+                <ListOrdered className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => insertMarkdown('[', '](url)')}
+                className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-all text-gray-500 hover:text-indigo-600"
+                title="Link ([text](url))"
+              >
+                <LinkIcon className="w-3.5 h-3.5" />
+              </button>
+              <div className="h-4 w-[1px] bg-gray-200 dark:bg-gray-800 mx-1" />
+              <button
+                type="button"
+                onClick={() => {
+                  alert("Markdown Guide:\n\n**Bold** -> **text**\n*Italic* -> *text*\nList -> - item\nNumbered -> 1. item\nLink -> [text](url)");
+                }}
+                className="p-2 hover:bg-white dark:hover:bg-gray-800 rounded-full transition-all text-gray-400 hover:text-indigo-600"
+                title="Markdown Guide"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div className="h-4 w-[1px] bg-gray-200 dark:bg-gray-800 mx-1" />
+
             <button
               type="button"
               onClick={() => setShowTranslated(!showTranslated)}
@@ -196,6 +407,16 @@ export function DiaryInput({
               Need a prompt?
             </button>
             
+            <button
+              type="button"
+              onClick={() => setShowImageInput(!showImageInput)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all active:scale-95 border ${imageUrl ? 'bg-green-600 text-white border-green-600 shadow-md shadow-green-200' : 'bg-white dark:bg-[#262626] text-gray-600 dark:text-gray-400 border-gray-100 dark:border-indigo-800/30 hover:bg-gray-50'}`}
+              title="Add an image URL to this entry"
+            >
+              <ImageIcon className="w-3 h-3" />
+              {imageUrl ? 'Image Added' : 'Add Image'}
+            </button>
+
             <div className="h-4 w-[1px] bg-gray-200 dark:bg-gray-800 mx-2" />
 
             <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400 whitespace-nowrap mr-2">

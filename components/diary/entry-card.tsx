@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Smile, Trash2, ChevronRight, Lightbulb, Languages, Copy, Check, Share2 } from 'lucide-react';
 
+import ReactMarkdown from 'react-markdown';
+
 interface EntryCardProps {
   entry: any;
   deleteEntry: (id: string) => void;
@@ -115,16 +117,33 @@ export function EntryCard({ entry, deleteEntry, t, onTryNow, showTranslatedGloba
       </div>
       <div className="relative min-h-[3rem] overflow-hidden">
         <AnimatePresence mode="wait">
-          <motion.p
-            key={showOriginal ? 'original' : 'translated'}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            transition={{ duration: 0.2 }}
-            className="text-[#374151] dark:text-[#D1D5DB] leading-relaxed mb-6 whitespace-pre-wrap"
-          >
-            {showOriginal ? entry.content : (entry.translated_content || entry.content)}
-          </motion.p>
+          <div key={showOriginal ? 'original' : 'translated'}>
+            {entry.image_url && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="mb-6 rounded-2xl overflow-hidden border border-gray-100 dark:border-[#2E2E2E] shadow-sm"
+              >
+                <img 
+                  src={entry.image_url} 
+                  alt="Memory" 
+                  className="w-full h-auto max-h-[400px] object-cover"
+                  referrerPolicy="no-referrer"
+                />
+              </motion.div>
+            )}
+            <motion.div
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.2 }}
+              className="text-[#374151] dark:text-[#D1D5DB] leading-relaxed mb-6 prose dark:prose-invert prose-sm max-w-none"
+            >
+              <ReactMarkdown>
+                {showOriginal ? entry.content : (entry.translated_content || entry.content)}
+              </ReactMarkdown>
+            </motion.div>
+          </div>
         </AnimatePresence>
       </div>
       {entry.summary && (

@@ -16,6 +16,7 @@ import { WinDearAssistant } from '@/components/diary/WinDearAssistant';
 import GrowthTracker from '@/components/diary/GrowthTracker';
 import WeeklyReflection from '@/components/diary/WeeklyReflection';
 import ConsistencyTracker from '@/components/diary/ConsistencyTracker';
+import Milestones from '@/components/diary/Milestones';
 import { processDiaryEntry, classifyIntent, handleChat } from '@/lib/ai';
 
 import { AppLayout } from '@/components/layout/AppLayout';
@@ -40,6 +41,7 @@ export default function AppDashboard() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showTranslated, setShowTranslated] = useState(false);
+  const [imageUrl, setImageUrl] = useState('');
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -111,6 +113,7 @@ export default function AppDashboard() {
             suggestion: aiResult?.suggestion || '',
             summary: aiResult?.summary || '',
             tags: aiResult?.tags || [],
+            image_url: imageUrl || null,
             translated_content: aiResult?.translated_content || null,
             normalized_content: aiResult?.normalized_content || null
           }
@@ -129,6 +132,7 @@ export default function AppDashboard() {
       // 3. Update local state
       setEntries([data, ...entries]);
       setNewEntry('');
+      setImageUrl('');
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (err: any) {
@@ -199,21 +203,25 @@ export default function AppDashboard() {
                 showTranslated={showTranslated}
                 setShowTranslated={setShowTranslated}
                 entries={entries}
+                imageUrl={imageUrl}
+                setImageUrl={setImageUrl}
               />
             </div>
           </div>
 
           {/* 2. Assistant (Middle on mobile, Right on desktop) */}
-          <div className="lg:col-span-5 order-2 lg:order-3 space-y-8 lg:sticky lg:top-8">
+            <div className="lg:col-span-5 order-2 lg:order-3 space-y-8 lg:sticky lg:top-8">
             <WinDearAssistant 
               onSendMessage={handleAssistantMessage}
               isSubmitting={isAssistantLoading}
               t={t}
+              entries={entries}
             />
 
-            <div className="hidden lg:block">
+            <div className="hidden lg:block space-y-8">
               {!isLoadingEntries && entries.length > 0 && (
                 <div className="space-y-8">
+                  <Milestones entries={entries} />
                   <WeeklyReflection entries={entries} />
                   <GrowthTracker entries={entries} />
                 </div>
@@ -235,9 +243,10 @@ export default function AppDashboard() {
             </div>
             
             {/* Show trackers at the very bottom on mobile */}
-            <div className="lg:hidden">
+            <div className="lg:hidden space-y-8 mt-8">
               {!isLoadingEntries && entries.length > 0 && (
                 <div className="space-y-8">
+                  <Milestones entries={entries} />
                   <WeeklyReflection entries={entries} />
                   <GrowthTracker entries={entries} />
                 </div>
