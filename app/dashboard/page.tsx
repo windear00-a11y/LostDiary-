@@ -154,10 +154,10 @@ export default function AppDashboard() {
     <AppLayout onNewEntry={handleStartWriting} onStartChat={handleStartChat}>
       <div className="space-y-12 min-h-screen">
         <div className="text-center space-y-4 pt-6 sm:pt-10 min-h-[140px] sm:min-h-[160px] flex flex-col justify-center px-4">
-          <h1 className="text-3xl sm:text-4xl font-serif italic text-gray-900 dark:text-[#F9FAFB]">
+          <h1 className="text-2xl sm:text-4xl font-serif italic text-gray-900 dark:text-[#F9FAFB]">
             {t('dash.hello', 'Hello')}, {user?.user_metadata?.full_name || user?.email?.split('@')[0]}
           </h1>
-          <p className="text-base sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-sm sm:text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
             {t('dash.howAreYou', 'How are you feeling today?')}
           </p>
         </div>
