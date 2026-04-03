@@ -1,5 +1,11 @@
 [
   {
+    "hash": "33872d789914bdba098b6e4d4eec6ebd561111dc",
+    "message": "feat: enhance diary input with image upload and rich text",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-03T12:52:41+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
