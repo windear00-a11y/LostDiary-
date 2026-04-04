@@ -7,7 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { CookieConsent } from '@/components/ui/CookieConsent';
 import { GoogleAnalytics } from '@next/third-parties/google';
-import { ErrorLogger } from '@/components/error-logger';
+import DebugOverlay from '@/components/debug-overlay';
 import { Suspense } from 'react';
 import './globals.css';
 
@@ -57,7 +57,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] min-h-screen transition-colors duration-300`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <ErrorLogger />
+          <DebugOverlay />
           <Suspense fallback={null}>
             <I18nProvider>
               <AuthProvider>
