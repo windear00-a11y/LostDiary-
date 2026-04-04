@@ -9,16 +9,18 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useUpdates } from '@/hooks/use-updates';
 import { createClient } from '@/lib/supabase';
-import posthog from 'posthog-js';
 import { DiaryInput } from '@/components/diary/DiaryInput';
 import { DiaryList } from '@/components/diary/DiaryList';
-import GrowthTracker from '@/components/diary/GrowthTracker';
-import WeeklyReflection from '@/components/diary/WeeklyReflection';
-import ConsistencyTracker from '@/components/diary/ConsistencyTracker';
-import Milestones from '@/components/diary/Milestones';
+import dynamic from 'next/dynamic';
+
+const GrowthTracker = dynamic(() => import('@/components/diary/GrowthTracker'), { ssr: false });
+const WeeklyReflection = dynamic(() => import('@/components/diary/WeeklyReflection'), { ssr: false });
+const ConsistencyTracker = dynamic(() => import('@/components/diary/ConsistencyTracker'), { ssr: false });
+const Milestones = dynamic(() => import('@/components/diary/Milestones'), { ssr: false });
+const AIUsageDashboard = dynamic(() => import('@/components/diary/AIUsageDashboard'), { ssr: false });
+
 import { processDiaryEntry, classifyIntent, handleChat } from '@/lib/ai';
 import { useResourceUsage } from '@/hooks/use-resource-usage';
-import { AIUsageDashboard } from '@/components/diary/AIUsageDashboard';
 
 import { AppLayout } from '@/components/layout/AppLayout';
 
