@@ -1,11 +1,5 @@
 [
   {
-    "hash": "20eedbed1c020f45c8659ea88f38e7c93b6788c3",
-    "message": "feat: Remove outdated update entry",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-04T17:15:10+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
