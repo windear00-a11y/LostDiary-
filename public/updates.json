@@ -1,5 +1,11 @@
 [
   {
+    "hash": "d0c3e26648a2a281eff49dc297493c6fae588db9",
+    "message": "refactor: Initialize Supabase client client-side",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-04T19:17:09+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
