@@ -1,5 +1,11 @@
 [
   {
+    "hash": "4cb4cba70b3255f82a13e121e52a0a5a8c134062",
+    "message": "feat: Enable standalone output for Next.js",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-04T16:10:06+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
