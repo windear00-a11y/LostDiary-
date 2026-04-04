@@ -1,5 +1,11 @@
 [
   {
+    "hash": "b9d6be538711191cab042fa2474eb99ab7b63ac1",
+    "message": "refactor: Optimize dashboard performance and remove unused dependencies",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-04T10:22:03+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
