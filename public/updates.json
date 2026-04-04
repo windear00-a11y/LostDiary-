@@ -1,11 +1,5 @@
 [
   {
-    "hash": "dff757a4d31f8a2843cba341f97038fca55764ad",
-    "message": "feat: Remove stale PostHog analytics update",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-04T12:39:45+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
