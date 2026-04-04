@@ -1,11 +1,5 @@
 [
   {
-    "hash": "7a0c549b4d7a11ec87c7ad40b31c1d1755302349",
-    "message": "feat: Remove old Next.js standalone output update",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-04T16:23:42+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
