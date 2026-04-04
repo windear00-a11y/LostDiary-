@@ -1,5 +1,11 @@
 [
   {
+    "hash": "3a94edf0c0646d57a9a67701dd6c0676583256ca",
+    "message": "feat: Display recent diary entries on dashboard",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-04T18:45:17+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
