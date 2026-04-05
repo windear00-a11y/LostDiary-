@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase";
+
+const supabase = createClient();
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -9,13 +12,13 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadUser() {
       try {
-        // 👉 yaha apna actual auth code laga sakte ho
-        const res = await fetch("/api/user"); // agar API hai
-        const data = await res.json();
+        const { data, error } = await supabase.auth.getUser();
 
-        console.log("USER DATA:", data);
+        if (error) throw error;
 
-        setUser(data);
+        console.log("REAL USER:", data);
+
+        setUser(data.user);
       } catch (err) {
         console.error("ERROR:", err);
       } finally {
@@ -40,7 +43,7 @@ export default function DashboardPage() {
   return (
     <div style={{ padding: 20 }}>
       <h1>Dashboard</h1>
-      <p>Name: {user?.name || "Guest"}</p>
+      <p>Name: {user?.user_metadata?.name || "No Name"}</p>
       <p>Email: {user?.email || "No Email"}</p>
 
       {/* DEBUG */}
