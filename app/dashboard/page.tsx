@@ -41,13 +41,29 @@ export default function DashboardPage() {
 
   // ✅ SAFE render
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Dashboard</h1>
-      <p>Name: {user?.user_metadata?.name || "No Name"}</p>
-      <p>Email: {user?.email || "No Email"}</p>
+    <div style={{ padding: 20, fontFamily: "sans-serif" }}>
+      <h1 style={{ fontSize: 24, fontWeight: "bold" }}>Dashboard</h1>
 
-      {/* DEBUG */}
-      <pre>{JSON.stringify(user, null, 2)}</pre>
+      <div style={{
+        marginTop: 20,
+        padding: 20,
+        borderRadius: 12,
+        background: "#f5f5f5"
+      }}>
+        <img
+          src={user?.user_metadata?.avatar_url}
+          alt="avatar"
+          style={{
+            width: 60,
+            height: 60,
+            borderRadius: "50%",
+            marginBottom: 10
+          }}
+        />
+
+        <p><b>Name:</b> {user?.user_metadata?.full_name}</p>
+        <p><b>Email:</b> {user?.email}</p>
+      </div>
     </div>
   );
 }
