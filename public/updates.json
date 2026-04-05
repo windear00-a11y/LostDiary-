@@ -1,11 +1,5 @@
 [
   {
-    "hash": "cbc691bb764675d93ee6042dd7ddbec2283c461d",
-    "message": "feat: Fetch user data directly from Supabase",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-05T09:13:06+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
