@@ -73,6 +73,20 @@ export function DiaryList({
     return result;
   }, [entries, selectedTag, searchQuery]);
 
+  const groupedEntries = useMemo(() => {
+    const groups: Record<string, any[]> = {};
+    filteredEntries.forEach(entry => {
+      const tags = entry.tags && Array.isArray(entry.tags) && entry.tags.length > 0 ? entry.tags : ['Uncategorized'];
+      tags.forEach((tag: string) => {
+        if (selectedTag === 'All' || tag === selectedTag) {
+          if (!groups[tag]) groups[tag] = [];
+          groups[tag].push(entry);
+        }
+      });
+    });
+    return groups;
+  }, [filteredEntries, selectedTag]);
+
   return (
     <section className="space-y-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-center md:text-left">
@@ -202,7 +216,6 @@ export function DiaryList({
             <p className="text-gray-500 dark:text-gray-400 italic font-serif">No entries found in this category.</p>
           </div>
         )}
-      </div>
-    </section>
+      </section>
   );
 }
