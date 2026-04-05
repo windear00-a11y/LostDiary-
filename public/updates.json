@@ -1,5 +1,11 @@
 [
   {
+    "hash": "e9e2cabb0fb63f0e03d35c26d328ec29088c2a6a",
+    "message": "fix(drawer): Prevent background scroll and improve avatar loading",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-05T15:19:07+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
