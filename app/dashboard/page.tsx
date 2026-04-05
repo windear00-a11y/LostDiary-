@@ -28,6 +28,17 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchEntries();
+
+    async function loadUser() {
+      try {
+        const data = await getUserData();
+        setUser(data);
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message);
+      }
+    }
+
     loadUser();
   }, []);
 
@@ -43,22 +54,10 @@ export default function Dashboard() {
     setEntries(data || []);
   };
 
-  async function loadUser() {
-    try {
-      const res = await fetch("/api/user");
-      const data = await res.json();
-
-      console.log("USER DATA:", data);
-
-      if (!data) {
-        throw new Error("User not found");
-      }
-
-      setUser(data);
-    } catch (err: any) {
-      console.log("Dashboard error:", err.message);
-      setError(err.message);
-    }
+  async function getUserData() {
+    const res = await fetch("/api/user");
+    if (!res.ok) throw new Error("Failed to fetch user");
+    return res.json();
   }
 
   if (error) {
@@ -75,7 +74,8 @@ export default function Dashboard() {
 
   return (
     <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Welcome {user.name}</h1>
+      <h1 className="text-2xl font-bold mb-4">{user?.name || "Guest"}</h1>
+      <p>{JSON.stringify(user)}</p>
       
       <AIUsageDashboard />
 

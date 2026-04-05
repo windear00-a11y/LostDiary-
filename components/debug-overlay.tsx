@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 
 export default function DebugOverlay() {
-  const [logs, setLogs] = useState<string[]>([]);
+  const [logs, setLogs] = useState<{ msg: string; type: "log" | "error" }[]>([]);
 
   useEffect(() => {
     const addLog = (msg: string, type: "log" | "error" = "log") => {
-      setLogs((prev) => [...prev, `[${type}] ${msg}`]);
+      setLogs((prev) => [...prev, { msg, type }]);
     };
 
     window.onerror = function (msg, url, line, col, error) {
@@ -41,7 +41,9 @@ export default function DebugOverlay() {
       padding: "5px"
     }}>
       {logs.map((log, i) => (
-        <div key={i}>{log}</div>
+        <div key={i} style={{ color: log.type === "error" ? "red" : "lime" }}>
+          [{log.type}] {log.msg}
+        </div>
       ))}
     </div>
   );
