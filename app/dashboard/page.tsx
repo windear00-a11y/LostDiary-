@@ -2,23 +2,31 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
+import { DiaryList } from "@/components/diary/DiaryList";
+import { DiaryInput } from "@/components/diary/DiaryInput";
+import { Milestones } from "@/components/diary/Milestones";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const supabase = createClient();
 
 export default function DashboardPage() {
-  const [user, setUser] = useState<any>(null);
+  const [entries, setEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadUser() {
+    async function loadData() {
       try {
-        const { data, error } = await supabase.auth.getUser();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data, error } = await supabase
+          .from('entries')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
         if (error) throw error;
-
-        console.log("REAL USER:", data);
-
-        setUser(data.user);
+        setEntries(data || []);
       } catch (err) {
         console.error("ERROR:", err);
       } finally {
@@ -26,44 +34,31 @@ export default function DashboardPage() {
       }
     }
 
-    loadUser();
+    loadData();
   }, []);
 
-  // ✅ loading safe
   if (loading) {
-    return <p style={{ padding: 20 }}>Loading dashboard...</p>;
+    return <div className="p-8">Loading dashboard...</div>;
   }
 
-  // ❌ agar user null hai to crash mat hone do
-  if (!user) {
-    return <p style={{ padding: 20 }}>No user data found</p>;
-  }
-
-  // ✅ SAFE render
   return (
-    <div style={{ padding: 20, fontFamily: "sans-serif" }}>
-      <h1 style={{ fontSize: 24, fontWeight: "bold" }}>Dashboard</h1>
+    <AppLayout>
+      <div className="space-y-8">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+        </div>
 
-      <div style={{
-        marginTop: 20,
-        padding: 20,
-        borderRadius: 12,
-        background: "#f5f5f5"
-      }}>
-        <img
-          src={user?.user_metadata?.avatar_url}
-          alt="avatar"
-          style={{
-            width: 60,
-            height: 60,
-            borderRadius: "50%",
-            marginBottom: 10
-          }}
-        />
-
-        <p><b>Name:</b> {user?.user_metadata?.full_name}</p>
-        <p><b>Email:</b> {user?.email}</p>
+        <Milestones entries={entries} />
+        
+        <div className="grid md:grid-cols-3 gap-8">
+          <div className="md:col-span-2">
+            <DiaryList entries={entries} />
+          </div>
+          <div>
+            <DiaryInput onEntryAdded={() => window.location.reload()} />
+          </div>
+        </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }
