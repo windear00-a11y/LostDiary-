@@ -1,10 +1,14 @@
 'use client';
-import { Sparkles, Loader2, Info, Mic, MicOff, Languages, Lightbulb, Image as ImageIcon, Link as LinkIcon, X as XIcon, Upload, Bold, Italic, List, ListOrdered, Type as TypeIcon, HelpCircle } from 'lucide-react';
-import { RefObject, useState, useEffect, useCallback } from 'react';
-import { checkSpelling } from '@/lib/ai';
+import { Sparkles, Loader2, Info, Mic, MicOff, Languages, Lightbulb, Image as ImageIcon, Link as LinkIcon, X as XIcon, Upload, Bold, Italic, List, ListOrdered, Type as TypeIcon, HelpCircle, Wand2, ArrowRight, RefreshCw } from 'lucide-react';
+import Image from 'next/image';
+import React, { RefObject, useState, useEffect, useCallback } from 'react';
+import { checkSpelling, generateInlineSuggestions } from '@/lib/ai';
 import { motion, AnimatePresence } from 'motion/react';
 
-export function DiaryInput({
+import { useDiaryStore, useEntries } from '@/lib/store/use-diary-store';
+import { useUIState } from '@/lib/store/use-ui-store';
+
+export const DiaryInput = React.memo(function DiaryInput({
   newEntry,
   setNewEntry,
   handleSubmit,
@@ -13,9 +17,6 @@ export function DiaryInput({
   t,
   textareaRef,
   showSuccess,
-  showTranslated,
-  setShowTranslated,
-  entries,
   imageUrl,
   setImageUrl
 }: {
@@ -27,13 +28,15 @@ export function DiaryInput({
   t: (key: string) => string;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
   showSuccess: boolean;
-  showTranslated: boolean;
-  setShowTranslated: React.Dispatch<React.SetStateAction<boolean>>;
-  entries: any[];
   imageUrl: string;
   setImageUrl: React.Dispatch<React.SetStateAction<string>>;
 }) {
+  const entries = useEntries();
+  const { showTranslated, setShowTranslated } = useUIState();
   const [spellingSuggestion, setSpellingSuggestion] = useState<{ suggestion: string, explanation: string } | null>(null);
+  const [inlineSuggestion, setInlineSuggestion] = useState<string | null>(null);
+  const [suggestionType, setSuggestionType] = useState<'improve' | 'continue' | 'rephrase'>('improve');
+  const [isGeneratingSuggestion, setIsGeneratingSuggestion] = useState(false);
   const [showImageInput, setShowImageInput] = useState(false);
   const [isCheckingSpelling, setIsCheckingSpelling] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -75,6 +78,46 @@ export function DiaryInput({
       setIsIntense(false);
     }
   }, [newEntry, mood]);
+
+  // Inline AI Suggestions Logic
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      const trimmed = newEntry.trim();
+      if (trimmed.length > 15 && !inlineSuggestion) {
+        setIsGeneratingSuggestion(true);
+        const suggestion = await generateInlineSuggestions(trimmed, suggestionType);
+        setInlineSuggestion(suggestion);
+        setIsGeneratingSuggestion(false);
+      }
+    }, 3000); // Trigger after 3 seconds of inactivity
+
+    return () => clearTimeout(timer);
+  }, [newEntry, suggestionType, inlineSuggestion]);
+
+  // Clear suggestion when typing starts again or entry is cleared
+  useEffect(() => {
+    if (newEntry.length === 0) {
+      setInlineSuggestion(null);
+    }
+  }, [newEntry]);
+
+  const handleApplySuggestion = () => {
+    if (!inlineSuggestion) return;
+    if (suggestionType === 'continue') {
+      setNewEntry(prev => prev.trim() + ' ' + inlineSuggestion);
+    } else {
+      setNewEntry(inlineSuggestion);
+    }
+    setInlineSuggestion(null);
+  };
+
+  const cycleSuggestionType = () => {
+    const types: ('improve' | 'continue' | 'rephrase')[] = ['improve', 'continue', 'rephrase'];
+    const currentIndex = types.indexOf(suggestionType);
+    const nextIndex = (currentIndex + 1) % types.length;
+    setSuggestionType(types[nextIndex]);
+    setInlineSuggestion(null); // Reset to trigger new one
+  };
 
   const getMoodStyles = () => {
     const base = "transition-all duration-[3000ms] ease-out";
@@ -207,7 +250,7 @@ export function DiaryInput({
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
-  }, []); // Run only on mount
+  }, [textareaRef]); // Run only on mount
 
   useEffect(() => {
     // Auto-scroll textarea to bottom when typing
@@ -369,13 +412,12 @@ export function DiaryInput({
 
                 {imageUrl && (
                   <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-gray-200 dark:border-[#2E2E2E]">
-                    <img 
+                    <Image 
                       src={imageUrl} 
                       alt="Preview" 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x450?text=Invalid+Image+URL';
-                      }}
+                      fill
+                      className="object-cover"
+                      referrerPolicy="no-referrer"
                     />
                     <button 
                       type="button"
@@ -548,6 +590,65 @@ export function DiaryInput({
                   </div>
                 </motion.div>
               )}
+
+              {/* Inline AI Suggestions Tooltip */}
+              {(inlineSuggestion || isGeneratingSuggestion) && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  className="absolute bottom-32 left-6 right-6 z-20 bg-white/90 dark:bg-[#1A1A1A]/90 backdrop-blur-md border border-indigo-100 dark:border-indigo-900/30 rounded-2xl shadow-xl p-3 flex flex-col gap-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="p-1.5 bg-indigo-500 rounded-lg text-white">
+                        <Wand2 className="w-3 h-3" />
+                      </div>
+                      <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
+                        AI {suggestionType === 'improve' ? 'Improvement' : suggestionType === 'continue' ? 'Continuation' : 'Rephrase'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={cycleSuggestionType}
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-400 transition-colors"
+                        title="Change suggestion type"
+                      >
+                        <RefreshCw className="w-3 h-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInlineSuggestion(null)}
+                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-400 transition-colors"
+                      >
+                        <XIcon className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {isGeneratingSuggestion ? (
+                    <div className="flex items-center gap-2 py-2 px-1">
+                      <Loader2 className="w-3 h-3 animate-spin text-indigo-500" />
+                      <span className="text-xs text-gray-400 italic">WinDear is thinking...</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed italic">
+                        {inlineSuggestion}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleApplySuggestion}
+                        className="flex items-center justify-center gap-2 w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all active:scale-95 shadow-md shadow-indigo-200 dark:shadow-none"
+                      >
+                        Apply Suggestion
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
             </AnimatePresence>
 
             <textarea
@@ -662,4 +763,4 @@ export function DiaryInput({
       </form>
     </section>
   );
-}
+});

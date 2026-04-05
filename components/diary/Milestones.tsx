@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Trophy, Star, Target, Zap, Award, Calendar } from 'lucide-react';
 import { motion } from 'motion/react';
 
@@ -15,7 +15,7 @@ interface MilestonesProps {
   entries: Entry[];
 }
 
-export function Milestones({ entries }: MilestonesProps) {
+export const Milestones = React.memo(function Milestones({ entries }: MilestonesProps) {
   const achievements = useMemo(() => {
     if (entries.length === 0) return [];
 
@@ -92,4 +92,4 @@ export function Milestones({ entries }: MilestonesProps) {
       </div>
     </div>
   );
-}
+});

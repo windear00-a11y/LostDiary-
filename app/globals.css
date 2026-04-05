@@ -6,3 +6,9 @@
     @apply w-full overflow-x-hidden;
   }
 }
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

@@ -23,19 +23,21 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useResourceUsage } from '@/hooks/use-resource-usage';
 import Image from 'next/image';
 
+import { useUIStore } from '@/lib/store/use-ui-store';
+
 interface DrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
   hasNewUpdates?: boolean;
   entries?: any[];
 }
 
-export const Drawer = ({ isOpen, onClose, hasNewUpdates, entries = [] }: DrawerProps) => {
+export const Drawer = ({ hasNewUpdates, entries = [] }: DrawerProps) => {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const { t } = useTranslation();
   const { aiCalls, entryCount } = useResourceUsage();
+  const { isSidebarOpen: isOpen, setSidebarOpen: setOpen } = useUIStore();
+  const onClose = React.useCallback(() => setOpen(false), [setOpen]);
 
   // Free tier limits for visualization
   const AI_LIMIT = 100; // 100 calls per day
@@ -62,7 +64,7 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates, entries = [] }: DrawerP
       window.removeEventListener('keydown', handleEsc);
       document.body.style.overflow = 'unset';
     };
-  }, [onClose, isOpen]);
+  }, [isOpen, onClose]);
 
   const menuItems = [
     {

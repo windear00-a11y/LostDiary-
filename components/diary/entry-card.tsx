@@ -1,8 +1,11 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'motion/react';
-import { Smile, Trash2, ChevronRight, Lightbulb, Languages, Copy, Check, Share2, ChevronDown, MoreVertical, Edit2, Pin, PinOff } from 'lucide-react';
+import { Smile, Trash2, ChevronRight, Lightbulb, Languages, Copy, Check, Share2, ChevronDown, MoreVertical, Edit2, Pin, PinOff, Sparkles } from 'lucide-react';
+import Image from 'next/image';
 
 import ReactMarkdown from 'react-markdown';
+
+import { useUIState, useUIStore } from '@/lib/store/use-ui-store';
 
 interface EntryCardProps {
   entry: any;
@@ -11,12 +14,12 @@ interface EntryCardProps {
   onPin?: (id: string) => void;
   t: any;
   onTryNow?: () => void;
-  showTranslatedGlobal?: boolean;
   isOpen: boolean;
   onToggle: () => void;
 }
 
-export function EntryCard({ entry, deleteEntry, onEdit, onPin, t, onTryNow, showTranslatedGlobal = false, isOpen, onToggle }: EntryCardProps) {
+export const EntryCard = memo(function EntryCard({ entry, deleteEntry, onEdit, onPin, t, onTryNow, isOpen, onToggle }: EntryCardProps) {
+  const { showTranslated: showTranslatedGlobal } = useUIState();
   const [localShowOriginal, setLocalShowOriginal] = useState<boolean | null>(null);
   const [copied, setCopied] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,13 +28,15 @@ export function EntryCard({ entry, deleteEntry, onEdit, onPin, t, onTryNow, show
   const x = useMotionValue(0);
   const background = useTransform(
     x,
-    [-100, 0, 100],
-    ["rgba(239, 68, 68, 0.1)", "rgba(255, 255, 255, 0)", "rgba(245, 158, 11, 0.1)"]
+    [-150, 0, 150],
+    ["rgba(239, 68, 68, 0.2)", "rgba(255, 255, 255, 0)", "rgba(245, 158, 11, 0.2)"]
   );
-  const pinOpacity = useTransform(x, [20, 80], [0, 1]);
-  const deleteOpacity = useTransform(x, [-80, -20], [1, 0]);
-  const pinScale = useTransform(x, [20, 80], [0.8, 1.2]);
-  const deleteScale = useTransform(x, [-80, -20], [1.2, 0.8]);
+  const pinOpacity = useTransform(x, [40, 120], [0, 1]);
+  const deleteOpacity = useTransform(x, [-120, -40], [1, 0]);
+  const pinScale = useTransform(x, [40, 120], [0.5, 1.5]);
+  const deleteScale = useTransform(x, [-120, -40], [1.5, 0.5]);
+  const pinRotate = useTransform(x, [40, 120], [-45, 0]);
+  const deleteRotate = useTransform(x, [-120, -40], [0, 45]);
 
   const showOriginal = localShowOriginal !== null ? localShowOriginal : !showTranslatedGlobal;
   
@@ -101,15 +106,15 @@ export function EntryCard({ entry, deleteEntry, onEdit, onPin, t, onTryNow, show
       {/* Swipe Background Actions */}
       <motion.div 
         style={{ background }}
-        className="absolute inset-0 rounded-[2rem] flex items-center justify-between px-8 pointer-events-none"
+        className="absolute inset-0 rounded-[2rem] flex items-center justify-between px-10 pointer-events-none"
       >
-        <motion.div style={{ opacity: pinOpacity, scale: pinScale }} className="flex items-center gap-2 text-amber-500 font-bold text-xs uppercase tracking-widest">
-          <Pin className="w-5 h-5" />
+        <motion.div style={{ opacity: pinOpacity, scale: pinScale, rotate: pinRotate }} className="flex items-center gap-2 text-amber-500 font-bold text-xs uppercase tracking-widest">
+          <Pin className="w-6 h-6 fill-current" />
           <span>{entry.is_pinned ? 'Unpin' : 'Pin'}</span>
         </motion.div>
-        <motion.div style={{ opacity: deleteOpacity, scale: deleteScale }} className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-widest">
+        <motion.div style={{ opacity: deleteOpacity, scale: deleteScale, rotate: deleteRotate }} className="flex items-center gap-2 text-red-500 font-bold text-xs uppercase tracking-widest">
           <span>Delete</span>
-          <Trash2 className="w-5 h-5" />
+          <Trash2 className="w-6 h-6" />
         </motion.div>
       </motion.div>
 
@@ -119,6 +124,7 @@ export function EntryCard({ entry, deleteEntry, onEdit, onPin, t, onTryNow, show
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.7}
         onDragEnd={handleDragEnd}
+        whileDrag={{ scale: 0.98 }}
         className={`bg-white dark:bg-[#1A1A1A] rounded-[2rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm transition-all duration-300 overflow-hidden cursor-grab active:cursor-grabbing ${
           isOpen 
             ? 'shadow-lg border-indigo-100 dark:border-indigo-900/50 scale-[1.01]' 
@@ -217,95 +223,121 @@ export function EntryCard({ entry, deleteEntry, onEdit, onPin, t, onTryNow, show
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
               className="px-6 sm:px-8 pb-8"
             >
-              <div className="flex justify-end items-center gap-3 mb-6">
-                <button
-                  onClick={handleCopy}
-                  className="p-2 text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-full transition-all active:scale-90"
-                  title={t('common.copy', 'Copy to clipboard')}
-                >
-                  {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                </button>
-                <button
-                  onClick={handleShare}
-                  className="p-2 text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-full transition-all active:scale-90"
-                  title={t('common.share', 'Share entry')}
-                >
-                  <Share2 className="w-4 h-4" />
-                </button>
-                {hasTranslation && (
+              <motion.div 
+                initial="hidden"
+                animate="visible"
+                variants={{
+                  hidden: { opacity: 0 },
+                  visible: {
+                    opacity: 1,
+                    transition: {
+                      staggerChildren: 0.05
+                    }
+                  }
+                }}
+                className="space-y-6"
+              >
+                <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="flex justify-end items-center gap-3">
                   <button
-                    onClick={() => setLocalShowOriginal(showOriginal ? false : true)}
-                    className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-600 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors bg-indigo-50/50 hover:bg-indigo-50 dark:bg-indigo-900/10 dark:hover:bg-indigo-900/20 px-3 py-1.5 rounded-full"
+                    onClick={() => {
+                      useUIStore.getState().setAIAssistantOpen(true);
+                    }}
+                    className="xl:hidden flex items-center gap-1.5 p-2 text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-full transition-all active:scale-90"
+                    title="AI Insights"
                   >
-                    <Languages className="w-3 h-3" />
-                    {showOriginal ? t('dash.translated') : t('dash.original')}
+                    <Sparkles className="w-4 h-4" />
                   </button>
-                )}
-                <button 
-                  onClick={() => deleteEntry(entry.id)}
-                  className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                  title={t('common.delete', 'Delete entry')}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
+                  <button
+                    onClick={handleCopy}
+                    className="p-2 text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-full transition-all active:scale-90"
+                    title={t('common.copy', 'Copy to clipboard')}
+                  >
+                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={handleShare}
+                    className="p-2 text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-full transition-all active:scale-90"
+                    title={t('common.share', 'Share entry')}
+                  >
+                    <Share2 className="w-4 h-4" />
+                  </button>
+                  {hasTranslation && (
+                    <button
+                      onClick={() => setLocalShowOriginal(showOriginal ? false : true)}
+                      className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-indigo-400 hover:text-indigo-600 dark:text-indigo-500 dark:hover:text-indigo-300 transition-colors bg-indigo-50/50 hover:bg-indigo-50 dark:bg-indigo-900/10 dark:hover:bg-indigo-900/20 px-3 py-1.5 rounded-full"
+                    >
+                      <Languages className="w-3 h-3" />
+                      {showOriginal ? t('dash.translated') : t('dash.original')}
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => deleteEntry(entry.id)}
+                    className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                    title={t('common.delete', 'Delete entry')}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </motion.div>
 
-              {entry.image_url && (
-                <div className="mb-6 rounded-2xl overflow-hidden border border-gray-100 dark:border-[#2E2E2E] shadow-sm">
-                  <img 
-                    src={entry.image_url} 
-                    alt="Memory" 
-                    className="w-full h-auto max-h-[400px] object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-              )}
-              
-              <div className="text-[#374151] dark:text-[#D1D5DB] leading-relaxed mb-6 prose dark:prose-invert prose-sm max-w-none">
-                <ReactMarkdown>
-                  {showOriginal ? entry.content : (entry.translated_content || entry.content)}
-                </ReactMarkdown>
-              </div>
-              
-              {entry.summary && (
-                <div className="mb-6 p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-800/30">
-                  <p className="text-xs font-bold text-[#6366F1] uppercase tracking-widest mb-2">
-                    {t('dash.summaryTitle')}
-                  </p>
-                  <p className="text-sm text-[#374151] dark:text-[#D1D5DB] leading-relaxed">{entry.summary}</p>
-                </div>
-              )}
-              
-              {entry.insight && (
-                <div className="pt-6 border-t border-gray-50 dark:border-gray-800 space-y-4">
-                  <p className="text-sm font-serif italic text-[#6B7280] dark:text-[#9CA3AF]">
-                    {entry.insight}
-                  </p>
-                  <div className="flex items-center justify-between gap-4 pt-2">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-[#6366F1] uppercase tracking-widest">
-                      <ChevronRight className="w-3 h-3" />
-                      {t('dash.growthStep')} {entry.suggestion}
+                {entry.image_url && (
+                  <motion.div variants={{ hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1 } }} className="relative rounded-2xl overflow-hidden border border-gray-100 dark:border-[#2E2E2E] shadow-sm aspect-video">
+                    <Image 
+                      src={entry.image_url} 
+                      alt="Memory" 
+                      fill
+                      className="object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                  </motion.div>
+                )}
+                
+                <motion.div variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }} className="text-[#374151] dark:text-[#D1D5DB] leading-relaxed prose dark:prose-invert prose-sm max-w-none">
+                  <ReactMarkdown>
+                    {showOriginal ? entry.content : (entry.translated_content || entry.content)}
+                  </ReactMarkdown>
+                </motion.div>
+                
+                {entry.summary && (
+                  <motion.div variants={{ hidden: { opacity: 0, x: -10 }, visible: { opacity: 1, x: 0 } }} className="p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-800/30">
+                    <p className="text-xs font-bold text-[#6366F1] uppercase tracking-widest mb-2">
+                      {t('dash.summaryTitle')}
+                    </p>
+                    <p className="text-sm text-[#374151] dark:text-[#D1D5DB] leading-relaxed">{entry.summary}</p>
+                  </motion.div>
+                )}
+                
+                {entry.insight && (
+                  <motion.div variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }} className="pt-6 border-t border-gray-50 dark:border-gray-800 space-y-4">
+                    <p className="text-sm font-serif italic text-[#6B7280] dark:text-[#9CA3AF]">
+                      {entry.insight}
+                    </p>
+                    <div className="flex items-center justify-between gap-4 pt-2">
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-[#6366F1] uppercase tracking-widest">
+                        <ChevronRight className="w-3 h-3" />
+                        {t('dash.growthStep')} {entry.suggestion}
+                      </div>
+                      {entry.suggestion && (
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onTryNow?.();
+                          }}
+                          className="text-[10px] uppercase tracking-widest font-bold px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-[#6366F1] rounded-full hover:bg-[#6366F1] hover:text-white transition-all active:scale-95 whitespace-nowrap"
+                        >
+                          {t('dash.tryNow')}
+                        </button>
+                      )}
                     </div>
-                    {entry.suggestion && (
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onTryNow?.();
-                        }}
-                        className="text-[10px] uppercase tracking-widest font-bold px-4 py-2 bg-indigo-50 dark:bg-indigo-900/20 text-[#6366F1] rounded-full hover:bg-[#6366F1] hover:text-white transition-all active:scale-95 whitespace-nowrap"
-                      >
-                        {t('dash.tryNow')}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
+                  </motion.div>
+                )}
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>
       </motion.div>
     </motion.div>
   );
-}
+});

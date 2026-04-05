@@ -583,3 +583,47 @@ export async function generateDailyPrompt(entries: any[]) {
     return "What's on your mind right now?";
   }
 }
+
+export async function generateInlineSuggestions(text: string, type: 'improve' | 'continue' | 'rephrase') {
+  if (!text || text.length < 5) return null;
+  try {
+    const ai = getGenAI();
+    const inputLang = await detectLanguage(text);
+    const langName = inputLang === 'hinglish' ? 'Natural Hinglish (mix of Hindi + casual English)' : (inputLang === 'hi' ? 'Hindi' : 'English');
+
+    let taskDescription = '';
+    if (type === 'improve') {
+      taskDescription = 'Improve the writing quality, making it more expressive and natural while keeping the original meaning.';
+    } else if (type === 'continue') {
+      taskDescription = 'Continue the sentence or thought naturally based on the context.';
+    } else if (type === 'rephrase') {
+      taskDescription = 'Rephrase the text to give it a different but equally meaningful tone.';
+    }
+
+    const prompt = `User text: "${text}"
+    
+    Task: ${taskDescription}
+    
+    Rules:
+    - Respond in ${langName}.
+    - Keep it short (max 15-20 words).
+    - Do not use quotes in the output.
+    - Output ONLY the suggested text.
+    - If the input is Hinglish, keep the suggestion in natural Hinglish.`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: {
+        systemInstruction: `You are a helpful writing assistant for a personal diary. Your goal is to provide subtle, natural-sounding suggestions.
+        
+        CRITICAL RULE: Always respond in the SAME language as the user's input (${langName}).`,
+      }
+    });
+
+    return response.text?.trim() || null;
+  } catch (error) {
+    console.error('Inline suggestion error:', error);
+    return null;
+  }
+}

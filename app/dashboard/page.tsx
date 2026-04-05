@@ -1,53 +1,63 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { createClient } from "@/lib/supabase";
 import { DiaryList } from "@/components/diary/DiaryList";
-import { DiaryInput } from "@/components/diary/DiaryInput";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
-import { Milestones } from "@/components/diary/Milestones";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useTranslation } from 'react-i18next';
+import { useDiaryStore, useEntries } from "@/lib/store/use-diary-store";
+import { useUIStore, useUIState } from "@/lib/store/use-ui-store";
+
+const DiaryInput = dynamic(() => import("@/components/diary/DiaryInput").then(mod => ({ default: mod.DiaryInput })), { ssr: false });
+const Milestones = dynamic(() => import("@/components/diary/Milestones").then(mod => ({ default: mod.Milestones })), { ssr: false });
 
 const supabase = createClient();
 
 export default function DashboardPage() {
-  const [entries, setEntries] = useState<any[]>([]);
+  const entries = useEntries();
+  const { setEntries, updateEntry, togglePin, setSelectedEntry, selectedEntry } = useDiaryStore();
+  const { isBottomSheetOpen, setBottomSheetOpen, showTranslated, setShowTranslated } = useUIState();
+  
   const [loading, setLoading] = useState(true);
   
-  // State for DiaryInput
+  // State for DiaryInput (some of these could also be in store, but keeping form state local is often better)
   const [newEntry, setNewEntry] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showTranslated, setShowTranslated] = useState(false);
-  const [isInputOpen, setIsInputOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { t } = useTranslation();
 
-  const handlePin = async (id: string) => {
+  const handlePin = useCallback(async (id: string) => {
+    const entry = entries.find(e => e.id === id);
+    if (!entry) return;
+    
+    // Optimistic update
+    togglePin(id);
+
     try {
-      const entry = entries.find(e => e.id === id);
       const { error } = await supabase
         .from('entries')
         .update({ is_pinned: !entry.is_pinned })
         .eq('id', id);
 
       if (error) throw error;
-      setEntries(entries.map(e => e.id === id ? { ...e, is_pinned: !e.is_pinned } : e));
     } catch (err) {
       console.error("Error pinning:", err);
+      // Revert on failure
+      togglePin(id);
     }
-  };
+  }, [entries, togglePin]);
 
-  const handleEdit = (entry: any) => {
-    setEditingId(entry.id);
+  const handleEdit = useCallback((entry: any) => {
+    setSelectedEntry(entry);
     setNewEntry(entry.content);
     setImageUrl(entry.image_url || "");
-    setIsInputOpen(true);
-  };
+    setBottomSheetOpen(true);
+  }, [setSelectedEntry, setBottomSheetOpen]);
 
   useEffect(() => {
     async function loadData() {
@@ -71,56 +81,114 @@ export default function DashboardPage() {
     }
 
     loadData();
-  }, []);
+  }, [setEntries]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    const content = newEntry;
+    const img = imageUrl;
+    const isEditing = !!selectedEntry;
+    const originalEntry = selectedEntry;
+
+    // Reset form and close sheet immediately for "no delay" feel
+    setNewEntry("");
+    setImageUrl("");
+    setSelectedEntry(null);
+    setBottomSheetOpen(false);
     setSubmitError(null);
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user");
 
-      if (editingId) {
-        const { error } = await supabase
-          .from('entries')
-          .update({
-            content: newEntry,
-            image_url: imageUrl
-          })
-          .eq('id', editingId);
-        if (error) throw error;
+      if (isEditing && originalEntry) {
+        // Optimistic update
+        updateEntry(originalEntry.id, { content, image_url: img });
+
+        try {
+          const { error } = await supabase
+            .from('entries')
+            .update({ content, image_url: img })
+            .eq('id', originalEntry.id);
+          if (error) throw error;
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 3000);
+        } catch (err: any) {
+          console.error("Update failed:", err);
+          // Revert
+          updateEntry(originalEntry.id, originalEntry);
+          setSubmitError(err.message);
+        }
       } else {
-        const { error } = await supabase
-          .from('entries')
-          .insert({
-            user_id: user.id,
-            content: newEntry,
-            image_url: imageUrl
-          });
-        if (error) throw error;
+        // Optimistic add
+        const tempId = `temp-${Date.now()}`;
+        const tempEntry = {
+          id: tempId,
+          user_id: user.id,
+          content,
+          image_url: img,
+          created_at: new Date().toISOString(),
+          is_pinned: false
+        };
+
+        useDiaryStore.getState().addEntry(tempEntry);
+
+        try {
+          const { data, error } = await supabase
+            .from('entries')
+            .insert({
+              user_id: user.id,
+              content,
+              image_url: img
+            })
+            .select()
+            .single();
+
+          if (error) throw error;
+          
+          // Replace temp entry with real one
+          if (data) {
+            useDiaryStore.getState().replaceEntry(tempId, data);
+          }
+          setShowSuccess(true);
+          setTimeout(() => setShowSuccess(false), 3000);
+        } catch (err: any) {
+          console.error("Add failed:", err);
+          // Revert
+          useDiaryStore.getState().deleteEntry(tempId);
+          setSubmitError(err.message);
+        }
       }
-      
-      setNewEntry("");
-      setImageUrl("");
-      setEditingId(null);
-      setIsInputOpen(false);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 3000);
-      
-      // Refresh entries
-      const { data } = await supabase
-        .from('entries')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-      setEntries(data || []);
     } catch (err: any) {
       setSubmitError(err.message);
-    } finally {
-      setIsSubmitting(false);
     }
   };
+
+  const handleDelete = useCallback(async (id: string) => {
+    const entryToDelete = entries.find(e => e.id === id);
+    if (!entryToDelete) return;
+
+    // Optimistic update
+    useDiaryStore.getState().deleteEntry(id);
+
+    try {
+      const { error } = await supabase.from('entries').delete().eq('id', id);
+      if (error) throw error;
+    } catch (err) {
+      console.error("Error deleting:", err);
+      // Revert on failure
+      if (entryToDelete) {
+        useDiaryStore.getState().addEntry(entryToDelete);
+      }
+    }
+  }, [entries]);
+
+  const handleStartWriting = useCallback(() => {
+    setSelectedEntry(null);
+    setNewEntry("");
+    setImageUrl("");
+    setBottomSheetOpen(true);
+  }, [setSelectedEntry, setBottomSheetOpen]);
 
   if (loading) {
     return <div className="p-8">Loading dashboard...</div>;
@@ -134,7 +202,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="space-y-8">
-          <BottomSheet isOpen={isInputOpen} onClose={() => setIsInputOpen(false)}>
+          <BottomSheet isOpen={isBottomSheetOpen} onClose={() => setBottomSheetOpen(false)}>
             <DiaryInput 
               newEntry={newEntry}
               setNewEntry={setNewEntry}
@@ -144,31 +212,18 @@ export default function DashboardPage() {
               t={t}
               textareaRef={textareaRef}
               showSuccess={showSuccess}
-              showTranslated={showTranslated}
-              setShowTranslated={setShowTranslated}
-              entries={entries}
               imageUrl={imageUrl}
               setImageUrl={setImageUrl}
             />
           </BottomSheet>
           
           <DiaryList 
-            entries={entries}
             isLoadingEntries={loading}
-            deleteEntry={async (id) => {
-              await supabase.from('entries').delete().eq('id', id);
-              setEntries(entries.filter(e => e.id !== id));
-            }}
+            deleteEntry={handleDelete}
             onEdit={handleEdit}
             onPin={handlePin}
             t={t}
-            handleStartWriting={() => {
-              setEditingId(null);
-              setNewEntry("");
-              setImageUrl("");
-              setIsInputOpen(true);
-            }}
-            showTranslated={showTranslated}
+            handleStartWriting={handleStartWriting}
           />
 
           <Milestones entries={entries} />

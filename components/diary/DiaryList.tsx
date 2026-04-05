@@ -1,44 +1,57 @@
 'use client';
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EntryCard } from '@/components/diary/entry-card';
-import { PenLine, Tag, Filter, LayoutGrid, List, Search, X, Download, Folder, ChevronDown, ChevronUp } from 'lucide-react';
+import { DiarySkeleton } from '@/components/diary/skeleton-card';
+import { PenLine, Tag, Filter, LayoutGrid, List, Search, X, Download, Folder, ChevronDown, ChevronUp, Pin } from 'lucide-react';
 
-export function DiaryList({
-  entries,
+import { useDiaryStore, useEntries } from '@/lib/store/use-diary-store';
+import { useUIState } from '@/lib/store/use-ui-store';
+
+export const DiaryList = React.memo(function DiaryList({
   isLoadingEntries,
   deleteEntry,
   onEdit,
   onPin,
   t,
   handleStartWriting,
-  showTranslated
 }: {
-  entries: any[];
   isLoadingEntries: boolean;
   deleteEntry: (id: string) => Promise<void>;
   onEdit?: (entry: any) => void;
   onPin?: (id: string) => void;
   t: (key: string) => string;
   handleStartWriting: () => void;
-  showTranslated: boolean;
 }) {
+  const entries = useEntries();
+  const { showTranslated } = useUIState();
   const [selectedTag, setSelectedTag] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showPinnedOnly, setShowPinnedOnly] = useState(false);
+  const [dateSort, setDateSort] = useState<'newest' | 'oldest'>('newest');
   const [openFolders, setOpenFolders] = useState<string[]>([]);
   const [openEntryId, setOpenEntryId] = useState<string | null>(null);
 
-  const toggleFolder = (tag: string) => {
+  const toggleFolder = useCallback((tag: string) => {
     setOpenFolders(prev => 
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
-  };
+  }, []);
 
-  const toggleEntry = (id: string) => {
-    setOpenEntryId(prev => prev === id ? null : id);
-  };
+  const toggleEntry = useCallback((id: string) => {
+    setOpenEntryId(prev => {
+      const newId = prev === id ? null : id;
+      if (newId) {
+        const entry = entries.find(e => e.id === newId);
+        useDiaryStore.getState().setSelectedEntry(entry || null);
+      } else {
+        useDiaryStore.getState().setSelectedEntry(null);
+      }
+      return newId;
+    });
+  }, [entries]);
 
-  const handleExportData = () => {
+  const handleExportData = useCallback(() => {
     const dataStr = JSON.stringify(entries, null, 2);
     const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
     
@@ -48,7 +61,7 @@ export function DiaryList({
     linkElement.setAttribute('href', dataUri);
     linkElement.setAttribute('download', exportFileDefaultName);
     linkElement.click();
-  };
+  }, [entries]);
 
   const allTags = useMemo(() => {
     const tags = new Set<string>();
@@ -61,14 +74,21 @@ export function DiaryList({
   }, [entries]);
 
   const filteredEntries = useMemo(() => {
-    let result = entries;
+    let result = [...entries];
     
+    // Pinned filter
+    if (showPinnedOnly) {
+      result = result.filter(entry => entry.is_pinned);
+    }
+
+    // Tag filter
     if (selectedTag !== 'All') {
       result = result.filter(entry => 
         entry.tags && Array.isArray(entry.tags) && entry.tags.includes(selectedTag)
       );
     }
 
+    // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(entry => 
@@ -79,8 +99,15 @@ export function DiaryList({
       );
     }
 
+    // Date sort
+    result.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return dateSort === 'newest' ? dateB - dateA : dateA - dateB;
+    });
+
     return result;
-  }, [entries, selectedTag, searchQuery]);
+  }, [entries, selectedTag, searchQuery, showPinnedOnly, dateSort]);
 
   const groupedEntries = useMemo(() => {
     const groups: Record<string, any[]> = {};
@@ -107,6 +134,33 @@ export function DiaryList({
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-3">
+          <div className="flex items-center gap-2 bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#2E2E2E] rounded-xl p-1">
+            <button
+              onClick={() => setDateSort('newest')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${dateSort === 'newest' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+            >
+              Newest
+            </button>
+            <button
+              onClick={() => setDateSort('oldest')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${dateSort === 'oldest' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+            >
+              Oldest
+            </button>
+          </div>
+
+          <button
+            onClick={() => setShowPinnedOnly(!showPinnedOnly)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+              showPinnedOnly 
+                ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400' 
+                : 'bg-white dark:bg-[#1A1A1A] border-gray-100 dark:border-[#2E2E2E] text-gray-500 hover:border-amber-200 dark:hover:border-amber-800'
+            }`}
+          >
+            <Pin className={`w-4 h-4 ${showPinnedOnly ? 'fill-amber-500' : ''}`} />
+            <span>Pinned</span>
+          </button>
+
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-indigo-500 transition-colors" />
             <input
@@ -163,61 +217,58 @@ export function DiaryList({
       
       {/* Folder View */}
       <div className="space-y-4">
-        {Object.entries(groupedEntries).map(([tag, entriesInTag]) => (
-          <div key={tag} className="bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm overflow-hidden">
-            <button 
-              onClick={() => toggleFolder(tag)}
-              className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#262626] transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <Folder className="w-5 h-5 text-indigo-500" />
-                <span className="font-bold text-gray-900 dark:text-white">#{tag}</span>
-                <span className="text-sm text-gray-400">({entriesInTag.length})</span>
-              </div>
-              {openFolders.includes(tag) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            </button>
-            
-            {openFolders.includes(tag) && (
-              <div className="p-4 border-t border-gray-100 dark:border-[#2E2E2E] space-y-4">
-                {entriesInTag.map(entry => (
-                  <EntryCard 
-                    key={entry.id} 
-                    entry={entry} 
-                    deleteEntry={deleteEntry} 
-                    onEdit={onEdit}
-                    onPin={onPin}
-                    t={t} 
-                    onTryNow={handleStartWriting} 
-                    showTranslatedGlobal={showTranslated}
-                    isOpen={openEntryId === entry.id}
-                    onToggle={() => toggleEntry(entry.id)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+        {isLoadingEntries ? (
+          <DiarySkeleton />
+        ) : (
+          Object.entries(groupedEntries).map(([tag, entriesInTag]) => (
+            <div key={tag} className="bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm overflow-hidden">
+              <button 
+                onClick={() => toggleFolder(tag)}
+                className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#262626] transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Folder className="w-5 h-5 text-indigo-500" />
+                  <span className="font-bold text-gray-900 dark:text-white">#{tag}</span>
+                  <span className="text-sm text-gray-400">({entriesInTag.length})</span>
+                </div>
+                {openFolders.includes(tag) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              
+              {openFolders.includes(tag) && (
+                <div className="p-4 border-t border-gray-100 dark:border-[#2E2E2E] space-y-4">
+                  {entriesInTag.map(entry => (
+                    <EntryCard 
+                      key={entry.id} 
+                      entry={entry} 
+                      deleteEntry={deleteEntry} 
+                      onEdit={onEdit}
+                      onPin={onPin}
+                      t={t} 
+                      onTryNow={handleStartWriting} 
+                      isOpen={openEntryId === entry.id}
+                      onToggle={() => toggleEntry(entry.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
         {!isLoadingEntries && entries.length === 0 && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center py-24 space-y-8 text-center bg-white dark:bg-[#1A1A1A] rounded-[3rem] border border-slate-100 dark:border-[#2E2E2E] shadow-sm min-h-[400px] col-span-full"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center justify-center py-32 space-y-6 text-center col-span-full"
           >
-            <div className="relative">
-              <div className="absolute inset-0 bg-indigo-100 dark:bg-indigo-900/20 rounded-full blur-2xl opacity-40 animate-pulse" />
-              <div className="relative w-24 h-24 bg-indigo-50 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">
-                <PenLine className="w-10 h-10 text-[#6366F1]" />
-              </div>
-            </div>
-            <div className="space-y-2 px-6">
-              <h3 className="text-2xl font-serif italic text-[#111827] dark:text-[#F9FAFB]">{t('dash.empty.title')}</h3>
-              <p className="text-[#6B7280] dark:text-[#9CA3AF] max-w-xs mx-auto">{t('dash.empty.subtitle')}</p>
+            <div className="space-y-2">
+              <h3 className="text-2xl font-medium text-gray-900 dark:text-gray-100">{t('dash.empty.title')}</h3>
+              <p className="text-gray-500 dark:text-gray-400 max-w-xs mx-auto text-sm">{t('dash.empty.subtitle')}</p>
             </div>
             <button
               onClick={handleStartWriting}
-              className="bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] px-10 py-5 rounded-2xl text-base font-semibold hover:bg-[#1f2937] dark:hover:bg-white transition-all active:scale-95 shadow-xl shadow-indigo-100 dark:shadow-none"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none"
             >
               {t('dash.empty.cta')}
             </button>
@@ -226,9 +277,9 @@ export function DiaryList({
 
         {!isLoadingEntries && entries.length > 0 && filteredEntries.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-center col-span-full">
-            <p className="text-gray-500 dark:text-gray-400 italic font-serif">No entries found in this category.</p>
+            <p className="text-gray-500 dark:text-gray-400 italic font-serif">No entries match your current filters.</p>
           </div>
         )}
       </section>
   );
-}
+});

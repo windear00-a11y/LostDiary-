@@ -6,20 +6,23 @@ import { Drawer } from './Drawer';
 import { Sidebar } from './Sidebar';
 import { RightPanel } from './RightPanel';
 import { FloatingActionButton } from '@/components/ui/floating-action-button';
+import { BottomSheet } from '@/components/ui/bottom-sheet';
+import { WinDearSoul } from '@/components/ai/WinDearSoul';
 import { useUpdates } from '@/hooks/use-updates';
 import { createClient } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
 
+import { useUIStore } from '@/lib/store/use-ui-store';
+
 interface AppLayoutProps {
   children: React.ReactNode;
-  onNewEntry?: () => void;
   onStartChat?: () => void;
   entries?: any[]; // Optional prop if already fetched
 }
 
-export const AppLayout = ({ children, onNewEntry, onStartChat, entries: initialEntries }: AppLayoutProps) => {
+export const AppLayout = ({ children, onStartChat, entries: initialEntries }: AppLayoutProps) => {
   const { user } = useAuth();
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const { isSidebarOpen, setSidebarOpen, isAIAssistantOpen, setAIAssistantOpen } = useUIStore();
   const [entries, setEntries] = useState<any[]>(initialEntries || []);
   const { hasNewUpdates } = useUpdates({ autoRefreshInterval: 5 * 60 * 1000 });
 
@@ -58,21 +61,20 @@ export const AppLayout = ({ children, onNewEntry, onStartChat, entries: initialE
     <div className="min-h-screen w-full bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] transition-colors duration-300 flex flex-col">
       {/* Header */}
       <Header 
-        onOpenDrawer={() => setIsDrawerOpen(true)} 
-        onNewEntry={onNewEntry}
+        onOpenDrawer={() => setSidebarOpen(true)} 
         onStartChat={onStartChat}
         hasNewUpdates={hasNewUpdates}
       />
 
       {/* Drawer */}
       <Drawer 
-        isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)} 
+        isOpen={isSidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
         hasNewUpdates={hasNewUpdates}
         entries={entries}
       />
 
-      <FloatingActionButton onNewEntry={onNewEntry} />
+      <FloatingActionButton />
 
       <div className="flex flex-1 pt-16 h-screen overflow-hidden">
         {/* Sidebar */}
@@ -87,6 +89,15 @@ export const AppLayout = ({ children, onNewEntry, onStartChat, entries: initialE
 
         {/* Right Panel */}
         <RightPanel />
+      </div>
+
+      {/* Mobile AI Assistant Bottom Sheet */}
+      <div className="xl:hidden">
+        <BottomSheet isOpen={isAIAssistantOpen} onClose={() => setAIAssistantOpen(false)}>
+          <div className="h-[70vh]">
+            <WinDearSoul />
+          </div>
+        </BottomSheet>
       </div>
     </div>
   );

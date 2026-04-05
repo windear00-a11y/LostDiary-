@@ -8,16 +8,17 @@ import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { HeaderAssistant } from './HeaderAssistant';
 
+import { useUIStore } from '@/lib/store/use-ui-store';
+
 interface HeaderProps {
-  onOpenDrawer: () => void;
-  onNewEntry?: () => void;
   onStartChat?: () => void;
   hasNewUpdates?: boolean;
 }
 
-export const Header = ({ onOpenDrawer, onNewEntry, onStartChat, hasNewUpdates }: HeaderProps) => {
+export const Header = ({ onStartChat, hasNewUpdates }: HeaderProps) => {
   const router = useRouter();
   const { t } = useTranslation();
+  const { setSidebarOpen } = useUIStore();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-[#0A0A0A]/80 backdrop-blur-md border-b border-gray-100 dark:border-[#1A1A1A] transition-colors duration-300 w-full">
@@ -56,7 +57,7 @@ export const Header = ({ onOpenDrawer, onNewEntry, onStartChat, hasNewUpdates }:
 
           {/* Hamburger Menu */}
           <button
-            onClick={onOpenDrawer}
+            onClick={() => setSidebarOpen(true)}
             className="relative p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] rounded-full transition-colors"
             aria-label={t('common.openMenu', 'Open Menu')}
             title={t('common.openMenu', 'Open Menu')}
