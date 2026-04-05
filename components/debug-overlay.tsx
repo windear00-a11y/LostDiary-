@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 
 export default function DebugOverlay() {
-  const [logs, setLogs] = useState<{ msg: string; type: "log" | "error" }[]>([]);
+  const [logs, setLogs] = useState<{ msg: string; type: "log" | "error" | "warn" }[]>([]);
 
   useEffect(() => {
-    const addLog = (msg: string, type: "log" | "error" = "log") => {
+    const addLog = (msg: string, type: "log" | "error" | "warn" = "log") => {
       setLogs((prev) => [...prev, { msg, type }]);
     };
 
@@ -15,14 +15,29 @@ export default function DebugOverlay() {
     };
 
     const oldLog = console.log;
+    const oldError = console.error;
+    const oldWarn = console.warn;
+
     console.log = function (...args) {
       addLog(args.join(" "), "log");
       oldLog.apply(console, args);
     };
 
-    // Cleanup to prevent memory leaks or multiple handlers
+    console.error = function (...args) {
+      addLog(args.join(" "), "error");
+      oldError.apply(console, args);
+    };
+
+    console.warn = function (...args) {
+      addLog(args.join(" "), "warn");
+      oldWarn.apply(console, args);
+    };
+
+    // Cleanup
     return () => {
       console.log = oldLog;
+      console.error = oldError;
+      console.warn = oldWarn;
     };
   }, []);
 
@@ -41,7 +56,7 @@ export default function DebugOverlay() {
       padding: "5px"
     }}>
       {logs.map((log, i) => (
-        <div key={i} style={{ color: log.type === "error" ? "red" : "lime" }}>
+        <div key={i} style={{ color: log.type === "error" ? "red" : log.type === "warn" ? "orange" : "lime" }}>
           [{log.type}] {log.msg}
         </div>
       ))}

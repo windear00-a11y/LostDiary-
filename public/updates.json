@@ -1,11 +1,5 @@
 [
   {
-    "hash": "52ffc59d4ab1d5b7179d07f3d598ee4e57800fb7",
-    "message": "refactor: Export Milestones component from diary module",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-05T14:35:19+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
