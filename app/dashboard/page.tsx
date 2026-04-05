@@ -98,8 +98,8 @@ export default function DashboardPage() {
 
         <Milestones entries={entries} />
         
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 order-2 lg:order-1">
             <DiaryList 
               entries={entries}
               isLoadingEntries={loading}
@@ -112,7 +112,7 @@ export default function DashboardPage() {
               showTranslated={showTranslated}
             />
           </div>
-          <div>
+          <div className="order-1 lg:order-2">
             <DiaryInput 
               newEntry={newEntry}
               setNewEntry={setNewEntry}
