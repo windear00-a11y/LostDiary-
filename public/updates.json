@@ -1,11 +1,5 @@
 [
   {
-    "hash": "df08f36e6a9a04ccdd62273fc363229fe427e3e7",
-    "message": "feat: Enhance dashboard UI and remove old update entry",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-05T09:48:50+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
