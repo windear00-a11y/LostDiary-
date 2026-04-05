@@ -50,8 +50,19 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates, entries = [] }: DrawerP
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
-  }, [onClose]);
+    
+    // Prevent background scroll
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      window.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = 'unset';
+    };
+  }, [onClose, isOpen]);
 
   const menuItems = [
     {
@@ -110,6 +121,8 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates, entries = [] }: DrawerP
                     fill 
                     className="object-cover"
                     referrerPolicy="no-referrer"
+                    onLoadingComplete={() => console.log("Avatar loaded successfully")}
+                    onError={() => console.error("Avatar failed to load:", user.user_metadata.avatar_url)}
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
