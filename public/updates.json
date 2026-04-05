@@ -1,11 +1,5 @@
 [
   {
-    "hash": "81b01a01b5bcd86ab8141ce5197641f41bb8f88b",
-    "message": "feat: Introduce debug overlay for client-side logging",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-05T00:51:35+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
