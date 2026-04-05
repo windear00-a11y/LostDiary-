@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { EntryCard } from '@/components/diary/entry-card';
-import { PenLine, Tag, Filter, LayoutGrid, List, Search, X, Download } from 'lucide-react';
+import { PenLine, Tag, Filter, LayoutGrid, List, Search, X, Download, Folder, ChevronDown, ChevronUp } from 'lucide-react';
 
 export function DiaryList({
   entries,
@@ -20,8 +20,14 @@ export function DiaryList({
   showTranslated: boolean;
 }) {
   const [selectedTag, setSelectedTag] = useState<string>('All');
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [searchQuery, setSearchQuery] = useState('');
+  const [openFolders, setOpenFolders] = useState<string[]>([]);
+
+  const toggleFolder = (tag: string) => {
+    setOpenFolders(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
 
   const handleExportData = () => {
     const dataStr = JSON.stringify(entries, null, 2);
@@ -97,23 +103,6 @@ export function DiaryList({
             )}
           </div>
 
-          <div className="flex bg-white dark:bg-[#1A1A1A] p-1 rounded-xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
-              title="List View"
-            >
-              <List className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'}`}
-              title="Grid View"
-            >
-              <LayoutGrid className="w-4 h-4" />
-            </button>
-          </div>
-
           <button
             onClick={handleExportData}
             className="p-2 bg-white dark:bg-[#1A1A1A] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 border border-gray-100 dark:border-[#2E2E2E] rounded-xl shadow-sm transition-all"
@@ -149,49 +138,39 @@ export function DiaryList({
         </div>
       )}
       
-      <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-8' : 'space-y-8'}>
-        {isLoadingEntries ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <div key={`skeleton-${i}`} className="bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm animate-pulse min-h-[300px]">
-              <div className="flex justify-between items-start mb-6">
-                <div className="space-y-3">
-                  <div className="h-3 w-32 bg-gray-200 dark:bg-gray-800 rounded-full" />
-                  <div className="h-4 w-20 bg-gray-200 dark:bg-gray-800 rounded-full" />
-                </div>
-                <div className="flex gap-2">
-                  <div className="h-8 w-8 bg-gray-200 dark:bg-gray-800 rounded-full" />
-                  <div className="h-8 w-8 bg-gray-200 dark:bg-gray-800 rounded-full" />
-                </div>
+      {/* Folder View */}
+      <div className="space-y-4">
+        {Object.entries(groupedEntries).map(([tag, entriesInTag]) => (
+          <div key={tag} className="bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm overflow-hidden">
+            <button 
+              onClick={() => toggleFolder(tag)}
+              className="w-full p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-[#262626] transition-colors"
+            >
+              <div className="flex items-center gap-2">
+                <Folder className="w-5 h-5 text-indigo-500" />
+                <span className="font-bold text-gray-900 dark:text-white">#{tag}</span>
+                <span className="text-sm text-gray-400">({entriesInTag.length})</span>
               </div>
-              <div className="space-y-4 mb-8">
-                <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded-full" />
-                <div className="h-4 w-full bg-gray-200 dark:bg-gray-800 rounded-full" />
-                <div className="h-4 w-2/3 bg-gray-200 dark:bg-gray-800 rounded-full" />
+              {openFolders.includes(tag) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </button>
+            
+            {openFolders.includes(tag) && (
+              <div className="p-4 border-t border-gray-100 dark:border-[#2E2E2E] space-y-4">
+                {entriesInTag.map(entry => (
+                  <EntryCard 
+                    key={entry.id} 
+                    entry={entry} 
+                    deleteEntry={deleteEntry} 
+                    t={t} 
+                    onTryNow={handleStartWriting} 
+                    showTranslatedGlobal={showTranslated}
+                  />
+                ))}
               </div>
-            </div>
-          ))
-        ) : (
-          <AnimatePresence mode="popLayout">
-            {filteredEntries.map((entry) => (
-              <motion.div
-                key={entry.id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-              >
-                <EntryCard 
-                  entry={entry} 
-                  deleteEntry={deleteEntry} 
-                  t={t} 
-                  onTryNow={handleStartWriting} 
-                  showTranslatedGlobal={showTranslated}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        )}
+            )}
+          </div>
+        ))}
+      </div>
 
         {!isLoadingEntries && entries.length === 0 && (
           <motion.div 
