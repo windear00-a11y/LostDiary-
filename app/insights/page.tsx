@@ -9,32 +9,7 @@ import { useDiaryStore } from '@/lib/store/use-diary-store';
 const supabase = createClient();
 
 export default function InsightsPage() {
-  const { setEntries } = useDiaryStore();
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data, error } = await supabase
-          .from('entries')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setEntries(data || []);
-      } catch (err) {
-        console.error("ERROR:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadData();
-  }, [setEntries]);
+  const loading = useDiaryStore((state) => state.isLoading);
 
   if (loading) {
     return (

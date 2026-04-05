@@ -24,7 +24,7 @@ export const DiaryList = React.memo(function DiaryList({
   handleStartWriting: () => void;
 }) {
   const entries = useEntries();
-  const { showTranslated } = useUIState();
+  const showTranslated = useUIStore((state) => state.showTranslated);
   const [selectedTag, setSelectedTag] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [showPinnedOnly, setShowPinnedOnly] = useState(false);

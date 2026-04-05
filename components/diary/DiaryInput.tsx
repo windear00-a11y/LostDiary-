@@ -32,7 +32,9 @@ export const DiaryInput = React.memo(function DiaryInput({
   setImageUrl: React.Dispatch<React.SetStateAction<string>>;
 }) {
   const entries = useEntries();
-  const { showTranslated, setShowTranslated } = useUIState();
+  const showTranslated = useUIStore((state) => state.showTranslated);
+  const setShowTranslated = useUIStore((state) => state.setShowTranslated);
+  
   const [spellingSuggestion, setSpellingSuggestion] = useState<{ suggestion: string, explanation: string } | null>(null);
   const [inlineSuggestion, setInlineSuggestion] = useState<string | null>(null);
   const [suggestionType, setSuggestionType] = useState<'improve' | 'continue' | 'rephrase'>('improve');

@@ -18,7 +18,9 @@ interface DiaryEntry {
 interface DiaryState {
   entries: DiaryEntry[];
   selectedEntry: DiaryEntry | null;
+  isLoading: boolean;
   setEntries: (entries: DiaryEntry[]) => void;
+  setIsLoading: (isLoading: boolean) => void;
   addEntry: (entry: DiaryEntry) => void;
   updateEntry: (id: string, updates: Partial<DiaryEntry>) => void;
   deleteEntry: (id: string) => void;
@@ -30,7 +32,9 @@ interface DiaryState {
 export const useDiaryStore = create<DiaryState>((set) => ({
   entries: [],
   selectedEntry: null,
+  isLoading: false,
   setEntries: (entries) => set({ entries }),
+  setIsLoading: (isLoading) => set({ isLoading }),
   addEntry: (entry) => set((state) => ({ entries: [entry, ...state.entries] })),
   updateEntry: (id, updates) =>
     set((state) => ({

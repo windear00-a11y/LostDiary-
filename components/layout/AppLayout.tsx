@@ -13,6 +13,7 @@ import { createClient } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
 
 import { useUIStore } from '@/lib/store/use-ui-store';
+import { useDiaryStore } from '@/lib/store/use-diary-store';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -22,14 +23,21 @@ interface AppLayoutProps {
 
 export const AppLayout = ({ children, onStartChat, entries: initialEntries }: AppLayoutProps) => {
   const { user } = useAuth();
-  const { isSidebarOpen, setSidebarOpen, isAIAssistantOpen, setAIAssistantOpen } = useUIStore();
-  const [entries, setEntries] = useState<any[]>(initialEntries || []);
+  const isSidebarOpen = useUIStore((state) => state.isSidebarOpen);
+  const setSidebarOpen = useUIStore((state) => state.setSidebarOpen);
+  const isAIAssistantOpen = useUIStore((state) => state.isAIAssistantOpen);
+  const setAIAssistantOpen = useUIStore((state) => state.setAIAssistantOpen);
+  
+  const entries = useDiaryStore((state) => state.entries);
+  const setGlobalEntries = useDiaryStore((state) => state.setEntries);
+  const setIsLoading = useDiaryStore((state) => state.setIsLoading);
   const { hasNewUpdates } = useUpdates({ autoRefreshInterval: 5 * 60 * 1000 });
 
   const fetchEntries = useCallback(async () => {
     if (initialEntries) return; // Don't fetch if provided
     const supabase = createClient();
     if (!supabase || !user) return;
+    setIsLoading(true);
     try {
       const { data, error } = await supabase
         .from('entries')
@@ -38,38 +46,37 @@ export const AppLayout = ({ children, onStartChat, entries: initialEntries }: Ap
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setEntries(data || []);
+      setGlobalEntries(data || []);
     } catch (err) {
       console.error('Error fetching entries in AppLayout:', err);
+    } finally {
+      setIsLoading(false);
     }
-  }, [user, initialEntries]);
+  }, [user, initialEntries, setGlobalEntries, setIsLoading]);
 
   useEffect(() => {
-    if (user && !initialEntries) {
+    if (user && !initialEntries && entries.length === 0) {
       fetchEntries();
     }
-  }, [user, fetchEntries, initialEntries]);
+  }, [user, fetchEntries, initialEntries, entries.length]);
 
   // Sync entries if initialEntries changes
   useEffect(() => {
     if (initialEntries) {
-      setEntries(initialEntries);
+      setGlobalEntries(initialEntries);
     }
-  }, [initialEntries]);
+  }, [initialEntries, setGlobalEntries]);
 
   return (
     <div className="min-h-screen w-full bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] transition-colors duration-300 flex flex-col">
       {/* Header */}
       <Header 
-        onOpenDrawer={() => setSidebarOpen(true)} 
         onStartChat={onStartChat}
         hasNewUpdates={hasNewUpdates}
       />
 
       {/* Drawer */}
       <Drawer 
-        isOpen={isSidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
         hasNewUpdates={hasNewUpdates}
         entries={entries}
       />

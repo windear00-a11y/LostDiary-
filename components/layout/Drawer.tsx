@@ -36,7 +36,8 @@ export const Drawer = ({ hasNewUpdates, entries = [] }: DrawerProps) => {
   const pathname = usePathname();
   const { t } = useTranslation();
   const { aiCalls, entryCount } = useResourceUsage();
-  const { isSidebarOpen: isOpen, setSidebarOpen: setOpen } = useUIStore();
+  const isOpen = useUIStore((state) => state.isSidebarOpen);
+  const setOpen = useUIStore((state) => state.setSidebarOpen);
   const onClose = React.useCallback(() => setOpen(false), [setOpen]);
 
   // Free tier limits for visualization

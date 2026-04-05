@@ -139,6 +139,21 @@ export const InsightsDashboard = () => {
     };
   }, [entries]);
 
+  // 5. Top Tags Data
+  const topTags = useMemo(() => {
+    const tagCounts: Record<string, number> = {};
+    entries.forEach(entry => {
+      entry.tags?.forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    });
+
+    return Object.entries(tagCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 6);
+  }, [entries]);
+
   return (
     <div className="space-y-8 pb-12">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -290,6 +305,47 @@ export const InsightsDashboard = () => {
                 <Bar dataKey="count" fill="#6366F1" radius={[8, 8, 0, 0]} barSize={30} />
               </BarChart>
             </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        {/* Top Themes (Tags) */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
+                <Target className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <h3 className="font-bold text-gray-900 dark:text-white">Top Themes</h3>
+            </div>
+          </div>
+          <div className="space-y-4">
+            {topTags.length > 0 ? (
+              topTags.map((tag, i) => (
+                <div key={tag.name} className="space-y-1">
+                  <div className="flex justify-between text-xs font-bold uppercase tracking-widest">
+                    <span className="text-gray-700 dark:text-gray-300">{tag.name}</span>
+                    <span className="text-gray-400">{tag.count} entries</span>
+                  </div>
+                  <div className="h-2 w-full bg-gray-50 dark:bg-[#262626] rounded-full overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(tag.count / topTags[0].count) * 100}%` }}
+                      transition={{ delay: 0.5 + i * 0.1, duration: 1 }}
+                      className="h-full bg-emerald-500 rounded-full"
+                    />
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center h-40 text-center">
+                <p className="text-sm text-gray-500">No tags found yet. Start tagging your entries to see themes!</p>
+              </div>
+            )}
           </div>
         </motion.div>
 

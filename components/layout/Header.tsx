@@ -18,7 +18,7 @@ interface HeaderProps {
 export const Header = ({ onStartChat, hasNewUpdates }: HeaderProps) => {
   const router = useRouter();
   const { t } = useTranslation();
-  const { setSidebarOpen } = useUIStore();
+  const setSidebarOpen = useUIStore((state) => state.setSidebarOpen);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 dark:bg-[#0A0A0A]/80 backdrop-blur-md border-b border-gray-100 dark:border-[#1A1A1A] transition-colors duration-300 w-full">

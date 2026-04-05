@@ -17,10 +17,18 @@ const supabase = createClient();
 
 export default function DashboardPage() {
   const entries = useEntries();
-  const { setEntries, updateEntry, togglePin, setSelectedEntry, selectedEntry } = useDiaryStore();
-  const { isBottomSheetOpen, setBottomSheetOpen, showTranslated, setShowTranslated } = useUIState();
+  const setEntries = useDiaryStore((state) => state.setEntries);
+  const updateEntry = useDiaryStore((state) => state.updateEntry);
+  const togglePin = useDiaryStore((state) => state.togglePin);
+  const setSelectedEntry = useDiaryStore((state) => state.setSelectedEntry);
+  const selectedEntry = useDiaryStore((state) => state.selectedEntry);
+
+  const isBottomSheetOpen = useUIStore((state) => state.isBottomSheetOpen);
+  const setBottomSheetOpen = useUIStore((state) => state.setBottomSheetOpen);
+  const showTranslated = useUIStore((state) => state.showTranslated);
+  const setShowTranslated = useUIStore((state) => state.setShowTranslated);
   
-  const [loading, setLoading] = useState(true);
+  const loading = useDiaryStore((state) => state.isLoading);
   
   // State for DiaryInput (some of these could also be in store, but keeping form state local is often better)
   const [newEntry, setNewEntry] = useState("");
@@ -58,30 +66,6 @@ export default function DashboardPage() {
     setImageUrl(entry.image_url || "");
     setBottomSheetOpen(true);
   }, [setSelectedEntry, setBottomSheetOpen]);
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data, error } = await supabase
-          .from('entries')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-        setEntries(data || []);
-      } catch (err) {
-        console.error("ERROR:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadData();
-  }, [setEntries]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
