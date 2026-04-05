@@ -15,7 +15,7 @@ interface MilestonesProps {
   entries: Entry[];
 }
 
-export default function Milestones({ entries }: MilestonesProps) {
+export function Milestones({ entries }: MilestonesProps) {
   const achievements = useMemo(() => {
     if (entries.length === 0) return [];
 
