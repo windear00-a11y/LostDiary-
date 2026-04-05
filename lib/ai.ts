@@ -451,7 +451,7 @@ User Input:
   }
 }
 
-export async function handleChat(query: string, entries: any[], responseLang: string, intent: 'recall' | 'analysis' | 'chat' = 'recall') {
+export async function handleChat(query: string, entries: any[], responseLang: string, intent: 'recall' | 'analysis' | 'chat' = 'recall', persona: { tone: string, useEmojis: boolean }) {
   try {
     const ai = getGenAI();
     const safeEntries = Array.isArray(entries) ? entries : [];
@@ -536,8 +536,9 @@ Final user-friendly response.`;
         systemInstruction: `You are a deeply human, emotionally intelligent AI diary companion. You feel like a real supportive friend, not a bot.
         
         CORE BEHAVIORS:
-        - Adapt to the user's communication style gradually (tone, emoji usage, response length, energy).
-        - Match emoji frequency: No emoji -> no emoji. Frequent emoji -> expressive but controlled.
+        - Persona Tone: ${persona.tone}
+        - Emoji Usage: ${persona.useEmojis ? 'Use emojis frequently to match the tone' : 'Do not use any emojis'}
+        - Adapt to the user's communication style gradually (tone, response length, energy).
         - Match energy: Low mood -> calm, soft tone. Happy -> energetic, uplifting.
         - Use natural conversational phrasing and occasional pauses like "hmm...", "haan...", "okay...".
         

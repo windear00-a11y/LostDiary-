@@ -10,7 +10,7 @@ import { AIUsageDashboard } from '@/components/diary/AIUsageDashboard';
 import { useResourceUsage } from '@/hooks/use-resource-usage';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { motion } from 'motion/react';
-import { Sparkles, ArrowLeft } from 'lucide-react';
+import { Sparkles, ArrowLeft, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function AssistantPage() {
   const { user } = useAuth();
@@ -23,6 +23,9 @@ export default function AssistantPage() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
+  const [persona, setPersona] = useState({ tone: 'empathetic', useEmojis: true });
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(true);
 
   const supabase = createClient();
 
@@ -100,25 +103,31 @@ export default function AssistantPage() {
     if (!supabase || !user || !currentSessionId) return null;
     setIsAssistantLoading(true);
     try {
+      // Strip persona instructions from the message
+      const cleanMessage = message.split('\n\n[Persona:')[0];
+      const personaMatch = message.match(/\[Persona: Tone=(.*), UseEmojis=(.*)\]/);
+      const persona = personaMatch ? { tone: personaMatch[1], useEmojis: personaMatch[2] === 'true' } : { tone: 'empathetic', useEmojis: true };
+
       // Save user message
       const { data: userMsg, error: userError } = await supabase.from('chat_messages').insert({
         session_id: currentSessionId,
         role: 'user',
-        content: message
+        content: cleanMessage
       }).select().single();
       if (userError) throw userError;
       setMessages(prev => [...prev, userMsg]);
 
       trackAICall();
       const { classifyIntent, handleChat } = await import('@/lib/ai');
-      let intent = await classifyIntent(message);
+      let intent = await classifyIntent(cleanMessage);
       const chatIntent: 'recall' | 'analysis' | 'chat' = intent === 'entry' ? 'chat' : intent;
       
       const response = await handleChat(
-        message, 
+        cleanMessage, 
         entries, 
         i18n.resolvedLanguage || i18n.language || 'en', 
-        chatIntent
+        chatIntent,
+        persona // Pass persona to handleChat
       );
 
       // Save assistant message
@@ -143,43 +152,54 @@ export default function AssistantPage() {
     <AppLayout>
       <div className="flex h-[calc(100vh-100px)] gap-6">
         {/* Sidebar for Chat History */}
-        <div className="w-64 bg-white dark:bg-[#1A1A1A] rounded-[2rem] border border-gray-100 dark:border-[#2E2E2E] p-4 flex flex-col gap-4">
-          <h2 className="text-sm font-bold text-gray-900 dark:text-white px-2">Chat History</h2>
-          <div className="flex-1 overflow-y-auto space-y-2">
-            {sessions.map((session) => (
-              <button
-                key={session.id}
-                onClick={() => {
-                  setCurrentSessionId(session.id);
-                  fetchMessages(session.id);
-                }}
-                className={`w-full text-left p-3 rounded-xl text-sm transition-colors ${
-                  currentSessionId === session.id
-                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium'
-                    : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#262626]'
-                }`}
-              >
-                {session.title}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={async () => {
-              const { data: newSession, error } = await supabase
-                .from('chat_sessions')
-                .insert({ user_id: user?.id, title: 'New Chat' })
-                .select()
-                .single();
-              if (!error) {
-                setSessions([newSession, ...sessions]);
-                setCurrentSessionId(newSession.id);
-                setMessages([]);
-              }
-            }}
-            className="w-full py-3 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
+        <div className={`${showHistory ? 'w-64' : 'w-16'} bg-white dark:bg-[#1A1A1A] rounded-[2rem] border border-gray-100 dark:border-[#2E2E2E] p-4 flex flex-col gap-4 transition-all duration-300`}>
+          <button 
+            onClick={() => setShowHistory(!showHistory)}
+            className="flex items-center justify-between text-sm font-bold text-gray-900 dark:text-white px-2"
           >
-            New Chat
+            {showHistory && <span>Chat History</span>}
+            {showHistory ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </button>
+          
+          {showHistory && (
+            <>
+              <div className="flex-1 overflow-y-auto space-y-2">
+                {sessions.map((session) => (
+                  <button
+                    key={session.id}
+                    onClick={() => {
+                      setCurrentSessionId(session.id);
+                      fetchMessages(session.id);
+                    }}
+                    className={`w-full text-left p-3 rounded-xl text-sm transition-colors ${
+                      currentSessionId === session.id
+                        ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-medium'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-[#262626]'
+                    }`}
+                  >
+                    {session.title}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={async () => {
+                  const { data: newSession, error } = await supabase
+                    .from('chat_sessions')
+                    .insert({ user_id: user?.id, title: 'New Chat' })
+                    .select()
+                    .single();
+                  if (!error) {
+                    setSessions([newSession, ...sessions]);
+                    setCurrentSessionId(newSession.id);
+                    setMessages([]);
+                  }
+                }}
+                className="w-full py-3 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 transition-colors"
+              >
+                New Chat
+              </button>
+            </>
+          )}
         </div>
 
         {/* Main Chat Interface */}
@@ -207,12 +227,42 @@ export default function AssistantPage() {
               </p>
             </div>
 
-            <div className="w-full sm:w-72">
-              <AIUsageDashboard 
-                aiCalls={aiCalls}
-                entryCount={entryCount}
-                t={t}
-              />
+            <div className="w-full sm:w-72 space-y-4">
+              {/* Collapsible Settings Menu */}
+              <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm overflow-hidden">
+                <button 
+                  onClick={() => setShowSettings(!showSettings)}
+                  className="w-full p-4 flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-[#262626] transition-colors"
+                >
+                  <span>Assistant Settings</span>
+                  {showSettings ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+                
+                {showSettings && (
+                  <div className="p-4 border-t border-gray-100 dark:border-[#2E2E2E] space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-gray-400 uppercase">Tone</label>
+                      <select 
+                        value={persona.tone}
+                        onChange={(e) => setPersona({...persona, tone: e.target.value})}
+                        className="w-full p-2 bg-gray-50 dark:bg-[#262626] rounded-lg text-sm"
+                      >
+                        <option value="empathetic">Empathetic</option>
+                        <option value="analytical">Analytical</option>
+                        <option value="poetic">Poetic</option>
+                      </select>
+                    </div>
+                    <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <input 
+                        type="checkbox" 
+                        checked={persona.useEmojis}
+                        onChange={(e) => setPersona({...persona, useEmojis: e.target.checked})}
+                      />
+                      Use Emojis
+                    </label>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -228,6 +278,7 @@ export default function AssistantPage() {
               t={t}
               entries={entries}
               messages={messages}
+              persona={persona}
             />
           </motion.div>
         </div>

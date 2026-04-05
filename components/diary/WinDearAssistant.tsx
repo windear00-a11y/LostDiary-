@@ -17,13 +17,15 @@ export function WinDearAssistant({
   isSubmitting,
   t,
   entries = [],
-  messages = []
+  messages = [],
+  persona
 }: {
   onSendMessage: (message: string) => Promise<string | null>;
   isSubmitting: boolean;
   t: any;
   entries?: any[];
   messages?: Message[];
+  persona: { tone: string, useEmojis: boolean };
 }) {
   const [input, setInput] = useState('');
   const [dailyPrompt, setDailyPrompt] = useState<string | null>(null);
@@ -58,7 +60,9 @@ export function WinDearAssistant({
 
     const currentInput = input;
     setInput('');
-    await onSendMessage(currentInput);
+    // Append persona instructions to the message
+    const messageWithPersona = `${currentInput}\n\n[Persona: Tone=${persona.tone}, UseEmojis=${persona.useEmojis}]`;
+    await onSendMessage(messageWithPersona);
   };
 
   return (

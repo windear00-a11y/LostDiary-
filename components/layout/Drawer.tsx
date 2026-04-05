@@ -121,8 +121,17 @@ export const Drawer = ({ isOpen, onClose, hasNewUpdates, entries = [] }: DrawerP
                     fill 
                     className="object-cover"
                     referrerPolicy="no-referrer"
-                    onLoadingComplete={() => console.log("Avatar loaded successfully")}
-                    onError={() => console.error("Avatar failed to load:", user.user_metadata.avatar_url)}
+                    onError={(e) => {
+                      console.error("Avatar failed to load:", user.user_metadata.avatar_url);
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      const parent = e.target.parentElement;
+                      if (parent) {
+                        const fallback = document.createElement('div');
+                        fallback.className = "w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold";
+                        fallback.innerText = user?.user_metadata?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase() || '?';
+                        parent.appendChild(fallback);
+                      }
+                    }}
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white text-2xl font-bold">
