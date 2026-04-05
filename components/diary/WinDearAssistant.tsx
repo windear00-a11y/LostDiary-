@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Sparkles, Send, MessageCircle, User, Bot, Loader2, X, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id: string;
@@ -15,28 +16,21 @@ export function WinDearAssistant({
   onSendMessage,
   isSubmitting,
   t,
-  entries = []
+  entries = [],
+  messages = []
 }: {
   onSendMessage: (message: string) => Promise<string | null>;
   isSubmitting: boolean;
   t: any;
   entries?: any[];
+  messages?: Message[];
 }) {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
   const [dailyPrompt, setDailyPrompt] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Initial greeting and daily prompt
   useEffect(() => {
-    const hour = new Date().getHours();
-    let greeting = "I am the soul of your WinDear diary. I'm here to hold your memories. How are you feeling in this moment?";
-    if (hour < 12) greeting = "Good morning. I've been waiting for your first thoughts of the day. What's on your mind?";
-    else if (hour < 18) greeting = "The day is unfolding. I'm listening to everything you want to share.";
-    else greeting = "The stars are out, and I'm here to reflect on the day with you. Let's talk.";
-
-    setMessages([{ id: '1', role: 'assistant', content: greeting, timestamp: new Date() }]);
-
     // Generate daily prompt if entries exist
     if (entries.length > 0) {
       const generatePrompt = async () => {
@@ -62,28 +56,9 @@ export function WinDearAssistant({
     e?.preventDefault();
     if (!input.trim() || isSubmitting) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
     const currentInput = input;
     setInput('');
-
-    const response = await onSendMessage(currentInput);
-    
-    if (response) {
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: response,
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-    }
+    await onSendMessage(currentInput);
   };
 
   return (
@@ -119,13 +94,26 @@ export function WinDearAssistant({
         className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth scrollbar-hide"
       >
         {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-50">
-            <div className="w-16 h-16 bg-gray-50 dark:bg-[#262626] rounded-full flex items-center justify-center">
-              <MessageCircle className="w-8 h-8 text-gray-300" />
+          <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
+            <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center">
+              <MessageCircle className="w-8 h-8 text-indigo-500" />
             </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-gray-500">No conversation yet</p>
-              <p className="text-xs text-gray-400">Ask me about your patterns, memories, or for advice.</p>
+            <div className="space-y-2">
+              <p className="text-base font-medium text-gray-900 dark:text-white">How can I help you today?</p>
+              <p className="text-sm text-gray-500">Choose a prompt or start typing below.</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-sm">
+              {['Analyze my mood', 'Give me a writing prompt', 'Summarize my week'].map((prompt) => (
+                <button
+                  key={prompt}
+                  onClick={() => {
+                    setInput(prompt);
+                  }}
+                  className="p-3 text-xs text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+                >
+                  {prompt}
+                </button>
+              ))}
             </div>
           </div>
         )}
@@ -168,7 +156,13 @@ export function WinDearAssistant({
                   {msg.role === 'user' ? <User className="w-4 h-4 text-gray-400" /> : <Bot className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
                 </div>
                 <div className={`p-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-gray-50 dark:bg-[#262626] text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-800 shadow-sm'}`}>
-                  {msg.content}
+                  {msg.role === 'assistant' ? (
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    msg.content
+                  )}
                 </div>
               </div>
             </motion.div>

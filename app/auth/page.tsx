@@ -2,7 +2,6 @@
 
 import { useState, useMemo, useEffect, useRef, Suspense } from 'react';
 import { createClient } from '@/lib/supabase';
-import posthog from 'posthog-js';
 import { Book, Mail, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -45,7 +44,6 @@ function AuthForm() {
           password,
         });
         if (error) throw error;
-        posthog.capture('user_signup', { email });
         setMessage({ type: 'success', text: 'Account created! You can now sign in.' });
         setIsSignUp(false);
       } else {
@@ -54,10 +52,6 @@ function AuthForm() {
           password,
         });
         if (error) throw error;
-        if (data.user) {
-          posthog.identify(data.user.id, { email: data.user.email });
-          posthog.capture('user_signin');
-        }
         router.push('/dashboard');
       }
     } catch (err: any) {
