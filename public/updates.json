@@ -1,11 +1,5 @@
 [
   {
-    "hash": "21b50a6e5798959e3f51938c1c203a5da152856e",
-    "message": "feat: Refactor user data fetching and improve debug logs",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-05T08:49:50+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
