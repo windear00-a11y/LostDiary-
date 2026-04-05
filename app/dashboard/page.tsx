@@ -96,39 +96,36 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold">Dashboard</h1>
         </div>
 
-        <Milestones entries={entries} />
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 order-2 lg:order-1">
-            <DiaryList 
-              entries={entries}
-              isLoadingEntries={loading}
-              deleteEntry={async (id) => {
-                await supabase.from('entries').delete().eq('id', id);
-                setEntries(entries.filter(e => e.id !== id));
-              }}
-              t={t}
-              handleStartWriting={() => textareaRef.current?.focus()}
-              showTranslated={showTranslated}
-            />
-          </div>
-          <div className="order-1 lg:order-2">
-            <DiaryInput 
-              newEntry={newEntry}
-              setNewEntry={setNewEntry}
-              handleSubmit={handleSubmit}
-              isSubmitting={isSubmitting}
-              submitError={submitError}
-              t={t}
-              textareaRef={textareaRef}
-              showSuccess={showSuccess}
-              showTranslated={showTranslated}
-              setShowTranslated={setShowTranslated}
-              entries={entries}
-              imageUrl={imageUrl}
-              setImageUrl={setImageUrl}
-            />
-          </div>
+        <div className="space-y-8">
+          <DiaryInput 
+            newEntry={newEntry}
+            setNewEntry={setNewEntry}
+            handleSubmit={handleSubmit}
+            isSubmitting={isSubmitting}
+            submitError={submitError}
+            t={t}
+            textareaRef={textareaRef}
+            showSuccess={showSuccess}
+            showTranslated={showTranslated}
+            setShowTranslated={setShowTranslated}
+            entries={entries}
+            imageUrl={imageUrl}
+            setImageUrl={setImageUrl}
+          />
+          
+          <DiaryList 
+            entries={entries}
+            isLoadingEntries={loading}
+            deleteEntry={async (id) => {
+              await supabase.from('entries').delete().eq('id', id);
+              setEntries(entries.filter(e => e.id !== id));
+            }}
+            t={t}
+            handleStartWriting={() => textareaRef.current?.focus()}
+            showTranslated={showTranslated}
+          />
+
+          <Milestones entries={entries} />
         </div>
       </div>
     </AppLayout>
