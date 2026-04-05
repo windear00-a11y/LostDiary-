@@ -3,6 +3,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Header } from './Header';
 import { Drawer } from './Drawer';
+import { Sidebar } from './Sidebar';
+import { RightPanel } from './RightPanel';
+import { FloatingActionButton } from '@/components/ui/floating-action-button';
 import { useUpdates } from '@/hooks/use-updates';
 import { createClient } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
@@ -52,7 +55,7 @@ export const AppLayout = ({ children, onNewEntry, onStartChat, entries: initialE
   }, [initialEntries]);
 
   return (
-    <div className="min-h-screen w-full bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] transition-colors duration-300 pt-16 flex flex-col">
+    <div className="min-h-screen w-full bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] transition-colors duration-300 flex flex-col">
       {/* Header */}
       <Header 
         onOpenDrawer={() => setIsDrawerOpen(true)} 
@@ -69,10 +72,22 @@ export const AppLayout = ({ children, onNewEntry, onStartChat, entries: initialE
         entries={entries}
       />
 
-      {/* Main Content Container */}
-      <main className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-12 flex-1">
-        {children}
-      </main>
+      <FloatingActionButton onNewEntry={onNewEntry} />
+
+      <div className="flex flex-1 pt-16 h-screen overflow-hidden">
+        {/* Sidebar */}
+        <Sidebar isOpen={true} onClose={() => {}} />
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-12">
+          <div className="max-w-3xl mx-auto">
+            {children}
+          </div>
+        </main>
+
+        {/* Right Panel */}
+        <RightPanel />
+      </div>
     </div>
   );
 };

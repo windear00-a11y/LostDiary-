@@ -8,6 +8,8 @@ export function DiaryList({
   entries,
   isLoadingEntries,
   deleteEntry,
+  onEdit,
+  onPin,
   t,
   handleStartWriting,
   showTranslated
@@ -15,6 +17,8 @@ export function DiaryList({
   entries: any[];
   isLoadingEntries: boolean;
   deleteEntry: (id: string) => Promise<void>;
+  onEdit?: (entry: any) => void;
+  onPin?: (id: string) => void;
   t: (key: string) => string;
   handleStartWriting: () => void;
   showTranslated: boolean;
@@ -22,11 +26,16 @@ export function DiaryList({
   const [selectedTag, setSelectedTag] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [openFolders, setOpenFolders] = useState<string[]>([]);
+  const [openEntryId, setOpenEntryId] = useState<string | null>(null);
 
   const toggleFolder = (tag: string) => {
     setOpenFolders(prev => 
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
+  };
+
+  const toggleEntry = (id: string) => {
+    setOpenEntryId(prev => prev === id ? null : id);
   };
 
   const handleExportData = () => {
@@ -175,9 +184,13 @@ export function DiaryList({
                     key={entry.id} 
                     entry={entry} 
                     deleteEntry={deleteEntry} 
+                    onEdit={onEdit}
+                    onPin={onPin}
                     t={t} 
                     onTryNow={handleStartWriting} 
                     showTranslatedGlobal={showTranslated}
+                    isOpen={openEntryId === entry.id}
+                    onToggle={() => toggleEntry(entry.id)}
                   />
                 ))}
               </div>

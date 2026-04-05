@@ -203,6 +203,13 @@ export function DiaryInput({
   }, [isListening, startListening, stopListening]);
 
   useEffect(() => {
+    // Auto-focus when mounted
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, []); // Run only on mount
+
+  useEffect(() => {
     // Auto-scroll textarea to bottom when typing
     if (textareaRef.current) {
       const textarea = textareaRef.current;
