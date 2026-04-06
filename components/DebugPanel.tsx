@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Terminal, X, Trash2, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
+import { Terminal, X, Trash2, ChevronUp, ChevronDown, GripVertical, Copy, Check } from 'lucide-react';
 
 interface LogEntry {
   type: 'ERROR' | 'API' | 'WARN' | 'INFO';
@@ -27,6 +27,7 @@ export function DebugPanel() {
   const [isMinimized, setIsMinimized] = useState(false);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const dragRef = useRef<HTMLDivElement>(null);
   const offsetRef = useRef({ x: 0, y: 0 });
 
@@ -51,6 +52,13 @@ export function DebugPanel() {
     }
   };
 
+  const copyLogs = () => {
+    const logText = logs.map(l => `[${new Date(l.timestamp).toISOString()}] [${l.type}] ${l.message} ${l.metadata ? JSON.stringify(l.metadata) : ''}`).join('\n');
+    navigator.clipboard.writeText(logText);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (dragRef.current) {
       setIsDragging(true);
@@ -64,13 +72,13 @@ export function DebugPanel() {
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (isDragging) {
-      // Calculate position from bottom-right
-      const x = window.innerWidth - e.clientX - (dragRef.current?.offsetWidth || 0) + offsetRef.current.x;
-      const y = window.innerHeight - e.clientY - (dragRef.current?.offsetHeight || 0) + offsetRef.current.y;
+      // Calculate position from bottom-left
+      const x = e.clientX - offsetRef.current.x - 16; // 16px is 1rem (left-4)
+      const y = window.innerHeight - e.clientY - (dragRef.current?.offsetHeight || 0) + offsetRef.current.y - 16;
       
       setPosition({
-        x: Math.max(0, x),
-        y: Math.max(0, y)
+        x: Math.max(-16, x),
+        y: Math.max(-16, y)
       });
     }
   }, [isDragging]);
@@ -97,8 +105,8 @@ export function DebugPanel() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 z-[9999] p-3 bg-gray-900 text-white rounded-full shadow-xl border border-gray-700 hover:scale-110 transition-transform active:scale-95"
-        style={{ transform: `translate(-${position.x}px, -${position.y}px)` }}
+        className="fixed bottom-4 left-4 z-[9999] p-3 bg-gray-900 text-white rounded-full shadow-xl border border-gray-700 hover:scale-110 transition-transform active:scale-95"
+        style={{ transform: `translate(${position.x}px, -${position.y}px)` }}
       >
         <Terminal size={20} />
         {logs.some(l => l.type === 'ERROR') && (
@@ -116,8 +124,8 @@ export function DebugPanel() {
       }`}
       style={{ 
         bottom: '1rem', 
-        right: '1rem',
-        transform: `translate(-${position.x}px, -${position.y}px)`,
+        left: '1rem',
+        transform: `translate(${position.x}px, -${position.y}px)`,
         userSelect: isDragging ? 'none' : 'auto'
       }}
     >
@@ -135,6 +143,14 @@ export function DebugPanel() {
           </span>
         </div>
         <div className="flex items-center gap-1">
+          <button 
+            onClick={copyLogs}
+            className="p-1 hover:bg-gray-700 rounded transition-colors text-gray-500 hover:text-green-400 flex items-center gap-1"
+            title="Copy Logs"
+          >
+            {isCopied ? <Check size={14} className="text-green-400" /> : <Copy size={14} />}
+            {isCopied && <span className="text-[10px] text-green-400 font-bold">Copied!</span>}
+          </button>
           <button 
             onClick={() => setIsMinimized(!isMinimized)}
             className="p-1 hover:bg-gray-700 rounded transition-colors"
@@ -177,7 +193,12 @@ export function DebugPanel() {
               >
                 <div className="flex items-center gap-2 mb-0.5 opacity-60">
                   <span>[{new Date(log.timestamp).toLocaleTimeString()}]</span>
-                  <span className="font-bold">{log.type}</span>
+                  <span className={`font-bold ${
+                    log.type === 'ERROR' ? 'text-red-400' :
+                    log.type === 'API' ? 'text-blue-400' :
+                    log.type === 'WARN' ? 'text-yellow-400' :
+                    'text-gray-400'
+                  }`}>{log.type}</span>
                 </div>
                 <div className="break-all whitespace-pre-wrap">{log.message}</div>
                 {log.metadata && (
