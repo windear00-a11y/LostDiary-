@@ -3,6 +3,7 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logger } from '@/lib/logger';
+import { serializeError } from '@/lib/serializeError';
 
 interface Props {
   children: ReactNode;
@@ -11,27 +12,62 @@ interface Props {
 
 interface State {
   hasError: boolean;
+  error: Error | null;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   public state: State = {
-    hasError: false
+    hasError: false,
+    error: null
   };
 
-  public static getDerivedStateFromError(_: Error): State {
-    return { hasError: true };
+  public static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error('Uncaught error:', error, errorInfo);
+    
+    // Log to /api/log
+    try {
+      const serialized = serializeError(error);
+      fetch('/api/log', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'ERROR',
+          message: serialized.message || 'React Error Boundary caught an error',
+          timestamp: new Date().toISOString(),
+          url: window.location.href,
+          stack: serialized.stack,
+          name: serialized.name || 'ReactErrorBoundary',
+          metadata: { componentStack: errorInfo.componentStack }
+        }),
+        keepalive: true
+      }).catch(() => {});
+    } catch (e) {
+      // Ignore fetch errors
+    }
   }
+
+  private handleRetry = () => {
+    this.setState({ hasError: false, error: null });
+  };
 
   public render() {
     if (this.state.hasError) {
       return this.props.fallback || (
-        <div className="p-8 text-center bg-red-50 rounded-xl border border-red-100">
-          <h2 className="text-lg font-semibold text-red-800">Something went wrong.</h2>
-          <p className="text-sm text-red-600">Please try refreshing the page.</p>
+        <div className="flex flex-col items-center justify-center min-h-[400px] p-8 text-center bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-100 dark:border-red-900/30 m-4">
+          <h2 className="text-xl font-semibold text-red-800 dark:text-red-400 mb-2">Something went wrong</h2>
+          <p className="text-sm text-red-600 dark:text-red-300 mb-6 max-w-md">
+            {this.state.error?.message || "An unexpected error occurred in the application."}
+          </p>
+          <button
+            onClick={this.handleRetry}
+            className="px-4 py-2 bg-red-100 hover:bg-red-200 dark:bg-red-900/50 dark:hover:bg-red-900/80 text-red-800 dark:text-red-300 rounded-lg font-medium transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       );
     }

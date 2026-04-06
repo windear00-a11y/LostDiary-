@@ -1,4 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
+import { logger } from "./logger";
 
 let genAIInstance: GoogleGenAI | null = null;
 
@@ -44,7 +45,7 @@ Text: "${text}"`;
     }
     return 'en';
   } catch (error) {
-    console.error('Language detection error:', error);
+    logger.error('Language detection error:', error);
     return 'en';
   }
 }
@@ -80,7 +81,7 @@ Text: "${text}"`;
     });
     return response.text?.trim() || text;
   } catch (error) {
-    console.error('Normalization error:', error);
+    logger.error('Normalization error:', error);
     return text;
   }
 }
@@ -97,7 +98,7 @@ export async function translateText(text: string, targetLangCode: string) {
     });
     return response.text?.trim() || text;
   } catch (error) {
-    console.error('Translation error:', error);
+    logger.error('Translation error:', error);
     return text;
   }
 }
@@ -159,7 +160,7 @@ Response format:
     
     return JSON.parse(response.text || '{}');
   } catch (error) {
-    console.error('Insight generation error:', error);
+    logger.error('Insight generation error:', error);
     return null;
   }
 }
@@ -238,7 +239,7 @@ Response format (JSON):
     
     return result;
   } catch (error) {
-    console.error('Process diary entry error:', error);
+    logger.error('Process diary entry error:', error);
     return null;
   }
 }
@@ -304,7 +305,7 @@ Generate a structured weekly reflection:
     }
     return JSON.parse(resultText);
   } catch (error) {
-    console.error('Weekly Reflection Error:', error);
+    logger.error('Weekly Reflection Error:', error);
     throw error;
   }
 }
@@ -352,7 +353,7 @@ Focus on:
 
     return response.text || "You're showing up for yourself, and that's the most important step.";
   } catch (error) {
-    console.error('Growth Insight Error:', error);
+    logger.error('Growth Insight Error:', error);
     throw error;
   }
 }
@@ -406,7 +407,7 @@ Use ${langName} for the explanation.`;
     const result = JSON.parse(response.text || '{"hasErrors": false}');
     return result.hasErrors ? result : null;
   } catch (error) {
-    console.error('Spelling check error:', error);
+    logger.error('Spelling check error:', error);
     return null;
   }
 }
@@ -446,7 +447,7 @@ User Input:
     const result = JSON.parse(response.text || '{"type": "entry"}');
     return result.type as 'entry' | 'recall' | 'analysis' | 'chat';
   } catch (error) {
-    console.error('Intent classification error:', error);
+    logger.error('Intent classification error:', error);
     return 'entry';
   }
 }
@@ -552,7 +553,7 @@ Final user-friendly response.`;
 
     return response.text;
   } catch (error: any) {
-    console.error('Chat error:', error);
+    logger.error('Chat error:', error);
     const errorMessage = error?.message || "Unknown error";
     if (errorMessage.includes("quota") || errorMessage.includes("429")) {
       return "I'm a bit overwhelmed right now. Please give me a moment to breathe and try again.";
@@ -579,7 +580,7 @@ export async function generateDailyPrompt(entries: any[]) {
 
     return response.text?.trim() || "What's one thing you're grateful for today?";
   } catch (error) {
-    console.error('Prompt generation error:', error);
+    logger.error('Prompt generation error:', error);
     return "What's on your mind right now?";
   }
 }
@@ -623,7 +624,7 @@ export async function generateInlineSuggestions(text: string, type: 'improve' | 
 
     return response.text?.trim() || null;
   } catch (error) {
-    console.error('Inline suggestion error:', error);
+    logger.error('Inline suggestion error:', error);
     return null;
   }
 }

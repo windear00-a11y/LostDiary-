@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useTranslation } from 'react-i18next';
 import { useDiaryStore, useEntries } from "@/lib/store/use-diary-store";
 import { useUIStore } from "@/lib/store/use-ui-store";
+import { logger } from "@/lib/logger";
 
 const DiaryInput = dynamic(() => import("@/components/diary/DiaryInput").then(mod => ({ default: mod.DiaryInput })), { ssr: false });
 const Milestones = dynamic(() => import("@/components/diary/Milestones").then(mod => ({ default: mod.Milestones })), { ssr: false });
@@ -98,7 +99,7 @@ export default function DashboardPage() {
           setShowSuccess(true);
           setTimeout(() => setShowSuccess(false), 3000);
         } catch (err: any) {
-          console.error("Update failed:", err);
+          logger.error("Update failed:", err);
           // Revert
           updateEntry(originalEntry.id, originalEntry);
           setSubmitError(err.message);
@@ -137,7 +138,7 @@ export default function DashboardPage() {
           setShowSuccess(true);
           setTimeout(() => setShowSuccess(false), 3000);
         } catch (err: any) {
-          console.error("Add failed:", err);
+          logger.error("Add failed:", err);
           // Revert
           useDiaryStore.getState().deleteEntry(tempId);
           setSubmitError(err.message);
@@ -159,7 +160,7 @@ export default function DashboardPage() {
       const { error } = await supabase.from('entries').delete().eq('id', id);
       if (error) throw error;
     } catch (err) {
-      console.error("Error deleting:", err);
+      logger.error("Error deleting:", err);
       // Revert on failure
       if (entryToDelete) {
         useDiaryStore.getState().addEntry(entryToDelete);

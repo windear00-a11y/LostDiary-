@@ -1,4 +1,6 @@
 // lib/logger.ts
+import { serializeError } from './serializeError';
+
 const isProduction = process.env.NODE_ENV === 'production';
 
 export const logger = {
@@ -8,8 +10,13 @@ export const logger = {
     }
   },
   error: (...args: any[]) => {
-    // Always log errors, but maybe send to a service in production
-    console.error(...args);
+    const serializedArgs = args.map(arg => {
+      if (arg instanceof Error || (typeof arg === 'object' && arg !== null && 'message' in arg)) {
+        return serializeError(arg);
+      }
+      return arg;
+    });
+    console.error(...serializedArgs);
   },
   warn: (...args: any[]) => {
     if (!isProduction) {
