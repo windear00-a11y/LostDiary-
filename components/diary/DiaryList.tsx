@@ -6,7 +6,7 @@ import { DiarySkeleton } from '@/components/diary/skeleton-card';
 import { PenLine, Tag, Filter, LayoutGrid, List, Search, X, Download, Folder, ChevronDown, ChevronUp, Pin } from 'lucide-react';
 
 import { useDiaryStore, useEntries } from '@/lib/store/use-diary-store';
-import { useUIState } from '@/lib/store/use-ui-store';
+import { useUIStore } from '@/lib/store/use-ui-store';
 
 export const DiaryList = React.memo(function DiaryList({
   isLoadingEntries,

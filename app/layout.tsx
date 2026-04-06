@@ -6,7 +6,6 @@ import { PageTransition } from '@/components/page-transition';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { CookieConsent } from '@/components/ui/CookieConsent';
-import { GoogleAnalytics } from '@next/third-parties/google';
 import DebugOverlay from '@/components/debug-overlay';
 import { Suspense } from 'react';
 import './globals.css';
@@ -70,7 +69,6 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
               </AuthProvider>
             </I18nProvider>
           </Suspense>
-          <GoogleAnalytics gaId="G-65HWFY2J17" />
         </ThemeProvider>
       </body>
     </html>

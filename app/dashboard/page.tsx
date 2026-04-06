@@ -8,7 +8,7 @@ import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useTranslation } from 'react-i18next';
 import { useDiaryStore, useEntries } from "@/lib/store/use-diary-store";
-import { useUIStore, useUIState } from "@/lib/store/use-ui-store";
+import { useUIStore } from "@/lib/store/use-ui-store";
 
 const DiaryInput = dynamic(() => import("@/components/diary/DiaryInput").then(mod => ({ default: mod.DiaryInput })), { ssr: false });
 const Milestones = dynamic(() => import("@/components/diary/Milestones").then(mod => ({ default: mod.Milestones })), { ssr: false });

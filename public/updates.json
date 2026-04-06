@@ -1,11 +1,5 @@
 [
   {
-    "hash": "9a50a2e01d8ad16f048c3838904fba48f987f95f",
-    "message": "feat: Improve debug overlay analysis display",
-    "author": "Kulwinder Singh",
-    "date": "2026-04-06T10:01:42+05:30"
-  },
-  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",

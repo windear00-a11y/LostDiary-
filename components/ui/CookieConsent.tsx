@@ -42,7 +42,7 @@ export function CookieConsent() {
                 We use cookies to improve your experience.
               </p>
               <p className="text-xs text-[#6B7280] dark:text-gray-400 leading-relaxed">
-                By clicking &ldquo;Accept&rdquo;, you agree to our use of cookies for analytics and personalization. Read our{' '}
+                By clicking &ldquo;Accept&rdquo;, you agree to our use of cookies for personalization and security. Read our{' '}
                 <Link href="/privacy" className="text-indigo-600 dark:text-indigo-400 hover:underline">Privacy Policy</Link> to learn more.
               </p>
             </div>
