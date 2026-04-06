@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Terminal, Copy, X, Minimize2, Maximize2, Search, Filter, Sparkles, Loader2 } from "lucide-react";
+import { Terminal, Copy, X, Minimize2, Maximize2, Search, Filter, Sparkles, Loader2, Check } from "lucide-react";
 
 type LogType = "INFO" | "ERROR" | "WARN" | "API";
 type ErrorCategory = "NETWORK" | "AUTH" | "CODE" | "UNKNOWN";
@@ -22,6 +22,7 @@ export default function DebugOverlay() {
   const [search, setSearch] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const actionsRef = useRef<string[]>([]);
 
   const addLog = useCallback((entry: Omit<LogEntry, "time" | "actions">) => {
@@ -82,6 +83,11 @@ export default function DebugOverlay() {
       const url = typeof args[0] === "string" ? args[0] : (args[0] as Request).url;
       const method = (args[1]?.method || "GET").toUpperCase();
 
+      // Skip logging for debug-related endpoints to avoid noise/loops
+      if (url.includes("/api/log") || url.includes("/api/ai-debug")) {
+        return originalFetch(...args);
+      }
+
       try {
         const response = await originalFetch(...args);
         const logType: LogType = response.ok ? "API" : "ERROR";
@@ -141,6 +147,8 @@ export default function DebugOverlay() {
   const copyLogs = () => {
     const text = logs.map(l => `[${l.time}] [${l.type}]${l.category ? ` [${l.category}]` : ""} ${l.message}`).join("\n");
     navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const fixWithAI = async () => {
@@ -184,7 +192,7 @@ export default function DebugOverlay() {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 w-[450px] max-h-[80vh] bg-[#0F0F0F] text-gray-300 rounded-2xl shadow-2xl z-[9999] flex flex-col overflow-hidden border border-gray-800 animate-in slide-in-from-bottom-4">
+    <div className="fixed bottom-4 right-4 left-4 sm:left-auto w-auto sm:w-[450px] max-h-[80vh] bg-[#0F0F0F] text-gray-300 rounded-2xl shadow-2xl z-[9999] flex flex-col overflow-hidden border border-gray-800 animate-in slide-in-from-bottom-4">
       {/* Header */}
       <div className="flex items-center justify-between p-4 bg-gray-900/50 border-b border-gray-800">
         <div className="flex items-center gap-2">
@@ -192,8 +200,21 @@ export default function DebugOverlay() {
           <span className="text-xs font-bold uppercase tracking-widest text-gray-100">Debug System v2.0</span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={copyLogs} title="Copy Logs" className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"><Copy className="w-4 h-4" /></button>
-          <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"><Minimize2 className="w-4 h-4" /></button>
+          <button 
+            onClick={copyLogs} 
+            title="Copy Logs" 
+            className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${copied ? 'bg-emerald-500/20 text-emerald-400' : 'hover:bg-gray-800 text-gray-400'}`}
+          >
+            {copied ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span className="text-[10px] font-bold uppercase">Copied!</span>
+              </>
+            ) : (
+              <Copy className="w-4 h-4" />
+            )}
+          </button>
+          <button onClick={() => setIsOpen(false)} className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors text-gray-400"><Minimize2 className="w-4 h-4" /></button>
         </div>
       </div>
 
@@ -261,7 +282,7 @@ export default function DebugOverlay() {
                 <span className={`font-bold shrink-0 ${
                   log.type === "ERROR" ? "text-red-400" : 
                   log.type === "WARN" ? "text-orange-400" : 
-                  log.type === "API" ? "text-blue-400" : "text-emerald-400"
+                  log.type === "API" ? "text-blue-400" : "text-lime-400"
                 }`}>
                   [{log.type}]
                 </span>
@@ -270,7 +291,11 @@ export default function DebugOverlay() {
                     {log.category}
                   </span>
                 )}
-                <span className="break-all text-gray-300">{log.message}</span>
+                <span className={`break-all ${
+                  log.type === "ERROR" ? "text-red-400" : 
+                  log.type === "WARN" ? "text-orange-400" : 
+                  log.type === "API" ? "text-blue-400" : "text-lime-400"
+                }`}>{log.message}</span>
               </div>
               {log.meta && Object.keys(log.meta).length > 0 && (
                 <div className="ml-14 mt-1 text-gray-500 italic truncate group-hover:whitespace-normal group-hover:overflow-visible transition-all">
