@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Terminal, Copy, X, Minimize2, Maximize2, Search, Filter, Sparkles, Loader2, Check, ExternalLink } from "lucide-react";
+import { Terminal, Copy, X, Minimize2, Maximize2, Search, Filter, Sparkles, Loader2, Check, ExternalLink, ChevronDown, ChevronUp } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type LogType = "INFO" | "ERROR" | "WARN" | "API";
@@ -23,6 +23,7 @@ export default function DebugOverlay() {
   const [search, setSearch] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
+  const [isAnalysisExpanded, setIsAnalysisExpanded] = useState(true);
   const [copied, setCopied] = useState(false);
   const [fixCopied, setFixCopied] = useState(false);
   const actionsRef = useRef<string[]>([]);
@@ -60,7 +61,8 @@ export default function DebugOverlay() {
     // Session Tracking: Track last 10 user actions
     const trackAction = (e: MouseEvent | KeyboardEvent) => {
       const target = e.target as HTMLElement;
-      const action = `${e.type} on ${target.tagName}${target.id ? `#${target.id}` : ""}${target.className ? `.${target.className.split(" ")[0]}` : ""}`;
+      const className = typeof target.className === 'string' ? target.className : '';
+      const action = `${e.type} on ${target.tagName}${target.id ? `#${target.id}` : ""}${className ? `.${className.split(" ")[0]}` : ""}`;
       actionsRef.current = [action, ...actionsRef.current].slice(0, 10);
     };
 
@@ -157,6 +159,7 @@ export default function DebugOverlay() {
     if (logs.length === 0) return;
     setIsAnalyzing(true);
     setAnalysis(null);
+    setIsAnalysisExpanded(true);
     try {
       const res = await fetch("/api/ai-debug", {
         method: "POST",
@@ -264,8 +267,15 @@ export default function DebugOverlay() {
 
       {/* Analysis Section */}
       {analysis && (
-        <div className="m-3 p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-xl relative overflow-hidden group">
+        <div className="m-3 p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-xl relative overflow-hidden group transition-all duration-300">
           <div className="absolute top-2 right-2 flex items-center gap-1">
+            <button 
+              onClick={() => setIsAnalysisExpanded(!isAnalysisExpanded)}
+              className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400 transition-colors"
+              title={isAnalysisExpanded ? "Collapse" : "Expand"}
+            >
+              {isAnalysisExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
             <button 
               onClick={copyFix} 
               className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${fixCopied ? 'bg-emerald-500/20 text-emerald-400' : 'hover:bg-white/10 text-gray-400'}`}
@@ -279,29 +289,34 @@ export default function DebugOverlay() {
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">AI Debug Analysis</span>
+            {!isAnalysisExpanded && <span className="text-[9px] text-indigo-400/60 italic ml-2">(Collapsed)</span>}
           </div>
 
-          <div className="text-[11px] text-gray-300 max-h-60 overflow-auto custom-scrollbar leading-relaxed prose prose-invert prose-xs max-w-none">
-            <ReactMarkdown
-              components={{
-                h3: ({ children }) => <h3 className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 mt-4 mb-2 first:mt-0">{children}</h3>,
-                code: ({ children }) => <code className="bg-black/40 px-1 py-0.5 rounded text-indigo-300 font-mono">{children}</code>,
-                pre: ({ children }) => <pre className="bg-black/60 p-3 rounded-lg my-2 overflow-x-auto border border-white/5 font-mono text-[10px]">{children}</pre>,
-                ul: ({ children }) => <ul className="list-disc pl-4 space-y-1 my-2">{children}</ul>,
-                li: ({ children }) => <li className="text-gray-400">{children}</li>,
-                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>
-              }}
-            >
-              {analysis}
-            </ReactMarkdown>
-          </div>
+          {isAnalysisExpanded && (
+            <>
+              <div className="text-[11px] text-gray-300 max-h-60 overflow-auto custom-scrollbar leading-relaxed prose prose-invert prose-xs max-w-none animate-in fade-in slide-in-from-top-2 duration-300">
+                <ReactMarkdown
+                  components={{
+                    h3: ({ children }) => <h3 className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 mt-4 mb-2 first:mt-0">{children}</h3>,
+                    code: ({ children }) => <code className="bg-black/40 px-1 py-0.5 rounded text-indigo-300 font-mono">{children}</code>,
+                    pre: ({ children }) => <pre className="bg-black/60 p-3 rounded-lg my-2 overflow-x-auto border border-white/5 font-mono text-[10px]">{children}</pre>,
+                    ul: ({ children }) => <ul className="list-disc pl-4 space-y-1 my-2">{children}</ul>,
+                    li: ({ children }) => <li className="text-gray-400">{children}</li>,
+                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>
+                  }}
+                >
+                  {analysis}
+                </ReactMarkdown>
+              </div>
 
-          <div className="mt-4 pt-3 border-t border-indigo-500/20 flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-[9px] text-indigo-300/60 font-medium italic">
-              <ExternalLink className="w-3 h-3" />
-              Follow the &quot;Next Steps&quot; to resolve the issue.
-            </div>
-          </div>
+              <div className="mt-4 pt-3 border-t border-indigo-500/20 flex items-center justify-between animate-in fade-in duration-500">
+                <div className="flex items-center gap-1.5 text-[9px] text-indigo-300/60 font-medium italic">
+                  <ExternalLink className="w-3 h-3" />
+                  Follow the &quot;Next Steps&quot; to resolve the issue.
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
