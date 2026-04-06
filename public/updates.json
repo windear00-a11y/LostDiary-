@@ -1,5 +1,11 @@
 [
   {
+    "hash": "5fabe01d468ca02c40fb7d758d963e368a39fff6",
+    "message": "feat: Add copy functionality to debug panel",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-06T11:55:30+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
