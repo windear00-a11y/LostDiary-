@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Sparkles, Send, MessageCircle, User, Bot, Loader2, X, HelpCircle } from 'lucide-react';
+import { Sparkles, Send, MessageCircle, User, Bot, Loader2, X, HelpCircle, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import ReactMarkdown from 'react-markdown';
 
@@ -31,8 +31,14 @@ export function WinDearAssistant({
   const [dailyPrompt, setDailyPrompt] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const inputRef = useRef<HTMLInputElement>(null);
+
   // Initial greeting and daily prompt
   useEffect(() => {
+    // Auto-focus input on load
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
     // Generate daily prompt if entries exist
     if (entries.length > 0) {
       const generatePrompt = async () => {
@@ -66,60 +72,30 @@ export function WinDearAssistant({
   };
 
   return (
-    <section className="bg-white dark:bg-[#1A1A1A] rounded-[2.5rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm overflow-hidden flex flex-col h-[500px] transition-all duration-500">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-50 dark:border-[#2E2E2E] flex items-center justify-between bg-indigo-50/30 dark:bg-indigo-900/5">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none relative overflow-hidden">
-            <Bot className="w-6 h-6 text-white relative z-10" />
-            <motion.div 
-              animate={{ 
-                scale: [1, 1.5, 1],
-                opacity: [0.1, 0.3, 0.1] 
-              }}
-              transition={{ repeat: Infinity, duration: 3 }}
-              className="absolute inset-0 bg-white rounded-full"
-            />
-          </div>
-          <div>
-            <h3 className="text-base sm:text-lg font-serif italic text-gray-900 dark:text-white">WinDear&apos;s Soul</h3>
-            <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-              <span className="text-[9px] sm:text-[10px] uppercase tracking-widest font-bold text-gray-400 italic">Connected to your heart</span>
-            </div>
-          </div>
-        </div>
-        <HelpCircle className="w-5 h-5 text-gray-300 dark:text-gray-600" />
-      </div>
-
+    <section className="bg-white dark:bg-[#1A1A1A] rounded-[2rem] border border-gray-100 dark:border-[#2E2E2E] shadow-sm overflow-hidden flex flex-col h-full transition-all duration-500">
       {/* Chat Area */}
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth scrollbar-hide"
+        className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 scroll-smooth custom-scrollbar"
       >
         {messages.length === 0 && (
-          <div className="h-full flex flex-col items-center justify-center text-center space-y-6">
-            <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center">
-              <MessageCircle className="w-8 h-8 text-indigo-500" />
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex justify-start"
+          >
+            <div className="max-w-[85%] sm:max-w-[75%] flex gap-3 flex-row">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-200 dark:border-indigo-800/30 shadow-sm">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <div className="p-4 rounded-2xl text-sm leading-relaxed bg-gray-50 dark:bg-[#262626] text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-800 shadow-sm">
+                <p className="mb-2">I&apos;m here to help you understand your thoughts. Start by writing anything on your mind.</p>
+                <div className="p-3 bg-white dark:bg-[#1A1A1A] rounded-xl border border-gray-100 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400">
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Example:</span> &quot;I feel stuck and unmotivated lately...&quot;
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <p className="text-base font-medium text-gray-900 dark:text-white">How can I help you today?</p>
-              <p className="text-sm text-gray-500">Choose a prompt or start typing below.</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-sm">
-              {['Analyze my mood', 'Give me a writing prompt', 'Summarize my week'].map((prompt) => (
-                <button
-                  key={prompt}
-                  onClick={() => {
-                    setInput(prompt);
-                  }}
-                  className="p-3 text-xs text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-          </div>
+          </motion.div>
         )}
 
         <AnimatePresence initial={false}>
@@ -155,9 +131,9 @@ export function WinDearAssistant({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <div className={`max-w-[80%] flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${msg.role === 'user' ? 'bg-gray-50 dark:bg-[#262626] border-gray-100 dark:border-gray-800' : 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-100 dark:border-indigo-800/30'}`}>
-                  {msg.role === 'user' ? <User className="w-4 h-4 text-gray-400" /> : <Bot className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />}
+              <div className={`max-w-[85%] sm:max-w-[75%] flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${msg.role === 'user' ? 'bg-gray-50 dark:bg-[#262626] border-gray-100 dark:border-gray-800' : 'bg-gradient-to-br from-indigo-500 to-purple-600 border-indigo-200 dark:border-indigo-800/30 shadow-sm'}`}>
+                  {msg.role === 'user' ? <User className="w-4 h-4 text-gray-400" /> : <Sparkles className="w-4 h-4 text-white" />}
                 </div>
                 <div className={`p-4 rounded-2xl text-sm leading-relaxed ${msg.role === 'user' ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-gray-50 dark:bg-[#262626] text-gray-800 dark:text-gray-200 rounded-tl-none border border-gray-100 dark:border-gray-800 shadow-sm'}`}>
                   {msg.role === 'assistant' ? (
@@ -180,8 +156,8 @@ export function WinDearAssistant({
             className="flex justify-start"
           >
             <div className="flex gap-3 items-center">
-              <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 flex items-center justify-center">
-                <Bot className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 border border-indigo-200 dark:border-indigo-800/30 flex items-center justify-center shadow-sm">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
               <div className="flex gap-1">
                 <div className="w-1.5 h-1.5 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
@@ -194,26 +170,44 @@ export function WinDearAssistant({
       </div>
 
       {/* Input Area */}
-      <div className="p-6 bg-gray-50/50 dark:bg-black/20 border-t border-gray-50 dark:border-[#2E2E2E]">
-        <form onSubmit={handleSend} className="relative">
+      <div className="p-4 sm:p-6 bg-gray-50/50 dark:bg-black/20 border-t border-gray-50 dark:border-[#2E2E2E] flex flex-col gap-3">
+        {messages.length === 0 && (
+          <div className="flex flex-wrap gap-2">
+            {['Analyze my mood', 'What patterns do I have?', 'Help me clear my mind'].map((prompt) => (
+              <button
+                key={prompt}
+                onClick={() => {
+                  setInput(prompt);
+                  if (inputRef.current) inputRef.current.focus();
+                }}
+                className="px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/30 rounded-full hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors whitespace-nowrap"
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+        )}
+        <form onSubmit={handleSend} className="relative flex items-center">
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask WinDear something..."
-            className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-2xl py-4 pl-6 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
+            placeholder="Type your thoughts..."
+            className="w-full bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-2xl py-3.5 pl-5 pr-14 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all shadow-sm"
           />
           <button
             type="submit"
             disabled={!input.trim() || isSubmitting}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-all active:scale-95 shadow-md shadow-indigo-200 dark:shadow-none"
+            className="absolute right-2 p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 disabled:hover:bg-indigo-600 transition-all active:scale-95 shadow-sm"
           >
             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
         </form>
-        <p className="mt-3 text-[10px] text-center text-gray-400 font-medium uppercase tracking-widest">
-          WinDear remembers your past entries to help you better
-        </p>
+        <div className="flex items-center justify-center gap-1.5 mt-1">
+          <Lock className="w-3 h-3 text-gray-400" />
+          <span className="text-[10px] text-gray-400 font-medium">Your data is private & encrypted</span>
+        </div>
       </div>
     </section>
   );

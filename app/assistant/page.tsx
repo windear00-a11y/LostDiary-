@@ -10,7 +10,7 @@ import { AIUsageDashboard } from '@/components/diary/AIUsageDashboard';
 import { useResourceUsage } from '@/hooks/use-resource-usage';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { motion } from 'motion/react';
-import { Sparkles, ArrowLeft, ChevronDown, ChevronUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Sparkles, ArrowLeft, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Menu, X } from 'lucide-react';
 
 export default function AssistantPage() {
   const { user } = useAuth();
@@ -25,7 +25,7 @@ export default function AssistantPage() {
   const [isAssistantLoading, setIsAssistantLoading] = useState(false);
   const [persona, setPersona] = useState({ tone: 'empathetic', useEmojis: true });
   const [showSettings, setShowSettings] = useState(false);
-  const [showHistory, setShowHistory] = useState(true);
+  const [showHistory, setShowHistory] = useState(false); // Hidden by default on mobile
 
   const supabase = createClient();
 
@@ -149,16 +149,25 @@ export default function AssistantPage() {
   };
 
   return (
-    <AppLayout>
-      <div className="flex h-[calc(100vh-100px)] gap-6">
+    <AppLayout hideFAB>
+      <div className="flex h-[calc(100vh-80px)] gap-4 sm:gap-6 relative">
+        {/* Mobile Overlay */}
+        {showHistory && (
+          <div 
+            className="fixed inset-0 bg-black/20 dark:bg-black/40 z-20 md:hidden"
+            onClick={() => setShowHistory(false)}
+          />
+        )}
+
         {/* Sidebar for Chat History */}
-        <div className={`${showHistory ? 'w-64' : 'w-16'} bg-white dark:bg-[#1A1A1A] rounded-[2rem] border border-gray-100 dark:border-[#2E2E2E] p-4 flex flex-col gap-4 transition-all duration-300`}>
+        <div className={`absolute md:relative z-30 h-full bg-white dark:bg-[#1A1A1A] rounded-[2rem] border border-gray-100 dark:border-[#2E2E2E] p-4 flex flex-col gap-4 transition-all duration-300 ${showHistory ? 'translate-x-0 w-64 shadow-2xl md:shadow-none' : '-translate-x-[120%] md:translate-x-0 md:w-16'}`}>
           <button 
             onClick={() => setShowHistory(!showHistory)}
             className="flex items-center justify-between text-sm font-bold text-gray-900 dark:text-white px-2"
           >
             {showHistory && <span>Chat History</span>}
-            {showHistory ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            {showHistory ? <ChevronLeft className="w-4 h-4 hidden md:block" /> : <ChevronRight className="w-4 h-4 hidden md:block" />}
+            {showHistory && <X className="w-4 h-4 md:hidden" onClick={() => setShowHistory(false)} />}
           </button>
           
           {showHistory && (
@@ -203,39 +212,47 @@ export default function AssistantPage() {
         </div>
 
         {/* Main Chat Interface */}
-        <div className="flex-1 max-w-4xl space-y-8 pb-20">
+        <div className="flex-1 w-full max-w-4xl flex flex-col h-full pb-4">
           {/* Header Section */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 text-center sm:text-left">
-            <div className="space-y-2 flex flex-col items-center sm:items-start">
-              <button 
-                onClick={() => router.back()}
-                className="flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600 transition-colors mb-4"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </button>
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
+            <div className="space-y-1 flex flex-col">
+              <div className="flex items-center justify-between w-full sm:w-auto mb-2">
+                <button 
+                  onClick={() => router.back()}
+                  className="flex items-center gap-2 text-sm text-gray-500 hover:text-indigo-600 transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back
+                </button>
+                <button 
+                  onClick={() => setShowHistory(true)}
+                  className="md:hidden p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
+              </div>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 dark:shadow-none">
-                  <Sparkles className="w-5 h-5 text-white" />
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md">
+                  <Sparkles className="w-4 h-4 text-white" />
                 </div>
-                <h1 className="text-3xl font-serif italic text-gray-900 dark:text-[#F9FAFB]">
-                  WinDear Soul
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-[#F9FAFB] tracking-tight">
+                  Understand your thoughts.
                 </h1>
               </div>
-              <p className="text-gray-500 dark:text-gray-400 max-w-md">
-                Talk to the soul of your diary. Ask about your patterns, memories, or just share your heart.
+              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md leading-relaxed">
+                Write freely. Get instant AI insights about your emotions, patterns, and clarity.
               </p>
             </div>
 
-            <div className="w-full sm:w-72 space-y-4">
+            <div className="w-full sm:w-64">
               {/* Collapsible Settings Menu */}
-              <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-[#1A1A1A] rounded-xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm overflow-hidden">
                 <button 
                   onClick={() => setShowSettings(!showSettings)}
-                  className="w-full p-4 flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-[#262626] transition-colors"
+                  className="w-full p-3 flex items-center justify-between text-[10px] font-bold text-gray-500 uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-[#262626] transition-colors"
                 >
                   <span>Assistant Settings</span>
-                  {showSettings ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  {showSettings ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                 </button>
                 
                 {showSettings && (
@@ -268,9 +285,9 @@ export default function AssistantPage() {
 
           {/* Main Chat Interface */}
           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="h-[calc(100vh-350px)] min-h-[500px]"
+            className="flex-1 min-h-0 flex flex-col"
           >
             <WinDearAssistant 
               onSendMessage={handleAssistantMessage}

@@ -19,9 +19,10 @@ interface AppLayoutProps {
   children: React.ReactNode;
   onStartChat?: () => void;
   entries?: any[]; // Optional prop if already fetched
+  hideFAB?: boolean;
 }
 
-export const AppLayout = ({ children, onStartChat, entries: initialEntries }: AppLayoutProps) => {
+export const AppLayout = ({ children, onStartChat, entries: initialEntries, hideFAB = false }: AppLayoutProps) => {
   const { user } = useAuth();
   const isSidebarOpen = useUIStore((state) => state.isSidebarOpen);
   const setSidebarOpen = useUIStore((state) => state.setSidebarOpen);
@@ -81,7 +82,7 @@ export const AppLayout = ({ children, onStartChat, entries: initialEntries }: Ap
         entries={entries}
       />
 
-      <FloatingActionButton />
+      {!hideFAB && <FloatingActionButton />}
 
       <div className="flex flex-1 pt-16 h-screen overflow-hidden">
         {/* Sidebar */}
