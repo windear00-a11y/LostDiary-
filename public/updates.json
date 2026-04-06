@@ -1,5 +1,11 @@
 [
   {
+    "hash": "8a89af23585a14dba22962010ac504ad54da6e5e",
+    "message": "feat: Refine AI persona and chat interface",
+    "author": "Kulwinder Singh",
+    "date": "2026-04-06T13:21:15+05:30"
+  },
+  {
     "hash": "a1b2c3d",
     "message": "feat: add dark mode support across all pages [link:/profile]",
     "author": "windear",
