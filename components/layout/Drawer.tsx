@@ -1,27 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { 
-  X, 
-  User, 
-  Settings, 
-  Bell, 
-  LogOut, 
-  ChevronRight, 
-  Sparkles, 
-  BarChart3,
-  Moon,
-  Sun,
-  ShieldCheck,
-  Cloud,
-  Cpu
-} from 'lucide-react';
+import { Cpu, X, User, Settings, Bell, LogOut, ChevronRight, Sparkles, BarChart3, Moon, Sun, ShieldCheck, Cloud } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter, usePathname } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useResourceUsage } from '@/hooks/use-resource-usage';
 import Image from 'next/image';
+import { logger } from '@/lib/logger';
 
 import { useUIStore } from '@/lib/store/use-ui-store';
 
@@ -34,7 +20,6 @@ export const Drawer = ({ hasNewUpdates, entries = [] }: DrawerProps) => {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const { t } = useTranslation();
   const { aiCalls, entryCount } = useResourceUsage();
   const isOpen = useUIStore((state) => state.isSidebarOpen);
   const setOpen = useUIStore((state) => state.setSidebarOpen);
@@ -70,7 +55,7 @@ export const Drawer = ({ hasNewUpdates, entries = [] }: DrawerProps) => {
   const menuItems = [
     {
       icon: <User className="w-5 h-5" />,
-      label: t('nav.profile', 'Profile'),
+      label: 'Profile',
       path: '/profile',
       onClick: () => {
         router.push('/profile');
@@ -79,7 +64,7 @@ export const Drawer = ({ hasNewUpdates, entries = [] }: DrawerProps) => {
     },
     {
       icon: <Bell className="w-5 h-5" />,
-      label: t('nav.updates', 'Notifications'),
+      label: 'Notifications',
       path: '/updates',
       onClick: () => {
         router.push('/updates');
@@ -89,7 +74,7 @@ export const Drawer = ({ hasNewUpdates, entries = [] }: DrawerProps) => {
     },
     {
       icon: <Settings className="w-5 h-5" />,
-      label: t('profile.accountSettings', 'Settings'),
+      label: 'Settings',
       path: '/settings',
       onClick: () => {
         router.push('/settings');
@@ -125,7 +110,7 @@ export const Drawer = ({ hasNewUpdates, entries = [] }: DrawerProps) => {
                     className="object-cover"
                     referrerPolicy="no-referrer"
                     onError={(e) => {
-                      console.error("Avatar failed to load:", user.user_metadata.avatar_url);
+                      logger.error("Avatar failed to load:", user.user_metadata.avatar_url);
                       (e.target as HTMLImageElement).style.display = 'none';
                       const parent = e.target.parentElement;
                       if (parent) {
@@ -253,38 +238,6 @@ export const Drawer = ({ hasNewUpdates, entries = [] }: DrawerProps) => {
 
           <div className="h-px bg-gray-50 dark:bg-[#1A1A1A] mx-2" aria-hidden="true" />
 
-          {/* Future Ready Section */}
-          <div className="space-y-6">
-            <h3 className="px-3 text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">
-              Insights & Tools
-            </h3>
-            
-            <div className="space-y-1">
-              <button 
-                onClick={() => {
-                  router.push('/assistant');
-                  onClose();
-                }}
-                aria-label="WinDear Soul"
-                className="w-full flex items-center gap-4 p-3 rounded-2xl text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-all"
-              >
-                <Sparkles className="w-5 h-5 text-purple-500" aria-hidden="true" />
-                <span className="text-sm font-medium">WinDear Soul</span>
-              </button>
-              <button 
-                onClick={() => {
-                  router.push('/insights');
-                  onClose();
-                }}
-                aria-label="Insights"
-                className="w-full flex items-center gap-4 p-3 rounded-2xl text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
-              >
-                <BarChart3 className="w-5 h-5 text-indigo-500" aria-hidden="true" />
-                <span className="text-sm font-medium">Insights</span>
-              </button>
-            </div>
-          </div>
-
           {/* Theme Toggle in Drawer for Mobile Visibility */}
           <div className="sm:hidden pt-4 border-t border-gray-50 dark:border-[#1A1A1A]">
             <div className="flex items-center justify-between px-3">
@@ -301,11 +254,11 @@ export const Drawer = ({ hasNewUpdates, entries = [] }: DrawerProps) => {
               signOut();
               onClose();
             }}
-            aria-label={t('dash.logout', 'Logout')}
+            aria-label="Logout"
             className="w-full flex items-center gap-4 p-4 rounded-2xl bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 font-bold text-sm hover:bg-red-100 dark:hover:bg-red-900/20 transition-all active:scale-[0.98]"
           >
             <LogOut className="w-5 h-5" aria-hidden="true" />
-            <span>{t('dash.logout', 'Logout')}</span>
+            <span>Logout</span>
           </button>
         </div>
       </div>

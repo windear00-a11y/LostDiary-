@@ -6,8 +6,7 @@ import { Book, Mail, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
-import { useTranslation } from 'react-i18next';
-import { LanguageSwitcher } from '@/components/ui/language-switcher';
+import { logger } from '@/lib/logger';
 
 function AuthForm() {
   const [email, setEmail] = useState('');
@@ -17,12 +16,11 @@ function AuthForm() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const router = useRouter();
   const { loading } = useAuth();
-  const { t } = useTranslation();
   const supabase = useMemo(() => {
     try {
       return createClient();
     } catch (e) {
-      console.error('Failed to initialize Supabase client:', e);
+      logger.error('Failed to initialize Supabase client:', e);
       return null;
     }
   }, []);
@@ -80,7 +78,7 @@ function AuthForm() {
             className="inline-flex items-center gap-2 text-sm text-[#6B7280] dark:text-gray-400 hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            {t('auth.back')}
+            Back to Home
           </button>
           
           <div className="flex flex-col items-center gap-4">
@@ -88,7 +86,7 @@ function AuthForm() {
               <Book className="w-6 h-6 text-[#6366F1]" />
             </div>
             <h1 className="text-3xl font-serif italic tracking-tight text-[#111827] dark:text-[#F9FAFB]">
-              {isSignUp ? 'Create Account' : t('auth.welcome')}
+              {isSignUp ? 'Create Account' : 'Welcome Back'}
             </h1>
           </div>
         </div>
@@ -99,7 +97,7 @@ function AuthForm() {
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF] dark:text-gray-500" />
               <input
                 type="email"
-                placeholder={t('auth.emailPlaceholder')}
+                placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

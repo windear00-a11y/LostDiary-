@@ -3,15 +3,14 @@
 import { Book, CloudRain, Sparkles, Brain, Heart, ShieldCheck, MessageSquareOff, PenLine, Lightbulb, TrendingUp, Smile, Calendar, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/auth/auth-provider';
-import { useTranslation } from 'react-i18next';
-import { LanguageSwitcher } from '@/components/ui/language-switcher';
-import { FeedbackButton } from '@/components/ui/feedback-button';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
+
+const FeedbackButton = dynamic(() => import('@/components/ui/feedback-button').then(mod => mod.FeedbackButton), { ssr: false });
+const ThemeToggle = dynamic(() => import('@/components/ui/theme-toggle').then(mod => mod.ThemeToggle), { ssr: false });
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
-  const { t } = useTranslation();
   const router = useRouter();
 
   const handleCTA = () => {
@@ -40,20 +39,19 @@ export default function LandingPage() {
         </div>
         <div className="flex items-center gap-4 sm:gap-6">
           <ThemeToggle />
-          <LanguageSwitcher />
           {user && (
             <button 
               onClick={() => router.push('/profile')}
               className="text-sm font-medium text-[#6B7280] hover:text-[#111827] transition-colors"
             >
-              {t('nav.profile', 'Profile')}
+              Profile
             </button>
           )}
           <button 
             onClick={handleCTA}
             className="text-sm font-medium text-[#6B7280] hover:text-[#111827] transition-colors"
           >
-            {user ? t('nav.goToApp') : t('nav.signIn')}
+            {user ? 'Go to App' : 'Sign In'}
           </button>
         </div>
       </nav>
@@ -68,10 +66,10 @@ export default function LandingPage() {
         >
           <div className="space-y-6">
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[#111827] dark:text-[#F9FAFB] leading-[1.1]">
-              {t('hero.mainTitle')}
+              Your AI Diary
             </h1>
             <p className="text-xl md:text-2xl text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed max-w-2xl mx-auto">
-              {t('hero.mainSubtitle')}
+              Understand your thoughts. Write freely. Get instant AI insights about your emotions, patterns, and clarity.
             </p>
           </div>
 
@@ -80,7 +78,7 @@ export default function LandingPage() {
               onClick={handleCTA}
               className="w-full sm:w-auto bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] px-10 py-5 rounded-2xl text-lg font-semibold hover:bg-[#1f2937] dark:hover:bg-white transition-all shadow-xl shadow-indigo-200 dark:shadow-none active:scale-95"
             >
-              {t('hero.startWriting')}
+              Start Writing
             </button>
             <button 
               onClick={() => {
@@ -89,7 +87,7 @@ export default function LandingPage() {
               }}
               className="w-full sm:w-auto bg-white dark:bg-transparent text-[#111827] dark:text-[#F9FAFB] px-10 py-5 rounded-2xl text-lg font-semibold border border-gray-200 dark:border-[#2E2E2E] hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-all active:scale-95"
             >
-              {t('hero.viewDemo')}
+              View Demo
             </button>
           </div>
         </motion.div>
@@ -98,8 +96,8 @@ export default function LandingPage() {
       {/* Problem-Solution Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-8 py-32 border-t border-gray-100">
         <div className="text-center mb-20 space-y-4">
-          <h2 className="text-4xl font-serif italic text-[#111827]">{t('why.title')}</h2>
-          <p className="text-[#6B7280] max-w-md mx-auto">{t('why.subtitle')}</p>
+          <h2 className="text-4xl font-serif italic text-[#111827]">Why WinDear?</h2>
+          <p className="text-[#6B7280] max-w-md mx-auto">Because your thoughts deserve to be understood.</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
@@ -110,8 +108,8 @@ export default function LandingPage() {
             className="bg-gray-50/50 p-12 rounded-[3rem] border border-gray-100 space-y-12"
           >
             <div className="space-y-4">
-              <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#6B7280]">{t('landing.struggle.tag')}</span>
-              <h3 className="text-3xl font-serif italic text-[#111827]">{t('landing.struggle.title')}</h3>
+              <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#6B7280]">THE STRUGGLE</span>
+              <h3 className="text-3xl font-serif italic text-[#111827]">Feeling overwhelmed?</h3>
             </div>
             <div className="space-y-8">
               <div className="flex gap-6 items-start">
@@ -119,8 +117,8 @@ export default function LandingPage() {
                   <CloudRain className="w-5 h-5 text-gray-400" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">{t('landing.struggle.item1.title')}</p>
-                  <p className="text-sm text-[#6B7280]">{t('landing.struggle.item1.desc')}</p>
+                  <p className="font-medium text-[#111827]">Scattered Thoughts</p>
+                  <p className="text-sm text-[#6B7280]">Hard to focus when your mind is racing.</p>
                 </div>
               </div>
               <div className="flex gap-6 items-start">
@@ -128,8 +126,8 @@ export default function LandingPage() {
                   <Brain className="w-5 h-5 text-gray-400" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">{t('landing.struggle.item2.title')}</p>
-                  <p className="text-sm text-[#6B7280]">{t('landing.struggle.item2.desc')}</p>
+                  <p className="font-medium text-[#111827]">Unclear Emotions</p>
+                  <p className="text-sm text-[#6B7280]">Not sure why you feel the way you do.</p>
                 </div>
               </div>
               <div className="flex gap-6 items-start">
@@ -137,8 +135,8 @@ export default function LandingPage() {
                   <MessageSquareOff className="w-5 h-5 text-gray-400" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">{t('landing.struggle.item3.title')}</p>
-                  <p className="text-sm text-[#6B7280]">{t('landing.struggle.item3.desc')}</p>
+                  <p className="font-medium text-[#111827]">No Feedback</p>
+                  <p className="text-sm text-[#6B7280]">Traditional diaries don&apos;t talk back.</p>
                 </div>
               </div>
             </div>
@@ -152,8 +150,8 @@ export default function LandingPage() {
             className="bg-white p-12 rounded-[3rem] shadow-xl shadow-indigo-100/20 border border-indigo-50 space-y-12"
           >
             <div className="space-y-4">
-              <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#6366F1]">{t('landing.relief.tag')}</span>
-              <h3 className="text-3xl font-serif italic text-[#111827]">{t('landing.relief.title')}</h3>
+              <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#6366F1]">THE SOLUTION</span>
+              <h3 className="text-3xl font-serif italic text-[#111827]">Find clarity instantly.</h3>
             </div>
             <div className="space-y-8">
               <div className="flex gap-6 items-start">
@@ -161,8 +159,8 @@ export default function LandingPage() {
                   <Sparkles className="w-5 h-5 text-[#6366F1]" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">{t('landing.relief.item1.title')}</p>
-                  <p className="text-sm text-[#6B7280]">{t('landing.relief.item1.desc')}</p>
+                  <p className="font-medium text-[#111827]">AI Insights</p>
+                  <p className="text-sm text-[#6B7280]">Get immediate feedback on your entries.</p>
                 </div>
               </div>
               <div className="flex gap-6 items-start">
@@ -170,8 +168,8 @@ export default function LandingPage() {
                   <Heart className="w-5 h-5 text-[#6366F1]" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">{t('landing.relief.item2.title')}</p>
-                  <p className="text-sm text-[#6B7280]">{t('landing.relief.item2.desc')}</p>
+                  <p className="font-medium text-[#111827]">Emotional Tracking</p>
+                  <p className="text-sm text-[#6B7280]">Understand your mood patterns over time.</p>
                 </div>
               </div>
               <div className="flex gap-6 items-start">
@@ -179,8 +177,8 @@ export default function LandingPage() {
                   <ShieldCheck className="w-5 h-5 text-[#6366F1]" />
                 </div>
                 <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">{t('landing.relief.item3.title')}</p>
-                  <p className="text-sm text-[#6B7280]">{t('landing.relief.item3.desc')}</p>
+                  <p className="font-medium text-[#111827]">Private & Secure</p>
+                  <p className="text-sm text-[#6B7280]">Your data is encrypted and safe.</p>
                 </div>
               </div>
             </div>
@@ -191,8 +189,8 @@ export default function LandingPage() {
       {/* How it Works Section */}
       <section id="how-it-works" className="relative z-10 max-w-7xl mx-auto px-8 py-32">
         <div className="text-center mb-20 space-y-4">
-          <h2 className="text-4xl font-serif italic text-[#111827]">{t('how.title')}</h2>
-          <p className="text-[#6B7280] max-w-md mx-auto">{t('how.subtitle')}</p>
+          <h2 className="text-4xl font-serif italic text-[#111827]">How it Works</h2>
+          <p className="text-[#6B7280] max-w-md mx-auto">Three simple steps to a clearer mind.</p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           <motion.div 
@@ -205,8 +203,8 @@ export default function LandingPage() {
               <PenLine className="w-6 h-6 text-gray-400 group-hover:text-[#6366F1] transition-colors duration-500" />
             </div>
             <div className="space-y-3">
-              <h3 className="text-xl font-serif italic text-[#111827]">{t('landing.how.step1.title')}</h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">{t('landing.how.step1.desc')}</p>
+              <h3 className="text-xl font-serif italic text-[#111827]">1. Write</h3>
+              <p className="text-sm text-[#6B7280] leading-relaxed">Pour your thoughts out freely.</p>
             </div>
           </motion.div>
           <motion.div 
@@ -220,8 +218,8 @@ export default function LandingPage() {
               <Lightbulb className="w-6 h-6 text-gray-400 group-hover:text-[#6366F1] transition-colors duration-500" />
             </div>
             <div className="space-y-3">
-              <h3 className="text-xl font-serif italic text-[#111827]">{t('landing.how.step2.title')}</h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">{t('landing.how.step2.desc')}</p>
+              <h3 className="text-xl font-serif italic text-[#111827]">2. Analyze</h3>
+              <p className="text-sm text-[#6B7280] leading-relaxed">AI detects patterns and emotions.</p>
             </div>
           </motion.div>
           <motion.div 
@@ -235,8 +233,8 @@ export default function LandingPage() {
               <TrendingUp className="w-6 h-6 text-gray-400 group-hover:text-[#6366F1] transition-colors duration-500" />
             </div>
             <div className="space-y-3">
-              <h3 className="text-xl font-serif italic text-[#111827]">{t('landing.how.step3.title')}</h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">{t('landing.how.step3.desc')}</p>
+              <h3 className="text-xl font-serif italic text-[#111827]">3. Grow</h3>
+              <p className="text-sm text-[#6B7280] leading-relaxed">Gain insights and improve your well-being.</p>
             </div>
           </motion.div>
         </div>
@@ -245,8 +243,8 @@ export default function LandingPage() {
       {/* Features Section */}
       <div className="mt-48 max-w-5xl mx-auto">
         <div className="text-center mb-16 space-y-4">
-          <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#6366F1]">{t('landing.features.tag')}</span>
-          <h2 className="text-4xl font-serif italic text-[#111827]">{t('features.title')}</h2>
+          <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#6366F1]">FEATURES</span>
+          <h2 className="text-4xl font-serif italic text-[#111827]">Everything you need.</h2>
         </div>
         <div className="grid md:grid-cols-2 gap-12">
           <div className="flex gap-6 items-start">
@@ -255,10 +253,10 @@ export default function LandingPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <h3 className="font-medium text-[#111827]">{t('landing.features.item1.title')}</h3>
+                <h3 className="font-medium text-[#111827]">AI Assistant</h3>
                 <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-widest rounded-full">New</span>
               </div>
-              <p className="text-sm text-[#6B7280] leading-relaxed">{t('landing.features.item1.desc')}</p>
+              <p className="text-sm text-[#6B7280] leading-relaxed">Chat with your diary to explore your thoughts deeper.</p>
             </div>
           </div>
           <div className="flex gap-6 items-start">
@@ -267,10 +265,10 @@ export default function LandingPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <h3 className="font-medium text-[#111827]">{t('landing.features.item2.title')}</h3>
+                <h3 className="font-medium text-[#111827]">Mood Tracking</h3>
                 <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-widest rounded-full">New</span>
               </div>
-              <p className="text-sm text-[#6B7280] leading-relaxed">{t('landing.features.item2.desc')}</p>
+              <p className="text-sm text-[#6B7280] leading-relaxed">Automatically track your mood based on what you write.</p>
             </div>
           </div>
           <div className="flex gap-6 items-start">
@@ -278,8 +276,8 @@ export default function LandingPage() {
               <Calendar className="w-5 h-5 text-[#6366F1]" />
             </div>
             <div className="space-y-2">
-              <h3 className="font-medium text-[#111827]">{t('landing.features.item3.title')}</h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">{t('landing.features.item3.desc')}</p>
+              <h3 className="font-medium text-[#111827]">Daily Prompts</h3>
+              <p className="text-sm text-[#6B7280] leading-relaxed">Never stare at a blank page again.</p>
             </div>
           </div>
           <div className="flex gap-6 items-start">
@@ -287,8 +285,8 @@ export default function LandingPage() {
               <ShieldCheck className="w-5 h-5 text-[#6366F1]" />
             </div>
             <div className="space-y-2">
-              <h3 className="font-medium text-[#111827]">{t('landing.features.item4.title')}</h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">{t('landing.features.item4.desc')}</p>
+              <h3 className="font-medium text-[#111827]">Secure Storage</h3>
+              <p className="text-sm text-[#6B7280] leading-relaxed">Your data is safe and private.</p>
             </div>
           </div>
         </div>
@@ -302,23 +300,23 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="space-y-4">
-          <h2 className="text-3xl font-serif italic text-[#111827]">{t('privacy.title')}</h2>
+          <h2 className="text-3xl font-serif italic text-[#111827]">Your data is private & encrypted.</h2>
           <p className="text-[#6B7280] max-w-lg mx-auto leading-relaxed">
-            {t('privacy.subtitle')}
+            We believe your thoughts belong to you.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left max-w-2xl mx-auto">
           <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
             <div className="w-2 h-2 bg-green-400 rounded-full" />
-            <span className="text-sm font-medium text-[#111827]">{t('landing.privacy.item1')}</span>
+            <span className="text-sm font-medium text-[#111827]">No data sharing</span>
           </div>
           <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
             <div className="w-2 h-2 bg-green-400 rounded-full" />
-            <span className="text-sm font-medium text-[#111827]">{t('landing.privacy.item2')}</span>
+            <span className="text-sm font-medium text-[#111827]">Secure encryption</span>
           </div>
         </div>
         <p className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280] font-medium">
-          {t('landing.privacy.note')}
+          Read our privacy policy for more details.
         </p>
       </div>
 
@@ -334,7 +332,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="text-5xl md:text-6xl font-serif italic tracking-tight text-[#111827]"
           >
-            {t('cta.title')}
+            Ready to start?
           </motion.h2>
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -348,14 +346,14 @@ export default function LandingPage() {
                 onClick={handleCTA}
                 className="bg-[#111827] text-white px-14 py-6 rounded-full text-lg font-medium hover:bg-[#1f2937] transition-all shadow-2xl shadow-gray-200 active:scale-95"
               >
-                {t('cta.button')}
+                Start Writing Now
               </button>
               <p className="text-[10px] uppercase tracking-[0.3em] text-[#6B7280] font-bold">
-                {t('landing.cta.note1')}
+                Free to use.
               </p>
             </div>
             <p className="text-sm text-[#6B7280] font-serif italic tracking-wide">
-              {t('landing.cta.note2')}
+              Join thousands of others finding clarity.
             </p>
           </motion.div>
         </div>
@@ -369,7 +367,7 @@ export default function LandingPage() {
           <button onClick={() => router.push('/support')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Support</button>
         </div>
         <p className="text-[10px] uppercase tracking-[0.4em] text-[#6B7280] opacity-50">
-          &copy; {new Date().getFullYear()} {t('landing.footer')}
+          &copy; {new Date().getFullYear()} WinDear
         </p>
       </footer>
       <FeedbackButton />

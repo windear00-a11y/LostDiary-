@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { Loader2, ArrowUp, Plus, Lightbulb } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
+import { logger } from '@/lib/logger';
 
 export function IdeasTab() {
   const { user } = useAuth();
@@ -12,7 +13,7 @@ export function IdeasTab() {
   try {
     supabase = createClient();
   } catch (e) {
-    console.error('Failed to initialize Supabase client:', e);
+    logger.error('Failed to initialize Supabase client:', e);
     supabase = null;
   }
   const [ideas, setIdeas] = useState<any[]>([]);

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
+import { logger } from '@/lib/logger';
 
 export function useResourceUsage() {
   const { user } = useAuth();
@@ -22,7 +23,7 @@ export function useResourceUsage() {
       if (error) throw error;
       setEntryCount(count || 0);
     } catch (err) {
-      console.error('Error fetching entry count:', err);
+      logger.error('Error fetching entry count:', err);
     } finally {
       setIsLoading(false);
     }

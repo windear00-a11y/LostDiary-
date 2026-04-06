@@ -2,11 +2,12 @@
 import { Sparkles, Loader2, Info, Mic, MicOff, Languages, Lightbulb, Image as ImageIcon, Link as LinkIcon, X as XIcon, Upload, Bold, Italic, List, ListOrdered, Type as TypeIcon, HelpCircle, Wand2, ArrowRight, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import React, { RefObject, useState, useEffect, useCallback } from 'react';
-import { checkSpelling, generateInlineSuggestions } from '@/lib/ai';
+import { checkSpelling, generateInlineSuggestions } from '@/ai-core/ai';
 import { motion, AnimatePresence } from 'motion/react';
+import { logger } from '@/lib/logger';
 
 import { useDiaryStore, useEntries } from '@/lib/store/use-diary-store';
-import { useUIState } from '@/lib/store/use-ui-store';
+import { useUIStore } from '@/lib/store/use-ui-store';
 
 export const DiaryInput = React.memo(function DiaryInput({
   newEntry,
@@ -14,7 +15,6 @@ export const DiaryInput = React.memo(function DiaryInput({
   handleSubmit,
   isSubmitting,
   submitError,
-  t,
   textareaRef,
   showSuccess,
   imageUrl,
@@ -25,7 +25,6 @@ export const DiaryInput = React.memo(function DiaryInput({
   handleSubmit: (e: React.FormEvent) => Promise<void>;
   isSubmitting: boolean;
   submitError: string | null;
-  t: (key: string) => string;
   textareaRef: RefObject<HTMLTextAreaElement | null>;
   showSuccess: boolean;
   imageUrl: string;
@@ -164,12 +163,12 @@ export const DiaryInput = React.memo(function DiaryInput({
   const handleGetPrompt = async () => {
     setIsGeneratingPrompt(true);
     try {
-      const { generateDailyPrompt } = await import('@/lib/ai');
+      const { generateDailyPrompt } = await import('@/ai-core/ai');
       const prompt = await generateDailyPrompt(entries);
       setNewEntry(prompt);
       textareaRef.current?.focus();
     } catch (error) {
-      console.error('Prompt error:', error);
+      logger.error('Prompt error:', error);
     } finally {
       setIsGeneratingPrompt(false);
     }
@@ -179,13 +178,13 @@ export const DiaryInput = React.memo(function DiaryInput({
     if (!newEntry.trim()) return;
     setIsTranslating(true);
     try {
-      const { translateText } = await import('@/lib/ai');
+      const { translateText } = await import('@/ai-core/ai');
       const translated = await translateText(newEntry, 'en');
       if (translated && translated !== newEntry) {
         setNewEntry(translated);
       }
     } catch (error) {
-      console.error('Translation error:', error);
+      logger.error('Translation error:', error);
     } finally {
       setIsTranslating(false);
     }
@@ -223,7 +222,7 @@ export const DiaryInput = React.memo(function DiaryInput({
       rec.start();
       setRecognition(rec);
     } catch (e) {
-      console.error("Failed to start recognition:", e);
+      logger.error("Failed to start recognition:", e);
     }
   }, [isListening, setNewEntry]);
 
@@ -527,12 +526,12 @@ export const DiaryInput = React.memo(function DiaryInput({
             <div className="h-4 w-[1px] bg-gray-200 dark:bg-gray-800 mx-2" />
 
             <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400 whitespace-nowrap mr-2">
-              {t('dash.prompts')}
+              Prompts
             </span>
             {[
-              { id: 'gratitude', label: t('dash.prompt.gratitude'), text: t('dash.prompt.gratitude.text') },
-              { id: 'goals', label: t('dash.prompt.goals'), text: t('dash.prompt.goals.text') },
-              { id: 'reflection', label: t('dash.prompt.reflection'), text: t('dash.prompt.reflection.text') },
+              { id: 'gratitude', label: 'Gratitude', text: 'Today I am grateful for...' },
+              { id: 'goals', label: 'Goals', text: 'My main goal for today is...' },
+              { id: 'reflection', label: 'Reflection', text: 'A lesson I learned today was...' },
             ].map((prompt) => (
               <button
                 key={prompt.id}
@@ -657,8 +656,8 @@ export const DiaryInput = React.memo(function DiaryInput({
               ref={textareaRef}
               value={newEntry}
               onChange={(e) => setNewEntry(e.target.value)}
-              placeholder={t('dash.placeholder')}
-              aria-label={t('dash.placeholder')}
+              placeholder="What's on your mind?"
+              aria-label="What's on your mind?"
               className={`w-full min-h-[240px] pt-6 px-6 pb-32 sm:pb-20 border-none rounded-[2.5rem] text-base focus:ring-2 transition-all outline-none resize-none text-[#111827] dark:text-[#F9FAFB] bg-gray-50 dark:bg-[#262626] focus:ring-indigo-100 dark:focus:ring-indigo-900/30 placeholder:text-gray-400 dark:placeholder:text-gray-600`}
             />
 
@@ -668,7 +667,7 @@ export const DiaryInput = React.memo(function DiaryInput({
               <div className="flex items-center gap-2 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 pointer-events-auto shadow-sm">
                 <div className={`w-2 h-2 rounded-full ${isListening ? 'bg-red-500 animate-ping' : newEntry.length > 0 ? 'bg-green-400 animate-pulse' : 'bg-gray-300'}`} aria-hidden="true" />
                 <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500 dark:text-gray-400">
-                  {isListening ? "Listening..." : newEntry.length > 0 ? t('dash.writingMood') : t('dash.readyToListen')}
+                  {isListening ? "Listening..." : newEntry.length > 0 ? "Writing..." : "Ready to listen"}
                 </span>
               </div>
 
@@ -687,7 +686,7 @@ export const DiaryInput = React.memo(function DiaryInput({
                     </button>
                   )}
                   <span className="text-[10px] uppercase tracking-widest font-bold text-gray-400 bg-white/80 dark:bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-gray-100 dark:border-white/10 shadow-sm">
-                    {newEntry.length} {t('dash.chars')}
+                    {newEntry.length} chars
                   </span>
                 </div>
                 <motion.button
@@ -741,13 +740,13 @@ export const DiaryInput = React.memo(function DiaryInput({
           <button
             type="submit"
             disabled={isSubmitting || (!newEntry.trim() && !showSuccess)}
-            aria-label={isSubmitting ? t('dash.reflecting') : (showSuccess ? 'Saved!' : t('dash.save'))}
+            aria-label={isSubmitting ? "Reflecting..." : (showSuccess ? 'Saved!' : "Save Entry")}
             className={`group flex items-center gap-3 px-10 py-5 rounded-full text-base font-semibold transition-all duration-300 hover:shadow-lg active:scale-95 disabled:opacity-50 ${showSuccess ? 'bg-green-500 text-white' : 'bg-slate-900 dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] hover:bg-slate-800 dark:hover:bg-white'}`}
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" aria-hidden="true" />
-                {t('dash.reflecting')}
+                Reflecting...
               </>
             ) : showSuccess ? (
               <>
@@ -756,7 +755,7 @@ export const DiaryInput = React.memo(function DiaryInput({
               </>
             ) : (
               <>
-                {t('dash.save')}
+                Save Entry
                 <Sparkles className="w-5 h-5 group-hover:scale-110 transition-transform" aria-hidden="true" />
               </>
             )}

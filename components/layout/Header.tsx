@@ -3,10 +3,7 @@
 import React from 'react';
 import { Book, Menu, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useTranslation } from 'react-i18next';
-import { LanguageSwitcher } from '@/components/ui/language-switcher';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { HeaderAssistant } from './HeaderAssistant';
 
 import { useUIStore } from '@/lib/store/use-ui-store';
 
@@ -17,7 +14,6 @@ interface HeaderProps {
 
 export const Header = ({ onStartChat, hasNewUpdates }: HeaderProps) => {
   const router = useRouter();
-  const { t } = useTranslation();
   const setSidebarOpen = useUIStore((state) => state.setSidebarOpen);
 
   return (
@@ -38,29 +34,21 @@ export const Header = ({ onStartChat, hasNewUpdates }: HeaderProps) => {
 
         {/* Center: Assistant Suggestion Bar */}
         <div className="flex justify-center min-w-0">
-          {onStartChat && (
-            <HeaderAssistant onStartChat={onStartChat} t={t} />
-          )}
         </div>
 
         {/* Right Side: Actions & Menu */}
         <div className="flex items-center gap-1.5 sm:gap-4 shrink-0 justify-end">
-          {/* Language Switcher (Desktop) */}
-          <div className="hidden sm:block">
-            <LanguageSwitcher />
-          </div>
-
           {/* Theme Toggle (Desktop) */}
           <div className="hidden sm:block">
             <ThemeToggle />
           </div>
 
-          {/* Hamburger Menu */}
+          {/* Hamburger Menu (Mobile Only) */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="relative p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] rounded-full transition-colors"
-            aria-label={t('common.openMenu', 'Open Menu')}
-            title={t('common.openMenu', 'Open Menu')}
+            className="sm:hidden relative p-1.5 sm:p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] rounded-full transition-colors"
+            aria-label="Open Menu"
+            title="Open Menu"
           >
             <Menu className="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
             {hasNewUpdates && (

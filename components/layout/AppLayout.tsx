@@ -1,19 +1,20 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Header } from './Header';
-import { Drawer } from './Drawer';
-import { Sidebar } from './Sidebar';
-import { RightPanel } from './RightPanel';
-import { FloatingActionButton } from '@/components/ui/floating-action-button';
-import { BottomSheet } from '@/components/ui/bottom-sheet';
-import { WinDearSoul } from '@/components/ai/WinDearSoul';
+import dynamic from 'next/dynamic';
 import { useUpdates } from '@/hooks/use-updates';
 import { createClient } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
+import { logger } from '@/lib/logger';
 
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { useDiaryStore } from '@/lib/store/use-diary-store';
+
+// Dynamic imports for layout components
+const Header = dynamic(() => import('./Header').then(mod => mod.Header), { ssr: false });
+const Drawer = dynamic(() => import('./Drawer').then(mod => mod.Drawer), { ssr: false });
+const Sidebar = dynamic(() => import('./Sidebar').then(mod => mod.Sidebar), { ssr: false });
+const FloatingActionButton = dynamic(() => import('@/components/ui/floating-action-button').then(mod => mod.FloatingActionButton), { ssr: false });
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -49,7 +50,7 @@ export const AppLayout = ({ children, onStartChat, entries: initialEntries, hide
       if (error) throw error;
       setGlobalEntries(data || []);
     } catch (err) {
-      console.error('Error fetching entries in AppLayout:', err);
+      logger.error('Error fetching entries in AppLayout:', err);
     } finally {
       setIsLoading(false);
     }
@@ -86,26 +87,14 @@ export const AppLayout = ({ children, onStartChat, entries: initialEntries, hide
 
       <div className="flex flex-1 pt-16 h-screen overflow-hidden">
         {/* Sidebar */}
-        <Sidebar isOpen={true} onClose={() => {}} />
+        <Sidebar />
 
         {/* Main Content */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-12">
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-12 transition-all duration-300">
           <div className="max-w-3xl mx-auto">
             {children}
           </div>
         </main>
-
-        {/* Right Panel */}
-        <RightPanel />
-      </div>
-
-      {/* Mobile AI Assistant Bottom Sheet */}
-      <div className="xl:hidden">
-        <BottomSheet isOpen={isAIAssistantOpen} onClose={() => setAIAssistantOpen(false)}>
-          <div className="h-[70vh]">
-            <WinDearSoul />
-          </div>
-        </BottomSheet>
       </div>
     </div>
   );

@@ -3,7 +3,6 @@
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { logger } from '@/lib/logger';
-import { serializeError } from '@/lib/serializeError';
 
 interface Props {
   children: ReactNode;
@@ -27,27 +26,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     logger.error('Uncaught error:', error, errorInfo);
-    
-    // Log to /api/log
-    try {
-      const serialized = serializeError(error);
-      fetch('/api/log', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'ERROR',
-          message: serialized.message || 'React Error Boundary caught an error',
-          timestamp: new Date().toISOString(),
-          url: window.location.href,
-          stack: serialized.stack,
-          name: serialized.name || 'ReactErrorBoundary',
-          metadata: { componentStack: errorInfo.componentStack }
-        }),
-        keepalive: true
-      }).catch(() => {});
-    } catch (e) {
-      // Ignore fetch errors
-    }
   }
 
   private handleRetry = () => {

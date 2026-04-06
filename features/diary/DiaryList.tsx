@@ -1,8 +1,8 @@
 'use client';
 import React, { useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { EntryCard } from '@/components/diary/entry-card';
-import { DiarySkeleton } from '@/components/diary/skeleton-card';
+import { EntryCard } from './entry-card';
+import { DiarySkeleton } from './skeleton-card';
 import { PenLine, Tag, Filter, LayoutGrid, List, Search, X, Download, Folder, ChevronDown, ChevronUp, Pin } from 'lucide-react';
 
 import { useDiaryStore, useEntries } from '@/lib/store/use-diary-store';
@@ -13,14 +13,12 @@ export const DiaryList = React.memo(function DiaryList({
   deleteEntry,
   onEdit,
   onPin,
-  t,
   handleStartWriting,
 }: {
   isLoadingEntries: boolean;
   deleteEntry: (id: string) => Promise<void>;
   onEdit?: (entry: any) => void;
   onPin?: (id: string) => void;
-  t: (key: string) => string;
   handleStartWriting: () => void;
 }) {
   const entries = useEntries();
@@ -127,9 +125,9 @@ export const DiaryList = React.memo(function DiaryList({
     <section className="space-y-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 text-center md:text-left">
         <div className="space-y-1">
-          <h2 className="text-3xl font-serif italic tracking-tight text-slate-900 dark:text-[#F9FAFB]">{t('dash.past')}</h2>
+          <h2 className="text-3xl font-serif italic tracking-tight text-slate-900 dark:text-[#F9FAFB]">Past Entries</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-            {filteredEntries.length} {t('dash.entries')} {selectedTag !== 'All' && `in #${selectedTag}`}
+            {filteredEntries.length} entries {selectedTag !== 'All' && `in #${selectedTag}`}
           </p>
         </div>
 
@@ -243,7 +241,6 @@ export const DiaryList = React.memo(function DiaryList({
                       deleteEntry={deleteEntry} 
                       onEdit={onEdit}
                       onPin={onPin}
-                      t={t} 
                       onTryNow={handleStartWriting} 
                       isOpen={openEntryId === entry.id}
                       onToggle={() => toggleEntry(entry.id)}
@@ -263,14 +260,14 @@ export const DiaryList = React.memo(function DiaryList({
             className="flex flex-col items-center justify-center py-32 space-y-6 text-center col-span-full"
           >
             <div className="space-y-2">
-              <h3 className="text-2xl font-medium text-gray-900 dark:text-gray-100">{t('dash.empty.title')}</h3>
-              <p className="text-gray-500 dark:text-gray-400 max-w-xs mx-auto text-sm">{t('dash.empty.subtitle')}</p>
+              <h3 className="text-2xl font-medium text-gray-900 dark:text-gray-100">Your diary is empty</h3>
+              <p className="text-gray-500 dark:text-gray-400 max-w-xs mx-auto text-sm">Start writing your thoughts to see them here.</p>
             </div>
             <button
               onClick={handleStartWriting}
               className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-full text-sm font-semibold transition-all active:scale-95 shadow-lg shadow-indigo-200 dark:shadow-none"
             >
-              {t('dash.empty.cta')}
+              Write your first entry
             </button>
           </motion.div>
         )}

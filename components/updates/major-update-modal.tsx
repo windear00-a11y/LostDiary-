@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, Rocket, Zap, Sparkles } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
+import { logger } from '@/lib/logger';
 
 export function MajorUpdateModal() {
   const [update, setUpdate] = useState<any>(null);
@@ -14,7 +15,7 @@ export function MajorUpdateModal() {
   try {
     supabase = createClient();
   } catch (e) {
-    console.error('Failed to initialize Supabase client:', e);
+    logger.error('Failed to initialize Supabase client:', e);
     supabase = null;
   }
 

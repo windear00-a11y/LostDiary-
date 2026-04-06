@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase';
 import { useRouter, usePathname } from 'next/navigation';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { Loader2, AlertCircle } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -24,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       return createClient();
     } catch (e) {
-      console.error('AuthProvider: Failed to initialize Supabase client:', e);
+      logger.error('AuthProvider: Failed to initialize Supabase client:', e);
       return null;
     }
   }, []);
@@ -39,13 +40,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
-          console.error('AuthProvider: Error getting session:', error.message);
+          logger.error('AuthProvider: Error getting session:', error.message);
           setUser(null);
         } else {
           setUser(session?.user ?? null);
         }
       } catch (err) {
-        console.error('AuthProvider: Unexpected error in getSession:', err);
+        logger.error('AuthProvider: Unexpected error in getSession:', err);
         setUser(null);
       } finally {
         setLoading(false);
@@ -55,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      console.log('AuthProvider: Auth state changed:', event);
+      logger.log('AuthProvider: Auth state changed:', event);
       setUser(session?.user ?? null);
       setLoading(false);
     });

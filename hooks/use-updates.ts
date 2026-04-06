@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 export interface UpdateItem {
   hash: string;
@@ -53,7 +54,7 @@ export function useUpdates(options?: { autoRefreshInterval?: number }) {
           readUpdates = JSON.parse(stored);
         }
       } catch (e) {
-        console.warn('Failed to parse readUpdates from localStorage', e);
+        logger.warn('Failed to parse readUpdates from localStorage', e);
       }
 
       // Process and mark as "isNew"
@@ -70,7 +71,7 @@ export function useUpdates(options?: { autoRefreshInterval?: number }) {
 
       setUpdates(processedUpdates);
     } catch (err: any) {
-      console.error('Error fetching updates:', err);
+      logger.error('Error fetching updates:', err);
       setError(err.message || 'An unexpected error occurred while fetching updates');
       if (!silent) setUpdates([]);
     } finally {
@@ -103,7 +104,7 @@ export function useUpdates(options?: { autoRefreshInterval?: number }) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(readUpdates));
         }
       } catch (e) {
-        console.error('Failed to save read status to localStorage', e);
+        logger.error('Failed to save read status to localStorage', e);
       }
       
       return newUpdates;
@@ -118,7 +119,7 @@ export function useUpdates(options?: { autoRefreshInterval?: number }) {
         const allHashes = newUpdates.map(u => u.hash);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(allHashes));
       } catch (e) {
-        console.error('Failed to save read status to localStorage', e);
+        logger.error('Failed to save read status to localStorage', e);
       }
       
       return newUpdates;

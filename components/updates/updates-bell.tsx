@@ -5,6 +5,7 @@ import { Bell } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase';
 import { useAuth } from '@/components/auth/auth-provider';
+import { logger } from '@/lib/logger';
 
 export function UpdatesBell() {
   const [unreadCount, setUnreadCount] = useState(0);
@@ -14,7 +15,7 @@ export function UpdatesBell() {
   try {
     supabase = createClient();
   } catch (e) {
-    console.error('Failed to initialize Supabase client:', e);
+    logger.error('Failed to initialize Supabase client:', e);
     supabase = null;
   }
 

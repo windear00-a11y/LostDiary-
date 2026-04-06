@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { createClient } from '@/lib/supabase';
-import { useTranslation } from 'react-i18next';
+import { logger } from '@/lib/logger';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -12,7 +12,6 @@ interface FeedbackModalProps {
 }
 
 export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
-  const { t } = useTranslation();
   const [rating, setRating] = useState<'loved' | 'improvement' | null>(null);
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,7 +20,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   try {
     supabase = createClient();
   } catch (e) {
-    console.error('Failed to initialize Supabase client:', e);
+    logger.error('Failed to initialize Supabase client:', e);
     supabase = null;
   }
 
@@ -64,12 +63,12 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           >
             {isSuccess ? (
               <div className="text-center py-8">
-                <p className="text-xl font-serif italic text-[#111827] dark:text-[#F9FAFB]">{t('feedback.success')}</p>
+                <p className="text-xl font-serif italic text-[#111827] dark:text-[#F9FAFB]">Thank you for your feedback!</p>
               </div>
             ) : (
               <>
                 <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-serif italic text-[#111827] dark:text-[#F9FAFB]">{t('feedback.title')}</h2>
+                  <h2 className="text-xl font-serif italic text-[#111827] dark:text-[#F9FAFB]">Send Feedback</h2>
                   <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-[#262626] rounded-full">
                     <X className="w-5 h-5 text-gray-400 dark:text-gray-500" />
                   </button>
@@ -99,7 +98,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
-                  placeholder={t('feedback.placeholder')}
+                  placeholder="Tell us what you think..."
                   className="w-full p-4 bg-gray-50 dark:bg-[#262626] border-none rounded-2xl text-sm focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 text-[#111827] dark:text-[#F9FAFB] transition-all outline-none resize-none"
                   rows={4}
                 />
@@ -108,7 +107,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   disabled={!rating || isSubmitting}
                   className="w-full bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] py-4 rounded-2xl font-medium hover:bg-[#1f2937] dark:hover:bg-white transition-all disabled:opacity-50"
                 >
-                  {t('feedback.submit')}
+                  Submit Feedback
                 </button>
               </>
             )}
