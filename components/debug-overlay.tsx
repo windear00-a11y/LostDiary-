@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Terminal, Copy, X, Minimize2, Maximize2, Search, Filter, Sparkles, Loader2, Check } from "lucide-react";
+import { Terminal, Copy, X, Minimize2, Maximize2, Search, Filter, Sparkles, Loader2, Check, ExternalLink } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 type LogType = "INFO" | "ERROR" | "WARN" | "API";
 type ErrorCategory = "NETWORK" | "AUTH" | "CODE" | "UNKNOWN";
@@ -23,6 +24,7 @@ export default function DebugOverlay() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [fixCopied, setFixCopied] = useState(false);
   const actionsRef = useRef<string[]>([]);
 
   const addLog = useCallback((entry: Omit<LogEntry, "time" | "actions">) => {
@@ -170,6 +172,13 @@ export default function DebugOverlay() {
     }
   };
 
+  const copyFix = () => {
+    if (!analysis) return;
+    navigator.clipboard.writeText(analysis);
+    setFixCopied(true);
+    setTimeout(() => setFixCopied(false), 2000);
+  };
+
   const filteredLogs = logs.filter(l => {
     const matchesFilter = filter === "ALL" || l.type === filter;
     const matchesSearch = l.message.toLowerCase().includes(search.toLowerCase()) || 
@@ -255,14 +264,43 @@ export default function DebugOverlay() {
 
       {/* Analysis Section */}
       {analysis && (
-        <div className="m-3 p-3 bg-indigo-900/20 border border-indigo-500/30 rounded-xl relative overflow-hidden group">
-          <button onClick={() => setAnalysis(null)} className="absolute top-2 right-2 p-1 hover:bg-white/10 rounded-full"><X className="w-3 h-3" /></button>
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">AI Analysis</span>
+        <div className="m-3 p-4 bg-indigo-900/20 border border-indigo-500/30 rounded-xl relative overflow-hidden group">
+          <div className="absolute top-2 right-2 flex items-center gap-1">
+            <button 
+              onClick={copyFix} 
+              className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${fixCopied ? 'bg-emerald-500/20 text-emerald-400' : 'hover:bg-white/10 text-gray-400'}`}
+              title="Copy Fix"
+            >
+              {fixCopied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+            </button>
+            <button onClick={() => setAnalysis(null)} className="p-1.5 hover:bg-white/10 rounded-lg text-gray-400"><X className="w-3 h-3" /></button>
           </div>
-          <div className="text-xs text-gray-300 whitespace-pre-wrap max-h-40 overflow-auto custom-scrollbar leading-relaxed">
-            {analysis}
+          
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-300">AI Debug Analysis</span>
+          </div>
+
+          <div className="text-[11px] text-gray-300 max-h-60 overflow-auto custom-scrollbar leading-relaxed prose prose-invert prose-xs max-w-none">
+            <ReactMarkdown
+              components={{
+                h3: ({ children }) => <h3 className="text-[10px] font-bold uppercase tracking-wider text-indigo-400 mt-4 mb-2 first:mt-0">{children}</h3>,
+                code: ({ children }) => <code className="bg-black/40 px-1 py-0.5 rounded text-indigo-300 font-mono">{children}</code>,
+                pre: ({ children }) => <pre className="bg-black/60 p-3 rounded-lg my-2 overflow-x-auto border border-white/5 font-mono text-[10px]">{children}</pre>,
+                ul: ({ children }) => <ul className="list-disc pl-4 space-y-1 my-2">{children}</ul>,
+                li: ({ children }) => <li className="text-gray-400">{children}</li>,
+                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>
+              }}
+            >
+              {analysis}
+            </ReactMarkdown>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-indigo-500/20 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-[9px] text-indigo-300/60 font-medium italic">
+              <ExternalLink className="w-3 h-3" />
+              Follow the &quot;Next Steps&quot; to resolve the issue.
+            </div>
           </div>
         </div>
       )}
@@ -277,7 +315,7 @@ export default function DebugOverlay() {
         ) : (
           filteredLogs.map((log, i) => (
             <div key={i} className="group border-b border-gray-800/50 pb-2 last:border-0">
-              <div className="flex items-start gap-2">
+              <div className="flex items-center gap-2 mb-1 opacity-80">
                 <span className="text-gray-600 shrink-0">[{new Date(log.time).toLocaleTimeString()}]</span>
                 <span className={`font-bold shrink-0 ${
                   log.type === "ERROR" ? "text-red-400" : 
@@ -291,14 +329,16 @@ export default function DebugOverlay() {
                     {log.category}
                   </span>
                 )}
-                <span className={`break-all ${
-                  log.type === "ERROR" ? "text-red-400" : 
-                  log.type === "WARN" ? "text-orange-400" : 
-                  log.type === "API" ? "text-blue-400" : "text-lime-400"
-                }`}>{log.message}</span>
+              </div>
+              <div className={`break-all leading-relaxed ${
+                log.type === "ERROR" ? "text-red-400" : 
+                log.type === "WARN" ? "text-orange-400" : 
+                log.type === "API" ? "text-blue-400" : "text-lime-400"
+              }`}>
+                {log.message}
               </div>
               {log.meta && Object.keys(log.meta).length > 0 && (
-                <div className="ml-14 mt-1 text-gray-500 italic truncate group-hover:whitespace-normal group-hover:overflow-visible transition-all">
+                <div className="mt-1 text-gray-500 italic truncate group-hover:whitespace-normal group-hover:overflow-visible transition-all">
                   meta: {JSON.stringify(log.meta)}
                 </div>
               )}

@@ -11,11 +11,21 @@ export async function POST(request: Request) {
   const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
   const prompt = `
-    You are a senior software engineer debugging a Next.js application.
-    Analyze the following logs and provide:
-    1. Root cause of the issue.
-    2. A clear fix.
-    3. A code suggestion.
+    You are an expert Next.js debugger. Analyze these logs and provide a structured response:
+    
+    ### 🔍 Root Cause
+    (Briefly explain what went wrong)
+
+    ### 🛠️ Recommended Fix
+    (Step-by-step instructions to fix the issue)
+
+    ### 💻 Code Suggestion
+    \`\`\`typescript
+    // Provide the corrected code snippet here
+    \`\`\`
+
+    ### 🚀 Next Steps
+    (What the user should do immediately after applying the fix, e.g., "Restart the dev server", "Check the network tab", etc.)
 
     Logs:
     ${JSON.stringify(logs, null, 2)}
