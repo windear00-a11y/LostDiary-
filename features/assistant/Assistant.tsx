@@ -1,10 +1,11 @@
 'use client';
 import React, { memo } from 'react';
 import { useAssistant } from './use-assistant';
-import { Sparkles, Send, Loader2 } from 'lucide-react';
+import { AssistantInput } from './AssistantInput';
+import { Sparkles } from 'lucide-react';
 
 export const Assistant = memo(() => {
-  const { input, setInput, response, isLoading, handleSend } = useAssistant();
+  const { response, isLoading, handleSend } = useAssistant();
 
   return (
     <div className="flex flex-col h-full max-w-2xl mx-auto p-4 space-y-6">
@@ -40,27 +41,7 @@ export const Assistant = memo(() => {
         )}
       </div>
 
-      <div className="relative">
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="What's on your mind?"
-          className="w-full p-4 pr-14 bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#2E2E2E] rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none resize-none min-h-[100px]"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSend(input);
-            }
-          }}
-        />
-        <button
-          onClick={() => handleSend(input)}
-          disabled={isLoading || !input.trim()}
-          className="absolute right-3 bottom-3 p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition-all active:scale-95"
-        >
-          {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-        </button>
-      </div>
+      <AssistantInput isLoading={isLoading} onSend={handleSend} />
     </div>
   );
 });

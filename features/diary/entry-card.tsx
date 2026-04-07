@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Trash2, Calendar, X, Check } from 'lucide-react';
 import { format } from 'date-fns';
 
 import Image from 'next/image';
 
-export const EntryCard = ({
+export const EntryCard = memo(({
   entry,
   deleteEntry,
 }: {
@@ -72,4 +72,6 @@ export const EntryCard = ({
       )}
     </div>
   );
-};
+});
+
+EntryCard.displayName = 'EntryCard';

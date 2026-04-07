@@ -1,66 +1,25 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { diaryService } from '@/lib/services/diary-service';
-import { useAuth } from '@/components/auth/auth-provider';
-import { logger } from '@/lib/logger';
-import { useDiaryStore } from '@/lib/store/use-diary-store';
+import React, { useState } from 'react';
+import { useDiaryData } from '@/features/diary/use-diary-data';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { Drawer } from './Drawer';
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-  entries?: any[];
-}
-
-export const AppLayout = ({ children, entries: initialEntries }: AppLayoutProps) => {
-  const { user } = useAuth();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
-  const entries = useDiaryStore((state) => state.entries);
-  const setGlobalEntries = useDiaryStore((state) => state.setEntries);
-  const setIsLoading = useDiaryStore((state) => state.setIsLoading);
-
-  const fetchEntries = useCallback(async () => {
-    if (initialEntries || !user) return;
-    setIsLoading(true);
-    try {
-      const data = await diaryService.fetchEntries(user.id);
-      setGlobalEntries(data || []);
-    } catch (err) {
-      logger.error('Error fetching entries in AppLayout:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user, initialEntries, setGlobalEntries, setIsLoading]);
-
-  useEffect(() => {
-    if (user && !initialEntries && entries.length === 0) {
-      fetchEntries();
-    }
-  }, [user, fetchEntries, initialEntries, entries.length]);
-
-  useEffect(() => {
-    if (initialEntries) {
-      setGlobalEntries(initialEntries);
-    }
-  }, [initialEntries, setGlobalEntries]);
+export const AppLayout = ({ children, entries: initialEntries }: { children: React.ReactNode; entries?: any[] }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  useDiaryData(initialEntries);
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-[#0A0A0A]">
-      <Sidebar isOpen={isSidebarOpen} />
-      <Drawer isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+    <div className="min-h-screen bg-white dark:bg-[#0A0A0A] text-gray-900 dark:text-gray-100">
+      <Header onMenuClick={() => setIsMenuOpen(true)} />
       
-      <div className="flex-1 flex flex-col min-w-0">
-        <Header 
-          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
-          toggleMobileMenu={() => setIsMobileMenuOpen(true)}
-        />
+      <div className="flex h-[calc(100vh-64px)]">
+        <Sidebar />
+        <Drawer isOpen={isMenuOpen} onClose={() => setIsMenuOpen(false)} />
         
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <div className="max-w-3xl mx-auto">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+          <div className="max-w-4xl mx-auto w-full">
             {children}
           </div>
         </main>

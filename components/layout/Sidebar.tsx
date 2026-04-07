@@ -1,18 +1,38 @@
 'use client';
-import Link from 'next/link';
-import { LayoutDashboard, BookOpen } from 'lucide-react';
 
-export const Sidebar = ({ isOpen }: { isOpen: boolean }) => (
-  <aside className={`${isOpen ? 'w-64' : 'w-0'} transition-all duration-300 border-r border-gray-200 dark:border-gray-800 h-screen overflow-hidden bg-white dark:bg-[#1A1A1A] flex-shrink-0`}>
-    <nav className="p-4 space-y-2">
-      <Link href="/dashboard" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-[#262626] text-gray-700 dark:text-gray-300">
-        <LayoutDashboard className="w-5 h-5" />
-        Dashboard
-      </Link>
-      <Link href="/diary" className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-[#262626] text-gray-700 dark:text-gray-300">
-        <BookOpen className="w-5 h-5" />
-        Diary
-      </Link>
-    </nav>
-  </aside>
-);
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { LayoutDashboard, Sparkles, Settings } from 'lucide-react';
+
+const NAV_ITEMS = [
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Assistant', href: '/assistant', icon: Sparkles },
+  { label: 'Settings', href: '/settings', icon: Settings },
+];
+
+export const Sidebar = () => {
+  const pathname = usePathname();
+
+  return (
+    <aside className="hidden md:flex flex-col w-64 border-r border-gray-100 dark:border-[#2E2E2E] bg-white dark:bg-[#0A0A0A] p-4 space-y-2">
+      {NAV_ITEMS.map((item) => {
+        const Icon = item.icon;
+        const isActive = pathname === item.href;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 font-medium ${
+              isActive 
+                ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' 
+                : 'text-gray-500 hover:bg-gray-50 dark:hover:bg-[#1A1A1A] hover:text-gray-900 dark:hover:text-gray-100'
+            }`}
+          >
+            <Icon className="w-5 h-5" />
+            {item.label}
+          </Link>
+        );
+      })}
+    </aside>
+  );
+};

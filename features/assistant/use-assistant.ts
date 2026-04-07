@@ -4,7 +4,6 @@ import { generateAIResponse } from '@/ai-core/brain';
 import { AIResponse } from '@/ai-core/response-engine';
 
 export const useAssistant = () => {
-  const [input, setInput] = useState('');
   const [response, setResponse] = useState<AIResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -14,7 +13,6 @@ export const useAssistant = () => {
     try {
       const result = await generateAIResponse(text);
       setResponse(result);
-      setInput('');
     } catch (error) {
       console.error('Assistant Error:', error);
     } finally {
@@ -22,5 +20,5 @@ export const useAssistant = () => {
     }
   }, []);
 
-  return { input, setInput, response, isLoading, handleSend };
+  return { response, isLoading, handleSend };
 };
