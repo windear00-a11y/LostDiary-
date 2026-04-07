@@ -4,7 +4,6 @@ import { AuthProvider } from '@/components/auth/auth-provider';
 import { PageTransition } from '@/components/page-transition';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
-import { CookieConsent } from '@/components/ui/CookieConsent';
 import { Suspense } from 'react';
 import './globals.css';
 
@@ -60,7 +59,6 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
                 <PageTransition>
                   {children}
                 </PageTransition>
-                <CookieConsent />
               </ErrorBoundary>
             </AuthProvider>
           </Suspense>

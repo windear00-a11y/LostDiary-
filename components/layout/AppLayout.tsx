@@ -1,53 +1,33 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import dynamic from 'next/dynamic';
-import { useUpdates } from '@/hooks/use-updates';
-import { createClient } from '@/lib/supabase';
+import { diaryService } from '@/lib/services/diary-service';
 import { useAuth } from '@/components/auth/auth-provider';
 import { logger } from '@/lib/logger';
-
-import { useUIStore } from '@/lib/store/use-ui-store';
 import { useDiaryStore } from '@/lib/store/use-diary-store';
-
-// Dynamic imports for layout components
-const Header = dynamic(() => import('./Header').then(mod => mod.Header), { ssr: false });
-const Drawer = dynamic(() => import('./Drawer').then(mod => mod.Drawer), { ssr: false });
-const Sidebar = dynamic(() => import('./Sidebar').then(mod => mod.Sidebar), { ssr: false });
-const FloatingActionButton = dynamic(() => import('@/components/ui/floating-action-button').then(mod => mod.FloatingActionButton), { ssr: false });
+import { Header } from './Header';
+import { Sidebar } from './Sidebar';
+import { Drawer } from './Drawer';
 
 interface AppLayoutProps {
   children: React.ReactNode;
-  onStartChat?: () => void;
-  entries?: any[]; // Optional prop if already fetched
-  hideFAB?: boolean;
+  entries?: any[];
 }
 
-export const AppLayout = ({ children, onStartChat, entries: initialEntries, hideFAB = false }: AppLayoutProps) => {
+export const AppLayout = ({ children, entries: initialEntries }: AppLayoutProps) => {
   const { user } = useAuth();
-  const isSidebarOpen = useUIStore((state) => state.isSidebarOpen);
-  const setSidebarOpen = useUIStore((state) => state.setSidebarOpen);
-  const isAIAssistantOpen = useUIStore((state) => state.isAIAssistantOpen);
-  const setAIAssistantOpen = useUIStore((state) => state.setAIAssistantOpen);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const entries = useDiaryStore((state) => state.entries);
   const setGlobalEntries = useDiaryStore((state) => state.setEntries);
   const setIsLoading = useDiaryStore((state) => state.setIsLoading);
-  const { hasNewUpdates } = useUpdates({ autoRefreshInterval: 5 * 60 * 1000 });
 
   const fetchEntries = useCallback(async () => {
-    if (initialEntries) return; // Don't fetch if provided
-    const supabase = createClient();
-    if (!supabase || !user) return;
+    if (initialEntries || !user) return;
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('entries')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await diaryService.fetchEntries(user.id);
       setGlobalEntries(data || []);
     } catch (err) {
       logger.error('Error fetching entries in AppLayout:', err);
@@ -62,7 +42,6 @@ export const AppLayout = ({ children, onStartChat, entries: initialEntries, hide
     }
   }, [user, fetchEntries, initialEntries, entries.length]);
 
-  // Sync entries if initialEntries changes
   useEffect(() => {
     if (initialEntries) {
       setGlobalEntries(initialEntries);
@@ -70,27 +49,17 @@ export const AppLayout = ({ children, onStartChat, entries: initialEntries, hide
   }, [initialEntries, setGlobalEntries]);
 
   return (
-    <div className="min-h-screen w-full bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] transition-colors duration-300 flex flex-col">
-      {/* Header */}
-      <Header 
-        onStartChat={onStartChat}
-        hasNewUpdates={hasNewUpdates}
-      />
-
-      {/* Drawer */}
-      <Drawer 
-        hasNewUpdates={hasNewUpdates}
-        entries={entries}
-      />
-
-      {!hideFAB && <FloatingActionButton />}
-
-      <div className="flex flex-1 pt-16 h-screen overflow-hidden">
-        {/* Sidebar */}
-        <Sidebar />
-
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 py-12 transition-all duration-300">
+    <div className="min-h-screen flex bg-white dark:bg-[#0A0A0A]">
+      <Sidebar isOpen={isSidebarOpen} />
+      <Drawer isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+      
+      <div className="flex-1 flex flex-col min-w-0">
+        <Header 
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} 
+          toggleMobileMenu={() => setIsMobileMenuOpen(true)}
+        />
+        
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="max-w-3xl mx-auto">
             {children}
           </div>

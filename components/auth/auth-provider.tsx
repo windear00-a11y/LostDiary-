@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react';
 import { createClient } from '@/lib/supabase';
+import { authService } from '@/lib/services/auth-service';
 import { useRouter, usePathname } from 'next/navigation';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { Loader2, AlertCircle } from 'lucide-react';
@@ -38,15 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initializeAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          logger.error('AuthProvider: Error getting session:', error.message);
-          setUser(null);
-        } else {
-          setUser(session?.user ?? null);
-        }
+        const currentUser = await authService.getUser();
+        setUser(currentUser);
       } catch (err) {
-        logger.error('AuthProvider: Unexpected error in getSession:', err);
+        logger.error('AuthProvider: Unexpected error in initializeAuth:', err);
         setUser(null);
       } finally {
         setLoading(false);
@@ -84,9 +80,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, loading, pathname, router, isAppPage, isAuthPage, isLandingPage]);
 
   const signOut = async () => {
-    if (supabase) {
-      await supabase.auth.signOut();
+    try {
+      await authService.signOut();
       router.push('/');
+    } catch (err) {
+      logger.error('AuthProvider: Error signing out:', err);
     }
   };
 

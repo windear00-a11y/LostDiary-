@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/auth/auth-provider';
 
-const FeedbackButton = dynamic(() => import('@/components/ui/feedback-button').then(mod => mod.FeedbackButton), { ssr: false });
 const ThemeToggle = dynamic(() => import('@/components/ui/theme-toggle').then(mod => mod.ThemeToggle), { ssr: false });
 
 export default function LandingPage() {
@@ -305,19 +304,6 @@ export default function LandingPage() {
             We believe your thoughts belong to you.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left max-w-2xl mx-auto">
-          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-            <div className="w-2 h-2 bg-green-400 rounded-full" />
-            <span className="text-sm font-medium text-[#111827]">No data sharing</span>
-          </div>
-          <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-            <div className="w-2 h-2 bg-green-400 rounded-full" />
-            <span className="text-sm font-medium text-[#111827]">Secure encryption</span>
-          </div>
-        </div>
-        <p className="text-[10px] uppercase tracking-[0.2em] text-[#6B7280] font-medium">
-          Read our privacy policy for more details.
-        </p>
       </div>
 
       {/* Final CTA Section */}
@@ -361,16 +347,10 @@ export default function LandingPage() {
 
       {/* Landing Footer */}
       <footer className="relative z-10 py-12 text-center space-y-4">
-        <div className="flex justify-center gap-6 text-[10px] uppercase tracking-[0.2em] text-[#6B7280] font-medium">
-          <button onClick={() => router.push('/privacy')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Privacy Policy</button>
-          <button onClick={() => router.push('/terms')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Terms of Service</button>
-          <button onClick={() => router.push('/support')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Support</button>
-        </div>
         <p className="text-[10px] uppercase tracking-[0.4em] text-[#6B7280] opacity-50">
           &copy; {new Date().getFullYear()} WinDear
         </p>
       </footer>
-      <FeedbackButton />
     </main>
   );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { createClient } from '@/lib/supabase';
+import { authService } from '@/lib/services/auth-service';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
@@ -11,7 +11,6 @@ export default function UpdatePasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,10 +18,7 @@ export default function UpdatePasswordPage() {
     setMessage(null);
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password,
-      });
-      if (error) throw error;
+      await authService.updatePassword(password);
       setMessage({ type: 'success', text: 'Password updated successfully!' });
       setTimeout(() => router.push('/auth'), 2000);
     } catch (err: any) {

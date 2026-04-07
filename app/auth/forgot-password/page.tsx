@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { createClient } from '@/lib/supabase';
+import { authService } from '@/lib/services/auth-service';
 import { Mail, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
@@ -11,7 +11,6 @@ export default function ForgotPasswordPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,10 +18,7 @@ export default function ForgotPasswordPage() {
     setMessage(null);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
-      });
-      if (error) throw error;
+      await authService.resetPassword(email);
       setMessage({ type: 'success', text: 'Check your email for the password reset link!' });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to send reset link' });

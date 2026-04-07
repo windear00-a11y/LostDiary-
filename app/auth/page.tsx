@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef, Suspense } from 'react';
-import { createClient } from '@/lib/supabase';
+import { authService } from '@/lib/services/auth-service';
 import { Book, Mail, ArrowLeft, Loader2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -16,40 +16,20 @@ function AuthForm() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const router = useRouter();
   const { loading } = useAuth();
-  const supabase = useMemo(() => {
-    try {
-      return createClient();
-    } catch (e) {
-      logger.error('Failed to initialize Supabase client:', e);
-      return null;
-    }
-  }, []);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabase) {
-      setMessage({ type: 'error', text: 'Authentication is not configured.' });
-      return;
-    }
     if (!email || !password) return;
     setIsSubmitting(true);
     setMessage(null);
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
+        await authService.signUp(email, password);
         setMessage({ type: 'success', text: 'Account created! You can now sign in.' });
         setIsSignUp(false);
       } else {
-        const { error, data } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
+        await authService.signIn(email, password);
         router.push('/dashboard');
       }
     } catch (err: any) {
@@ -165,9 +145,7 @@ function AuthForm() {
 
         {/* Footer Links */}
         <div className="flex justify-center gap-6 text-[10px] uppercase tracking-[0.2em] text-[#6B7280] dark:text-gray-500 font-medium pt-4">
-          <button onClick={() => router.push('/privacy')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Privacy Policy</button>
-          <button onClick={() => router.push('/terms')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Terms of Service</button>
-          <button onClick={() => router.push('/support')} className="hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors">Support</button>
+          <p>&copy; {new Date().getFullYear()} WinDear</p>
         </div>
       </motion.div>
     </main>

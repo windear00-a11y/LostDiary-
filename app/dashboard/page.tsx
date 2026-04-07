@@ -2,31 +2,26 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import dynamic from "next/dynamic";
-import { createClient } from "@/lib/supabase";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { diaryService } from "@/lib/services/diary-service";
+import { authService } from "@/lib/services/auth-service";
 import { useDiaryStore, useEntries } from "@/lib/store/use-diary-store";
 import { useUIStore } from "@/lib/store/use-ui-store";
-import { useAI } from "@/hooks/use-ai";
 import { logger } from "@/lib/logger";
 
 const DiaryInput = dynamic(() => import("@/features/diary/DiaryInput").then(mod => ({ default: mod.DiaryInput })), { ssr: false });
 const DiaryList = dynamic(() => import("@/features/diary/DiaryList").then(mod => ({ default: mod.DiaryList })), { ssr: false });
 const BottomSheet = dynamic(() => import("@/components/ui/bottom-sheet").then(mod => ({ default: mod.BottomSheet })), { ssr: false });
 
-const supabase = createClient();
-
 export default function DashboardPage() {
   const entries = useEntries();
-  const setEntries = useDiaryStore((state) => state.setEntries);
   const updateEntry = useDiaryStore((state) => state.updateEntry);
-  const togglePin = useDiaryStore((state) => state.togglePin);
   const setSelectedEntry = useDiaryStore((state) => state.setSelectedEntry);
   const selectedEntry = useDiaryStore((state) => state.selectedEntry);
 
   const isBottomSheetOpen = useUIStore((state) => state.isBottomSheetOpen);
   const setBottomSheetOpen = useUIStore((state) => state.setBottomSheetOpen);
   
-  const { analyzeEntry, isAnalyzing } = useAI();
   const loading = useDiaryStore((state) => state.isLoading);
   
   // State for DiaryInput (some of these could also be in store, but keeping form state local is often better)
@@ -36,27 +31,6 @@ export default function DashboardPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const handlePin = useCallback(async (id: string) => {
-    const entry = entries.find(e => e.id === id);
-    if (!entry) return;
-    
-    // Optimistic update
-    togglePin(id);
-
-    try {
-      const { error } = await supabase
-        .from('entries')
-        .update({ is_pinned: !entry.is_pinned })
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (err) {
-      logger.error("Error pinning:", err);
-      // Revert on failure
-      togglePin(id);
-    }
-  }, [entries, togglePin]);
 
   const handleEdit = useCallback((entry: any) => {
     setSelectedEntry(entry);
@@ -81,37 +55,18 @@ export default function DashboardPage() {
     setIsSubmitting(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const user = await authService.getUser();
       if (!user) throw new Error("No user");
-
-      // Get AI analysis
-      const analysis = await analyzeEntry(content);
-      const aiData = analysis || { summary: "", insight: "", sentiment: "Neutral", tags: [] };
 
       if (isEditing && originalEntry) {
         // Optimistic update
         updateEntry(originalEntry.id, { 
           content, 
           image_url: img,
-          summary: aiData.summary,
-          insight: aiData.insight,
-          mood: aiData.sentiment,
-          tags: aiData.tags
         });
 
         try {
-          const { error } = await supabase
-            .from('entries')
-            .update({ 
-              content, 
-              image_url: img,
-              summary: aiData.summary,
-              insight: aiData.insight,
-              mood: aiData.sentiment,
-              tags: aiData.tags
-            })
-            .eq('id', originalEntry.id);
-          if (error) throw error;
+          await diaryService.updateEntry(originalEntry.id, content, img);
           setShowSuccess(true);
           setTimeout(() => setShowSuccess(false), 3000);
         } catch (err: any) {
@@ -128,32 +83,13 @@ export default function DashboardPage() {
           user_id: user.id,
           content,
           image_url: img,
-          summary: aiData.summary,
-          insight: aiData.insight,
-          mood: aiData.sentiment,
-          tags: aiData.tags,
           created_at: new Date().toISOString(),
-          is_pinned: false
         };
 
         useDiaryStore.getState().addEntry(tempEntry);
 
         try {
-          const { data, error } = await supabase
-            .from('entries')
-            .insert({
-              user_id: user.id,
-              content,
-              image_url: img,
-              summary: aiData.summary,
-              insight: aiData.insight,
-              mood: aiData.sentiment,
-              tags: aiData.tags
-            })
-            .select()
-            .single();
-
-          if (error) throw error;
+          const data = await diaryService.createEntry(user.id, content, img);
           
           // Replace temp entry with real one
           if (data) {
@@ -183,8 +119,7 @@ export default function DashboardPage() {
     useDiaryStore.getState().deleteEntry(id);
 
     try {
-      const { error } = await supabase.from('entries').delete().eq('id', id);
-      if (error) throw error;
+      await diaryService.deleteEntry(id);
     } catch (err) {
       logger.error("Error deleting:", err);
       // Revert on failure
@@ -230,9 +165,6 @@ export default function DashboardPage() {
           <DiaryList 
             isLoadingEntries={loading}
             deleteEntry={handleDelete}
-            onEdit={handleEdit}
-            onPin={handlePin}
-            handleStartWriting={handleStartWriting}
           />
         </div>
       </div>
