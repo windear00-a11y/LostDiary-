@@ -10,7 +10,7 @@ import { memorySystem } from '@/lib/memory-system';
 import { useMicroInteractionStore } from '@/lib/store/use-micro-interaction-store';
 import { StreakBadge } from '@/components/retention/StreakBadge';
 
-export const DiaryInput = ({
+export const DiaryInputModal = ({
   handleCreate,
   handleUpdate,
 }: {
@@ -94,7 +94,6 @@ export const DiaryInput = ({
             </p>
           )}
         </div>
-        <StreakBadge />
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">

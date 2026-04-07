@@ -3,12 +3,14 @@
 import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useDiaryActions } from "@/features/diary/use-diary-actions";
-import { RetentionWidget } from "@/components/retention/RetentionWidget";
 import { WeeklyInsight } from "@/components/insights/WeeklyInsight";
+import { useUIStore } from "@/lib/store/use-ui-store";
+import { FAB } from "@/components/ui/FAB";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 
-const DiaryInput = dynamic(() => import("@/features/diary/DiaryInput").then(mod => ({ default: mod.DiaryInput })), { ssr: false });
+const DiaryInputModal = dynamic(() => import("@/features/diary/DiaryInputModal").then(mod => ({ default: mod.DiaryInputModal })), { ssr: false });
 const DiaryList = dynamic(() => import("@/features/diary/DiaryList").then(mod => ({ default: mod.DiaryList })), { ssr: false });
-const BottomSheet = dynamic(() => import("@/components/ui/bottom-sheet").then(mod => ({ default: mod.BottomSheet })), { ssr: false });
+const InsightsPanel = dynamic(() => import("@/components/insights/InsightsPanel").then(mod => ({ default: mod.InsightsPanel })), { ssr: false });
 
 export default function DashboardPage() {
   const {
@@ -20,37 +22,42 @@ export default function DashboardPage() {
     handleDelete,
   } = useDiaryActions();
 
+  const isInsightsOpen = useUIStore((state) => state.isInsightsOpen);
+  const setInsightsOpen = useUIStore((state) => state.setInsightsOpen);
+
   if (loading) {
     return <div className="p-8">Loading dashboard...</div>;
   }
 
   return (
     <AppLayout>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-          </div>
-
-          <div className="space-y-8">
-            <BottomSheet isOpen={isBottomSheetOpen} onClose={() => setBottomSheetOpen(false)}>
-              <DiaryInput 
-                handleCreate={handleCreate}
-                handleUpdate={handleUpdate}
-              />
-            </BottomSheet>
-            
-            <DiaryList 
-              isLoadingEntries={loading}
-              deleteEntry={handleDelete}
-            />
-          </div>
+      <div className="max-w-2xl mx-auto space-y-8 relative min-h-[calc(100vh-120px)]">
+        <div className="flex flex-col space-y-2">
+          <h1 className="text-3xl font-bold tracking-tight">Timeline</h1>
+          <p className="text-gray-500 text-sm">Your journey, one thought at a time.</p>
         </div>
+
+        <WeeklyInsight />
 
         <div className="space-y-8">
-          <RetentionWidget />
-          <WeeklyInsight />
+          <BottomSheet isOpen={isBottomSheetOpen} onClose={() => setBottomSheetOpen(false)}>
+            <DiaryInputModal 
+              handleCreate={handleCreate}
+              handleUpdate={handleUpdate}
+            />
+          </BottomSheet>
+
+          <BottomSheet isOpen={isInsightsOpen} onClose={() => setInsightsOpen(false)}>
+            <InsightsPanel />
+          </BottomSheet>
+          
+          <DiaryList 
+            isLoadingEntries={loading}
+            deleteEntry={handleDelete}
+          />
         </div>
+
+        <FAB onClick={() => setBottomSheetOpen(true)} />
       </div>
     </AppLayout>
   );

@@ -6,7 +6,7 @@ import { LayoutDashboard, Sparkles, Settings, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Timeline', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Assistant', href: '/assistant', icon: Sparkles },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];

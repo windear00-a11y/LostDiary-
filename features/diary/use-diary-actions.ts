@@ -10,6 +10,8 @@ import { logger } from '@/lib/logger';
 import { memorySystem } from '@/lib/memory-system';
 import { retentionSystem } from '@/lib/retention-system';
 
+import { generateAIResponse } from '@/ai-core/brain';
+
 export const useDiaryActions = () => {
   const entries = useEntries();
   const updateEntry = useDiaryStore((state) => state.updateEntry);
@@ -26,6 +28,9 @@ export const useDiaryActions = () => {
       const user = await authService.getUser();
       if (!user) throw new Error("No user");
 
+      // Generate AI response
+      const aiResponse = await generateAIResponse(content);
+
       // Save to lightweight memory system
       memorySystem.saveEntry(content);
 
@@ -38,13 +43,14 @@ export const useDiaryActions = () => {
         user_id: user.id,
         content,
         image_url: imageUrl,
+        ai_response: aiResponse,
         created_at: new Date().toISOString(),
       };
 
       useDiaryStore.getState().addEntry(tempEntry);
 
       try {
-        const data = await diaryService.createEntry(user.id, content, imageUrl);
+        const data = await diaryService.createEntry(user.id, content, imageUrl, aiResponse);
         if (data) {
           useDiaryStore.getState().replaceEntry(tempId, data);
         }

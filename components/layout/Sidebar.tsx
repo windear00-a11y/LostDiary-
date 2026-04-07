@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Sparkles, Settings } from 'lucide-react';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Timeline', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Assistant', href: '/assistant', icon: Sparkles },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];

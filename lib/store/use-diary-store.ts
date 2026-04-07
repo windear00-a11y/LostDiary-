@@ -6,6 +6,7 @@ export interface DiaryEntry {
   content: string;
   image_url?: string;
   created_at: string;
+  ai_response?: any;
 }
 
 interface DiaryState {

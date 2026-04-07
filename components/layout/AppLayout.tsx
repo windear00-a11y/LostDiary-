@@ -2,10 +2,10 @@
 
 import React, { useState } from 'react';
 import { useDiaryData } from '@/features/diary/use-diary-data';
-import { Header } from './Header';
+import { Header } from '@/components/ui/Header';
 import { Sidebar } from './Sidebar';
 import { Drawer } from './Drawer';
-import { MicroInteractionToast } from '../ui/MicroInteractionToast';
+import { MicroInteractionToast } from '@/components/ui/MicroInteractionToast';
 
 export const AppLayout = ({ children, entries: initialEntries }: { children: React.ReactNode; entries?: any[] }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

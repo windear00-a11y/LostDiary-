@@ -21,7 +21,7 @@ export const diaryService = {
     }
   },
 
-  async createEntry(userId: string, content: string, imageUrl?: string): Promise<DiaryEntry> {
+  async createEntry(userId: string, content: string, imageUrl?: string, aiResponse?: any): Promise<DiaryEntry> {
     try {
       const { data, error } = await supabase
         .from('entries')
@@ -29,6 +29,7 @@ export const diaryService = {
           user_id: userId,
           content,
           image_url: imageUrl,
+          ai_response: aiResponse,
         })
         .select()
         .single();
@@ -41,13 +42,14 @@ export const diaryService = {
     }
   },
 
-  async updateEntry(id: string, content: string, imageUrl?: string): Promise<DiaryEntry> {
+  async updateEntry(id: string, content: string, imageUrl?: string, aiResponse?: any): Promise<DiaryEntry> {
     try {
       const { data, error } = await supabase
         .from('entries')
         .update({
           content,
           image_url: imageUrl,
+          ai_response: aiResponse,
         })
         .eq('id', id)
         .select()

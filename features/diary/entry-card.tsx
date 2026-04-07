@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, memo } from 'react';
-import { Trash2, Calendar, X, Check } from 'lucide-react';
+import { Trash2, Calendar, X, Check, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 
 import Image from 'next/image';
@@ -16,58 +16,91 @@ export const EntryCard = memo(({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   return (
-    <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl border border-gray-100 dark:border-[#2E2E2E] p-6 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-2 text-gray-500 text-sm">
-          <Calendar className="w-4 h-4" />
-          <span>{format(new Date(entry.created_at), 'PPP')}</span>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {isConfirmingDelete ? (
-            <div className="flex items-center gap-1 animate-in fade-in slide-in-from-right-2">
-              <button
-                onClick={() => deleteEntry(entry.id)}
-                className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                title="Confirm delete"
-              >
-                <Check className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setIsConfirmingDelete(false)}
-                className="p-1.5 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
-                title="Cancel"
-              >
-                <X className="w-4 h-4" />
-              </button>
+    <div className="space-y-4">
+      {/* User Entry Bubble */}
+      <div className="flex flex-col items-end space-y-1">
+        <div className="bg-indigo-600 text-white rounded-2xl rounded-tr-none p-4 shadow-sm max-w-[85%] relative group">
+          <div className="prose prose-invert max-w-none">
+            <p className="text-white whitespace-pre-wrap text-sm md:text-base">
+              {entry.content}
+            </p>
+          </div>
+          {entry.image_url && (
+            <div className="mt-3 relative aspect-video rounded-xl overflow-hidden border border-white/10">
+              <Image 
+                src={entry.image_url} 
+                alt="Entry attachment" 
+                fill
+                className="object-cover"
+                referrerPolicy="no-referrer"
+              />
             </div>
-          ) : (
-            <button
-              onClick={() => setIsConfirmingDelete(true)}
-              className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-              title="Delete entry"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
           )}
+          
+          {/* Delete Action */}
+          <div className="absolute -left-10 top-0 opacity-0 group-hover:opacity-100 transition-opacity">
+             {isConfirmingDelete ? (
+              <div className="flex flex-col items-center gap-1 bg-white dark:bg-[#1A1A1A] p-1 rounded-lg border border-gray-100 dark:border-[#2E2E2E] shadow-sm">
+                <button
+                  onClick={() => deleteEntry(entry.id)}
+                  className="p-1 text-red-600 hover:bg-red-50 rounded"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={() => setIsConfirmingDelete(false)}
+                  className="p-1 text-gray-400 hover:bg-gray-50 rounded"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsConfirmingDelete(true)}
+                className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
+          </div>
         </div>
-      </div>
-      
-      <div className="prose dark:prose-invert max-w-none">
-        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-          {entry.content}
-        </p>
+        <span className="text-[10px] text-gray-400 px-1">
+          {format(new Date(entry.created_at), 'p')}
+        </span>
       </div>
 
-      {entry.image_url && (
-        <div className="mt-4 relative aspect-video rounded-xl overflow-hidden border border-gray-100 dark:border-[#2E2E2E]">
-          <Image 
-            src={entry.image_url} 
-            alt="Entry attachment" 
-            fill
-            className="object-cover"
-            referrerPolicy="no-referrer"
-          />
+      {/* AI Response Bubble */}
+      {entry.ai_response && (
+        <div className="flex flex-col items-start space-y-1 animate-in fade-in slide-in-from-left-4 duration-500">
+          <div className="bg-white dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100 rounded-2xl rounded-tl-none p-5 shadow-sm border border-gray-100 dark:border-[#2E2E2E] max-w-[90%] space-y-3">
+            <div className="flex items-center gap-2 text-indigo-500 mb-1">
+              <Sparkles className="w-4 h-4" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">WinDear Reflection</span>
+            </div>
+            
+            <p className="text-sm md:text-base font-medium italic text-gray-800 dark:text-gray-200">
+              &quot;{entry.ai_response.emotion_reflection}&quot;
+            </p>
+            
+            <div className="space-y-2 pt-2 border-t border-gray-50 dark:border-[#2E2E2E]">
+              <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                {entry.ai_response.validation}
+              </p>
+              
+              {entry.ai_response.insight && (
+                <div className="bg-indigo-50/50 dark:bg-indigo-900/10 p-3 rounded-xl border border-indigo-100/50 dark:border-indigo-900/20">
+                  <p className="text-xs text-indigo-700 dark:text-indigo-300 leading-relaxed">
+                    <span className="font-bold">Insight: </span>
+                    {entry.ai_response.insight}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 pt-1">
+              {entry.ai_response.short_reply}
+            </p>
+          </div>
         </div>
       )}
     </div>
