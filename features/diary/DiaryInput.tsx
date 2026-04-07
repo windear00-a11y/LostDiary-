@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Loader2, Image as ImageIcon, X } from 'lucide-react';
+import { Sparkles, Loader2, Image as ImageIcon, X, MessageCircle } from 'lucide-react';
 import { useDiaryStore } from '@/lib/store/use-diary-store';
 import { useUIStore } from '@/lib/store/use-ui-store';
+import { retentionSystem } from '@/lib/retention-system';
+import { StreakBadge } from '@/components/retention/StreakBadge';
 
 export const DiaryInput = ({
   handleCreate,
@@ -20,7 +22,12 @@ export const DiaryInput = ({
   const [imageUrl, setImageUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shouldRemind, setShouldRemind] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    setShouldRemind(retentionSystem.shouldRemind());
+  }, []);
 
   useEffect(() => {
     if (selectedEntry) {
@@ -60,6 +67,21 @@ export const DiaryInput = ({
 
   return (
     <section className="p-6 bg-white dark:bg-[#1A1A1A] rounded-3xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm">
+      <div className="flex items-center justify-between mb-6">
+        <div className="space-y-1">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+            {selectedEntry ? 'Edit Entry' : 'How are you feeling today?'}
+          </h3>
+          {!selectedEntry && shouldRemind && (
+            <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1.5">
+              <MessageCircle className="w-3.5 h-3.5" />
+              Haven&apos;t written today, want to check in?
+            </p>
+          )}
+        </div>
+        <StreakBadge />
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="p-3 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 text-xs rounded-xl border border-red-100 dark:border-red-900/20">

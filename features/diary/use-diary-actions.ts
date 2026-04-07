@@ -7,6 +7,9 @@ import { useDiaryStore, useEntries } from '@/lib/store/use-diary-store';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { logger } from '@/lib/logger';
 
+import { memorySystem } from '@/lib/memory-system';
+import { retentionSystem } from '@/lib/retention-system';
+
 export const useDiaryActions = () => {
   const entries = useEntries();
   const updateEntry = useDiaryStore((state) => state.updateEntry);
@@ -22,6 +25,12 @@ export const useDiaryActions = () => {
     try {
       const user = await authService.getUser();
       if (!user) throw new Error("No user");
+
+      // Save to lightweight memory system
+      memorySystem.saveEntry(content);
+
+      // Update streak
+      retentionSystem.updateStreak();
 
       const tempId = `temp-${Date.now()}`;
       const tempEntry = {

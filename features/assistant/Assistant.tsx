@@ -19,24 +19,28 @@ export const Assistant = memo(() => {
       <div className="flex-1 overflow-y-auto space-y-4">
         {response && (
           <div className="bg-white dark:bg-[#1A1A1A] p-6 rounded-3xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-4">
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider rounded-full">
-                {response.emotion}
-              </span>
+            <div className="space-y-2">
+              <p className="text-lg font-medium text-gray-900 dark:text-gray-100 italic">
+                {response.emotion_reflection}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {response.validation}
+              </p>
             </div>
-            <p className="text-lg font-medium text-gray-900 dark:text-gray-100 italic">
-              &quot;{response.short_reply}&quot;
-            </p>
+            
             <div className="pt-4 border-t border-gray-50 dark:border-[#2E2E2E] space-y-3">
               <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                 <span className="font-bold text-gray-900 dark:text-gray-200">Insight: </span>
                 {response.insight}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                <span className="font-bold text-gray-900 dark:text-gray-200">Suggestion: </span>
-                {response.suggestion}
+              <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed italic">
+                {response.gentle_suggestion}
               </p>
             </div>
+
+            <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 pt-2">
+              {response.short_reply}
+            </p>
           </div>
         )}
       </div>
