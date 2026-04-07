@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, X } from 'lucide-react';
 import { memorySystem } from '@/lib/memory-system';
-import { weeklyInsightGenerator } from '@/ai-core/weekly-insight';
+import { weeklyInsightGenerator } from '@/ai-core/pattern-detector';
 
 /**
  * WeeklyInsight Component

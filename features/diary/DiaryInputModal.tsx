@@ -4,8 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Loader2, Image as ImageIcon, X, MessageCircle } from 'lucide-react';
 import { useDiaryStore } from '@/lib/store/use-diary-store';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { nudgeSystem, Nudge } from '@/lib/nudge-system';
-import { microInteractions } from '@/ai-core/micro-interactions';
+import { engagementSystem, Nudge } from '@/lib/engagement-system';
 import { memorySystem } from '@/lib/memory-system';
 import { useMicroInteractionStore } from '@/lib/store/use-micro-interaction-store';
 import { StreakBadge } from '@/components/retention/StreakBadge';
@@ -32,7 +31,7 @@ export const DiaryInputModal = ({
   useEffect(() => {
     // Only show nudge if we are creating a new entry
     if (!selectedEntry) {
-      const nudge = nudgeSystem.getNudge();
+      const nudge = engagementSystem.getNudge();
       setActiveNudge(nudge);
     }
   }, [selectedEntry]);
@@ -58,12 +57,8 @@ export const DiaryInputModal = ({
       if (selectedEntry) {
         await handleUpdate(selectedEntry.id, content, imageUrl);
       } else {
-        // Trigger micro-interaction before clearing
-        const memory = memorySystem.getMemory();
-        const interaction = microInteractions.getPostEntryInteraction(content, memory);
-        if (interaction.message) {
-          setMicroInteraction(interaction.message);
-        }
+        // Micro-interactions removed as per request, but keeping the logic for potential future use or just removing it
+        // For now, removing the call to microInteractions
         
         await handleCreate(content, imageUrl);
       }

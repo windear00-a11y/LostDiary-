@@ -5,7 +5,7 @@ import { EntryCard } from './entry-card';
 import { DiarySkeleton } from './skeleton-card';
 import { useEntries } from '@/lib/store/use-diary-store';
 import { isToday, isYesterday, format } from 'date-fns';
-import { nudgeSystem, Nudge } from '@/lib/nudge-system';
+import { engagementSystem, Nudge } from '@/lib/engagement-system';
 import { Sparkles } from 'lucide-react';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { NudgeInline } from '@/components/ui/NudgeInline';
@@ -24,7 +24,7 @@ export const DiaryList = ({
   React.useEffect(() => {
     // Only show nudge if there are entries and it's been a while
     if (entries.length > 0) {
-      const nudge = nudgeSystem.getNudge();
+      const nudge = engagementSystem.getNudge();
       setActiveNudge(nudge);
     }
   }, [entries]);

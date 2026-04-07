@@ -1,8 +1,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { AIPersonality } from "./personality";
+import { AIPersonality, ToneMode } from "./personality";
 import { DiaryMemory } from "@/lib/memory-system";
 import { PatternReport } from "./pattern-detector";
-import { toneSelector } from "./tone-selector";
 
 export interface AIResponse {
   emotion_reflection: string;
@@ -24,12 +23,12 @@ export class ResponseEngine {
     const lastTone = typeof window !== 'undefined' ? localStorage.getItem('windear_last_tone') as ToneMode : undefined;
 
     // 2. Determine Tone Mode
-    const toneMode = toneSelector.selectTone({ 
+    const toneMode = AIPersonality.selectTone({ 
       input, 
       patterns: patterns || { emotional_trend: "stable", dominant_emotion: "neutral", recurring_topics: [], risk_flag: false },
       lastTone: lastTone || undefined
     });
-    const toneInstructions = toneSelector.getToneInstructions(toneMode);
+    const toneInstructions = AIPersonality.getToneInstructions(toneMode);
 
     // 3. Persist current tone for next time
     if (typeof window !== 'undefined') {

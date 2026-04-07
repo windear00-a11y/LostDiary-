@@ -5,10 +5,9 @@ import { diaryService } from '@/lib/services/diary-service';
 import { authService } from '@/lib/services/auth-service';
 import { useDiaryStore, useEntries } from '@/lib/store/use-diary-store';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { logger } from '@/lib/logger';
 
 import { memorySystem } from '@/lib/memory-system';
-import { retentionSystem } from '@/lib/retention-system';
+import { engagementSystem } from '@/lib/engagement-system';
 
 import { generateAIResponse } from '@/ai-core/brain';
 
@@ -35,7 +34,7 @@ export const useDiaryActions = () => {
       memorySystem.saveEntry(content);
 
       // Update streak
-      retentionSystem.updateStreak();
+      engagementSystem.updateStreak();
 
       const tempId = `temp-${Date.now()}`;
       const tempEntry = {
@@ -55,7 +54,7 @@ export const useDiaryActions = () => {
           useDiaryStore.getState().replaceEntry(tempId, data);
         }
       } catch (err: any) {
-        logger.error("Add failed:", err);
+        console.error("Add failed:", err);
         useDiaryStore.getState().deleteEntry(tempId);
         throw err;
       }
@@ -73,7 +72,7 @@ export const useDiaryActions = () => {
     try {
       await diaryService.updateEntry(id, content, imageUrl);
     } catch (err: any) {
-      logger.error("Update failed:", err);
+      console.error("Update failed:", err);
       updateEntry(id, originalEntry);
       throw err;
     }
@@ -88,7 +87,7 @@ export const useDiaryActions = () => {
     try {
       await diaryService.deleteEntry(id);
     } catch (err) {
-      logger.error("Error deleting:", err);
+      console.error("Error deleting:", err);
       if (entryToDelete) {
         useDiaryStore.getState().addEntry(entryToDelete);
       }

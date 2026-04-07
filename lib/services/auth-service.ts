@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/supabase";
-import { logger } from "@/lib/logger";
 
 const supabase = createClient();
 
@@ -10,7 +9,7 @@ export const authService = {
       if (error) throw error;
       return user;
     } catch (error) {
-      logger.error("Error getting user:", error);
+      console.error("Error getting user:", error);
       throw error;
     }
   },
@@ -20,7 +19,7 @@ export const authService = {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
     } catch (error) {
-      logger.error("Error signing out:", error);
+      console.error("Error signing out:", error);
       throw error;
     }
   },
@@ -34,7 +33,7 @@ export const authService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      logger.error("Error signing up:", error);
+      console.error("Error signing up:", error);
       throw error;
     }
   },
@@ -48,7 +47,7 @@ export const authService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      logger.error("Error signing in:", error);
+      console.error("Error signing in:", error);
       throw error;
     }
   },
@@ -60,7 +59,7 @@ export const authService = {
       });
       if (error) throw error;
     } catch (error) {
-      logger.error("Error resetting password:", error);
+      console.error("Error resetting password:", error);
       throw error;
     }
   },
@@ -70,7 +69,7 @@ export const authService = {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;
     } catch (error) {
-      logger.error("Error updating password:", error);
+      console.error("Error updating password:", error);
       throw error;
     }
   }

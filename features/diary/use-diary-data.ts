@@ -3,7 +3,6 @@
 import { useEffect, useCallback } from 'react';
 import { diaryService } from '@/lib/services/diary-service';
 import { useAuth } from '@/components/auth/auth-provider';
-import { logger } from '@/lib/logger';
 import { useDiaryStore } from '@/lib/store/use-diary-store';
 
 export const useDiaryData = (initialEntries?: any[]) => {
@@ -19,7 +18,7 @@ export const useDiaryData = (initialEntries?: any[]) => {
       const data = await diaryService.fetchEntries(user.id);
       setGlobalEntries(data || []);
     } catch (err) {
-      logger.error('Error fetching entries:', err);
+      console.error('Error fetching entries:', err);
     } finally {
       setIsLoading(false);
     }

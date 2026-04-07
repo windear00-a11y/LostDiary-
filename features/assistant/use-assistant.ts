@@ -2,8 +2,6 @@
 import { useState, useCallback } from 'react';
 import { generateAIResponse } from '@/ai-core/brain';
 import { AIResponse } from '@/ai-core/response-engine';
-import { microInteractions } from '@/ai-core/micro-interactions';
-import { memorySystem } from '@/lib/memory-system';
 import { useMicroInteractionStore } from '@/lib/store/use-micro-interaction-store';
 
 export const useAssistant = () => {
@@ -15,13 +13,6 @@ export const useAssistant = () => {
     if (!text.trim()) return;
     setIsLoading(true);
     
-    // Trigger micro-interaction occasionally while loading
-    const memory = memorySystem.getMemory();
-    const interaction = microInteractions.getPostEntryInteraction(text, memory);
-    if (interaction.message) {
-      setMicroInteraction(interaction.message);
-    }
-
     try {
       const result = await generateAIResponse(text);
       setResponse(result);
@@ -30,7 +21,7 @@ export const useAssistant = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [setMicroInteraction]);
+  }, []);
 
   return { response, isLoading, handleSend };
 };

@@ -1,4 +1,12 @@
+import { PatternReport } from "./pattern-detector";
+
 export type ToneMode = "soft_support" | "friendly_casual" | "deep_reflective" | "light_witty";
+
+export interface ToneContext {
+  input: string;
+  patterns: PatternReport;
+  lastTone?: ToneMode;
+}
 
 export const AIPersonality = {
   name: "WinDear Assistant",
@@ -31,6 +39,71 @@ export const AIPersonality = {
       "just breathe.",
       "you've got this."
     ]
+  },
+
+  selectTone(context: ToneContext): ToneMode {
+    const { input, patterns, lastTone } = context;
+    const { dominant_emotion, risk_flag } = patterns;
+
+    let selectedTone: ToneMode;
+
+    if (risk_flag || dominant_emotion === "negative") {
+      selectedTone = "soft_support";
+    }
+    else if (input.length > 250 && dominant_emotion === "neutral") {
+      selectedTone = "deep_reflective";
+    }
+    else if (dominant_emotion === "positive" && input.length < 100) {
+      selectedTone = Math.random() < 0.2 ? "light_witty" : "friendly_casual";
+    }
+    else {
+      selectedTone = "friendly_casual";
+    }
+
+    if (selectedTone === lastTone && !risk_flag && dominant_emotion !== "negative") {
+      if (selectedTone === "friendly_casual" && input.length > 150) {
+        selectedTone = "deep_reflective";
+      } else if (selectedTone === "deep_reflective") {
+        selectedTone = "friendly_casual";
+      }
+    }
+
+    return selectedTone;
+  },
+
+  getToneInstructions(mode: ToneMode): string {
+    const instructions: Record<ToneMode, string> = {
+      soft_support: `
+TONE: Soft & Supportive.
+- Use gentle, empathetic language.
+- Prioritize validation over advice.
+- Avoid being overly cheerful or using high-energy emojis.
+- Focus on making the user feel safe and heard.
+`,
+      friendly_casual: `
+TONE: Friendly & Casual.
+- Use warm, conversational language (Gen-Z casual).
+- Be supportive like a close friend.
+- Use light emojis to keep the vibe approachable.
+- Keep sentences natural and not too formal.
+`,
+      deep_reflective: `
+TONE: Deep & Reflective.
+- Use thoughtful, slightly more structured language.
+- Focus on insights and "the bigger picture."
+- Be calm and analytical without being cold.
+- Acknowledge the depth of the user's thoughts.
+`,
+      light_witty: `
+TONE: Light & Witty.
+- Be playful and slightly clever.
+- Use higher energy and positive emojis.
+- Keep it brief and bright.
+- Only use this because the user is in a great mood!
+`
+    };
+
+    return instructions[mode];
   },
 
   systemInstruction: `You are the WinDear Assistant, a warm and understanding companion for a diary app. 

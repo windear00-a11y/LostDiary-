@@ -6,7 +6,6 @@ import { authService } from '@/lib/services/auth-service';
 import { useRouter, usePathname } from 'next/navigation';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { logger } from '@/lib/logger';
 
 interface AuthContextType {
   user: User | null;
@@ -26,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       return createClient();
     } catch (e) {
-      logger.error('AuthProvider: Failed to initialize Supabase client:', e);
+      console.error('AuthProvider: Failed to initialize Supabase client:', e);
       return null;
     }
   }, []);
@@ -42,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = await authService.getUser();
         setUser(currentUser);
       } catch (err) {
-        logger.error('AuthProvider: Unexpected error in initializeAuth:', err);
+        console.error('AuthProvider: Unexpected error in initializeAuth:', err);
         setUser(null);
       } finally {
         setLoading(false);
@@ -52,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
-      logger.log('AuthProvider: Auth state changed:', event);
+      console.log('AuthProvider: Auth state changed:', event);
       setUser(session?.user ?? null);
       setLoading(false);
     });
@@ -84,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authService.signOut();
       router.push('/');
     } catch (err) {
-      logger.error('AuthProvider: Error signing out:', err);
+      console.error('AuthProvider: Error signing out:', err);
     }
   };
 

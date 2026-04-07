@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase";
 import { DiaryEntry } from "@/lib/store/use-diary-store";
-import { logger } from "@/lib/logger";
 
 const supabase = createClient();
 
@@ -16,7 +15,7 @@ export const diaryService = {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      logger.error("Error fetching entries:", error);
+      console.error("Error fetching entries:", error);
       throw error;
     }
   },
@@ -37,7 +36,7 @@ export const diaryService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      logger.error("Error creating entry:", error);
+      console.error("Error creating entry:", error);
       throw error;
     }
   },
@@ -58,7 +57,7 @@ export const diaryService = {
       if (error) throw error;
       return data;
     } catch (error) {
-      logger.error("Error updating entry:", error);
+      console.error("Error updating entry:", error);
       throw error;
     }
   },
@@ -72,7 +71,7 @@ export const diaryService = {
 
       if (error) throw error;
     } catch (error) {
-      logger.error("Error deleting entry:", error);
+      console.error("Error deleting entry:", error);
       throw error;
     }
   }

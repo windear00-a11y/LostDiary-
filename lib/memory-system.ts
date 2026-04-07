@@ -1,4 +1,4 @@
-import { intelligenceSystem, EmotionalTrend, MoodLabel } from './intelligence-system';
+import { analyzeEntries, EmotionalTrend, MoodLabel } from '@/ai-core/pattern-detector';
 
 /**
  * Lightweight Memory System
@@ -49,8 +49,8 @@ export const memorySystem = {
     // Add new entry and keep only the last MAX_ENTRIES
     const updatedEntries = [content, ...memory.recent_entries].slice(0, MAX_ENTRIES);
     
-    // Extract new signals using the intelligence system
-    const report = intelligenceSystem.analyze(updatedEntries);
+    // Extract new signals using the pattern detector
+    const report = analyzeEntries(updatedEntries);
     
     const newMemory: DiaryMemory = {
       recent_entries: updatedEntries,

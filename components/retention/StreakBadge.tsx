@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { Flame } from 'lucide-react';
-import { retentionSystem } from '@/lib/retention-system';
+import { engagementSystem } from '@/lib/engagement-system';
 
 export const StreakBadge = () => {
   const [streak, setStreak] = useState(0);
 
   useEffect(() => {
-    setStreak(retentionSystem.getStreak());
+    setStreak(engagementSystem.getStreak());
   }, []);
 
   if (streak === 0) return null;
