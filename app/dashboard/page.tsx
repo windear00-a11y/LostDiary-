@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useDiaryActions } from "@/features/diary/use-diary-actions";
 import { RetentionWidget } from "@/components/retention/RetentionWidget";
+import { WeeklyInsight } from "@/components/insights/WeeklyInsight";
 
 const DiaryInput = dynamic(() => import("@/features/diary/DiaryInput").then(mod => ({ default: mod.DiaryInput })), { ssr: false });
 const DiaryList = dynamic(() => import("@/features/diary/DiaryList").then(mod => ({ default: mod.DiaryList })), { ssr: false });
@@ -48,6 +49,7 @@ export default function DashboardPage() {
 
         <div className="space-y-8">
           <RetentionWidget />
+          <WeeklyInsight />
         </div>
       </div>
     </AppLayout>

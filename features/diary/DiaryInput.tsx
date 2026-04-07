@@ -4,7 +4,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Loader2, Image as ImageIcon, X, MessageCircle } from 'lucide-react';
 import { useDiaryStore } from '@/lib/store/use-diary-store';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { retentionSystem } from '@/lib/retention-system';
+import { nudgeSystem, Nudge } from '@/lib/nudge-system';
+import { microInteractions } from '@/ai-core/micro-interactions';
+import { memorySystem } from '@/lib/memory-system';
+import { useMicroInteractionStore } from '@/lib/store/use-micro-interaction-store';
 import { StreakBadge } from '@/components/retention/StreakBadge';
 
 export const DiaryInput = ({
@@ -17,17 +20,22 @@ export const DiaryInput = ({
   const selectedEntry = useDiaryStore((state) => state.selectedEntry);
   const setSelectedEntry = useDiaryStore((state) => state.setSelectedEntry);
   const setBottomSheetOpen = useUIStore((state) => state.setBottomSheetOpen);
+  const setMicroInteraction = useMicroInteractionStore((state) => state.setMessage);
 
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [shouldRemind, setShouldRemind] = useState(false);
+  const [activeNudge, setActiveNudge] = useState<Nudge | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    setShouldRemind(retentionSystem.shouldRemind());
-  }, []);
+    // Only show nudge if we are creating a new entry
+    if (!selectedEntry) {
+      const nudge = nudgeSystem.getNudge();
+      setActiveNudge(nudge);
+    }
+  }, [selectedEntry]);
 
   useEffect(() => {
     if (selectedEntry) {
@@ -50,6 +58,13 @@ export const DiaryInput = ({
       if (selectedEntry) {
         await handleUpdate(selectedEntry.id, content, imageUrl);
       } else {
+        // Trigger micro-interaction before clearing
+        const memory = memorySystem.getMemory();
+        const interaction = microInteractions.getPostEntryInteraction(content, memory);
+        if (interaction.message) {
+          setMicroInteraction(interaction.message);
+        }
+        
         await handleCreate(content, imageUrl);
       }
       
@@ -72,10 +87,10 @@ export const DiaryInput = ({
           <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
             {selectedEntry ? 'Edit Entry' : 'How are you feeling today?'}
           </h3>
-          {!selectedEntry && shouldRemind && (
-            <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1.5">
-              <MessageCircle className="w-3.5 h-3.5" />
-              Haven&apos;t written today, want to check in?
+          {!selectedEntry && activeNudge && (
+            <p className="text-xs text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1.5 animate-in fade-in slide-in-from-top-1 duration-500">
+              <Sparkles className="w-3.5 h-3.5" />
+              {activeNudge.message}
             </p>
           )}
         </div>

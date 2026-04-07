@@ -5,6 +5,7 @@ import { useDiaryData } from '@/features/diary/use-diary-data';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
 import { Drawer } from './Drawer';
+import { MicroInteractionToast } from '../ui/MicroInteractionToast';
 
 export const AppLayout = ({ children, entries: initialEntries }: { children: React.ReactNode; entries?: any[] }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,6 +25,8 @@ export const AppLayout = ({ children, entries: initialEntries }: { children: Rea
           </div>
         </main>
       </div>
+
+      <MicroInteractionToast />
     </div>
   );
 };

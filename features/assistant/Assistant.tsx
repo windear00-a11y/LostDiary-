@@ -17,6 +17,13 @@ export const Assistant = memo(() => {
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-4">
+        {isLoading && (
+          <div className="flex items-center gap-2 text-gray-400 italic text-sm animate-pulse px-6">
+            <Sparkles className="w-3 h-3" />
+            <span>WinDear is listening...</span>
+          </div>
+        )}
+        
         {response && (
           <div className="bg-white dark:bg-[#1A1A1A] p-6 rounded-3xl border border-gray-100 dark:border-[#2E2E2E] shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-4">
             <div className="space-y-2">
