@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, memo } from 'react';
-import { Trash2, Calendar, X, Check, Sparkles } from 'lucide-react';
+import { Trash2, Calendar, X, Check, Sparkles, FileText, BookOpen } from 'lucide-react';
 import { format } from 'date-fns';
 
 import Image from 'next/image';
@@ -14,15 +14,50 @@ export const EntryCard = memo(({
   deleteEntry: (id: string) => Promise<void>;
 }) => {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [viewMode, setViewMode] = useState<'authored' | 'raw'>('authored');
+
+  const hasRawContent = !!entry.original_content;
+  const displayContent = viewMode === 'raw' && hasRawContent ? entry.original_content : entry.content;
 
   return (
     <div className="space-y-4">
       {/* User Entry Bubble */}
       <div className="flex flex-col items-end space-y-1">
         <div className="bg-indigo-600 text-white rounded-2xl rounded-tr-none p-4 shadow-sm max-w-[85%] relative group">
+          
+          {/* View Toggle */}
+          {hasRawContent && (
+            <div className="flex justify-end mb-2">
+              <div className="flex items-center bg-indigo-700/50 rounded-full p-0.5">
+                <button
+                  onClick={() => setViewMode('authored')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors ${
+                    viewMode === 'authored' 
+                      ? 'bg-white text-indigo-600 shadow-sm' 
+                      : 'text-indigo-100 hover:text-white'
+                  }`}
+                >
+                  <BookOpen className="w-3 h-3" />
+                  LifeBook
+                </button>
+                <button
+                  onClick={() => setViewMode('raw')}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium transition-colors ${
+                    viewMode === 'raw' 
+                      ? 'bg-white text-indigo-600 shadow-sm' 
+                      : 'text-indigo-100 hover:text-white'
+                  }`}
+                >
+                  <FileText className="w-3 h-3" />
+                  Raw
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="prose prose-invert max-w-none">
             <p className="text-white whitespace-pre-wrap text-sm md:text-base">
-              {entry.content}
+              {displayContent}
             </p>
           </div>
           {entry.image_url && (

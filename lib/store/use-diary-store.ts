@@ -4,6 +4,8 @@ export interface DiaryEntry {
   id: string;
   user_id: string;
   content: string;
+  original_content?: string;
+  authored_content?: string;
   image_url?: string;
   created_at: string;
   ai_response?: any;

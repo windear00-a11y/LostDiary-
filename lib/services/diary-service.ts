@@ -20,13 +20,15 @@ export const diaryService = {
     }
   },
 
-  async createEntry(userId: string, content: string, imageUrl?: string, aiResponse?: any): Promise<DiaryEntry> {
+  async createEntry(userId: string, content: string, imageUrl?: string, aiResponse?: any, originalContent?: string, authoredContent?: string): Promise<DiaryEntry> {
     try {
       const { data, error } = await supabase
         .from('entries')
         .insert({
           user_id: userId,
           content,
+          original_content: originalContent,
+          authored_content: authoredContent,
           image_url: imageUrl,
           ai_response: aiResponse,
         })
@@ -41,12 +43,14 @@ export const diaryService = {
     }
   },
 
-  async updateEntry(id: string, content: string, imageUrl?: string, aiResponse?: any): Promise<DiaryEntry> {
+  async updateEntry(id: string, content: string, imageUrl?: string, aiResponse?: any, originalContent?: string, authoredContent?: string): Promise<DiaryEntry> {
     try {
       const { data, error } = await supabase
         .from('entries')
         .update({
           content,
+          original_content: originalContent,
+          authored_content: authoredContent,
           image_url: imageUrl,
           ai_response: aiResponse,
         })
