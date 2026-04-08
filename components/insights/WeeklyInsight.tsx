@@ -3,8 +3,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, X } from 'lucide-react';
-import { memorySystem } from '@/lib/memory-system';
-import { weeklyInsightGenerator } from '@/ai-core/pattern-detector';
 
 /**
  * WeeklyInsight Component
@@ -15,27 +13,8 @@ export const WeeklyInsight: React.FC = () => {
   const [isDismissed, setIsDismissed] = useState(false);
 
   useEffect(() => {
-    const memory = memorySystem.getMemory();
-    
-    // Check if it's already dismissed in this session
-    const dismissed = sessionStorage.getItem('windear_weekly_insight_dismissed');
-    if (dismissed) {
-      setIsDismissed(true);
-      return;
-    }
-
-    // 1. Check if we have enough data (3+ entries)
-    // 2. Check if it's been a week since the last insight
-    if (memory.recent_entries.length >= 3 && weeklyInsightGenerator.shouldShowWeeklyInsight()) {
-      const generated = weeklyInsightGenerator.generateWeeklyInsight({
-        emotional_trend: memory.emotional_trend,
-        dominant_emotion: memory.dominant_emotion,
-        recurring_topics: memory.recurring_patterns,
-        risk_flag: memory.risk_flag
-      });
-      setInsight(generated);
-      weeklyInsightGenerator.recordInsightShown();
-    }
+    // Simplified logic: Insights are now handled via the Insights mode
+    setInsight(null);
   }, []);
 
   const handleDismiss = () => {

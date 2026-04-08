@@ -1,7 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { AIPersonality, ToneMode } from "./personality";
-import { DiaryMemory } from "@/lib/memory-system";
-import { PatternReport } from "./pattern-detector";
+import { PatternReport, DiaryMemory } from "./pattern-detector";
 
 export interface AIResponse {
   emotion_reflection: string;
@@ -36,7 +35,7 @@ export class ResponseEngine {
     }
 
     let contextPrompt = "";
-    if (memory && memory.recent_entries.length > 0) {
+    if (memory && memory.recent_messages.length > 0) {
       const dominantEmotion = patterns?.dominant_emotion || memory.dominant_emotion;
       const trend = patterns?.emotional_trend || memory.emotional_trend;
       const risk = patterns?.risk_flag || memory.risk_flag;
@@ -48,7 +47,7 @@ Dominant Emotion: ${dominantEmotion}
 Emotional Trend: ${trend}
 Risk Flag: ${risk ? "HIGH (User is showing signs of persistent distress or decline)" : "Normal"}
 Recurring Patterns: ${topics.join(", ")}
-Recent Entries: ${memory.recent_entries.join(" | ")}
+Recent Messages: ${memory.recent_messages.join(" | ")}
 
 [TONE SELECTION]
 ${toneInstructions}
@@ -59,7 +58,7 @@ ${toneInstructions}
 3. Risk Handling: If Risk Flag is HIGH, be extremely empathetic, validating, and prioritize safety and soft support. Do not be overly cheerful.
 4. Subtle Pattern Mention: Mention emotional trends naturally. For example, if they've been low for a few days, say something like "I've noticed you've been feeling a bit low lately..." but keep it warm and human.
 5. Recurring Emotions: If the current message relates to past patterns (${topics.join(", ")}), mention it naturally.
-6. Avoid Repetition: Do not repeat the same advice or suggestions from previous entries.
+6. Avoid Repetition: Do not repeat the same advice or suggestions from previous messages.
 7. Human-like: Avoid robotic phrases like "Based on your memory...". Instead, use natural transitions like "It seems like..." or "I've noticed...".
 `;
     }

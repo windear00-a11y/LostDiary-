@@ -33,7 +33,10 @@ export const ChatInterface = () => {
     const user = await authService.getUser();
     if (!user) return;
     
-    const newMessage = await chatService.sendMessage({ ...message, user_id: user.id });
+    const newMessage = await chatService.sendMessage({ 
+      ...message, 
+      user_id: user.id
+    });
     setMessages(prev => [...prev, newMessage]);
 
     // Process message for LifeBook

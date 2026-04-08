@@ -5,6 +5,16 @@ import { LifeAuthorEngine } from "@/ai-core/life-author";
 const supabase = createClient();
 const authorEngine = new LifeAuthorEngine(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
 
+function isImportantMessage(message: any) {
+  const content = message.content || "";
+  const includesStrongEmotion = /sad|angry|hate|terrible|worst|stressed|anxious|failed|lonely|overwhelmed|exhausted|worried|frustrated|annoyed|happy|great|awesome|love|excited|wonderful|joy|blessed|proud/i.test(content);
+  return (
+    content.length > 80 ||
+    includesStrongEmotion ||
+    message.type !== "text"
+  );
+}
+
 export async function POST(req: Request) {
   try {
     const { messageId, userId } = await req.json();
@@ -18,67 +28,76 @@ export async function POST(req: Request) {
 
     if (messageError || !message) throw new Error("Message not found");
 
-    // 2. Extract Event (if text)
-    if (message.type === 'text' && message.content) {
-      const eventData = await authorEngine.extractLifeEvent(message.content);
-      
-      if (eventData) {
-        // 3. Save Event
-        const { data: event, error: eventError } = await supabase
-          .from('life_events')
+    // 2. Fetch the event (created in send route)
+    const { data: event, error: eventError } = await supabase
+      .from('life_events')
+      .select('*')
+      .eq('message_id', messageId)
+      .single();
+
+    if (event && !eventError) {
+      const finalCategory = event.category;
+
+      // 4. Organize/Update Chapters
+      const { data: chapter, error: chapterError } = await supabase
+        .from('chapters')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('title', finalCategory)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      let chapterId = chapter?.id;
+      if (!chapter) {
+        const { data: newChapter, error: newChapterError } = await supabase
+          .from('chapters')
           .insert({
             user_id: userId,
-            entry_id: messageId,
-            summary: eventData.summary,
-            emotion: eventData.emotion,
-            category: eventData.category,
-            intensity: eventData.intensity
+            title: finalCategory,
+            story_content: `Your journey in ${finalCategory}`,
+            dominant_categories: [finalCategory]
           })
           .select()
           .single();
-        
-        if (eventError) throw eventError;
-
-        // 4. Organize/Update Chapters (simplified: just update the chapter narrative)
-        // For now, let's just update the chapter narrative for the category
-        const { data: chapter, error: chapterError } = await supabase
-          .from('chapters')
-          .select('*')
-          .eq('user_id', userId)
-          .contains('dominant_categories', [eventData.category])
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-
-        if (chapter) {
-          // Update chapter narrative
-          const { data: eventsInChapter, error: eventsError } = await supabase
-            .from('life_events')
-            .select('*')
-            .eq('chapter_id', chapter.id);
-            
-          if (!eventsError && eventsInChapter) {
-            const chapterInput = eventsInChapter.map(e => ({
-              summary: e.summary,
-              emotion: e.emotion,
-              category: e.category
-            }));
-            const storyContent = await authorEngine.generateChapter(chapterInput);
-            await supabase.from('chapters').update({ story_content: storyContent }).eq('id', chapter.id);
-          }
+        if (!newChapterError && newChapter) {
+          chapterId = newChapter.id;
         }
+      }
 
-        // 5. (optional) AI Reply
-        if (authorEngine.shouldRespond(eventData.intensity)) {
-          const reply = await authorEngine.generateDiaryResponse(eventData);
-          if (reply) {
-            await supabase.from('chat_messages').insert({
-              user_id: userId,
-              role: 'diary',
-              type: 'text',
-              content: reply
-            });
-          }
+      if (chapterId) {
+        // Update event with chapter_id
+        await supabase.from('life_events').update({ chapter_id: chapterId }).eq('id', event.id);
+
+        // Update chapter narrative
+        const { data: eventsInChapter, error: eventsError } = await supabase
+          .from('life_events')
+          .select('*')
+          .eq('chapter_id', chapterId);
+          
+        if (!eventsError && eventsInChapter) {
+          const chapterInput = eventsInChapter.map(e => ({
+            summary: e.summary,
+            emotion: e.emotion,
+            category: e.category
+          }));
+          const storyContent = await authorEngine.generateChapter(chapterInput);
+          await supabase.from('chapters').update({ story_content: storyContent }).eq('id', chapterId);
+        }
+      }
+
+      // 5. (optional) AI Reply
+      if (authorEngine.shouldRespond(event.intensity)) {
+        const reply = await authorEngine.generateDiaryResponse(event);
+        if (reply) {
+          await supabase.from('chat_messages').insert({
+            user_id: userId,
+            role: 'diary',
+            type: 'text',
+            content: reply,
+            original_content: reply,
+            authored_content: reply
+          });
         }
       }
     }

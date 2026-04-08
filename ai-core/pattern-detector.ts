@@ -13,15 +13,24 @@ export interface PatternReport {
   risk_flag: boolean;
 }
 
+export interface DiaryMemory {
+  recent_messages: string[];
+  dominant_emotion: MoodLabel;
+  recurring_patterns: string[];
+  emotional_trend: EmotionalTrend;
+  risk_flag: boolean;
+  last_message_at?: number;
+}
+
 const POSITIVE_WORDS = ['happy', 'great', 'awesome', 'good', 'love', 'excited', 'wonderful', 'joy', 'blessed', 'proud', 'achieved', 'better', 'calm', 'peaceful', 'hopeful', 'grateful', 'inspired'];
 const NEGATIVE_WORDS = ['sad', 'bad', 'angry', 'upset', 'hate', 'terrible', 'worst', 'stressed', 'anxious', 'tired', 'failed', 'lonely', 'overwhelmed', 'exhausted', 'worried', 'frustrated', 'annoyed'];
 const STOP_WORDS = new Set(['the', 'and', 'a', 'to', 'in', 'is', 'i', 'it', 'that', 'was', 'for', 'on', 'are', 'with', 'as', 'be', 'at', 'one', 'have', 'this', 'from', 'or', 'had', 'by', 'but', 'some', 'what', 'there', 'we', 'can', 'out', 'other', 'were', 'all', 'your', 'when', 'up', 'use', 'how', 'said', 'an', 'each', 'she', 'which', 'do', 'their', 'time', 'if', 'will', 'way', 'about', 'many', 'then', 'them', 'write', 'would', 'like', 'so', 'these', 'her', 'long', 'make', 'thing', 'see', 'him', 'two', 'has', 'look', 'more', 'day', 'could', 'go', 'come', 'did', 'no', 'most', 'my', 'over', 'know', 'than', 'who', 'may', 'down', 'been', 'now', 'find', 'just', 'very', 'really']);
 
 /**
- * Detects the dominant emotion of a single entry based on keyword frequency.
+ * Detects the dominant emotion of a single message based on keyword frequency.
  */
-export const detectEmotion = (entry: string): { score: number; label: MoodLabel } => {
-  const words = entry.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
+export const detectEmotion = (message: string): { score: number; label: MoodLabel } => {
+  const words = message.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/);
   let score = 0;
 
   words.forEach(word => {
@@ -37,14 +46,14 @@ export const detectEmotion = (entry: string): { score: number; label: MoodLabel 
 };
 
 /**
- * Extracts recurring topics (keywords) that appear in multiple entries.
+ * Extracts recurring topics (keywords) that appear in multiple messages.
  */
-export const extractTopics = (entries: string[]): string[] => {
+export const extractTopics = (messages: string[]): string[] => {
   const wordFreq: Record<string, number> = {};
 
-  entries.forEach(entry => {
-    // Use a Set per entry to count "frequency across entries" rather than "total word count"
-    const words = new Set(entry.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/));
+  messages.forEach(message => {
+    // Use a Set per message to count "frequency across messages" rather than "total word count"
+    const words = new Set(message.toLowerCase().replace(/[^\w\s]/g, '').split(/\s+/));
     words.forEach(word => {
       if (word.length > 3 && !STOP_WORDS.has(word)) {
         wordFreq[word] = (wordFreq[word] || 0) + 1;
@@ -53,22 +62,22 @@ export const extractTopics = (entries: string[]): string[] => {
   });
 
   return Object.entries(wordFreq)
-    .filter(([_, count]) => count > 1) // Must appear in at least 2 entries
+    .filter(([_, count]) => count > 1) // Must appear in at least 2 messages
     .sort((a, b) => b[1] - a[1]) // Most frequent first
     .slice(0, 5) // Top 5
     .map(([word]) => word);
 };
 
 /**
- * Analyzes a list of entries to detect trends, dominant emotions, and risks.
- * Expects entries in reverse chronological order (newest first).
+ * Analyzes a list of messages to detect trends, dominant emotions, and risks.
+ * Expects messages in reverse chronological order (newest first).
  */
-export const analyzeEntries = (entries: string[]): PatternReport => {
-  if (entries.length === 0) {
+export const analyzeEntries = (messages: string[]): PatternReport => {
+  if (messages.length === 0) {
     return { emotional_trend: "stable", dominant_emotion: "neutral", recurring_topics: [], risk_flag: false };
   }
 
-  const analysis = entries.map(entry => detectEmotion(entry));
+  const analysis = messages.map(message => detectEmotion(message));
   
   // 1. Dominant Emotion
   const moodCounts = analysis.reduce((acc, curr) => {
@@ -96,10 +105,10 @@ export const analyzeEntries = (entries: string[]): PatternReport => {
   }
 
   // 3. Recurring Topics
-  const recurring_topics = extractTopics(entries);
+  const recurring_topics = extractTopics(messages);
 
   // 4. Risk Flag
-  // Triggered if trend is declining OR last 3 entries are negative
+  // Triggered if trend is declining OR last 3 messages are negative
   const recentLabels = analysis.slice(0, 3).map(a => a.label);
   const risk_flag = emotional_trend === "declining" || 
                     (recentLabels.length >= 3 && recentLabels.every(l => l === "negative"));

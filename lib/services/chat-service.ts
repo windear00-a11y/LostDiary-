@@ -8,6 +8,8 @@ export interface ChatMessage {
   role: 'user' | 'diary';
   type: 'text' | 'image' | 'video' | 'audio' | 'location';
   content: string | null;
+  original_content: string | null;
+  authored_content: string | null;
   media_url: string | null;
   created_at: string;
 }
@@ -25,14 +27,18 @@ export const chatService = {
   },
 
   async sendMessage(message: Omit<ChatMessage, 'id' | 'created_at'>): Promise<ChatMessage> {
-    const { data, error } = await supabase
-      .from('chat_messages')
-      .insert(message)
-      .select()
-      .single();
+    const response = await fetch('/api/chat/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message)
+    });
 
-    if (error) throw error;
-    return data;
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to send message');
+    }
+
+    return response.json();
   },
 
   async uploadMedia(file: File, userId: string): Promise<string> {

@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useDiaryData } from '@/features/diary/use-diary-data';
 import { Header } from '@/components/ui/Header';
 import { Sidebar } from './Sidebar';
 import { Drawer } from './Drawer';
 import { MicroInteractionToast } from '@/components/ui/MicroInteractionToast';
 
-export const AppLayout = ({ children, entries: initialEntries }: { children: React.ReactNode; entries?: any[] }) => {
+export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  useDiaryData(initialEntries);
 
   return (
     <div className="min-h-screen bg-white dark:bg-[#0A0A0A] text-gray-900 dark:text-gray-100">

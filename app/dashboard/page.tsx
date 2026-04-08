@@ -1,54 +1,20 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useDiaryActions } from "@/features/diary/use-diary-actions";
-import { WeeklyInsight } from "@/components/insights/WeeklyInsight";
-import { FAB } from "@/components/ui/FAB";
-import { BottomSheet } from "@/components/ui/BottomSheet";
-
-const DiaryInputModal = dynamic(() => import("@/features/diary/DiaryInputModal").then(mod => ({ default: mod.DiaryInputModal })), { ssr: false });
-const DiaryList = dynamic(() => import("@/features/diary/DiaryList").then(mod => ({ default: mod.DiaryList })), { ssr: false });
+import { ChatInterface } from "@/features/chat/ChatInterface";
 
 export default function DashboardPage() {
-  const {
-    loading,
-    isBottomSheetOpen,
-    setBottomSheetOpen,
-    handleCreate,
-    handleUpdate,
-    handleDelete,
-  } = useDiaryActions();
-
-  if (loading) {
-    return <div className="p-8">Loading dashboard...</div>;
-  }
-
   return (
     <AppLayout>
-      <div className="max-w-2xl mx-auto space-y-8 relative min-h-[calc(100vh-120px)]">
-        <div className="flex flex-col space-y-2">
-          <h1 className="text-3xl font-bold tracking-tight">Timeline</h1>
+      <div className="max-w-2xl mx-auto space-y-6 relative h-[calc(100vh-120px)] flex flex-col">
+        <div className="flex flex-col space-y-2 shrink-0">
+          <h1 className="text-3xl font-bold tracking-tight">Chat</h1>
           <p className="text-gray-500 text-sm">Your journey, one thought at a time.</p>
         </div>
 
-        <WeeklyInsight />
-
-        <div className="space-y-8">
-          <BottomSheet isOpen={isBottomSheetOpen} onClose={() => setBottomSheetOpen(false)}>
-            <DiaryInputModal 
-              handleCreate={handleCreate}
-              handleUpdate={handleUpdate}
-            />
-          </BottomSheet>
-          
-          <DiaryList 
-            isLoadingEntries={loading}
-            deleteEntry={handleDelete}
-          />
+        <div className="flex-1 overflow-hidden border border-gray-100 dark:border-[#2E2E2E] rounded-2xl shadow-sm bg-white dark:bg-[#0A0A0A]">
+          <ChatInterface />
         </div>
-
-        <FAB onClick={() => setBottomSheetOpen(true)} />
       </div>
     </AppLayout>
   );

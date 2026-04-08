@@ -1,5 +1,3 @@
-import { memorySystem, DiaryMemory } from './memory-system';
-
 /**
  * Unified Engagement System
  * Manages streaks, retention, and proactive nudges.
@@ -107,31 +105,10 @@ export const engagementSystem = {
   getNudge(): Nudge | null {
     if (!this.shouldShowNudge()) return null;
 
-    const memory = memorySystem.getMemory();
     const streak = this.getStreak();
-    const now = Date.now();
-    const lastEntryAt = memory.last_entry_at || 0;
-    const hoursSinceLastEntry = (now - lastEntryAt) / (1000 * 60 * 60);
-
     const nudges: Nudge[] = [];
 
-    if (memory.dominant_emotion === 'negative' && hoursSinceLastEntry > 12 && hoursSinceLastEntry < 48) {
-      nudges.push({
-        id: 'emotional_followup',
-        message: "कल तुम थोड़ा low थे… आज कैसा feel कर रहे हो?",
-        priority: 1
-      });
-    }
-
-    if (hoursSinceLastEntry >= 24 && hoursSinceLastEntry < 72) {
-      nudges.push({
-        id: 'inactivity',
-        message: "आज कुछ share करना चाहोगे?",
-        priority: 2
-      });
-    }
-
-    if (streak > 0 && streak % 3 === 0 && hoursSinceLastEntry >= 12) {
+    if (streak > 0 && streak % 3 === 0) {
       nudges.push({
         id: 'streak_milestone',
         message: `🔥 ${streak} दिन का streak! Keep it going.`,

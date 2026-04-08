@@ -2,15 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Sparkles, Settings, X, BookOpen, MessageSquare } from 'lucide-react';
+import { Sparkles, X, BookOpen, MessageSquare } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 const NAV_ITEMS = [
-  { label: 'Timeline', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Chat', href: '/dashboard', icon: MessageSquare },
   { label: 'LifeBook', href: '/dashboard/lifebook', icon: BookOpen },
-  { label: 'Chat', href: '/dashboard/chat', icon: MessageSquare },
-  { label: 'Assistant', href: '/assistant', icon: Sparkles },
-  { label: 'Settings', href: '/settings', icon: Settings },
+  { label: 'Insights', href: '/assistant', icon: Sparkles },
 ];
 
 export const Drawer = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {

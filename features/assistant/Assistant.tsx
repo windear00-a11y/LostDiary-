@@ -13,7 +13,7 @@ export const Assistant = memo(() => {
         <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl">
           <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
         </div>
-        <h2 className="text-2xl font-bold">WinDear Assistant</h2>
+        <h2 className="text-2xl font-bold">WinDear Insights</h2>
       </div>
 
       <div className="flex-1 overflow-y-auto space-y-4">

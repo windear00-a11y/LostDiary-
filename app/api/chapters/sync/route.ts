@@ -4,6 +4,16 @@ import { format } from "date-fns";
 
 const supabase = createClient();
 
+function isImportantMessage(message: any) {
+  const content = message.content || "";
+  const includesStrongEmotion = /sad|angry|hate|terrible|worst|stressed|anxious|failed|lonely|overwhelmed|exhausted|worried|frustrated|annoyed|happy|great|awesome|love|excited|wonderful|joy|blessed|proud/i.test(content);
+  return (
+    content.length > 80 ||
+    includesStrongEmotion ||
+    message.type !== "text"
+  );
+}
+
 export async function POST(req: Request) {
   try {
     const { userId } = await req.json();
@@ -14,43 +24,52 @@ export async function POST(req: Request) {
 
     const authorEngine = new LifeAuthorEngine(apiKey);
 
-    // 1. Fetch all entries that don't have a life_event yet
-    const { data: entries, error: entriesError } = await supabase
-      .from('entries')
-      .select('id, content, created_at')
+    // 1. Fetch all chat messages that don't have a life_event yet
+    const { data: messages, error: messagesError } = await supabase
+      .from('chat_messages')
+      .select('id, content, original_content, authored_content, created_at, type')
       .eq('user_id', userId)
+      .eq('role', 'user')
+      .eq('type', 'text')
       .order('created_at', { ascending: true });
 
-    if (entriesError) throw entriesError;
-    if (!entries || entries.length === 0) return new Response(JSON.stringify({ message: "No entries found" }), { status: 200 });
+    if (messagesError) throw messagesError;
+    if (!messages || messages.length === 0) return new Response(JSON.stringify({ message: "No messages found" }), { status: 200 });
 
     // Fetch existing life events to filter out already processed ones
     const { data: existingEvents } = await supabase
       .from('life_events')
-      .select('entry_id')
+      .select('message_id')
       .eq('user_id', userId);
       
-    const existingEntryIds = new Set(existingEvents?.map(e => e.entry_id) || []);
-    const unprocessedEntries = entries.filter(e => !existingEntryIds.has(e.id));
+    const existingMessageIds = new Set(existingEvents?.map(e => e.message_id) || []);
+    const unprocessedMessages = messages.filter(m => !existingMessageIds.has(m.id));
 
-    if (unprocessedEntries.length === 0) {
-      return new Response(JSON.stringify({ message: "All entries are already processed" }), { status: 200 });
+    if (unprocessedMessages.length === 0) {
+      return new Response(JSON.stringify({ message: "All messages are already processed" }), { status: 200 });
     }
 
-    // 2. Extract Life Events for unprocessed entries
+    // 2. Extract Life Events for unprocessed messages
     const extractedEvents = [];
-    for (const entry of unprocessedEntries) {
-      const eventData = await authorEngine.extractLifeEvent(entry.content);
-      if (eventData) {
-        extractedEvents.push({
-          user_id: userId,
-          entry_id: entry.id,
-          summary: eventData.summary,
-          emotion: eventData.emotion,
-          category: eventData.category,
-          intensity: eventData.intensity,
-          created_at: entry.created_at
-        });
+    for (const msg of unprocessedMessages) {
+      const contentToProcess = msg.authored_content || msg.content;
+      if (!contentToProcess) continue;
+      
+      if (isImportantMessage(msg)) {
+        const eventData = await authorEngine.extractLifeEvent(contentToProcess);
+        if (eventData) {
+          extractedEvents.push({
+            user_id: userId,
+            message_id: msg.id,
+            summary: eventData.summary,
+            emotion: eventData.emotion,
+            category: eventData.category,
+            intensity: eventData.intensity,
+            created_at: msg.created_at
+          });
+        }
+      } else {
+        // skip processing
       }
     }
 
@@ -62,7 +81,7 @@ export async function POST(req: Request) {
       if (insertEventsError) throw insertEventsError;
     }
 
-    // 3. Group all life events using AI
+    // 3. Group all life events by category
     const { data: allEvents, error: allEventsError } = await supabase
       .from('life_events')
       .select('*')
@@ -74,15 +93,34 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ message: "Events extracted, but no new chapters needed yet." }), { status: 200 });
     }
 
-    const aiInput = allEvents.map(e => ({
-      id: e.id,
-      summary: e.summary,
-      emotion: e.emotion,
-      category: e.category,
-      date: e.created_at
-    }));
+    // 3.5 Clean existing data: Ensure all events have mapped categories
+    for (const event of allEvents) {
+      const mappedCat = authorEngine.mapCategory(event.category || "Growth");
+      if (mappedCat !== event.category) {
+        await supabase
+          .from('life_events')
+          .update({ category: mappedCat })
+          .eq('id', event.id);
+        event.category = mappedCat; // Update local object for grouping
+      }
+    }
 
-    const organization = await authorEngine.organizeChapters(aiInput);
+    const chaptersMap = new Map<string, any[]>();
+    for (const event of allEvents) {
+      const cat = authorEngine.mapCategory(event.category || "Growth");
+      if (!chaptersMap.has(cat)) {
+        chaptersMap.set(cat, []);
+      }
+      chaptersMap.get(cat)!.push(event);
+    }
+
+    const organization = {
+      chapters: Array.from(chaptersMap.entries()).map(([category, events]) => ({
+        title: category,
+        description: `Your journey in ${category}`,
+        events: events.map(e => e.id)
+      }))
+    };
 
     if (!organization || !organization.chapters) {
       return new Response(JSON.stringify({ message: "Failed to organize chapters." }), { status: 500 });

@@ -159,7 +159,7 @@ export default function LandingPage() {
                 </div>
                 <div className="space-y-1">
                   <p className="font-medium text-[#111827]">AI Insights</p>
-                  <p className="text-sm text-[#6B7280]">Get immediate feedback on your entries.</p>
+                  <p className="text-sm text-[#6B7280]">Get immediate feedback on your thoughts.</p>
                 </div>
               </div>
               <div className="flex gap-6 items-start">
@@ -252,10 +252,10 @@ export default function LandingPage() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <h3 className="font-medium text-[#111827]">AI Assistant</h3>
+                <h3 className="font-medium text-[#111827]">AI Insights</h3>
                 <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-widest rounded-full">New</span>
               </div>
-              <p className="text-sm text-[#6B7280] leading-relaxed">Chat with your diary to explore your thoughts deeper.</p>
+              <p className="text-sm text-[#6B7280] leading-relaxed">Deep emotional analysis and reflections on your journey.</p>
             </div>
           </div>
           <div className="flex gap-6 items-start">

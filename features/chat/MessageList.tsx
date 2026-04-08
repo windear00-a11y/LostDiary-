@@ -10,7 +10,9 @@ export const MessageList = ({ messages }: { messages: ChatMessage[] }) => {
       {messages.map((msg) => (
         <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
           <div className={`max-w-[85%] md:max-w-[75%] p-3 rounded-2xl ${msg.role === 'user' ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-[#1A1A1A] text-gray-900 dark:text-gray-100'}`}>
-            {msg.type === 'text' && <p className="whitespace-pre-wrap">{msg.content}</p>}
+            {msg.type === 'text' && (
+              <p className="whitespace-pre-wrap">{msg.original_content || msg.content}</p>
+            )}
             
             {msg.type === 'image' && (
               <img src={msg.media_url || ''} alt="Attachment" className="max-w-full rounded-lg object-cover" />

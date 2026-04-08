@@ -2,17 +2,78 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 export class LifeAuthorEngine {
   private ai: GoogleGenAI;
+  public static readonly ALLOWED_CATEGORIES = ["Love", "Work", "Family", "Health", "Growth", "Social"];
 
   constructor(apiKey: string) {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
-  async rewriteEntry(rawContent: string): Promise<string> {
+  async processMessageConsolidated(rawContent: string): Promise<{ authored: string; event: any | null }> {
+    const systemInstruction = `
+You are an AI life author and behavioral intelligence system.
+
+Goal:
+1. Rewrite raw chat messages into a meaningful, structured life narrative.
+2. Convert the message into a structured life event.
+
+Output:
+{
+  "authored": "Refined narrative version of the message",
+  "event": {
+    "summary": "Short summary of the event",
+    "emotion": "Detected emotion",
+    "category": "One of: Love, Work, Family, Health, Social, Growth",
+    "intensity": 0-1
+  }
+}
+
+Rules for Authoring:
+- Keep original meaning, improve clarity, add emotional depth.
+- Feels like part of a life story.
+- Slightly poetic but grounded.
+
+Rules for Extraction:
+- Summary: 1-2 lines.
+- Intensity: 0-1.
+- Category: Must be one of the 6 allowed.
+
+Output ONLY a valid JSON object.
+`;
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ role: "user", parts: [{ text: rawContent }] }],
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.4,
+          responseMimeType: "application/json",
+        }
+      });
+
+      const text = response.text?.trim();
+      if (!text) return { authored: rawContent, event: null };
+      
+      const parsed = JSON.parse(text);
+      if (parsed.event) {
+        parsed.event.category = this.mapCategory(parsed.event.category || "");
+      }
+      return {
+        authored: parsed.authored || rawContent,
+        event: parsed.event || null
+      };
+    } catch (error) {
+      console.error("Error in consolidated processing:", error);
+      return { authored: rawContent, event: null };
+    }
+  }
+
+  async rewriteMessage(rawContent: string): Promise<string> {
     const systemInstruction = `
 You are an AI life author.
 
 Goal:
-Rewrite raw diary entries into a meaningful, structured life narrative.
+Rewrite raw chat messages into a meaningful, structured life narrative.
 
 Output:
 A refined version that:
@@ -27,7 +88,7 @@ Rules:
 - Make it readable and reflective
 - Slightly poetic but not dramatic
 - Keep it concise
-- Output ONLY the rewritten entry text. Do not include any conversational filler, explanations, or quotes around the output.
+- Output ONLY the rewritten message text. Do not include any conversational filler, explanations, or quotes around the output.
 
 Example:
 Input: "Aaj pura din kuch nahi kiya, bas phone use karta raha"
@@ -46,19 +107,19 @@ Output: Today slipped by quietly, mostly spent scrolling through my phone, leavi
 
       return response.text?.trim() || rawContent;
     } catch (error) {
-      console.error("Error rewriting entry:", error);
+      console.error("Error rewriting message:", error);
       return rawContent; // Fallback to original if AI fails
     }
   }
 
-  async generateWeeklyStory(entries: string[]): Promise<string | null> {
-    if (!entries || entries.length === 0) return null;
+  async generateWeeklyStory(messages: string[]): Promise<string | null> {
+    if (!messages || messages.length === 0) return null;
 
     const systemInstruction = `
 You are writing a weekly life summary.
 
 Goal:
-Turn multiple diary entries into a single coherent life story.
+Turn multiple chat messages into a single coherent life story.
 
 Output:
 - a connected narrative
@@ -72,12 +133,12 @@ Rules:
 - Output ONLY the narrative text. Do not include any conversational filler, markdown formatting, or quotes around the output.
 `;
 
-    const combinedEntries = entries.map((entry, index) => `Entry ${index + 1}:\n${entry}`).join('\n\n');
+    const combinedMessages = messages.map((msg, index) => `Message ${index + 1}:\n${msg}`).join('\n\n');
 
     try {
       const response = await this.ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: [{ role: "user", parts: [{ text: combinedEntries }] }],
+        contents: [{ role: "user", parts: [{ text: combinedMessages }] }],
         config: {
           systemInstruction: systemInstruction,
           temperature: 0.7,
@@ -160,8 +221,7 @@ Categories:
 - Family
 - Health
 - Social
-- Personal Growth
-- Other
+- Growth
 
 Rules:
 - Keep summary short (1-2 lines)
@@ -197,66 +257,60 @@ Output:
       const text = response.text?.trim();
       if (!text) return null;
       
-      return JSON.parse(text);
+      const parsed = JSON.parse(text);
+      parsed.category = this.mapCategory(parsed.category || "");
+      return parsed;
     } catch (error) {
       console.error("Error extracting life event:", error);
       return null;
     }
   }
 
-  async organizeChapters(events: { id: string; summary: string; emotion: string; category: string; date: string }[]): Promise<{ chapters: { title: string; description: string; events: string[] }[] } | null> {
-    const systemInstruction = `
-You are organizing a person's life into chapters.
-
-Goal:
-Group life events into meaningful chapters.
-
-Input:
-List of events with id, category, emotion, timestamp, and summary.
-
-Tasks:
-1. Create chapters dynamically (Love, Work, etc.)
-2. Assign events to chapters (use the event 'id' in the events array)
-3. Maintain chronological order within each chapter
-4. Update chapters over time
-
-Rules:
-- Do not create too many chapters
-- Merge similar categories
-- Keep structure clean and readable
-- Output ONLY a valid JSON object with no markdown formatting or backticks.
-
-Output:
-{
-  "chapters": [
-    {
-      "title": "",
-      "description": "",
-      "events": ["event_id_1", "event_id_2"]
+  mapCategory(category: string): string {
+    const normalized = category.toLowerCase();
+    
+    // Love: relationship, romance, dating, partner, girlfriend, boyfriend, crush
+    if (normalized.includes("love") || normalized.includes("romance") || normalized.includes("relationship") || 
+        normalized.includes("dating") || normalized.includes("partner") || normalized.includes("girlfriend") || 
+        normalized.includes("boyfriend") || normalized.includes("crush")) {
+      return "Love";
     }
-  ]
-}
-`;
-
-    try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [{ role: "user", parts: [{ text: JSON.stringify(events) }] }],
-        config: {
-          systemInstruction: systemInstruction,
-          temperature: 0.2,
-          responseMimeType: "application/json",
-        }
-      });
-
-      const text = response.text?.trim();
-      if (!text) return null;
-      
-      return JSON.parse(text);
-    } catch (error) {
-      console.error("Error organizing chapters:", error);
-      return null;
+    
+    // Work: job, career, office, boss, project, meeting, salary, stress (often work related)
+    if (normalized.includes("work") || normalized.includes("career") || normalized.includes("job") || 
+        normalized.includes("office") || normalized.includes("boss") || normalized.includes("project") || 
+        normalized.includes("meeting") || normalized.includes("salary") || normalized.includes("stress")) {
+      return "Work";
     }
+    
+    // Family: parents, home, mom, dad, sister, brother, relative, cousin
+    if (normalized.includes("family") || normalized.includes("parents") || normalized.includes("home") || 
+        normalized.includes("mom") || normalized.includes("dad") || normalized.includes("sister") || 
+        normalized.includes("brother") || normalized.includes("relative")) {
+      return "Family";
+    }
+    
+    // Health: fitness, sleep, diet, exercise, gym, mental health, doctor, therapy
+    if (normalized.includes("health") || normalized.includes("fitness") || normalized.includes("medical") || 
+        normalized.includes("sleep") || normalized.includes("diet") || normalized.includes("exercise") || 
+        normalized.includes("gym") || normalized.includes("therapy")) {
+      return "Health";
+    }
+    
+    // Social: friends, social, party, hangout, gathering, community
+    if (normalized.includes("social") || normalized.includes("friend") || normalized.includes("party") || 
+        normalized.includes("hangout") || normalized.includes("gathering")) {
+      return "Social";
+    }
+    
+    // Growth: learning, self-improve, skill, meditation, reading, hobby, goal
+    if (normalized.includes("growth") || normalized.includes("learning") || normalized.includes("improve") || 
+        normalized.includes("skill") || normalized.includes("meditation") || normalized.includes("reading") || 
+        normalized.includes("hobby") || normalized.includes("goal")) {
+      return "Growth";
+    }
+
+    return "Growth"; // Default fallback
   }
 
   async compileBook(chapters: { title: string; events: { summary: string; emotion: string; date?: string }[] }[]): Promise<string | null> {
