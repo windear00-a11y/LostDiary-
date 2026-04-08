@@ -95,21 +95,27 @@ Rules:
     if (!events || events.length === 0) return null;
 
     const systemInstruction = `
-You are generating a life book.
+You are an AI life author.
 
 Goal:
-Convert structured events into a readable life story.
+Turn life events into a compelling narrative.
 
-Structure:
-- chapters
-- narrative flow
-- emotional continuity
+Input:
+List of events (summaries, emotions, timeline)
+
+Output:
+A smooth, human-like story.
 
 Rules:
-- no repetition
-- smooth storytelling
-- human-like narrative
-- Output ONLY the full chapter text. Do not include conversational filler or markdown formatting outside of the story itself.
+- Keep facts accurate
+- Add emotional depth
+- Maintain flow between events
+- Avoid repetition
+- Slightly reflective tone
+- Output ONLY the narrative text. Do not include conversational filler or markdown formatting.
+
+Example style:
+"This phase of life was marked by emotional ups and downs, especially in relationships..."
 `;
 
     const structuredData = events.map((e, i) => 
@@ -133,20 +139,48 @@ Rules:
     }
   }
 
-  async extractLifeEvent(content: string): Promise<{ summary: string; emotion: string; category: string; impact_score: number } | null> {
+  async extractLifeEvent(content: string): Promise<{ summary: string; emotion: string; category: string; intensity: number } | null> {
     const systemInstruction = `
-You are a highly analytical behavioral intelligence system.
-Your task is to extract the core "Life Event" from the user's raw message.
+You are a behavioral intelligence system.
 
-RULES:
-1. SUMMARY: A concise, objective statement of what happened (Max 10 words).
-2. EMOTION: The underlying feeling (e.g., Anxious, Joyful, Frustrated, Peaceful).
-3. CATEGORY: Must be one of: [Work, Love, Family, Health, Finance, Social, Self, Other].
-4. IMPACT_SCORE: A number from 1 to 5. 1 = Routine/Minor, 3 = Notable, 5 = Life-Changing.
+Goal:
+Convert chat messages into structured life events.
 
-Output ONLY a valid JSON object with no markdown formatting or backticks.
+Output:
+{
+"summary": "",
+"emotion": "",
+"category": "",
+"intensity": 0-1
+}
+
+Categories:
+- Love
+- Work
+- Family
+- Health
+- Social
+- Personal Growth
+- Other
+
+Rules:
+- Keep summary short (1-2 lines)
+- Detect real emotional context
+- Assign only one primary category
+- Avoid generic outputs
+- Output ONLY a valid JSON object with no markdown formatting or backticks.
+
 Example:
-{"summary": "Submitted major work project", "emotion": "Relieved", "category": "Work", "impact_score": 3}
+Input:
+"Had a fight with my girlfriend today"
+
+Output:
+{
+"summary": "An argument created tension in a close relationship",
+"emotion": "sad",
+"category": "Love",
+"intensity": 0.7
+}
 `;
 
     try {
@@ -166,6 +200,143 @@ Example:
       return JSON.parse(text);
     } catch (error) {
       console.error("Error extracting life event:", error);
+      return null;
+    }
+  }
+
+  async organizeChapters(events: { id: string; summary: string; emotion: string; category: string; date: string }[]): Promise<{ chapters: { title: string; description: string; events: string[] }[] } | null> {
+    const systemInstruction = `
+You are organizing a person's life into chapters.
+
+Goal:
+Group life events into meaningful chapters.
+
+Input:
+List of events with id, category, emotion, timestamp, and summary.
+
+Tasks:
+1. Create chapters dynamically (Love, Work, etc.)
+2. Assign events to chapters (use the event 'id' in the events array)
+3. Maintain chronological order within each chapter
+4. Update chapters over time
+
+Rules:
+- Do not create too many chapters
+- Merge similar categories
+- Keep structure clean and readable
+- Output ONLY a valid JSON object with no markdown formatting or backticks.
+
+Output:
+{
+  "chapters": [
+    {
+      "title": "",
+      "description": "",
+      "events": ["event_id_1", "event_id_2"]
+    }
+  ]
+}
+`;
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ role: "user", parts: [{ text: JSON.stringify(events) }] }],
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.2,
+          responseMimeType: "application/json",
+        }
+      });
+
+      const text = response.text?.trim();
+      if (!text) return null;
+      
+      return JSON.parse(text);
+    } catch (error) {
+      console.error("Error organizing chapters:", error);
+      return null;
+    }
+  }
+
+  async compileBook(chapters: { title: string; events: { summary: string; emotion: string; date?: string }[] }[]): Promise<string | null> {
+    const systemInstruction = `
+You are generating a life book.
+
+Goal:
+Convert chapters into a readable book.
+
+Input:
+Structured chapters with events
+
+Output:
+- Chapter-wise narrative
+- Smooth transitions
+- Clear storytelling
+
+Structure:
+Chapter Title
+→ Narrative
+
+Rules:
+- No bullet points
+- No repetition
+- Natural storytelling
+- Clean and readable
+- Output ONLY the full book content. Do not include conversational filler.
+`;
+
+    const structuredData = chapters.map(c => 
+      `Chapter: ${c.title}\nEvents:\n${c.events.map(e => `- ${e.date ? e.date + ': ' : ''}${e.summary} (Emotion: ${e.emotion})`).join('\n')}`
+    ).join('\n\n');
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ role: "user", parts: [{ text: structuredData }] }],
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.7,
+        }
+      });
+
+      return response.text?.trim() || null;
+    } catch (error) {
+      console.error("Error compiling book:", error);
+      return null;
+    }
+  }
+
+  shouldRespond(intensity: number): boolean {
+    // Respond if intensity is high (> 0.7)
+    return intensity > 0.7;
+  }
+
+  async generateDiaryResponse(event: { summary: string; emotion: string; intensity: number }): Promise<string | null> {
+    const systemInstruction = `
+You are an AI diary.
+
+Goal:
+Respond occasionally in chat.
+
+Rules:
+- Style: short (1–2 lines), calm, slightly thoughtful.
+- Output ONLY the natural response.
+`;
+
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ role: "user", parts: [{ text: JSON.stringify(event) }] }],
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.8,
+        }
+      });
+
+      return response.text?.trim() || null;
+    } catch (error) {
+      console.error("Error generating diary response:", error);
       return null;
     }
   }

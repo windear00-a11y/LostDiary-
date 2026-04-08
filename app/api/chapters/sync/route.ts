@@ -48,7 +48,7 @@ export async function POST(req: Request) {
           summary: eventData.summary,
           emotion: eventData.emotion,
           category: eventData.category,
-          impact_score: eventData.impact_score,
+          intensity: eventData.intensity,
           created_at: entry.created_at
         });
       }
@@ -62,12 +62,11 @@ export async function POST(req: Request) {
       if (insertEventsError) throw insertEventsError;
     }
 
-    // 3. Group all life events by Month/Year to create chapters
+    // 3. Group all life events using AI
     const { data: allEvents, error: allEventsError } = await supabase
       .from('life_events')
       .select('*')
       .eq('user_id', userId)
-      .is('chapter_id', null)
       .order('created_at', { ascending: true });
 
     if (allEventsError) throw allEventsError;
@@ -75,20 +74,31 @@ export async function POST(req: Request) {
       return new Response(JSON.stringify({ message: "Events extracted, but no new chapters needed yet." }), { status: 200 });
     }
 
-    // Grouping logic: Group by Month-Year
-    const groups: Record<string, any[]> = {};
-    allEvents.forEach(event => {
-      const monthYear = format(new Date(event.created_at), 'MMMM yyyy');
-      if (!groups[monthYear]) groups[monthYear] = [];
-      groups[monthYear].push(event);
-    });
+    const aiInput = allEvents.map(e => ({
+      id: e.id,
+      summary: e.summary,
+      emotion: e.emotion,
+      category: e.category,
+      date: e.created_at
+    }));
+
+    const organization = await authorEngine.organizeChapters(aiInput);
+
+    if (!organization || !organization.chapters) {
+      return new Response(JSON.stringify({ message: "Failed to organize chapters." }), { status: 500 });
+    }
 
     // 4. Generate Chapters for each group
-    for (const [monthYear, groupEvents] of Object.entries(groups)) {
-      // Only generate a chapter if there are at least 3 events, or if it's an older month
-      // For simplicity in this script, we'll generate a chapter for any group
+    // First, clear existing chapters for a full re-organization
+    await supabase.from('chapters').delete().eq('user_id', userId);
+
+    for (const chap of organization.chapters) {
+      if (!chap.events || chap.events.length === 0) continue;
+
+      const chapterEvents = allEvents.filter(e => chap.events.includes(e.id));
+      if (chapterEvents.length === 0) continue;
       
-      const chapterInput = groupEvents.map(e => ({
+      const chapterInput = chapterEvents.map(e => ({
         summary: e.summary,
         emotion: e.emotion,
         category: e.category,
@@ -97,37 +107,34 @@ export async function POST(req: Request) {
 
       const storyContent = await authorEngine.generateChapter(chapterInput);
       
-      if (storyContent) {
-        // Determine dominant emotion and category (simple mode)
-        const emotions = groupEvents.map(e => e.emotion);
-        const categories = groupEvents.map(e => e.category);
-        const dominantEmotion = emotions.sort((a,b) => emotions.filter(v => v===a).length - emotions.filter(v => v===b).length).pop();
-        const dominantCategory = categories.sort((a,b) => categories.filter(v => v===a).length - categories.filter(v => v===b).length).pop();
+      // Determine dominant emotion and category (simple mode)
+      const emotions = chapterEvents.map(e => e.emotion);
+      const categories = chapterEvents.map(e => e.category);
+      const dominantEmotion = emotions.sort((a,b) => emotions.filter(v => v===a).length - emotions.filter(v => v===b).length).pop();
+      const dominantCategory = categories.sort((a,b) => categories.filter(v => v===a).length - categories.filter(v => v===b).length).pop();
 
-        // Create Chapter
-        const { data: chapter, error: chapterError } = await supabase
-          .from('chapters')
-          .insert({
-            user_id: userId,
-            title: `Chapter: ${monthYear}`,
-            story_content: storyContent,
-            start_date: groupEvents[0].created_at,
-            end_date: groupEvents[groupEvents.length - 1].created_at,
-            dominant_emotion: dominantEmotion,
-            dominant_categories: [dominantCategory]
-          })
-          .select()
-          .single();
+      // Create Chapter
+      const { data: chapter, error: chapterError } = await supabase
+        .from('chapters')
+        .insert({
+          user_id: userId,
+          title: chap.title,
+          story_content: storyContent || chap.description,
+          start_date: chapterEvents[0].created_at,
+          end_date: chapterEvents[chapterEvents.length - 1].created_at,
+          dominant_emotion: dominantEmotion,
+          dominant_categories: [dominantCategory]
+        })
+        .select()
+        .single();
 
-        if (chapterError) throw chapterError;
+      if (chapterError) throw chapterError;
 
-        // Update events with chapter_id
-        const eventIds = groupEvents.map(e => e.id);
-        await supabase
-          .from('life_events')
-          .update({ chapter_id: chapter.id })
-          .in('id', eventIds);
-      }
+      // Update events with chapter_id
+      await supabase
+        .from('life_events')
+        .update({ chapter_id: chapter.id })
+        .in('id', chap.events);
     }
 
     return new Response(JSON.stringify({ message: "Sync complete!" }), { status: 200 });

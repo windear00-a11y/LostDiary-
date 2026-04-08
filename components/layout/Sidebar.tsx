@@ -2,11 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Sparkles, Settings, BookOpen } from 'lucide-react';
+import { LayoutDashboard, Sparkles, Settings, BookOpen, MessageSquare } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: 'Timeline', href: '/dashboard', icon: LayoutDashboard },
   { label: 'LifeBook', href: '/dashboard/lifebook', icon: BookOpen },
+  { label: 'Chat', href: '/dashboard/chat', icon: MessageSquare },
   { label: 'Assistant', href: '/assistant', icon: Sparkles },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];

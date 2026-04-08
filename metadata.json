@@ -1,5 +1,5 @@
 {
   "name": "WinDear",
   "description": "Your private AI-powered diary for reflection and growth",
-  "requestFramePermissions": []
+  "requestFramePermissions": ["camera", "microphone", "geolocation"]
 }
