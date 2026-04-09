@@ -3,10 +3,7 @@
 import { Book, CloudRain, Sparkles, Brain, Heart, ShieldCheck, MessageSquareOff, PenLine, Lightbulb, TrendingUp, Smile, Calendar, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/auth/auth-provider';
-
-const ThemeToggle = dynamic(() => import('@/components/ui/theme-toggle').then(mod => mod.ThemeToggle), { ssr: false });
 
 export default function LandingPage() {
   const { user, loading } = useAuth();
@@ -37,7 +34,6 @@ export default function LandingPage() {
           <span className="text-xl font-serif italic tracking-tight text-[#111827] dark:text-[#F9FAFB]">WinDear</span>
         </div>
         <div className="flex items-center gap-4 sm:gap-6">
-          <ThemeToggle />
           {user && (
             <button 
               onClick={() => router.push('/profile')}

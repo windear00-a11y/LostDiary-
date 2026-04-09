@@ -1,6 +1,6 @@
 'use client';
 
-import { LifeBookView } from "@/features/book/LifeBookView";
+import { LifeBookView } from "@/features/lifebook/LifeBookView";
 import { Header } from "@/components/ui/Header";
 import { FAB } from "@/components/ui/FAB";
 

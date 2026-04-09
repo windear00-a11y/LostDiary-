@@ -1,7 +1,6 @@
 'use client';
 
 import { Menu } from 'lucide-react';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { StreakBadge } from '@/components/retention/StreakBadge';
 
 export const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
@@ -22,7 +21,6 @@ export const Header = ({ onMenuClick }: { onMenuClick: () => void }) => {
       
       <div className="flex items-center gap-2 md:gap-4">
         <StreakBadge />
-        <ThemeToggle />
       </div>
     </header>
   );
