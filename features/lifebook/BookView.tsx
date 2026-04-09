@@ -75,7 +75,7 @@ export const BookView = () => {
             </div>
             <h2 className="text-4xl font-serif italic text-gray-800 dark:text-gray-200">Your story starts here...</h2>
             <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto leading-relaxed">
-              जैसे-जैसे आप असिस्टेंट के साथ अपने विचार साझा करेंगे, आपकी 'लाइफ बुक' खुद-ब-खुद यहाँ लिखी जाएगी।
+              जैसे-जैसे आप असिस्टेंट के साथ अपने विचार साझा करेंगे, आपकी &apos;लाइफ बुक&apos; खुद-ब-खुद यहाँ लिखी जाएगी।
             </p>
           </div>
         ) : (

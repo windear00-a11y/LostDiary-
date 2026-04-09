@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'motion/react';
 import { chatService, ChatMessage } from '@/lib/services/chat-service';
 import { authService } from '@/lib/services/auth-service';
 import { MessageList } from './MessageList';
