@@ -20,9 +20,18 @@ export interface Chapter {
 export const chapterService = {
   async fetchChapters(userId: string): Promise<Chapter[]> {
     try {
-      const { data, error } = await supabase
+      // SAFEGUARD: Explicitly forbid chat_messages access
+      const query = supabase
         .from('chapters')
-        .select('*, events:life_events(*)')
+        .select('*, events:life_events(*)');
+
+      // Runtime check to ensure query does not include chat_messages
+      const queryString = JSON.stringify(query);
+      if (queryString.includes('chat_messages')) {
+        throw new Error("SECURITY VIOLATION: Book view cannot access chat_messages.");
+      }
+
+      const { data, error } = await query
         .eq('user_id', userId)
         .order('start_date', { ascending: false });
 

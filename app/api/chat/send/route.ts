@@ -4,6 +4,7 @@ import { LifeAuthorEngine } from "@/ai-core/life-author";
 import { analyzeEntries } from "@/ai-core/pattern-detector";
 import { isImportantMessage } from "@/lib/utils/importance";
 import { mapToChapter } from "@/lib/utils/chapters";
+import { isHighValueResponse } from "@/lib/utils/quality";
 
 const supabase = createClient();
 const authorEngine = new LifeAuthorEngine(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
@@ -138,18 +139,20 @@ export async function POST(req: Request) {
       }
     }
 
-    // STEP 6: Save AI Response if generated
+    // STEP 6: Save AI Response if generated and high-value
     if (aiResponse) {
       const responseText = `${aiResponse.emotion_reflection}\n\n${aiResponse.validation}\n\n${aiResponse.insight}\n\n${aiResponse.gentle_suggestion}\n\n${aiResponse.short_reply}`;
       
-      await supabase.from('chat_messages').insert({
-        user_id,
-        role: 'diary',
-        type: 'text',
-        content: responseText,
-        original_content: responseText,
-        authored_content: responseText
-      });
+      if (isHighValueResponse(responseText)) {
+        await supabase.from('chat_messages').insert({
+          user_id,
+          role: 'diary',
+          type: 'text',
+          content: responseText,
+          original_content: responseText,
+          authored_content: responseText
+        });
+      }
     }
 
     return NextResponse.json(message);

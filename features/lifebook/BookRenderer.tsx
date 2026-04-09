@@ -25,7 +25,7 @@ export const BookRenderer = ({ chapters }: BookRendererProps) => {
     }
 
     return (
-      <div className="space-y-24 max-w-2xl mx-auto py-12">
+      <div className="max-w-[700px] mx-auto py-20 px-6">
         {chapters.map((chapter, index) => (
           <motion.article 
             key={chapter.id}
@@ -33,47 +33,35 @@ export const BookRenderer = ({ chapters }: BookRendererProps) => {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: index * 0.1 }}
-            className="group relative"
+            className="mb-24"
           >
-            {/* STEP 1: Structure - Chapter Title */}
-            <header className="mb-12 text-center">
-              <div className="inline-block mb-4">
-                <span className="text-[10px] uppercase tracking-[0.3em] text-indigo-500 font-bold">
-                  Chapter {index + 1}
-                </span>
-                <div className="h-px w-12 bg-indigo-500/20 mx-auto mt-2" />
-              </div>
-              <h2 className="text-4xl md:text-5xl font-serif font-medium text-gray-900 dark:text-gray-100 tracking-tight">
+            {/* Chapter Heading */}
+            <header className="mb-16">
+              <h2 className="text-3xl md:text-4xl font-serif font-bold text-gray-900 dark:text-gray-100 tracking-tight">
                 {chapter.name}
               </h2>
             </header>
 
-            {/* STEP 1: Structure - Narrative Content (Paragraph Form) */}
-            <div className="prose prose-lg md:prose-xl dark:prose-invert mx-auto font-serif leading-relaxed text-gray-800 dark:text-gray-200 selection:bg-indigo-100 dark:selection:bg-indigo-900/30">
+            {/* Narrative Content */}
+            <div className="font-serif text-lg md:text-xl leading-relaxed text-gray-800 dark:text-gray-200">
               {chapter.authored_content ? (
                 chapter.authored_content.split('\n').filter(p => p.trim()).map((paragraph, pIdx) => (
                   <p 
                     key={pIdx} 
-                    className="mb-8 first-letter:text-5xl first-letter:font-bold first-letter:mr-3 first-letter:float-left first-letter:mt-1 first-letter:text-indigo-600 dark:first-letter:text-indigo-400 first-letter:font-serif"
-                    style={pIdx !== 0 ? { clear: 'both', textIndent: '0' } : {}}
+                    className="mb-8"
                   >
-                    {/* Only apply drop cap to the very first paragraph of the chapter */}
-                    {pIdx === 0 ? paragraph : paragraph}
+                    {paragraph}
                   </p>
                 ))
               ) : (
-                <p className="italic text-gray-400 text-center">This chapter is still being synthesized from your memories...</p>
+                <p className="italic text-gray-400">This chapter is still being synthesized...</p>
               )}
             </div>
 
-            {/* Decorative separator */}
+            {/* Chapter Divider */}
             {index < chapters.length - 1 && (
-              <div className="mt-24 flex justify-center opacity-20">
-                <div className="flex gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                  <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                </div>
+              <div className="my-24 flex justify-center opacity-30">
+                <div className="w-16 h-px bg-gray-300 dark:bg-gray-700" />
               </div>
             )}
           </motion.article>
