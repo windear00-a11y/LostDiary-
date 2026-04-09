@@ -30,7 +30,7 @@ function AuthForm() {
         setIsSignUp(false);
       } else {
         await authService.signIn(email, password);
-        router.push('/dashboard');
+        router.push('/assistant');
       }
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Authentication failed' });

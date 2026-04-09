@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const isAuthPage = pathname === '/auth';
-  const isAppPage = pathname === '/dashboard' || pathname.startsWith('/dashboard/') || pathname === '/profile' || pathname === '/updates';
+  const isAppPage = pathname === '/assistant' || pathname.startsWith('/assistant/') || pathname === '/book' || pathname === '/profile' || pathname === '/updates';
   const isLandingPage = pathname === '/';
 
   const isRedirecting = (!loading && !user && isAppPage) || (!loading && user && (isAuthPage || isLandingPage));
@@ -74,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user && isAppPage) {
       router.push('/');
     } else if (user && (isAuthPage || isLandingPage)) {
-      router.push('/dashboard');
+      router.push('/assistant');
     }
   }, [user, loading, pathname, router, isAppPage, isAuthPage, isLandingPage]);
 
