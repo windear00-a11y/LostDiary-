@@ -18,7 +18,7 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
 
   const handleSendText = async () => {
     if (!text.trim() || isUploading) return;
-    await onSendMessage({ role: 'user', type: 'text', content: text, media_url: null });
+    await onSendMessage({ type: 'text', content: text });
     setText('');
   };
 
@@ -28,14 +28,10 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
 
     try {
       setIsUploading(true);
-      const user = await authService.getUser();
-      if (!user) throw new Error("User not found");
-
-      const url = await chatService.uploadMedia(file, user.id);
-      await onSendMessage({ role: 'user', type, content: null, media_url: url });
+      await onSendMessage({ type, content: file });
     } catch (error) {
-      console.error(`Error uploading ${type}:`, error);
-      alert(`Failed to upload ${type}`);
+      console.error(`Error sending ${type}:`, error);
+      alert(`Failed to send ${type}`);
     } finally {
       setIsUploading(false);
       if (e.target) e.target.value = ''; // reset input
@@ -48,30 +44,29 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
       return;
     }
 
-    try {
-      setIsUploading(true);
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude } = position.coords;
-          const mapUrl = `https://www.google.com/maps?q=${latitude},${longitude}`;
+    setIsUploading(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
           await onSendMessage({ 
-            role: 'user', 
             type: 'location', 
             content: `📍 Shared location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, 
-            media_url: mapUrl 
+            metadata: { latitude, longitude } 
           });
-          setIsUploading(false);
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          alert("Failed to get location");
+        } catch (error) {
+          console.error("Error sending location:", error);
+          alert("Failed to send location");
+        } finally {
           setIsUploading(false);
         }
-      );
-    } catch (error) {
-      console.error("Location error:", error);
-      setIsUploading(false);
-    }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        alert("Failed to get location");
+        setIsUploading(false);
+      }
+    );
   };
 
   const toggleRecording = async () => {
@@ -94,14 +89,10 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
           
           try {
             setIsUploading(true);
-            const user = await authService.getUser();
-            if (user) {
-              const url = await chatService.uploadMedia(file, user.id);
-              await onSendMessage({ role: 'user', type: 'audio', content: null, media_url: url });
-            }
+            await onSendMessage({ type: 'audio', content: file });
           } catch (error) {
-            console.error("Error uploading audio:", error);
-            alert("Failed to upload audio");
+            console.error("Error sending audio:", error);
+            alert("Failed to send audio");
           } finally {
             setIsUploading(false);
             // Stop all tracks to release microphone

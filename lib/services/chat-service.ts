@@ -11,6 +11,7 @@ export interface ChatMessage {
   original_content: string | null;
   authored_content: string | null;
   media_url: string | null;
+  metadata: any | null;
   created_at: string;
 }
 
@@ -26,11 +27,38 @@ export const chatService = {
     return data || [];
   },
 
-  async sendMessage(message: Omit<ChatMessage, 'id' | 'created_at'>): Promise<ChatMessage> {
+  async sendMessage(input: {
+    user_id: string;
+    type: 'text' | 'image' | 'video' | 'audio' | 'location';
+    content: string | File | null;
+    metadata?: any;
+  }): Promise<ChatMessage> {
+    const { type, content, metadata, user_id } = input;
+    
+    // Handle input types:
+    // - text → store directly in content
+    // - image/video/audio → upload to storage → store URL in content
+    // - location → store lat/lng in metadata
+    
+    let finalContent = typeof content === 'string' ? content : null;
+    let mediaUrl = null;
+
+    if (type !== "text" && type !== "location" && content instanceof File) {
+      finalContent = await this.uploadMedia(content, user_id);
+      mediaUrl = finalContent; // For backward compatibility with media_url column
+    }
+
     const response = await fetch('/api/chat/send', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(message)
+      body: JSON.stringify({
+        user_id,
+        role: 'user',
+        type,
+        content: finalContent,
+        media_url: mediaUrl,
+        metadata: metadata || {}
+      })
     });
 
     if (!response.ok) {

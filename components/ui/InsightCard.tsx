@@ -3,12 +3,12 @@
 import React from 'react';
 import { Sparkles, ArrowRight } from 'lucide-react';
 
-interface NudgeInlineProps {
+interface InsightCardProps {
   message: string;
   onClick: () => void;
 }
 
-export const NudgeInline: React.FC<NudgeInlineProps> = ({ message, onClick }) => {
+export const InsightCard: React.FC<InsightCardProps> = ({ message, onClick }) => {
   return (
     <button
       onClick={onClick}

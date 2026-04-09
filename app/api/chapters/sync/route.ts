@@ -1,18 +1,10 @@
 import { createClient } from "@/lib/supabase";
 import { LifeAuthorEngine } from "@/ai-core/life-author";
 import { format } from "date-fns";
+import { isImportantMessage } from "@/lib/utils/importance";
+import { mapToChapter } from "@/lib/utils/chapters";
 
 const supabase = createClient();
-
-function isImportantMessage(message: any) {
-  const content = message.content || "";
-  const includesStrongEmotion = /sad|angry|hate|terrible|worst|stressed|anxious|failed|lonely|overwhelmed|exhausted|worried|frustrated|annoyed|happy|great|awesome|love|excited|wonderful|joy|blessed|proud/i.test(content);
-  return (
-    content.length > 80 ||
-    includesStrongEmotion ||
-    message.type !== "text"
-  );
-}
 
 export async function POST(req: Request) {
   try {
@@ -95,7 +87,7 @@ export async function POST(req: Request) {
 
     // 3.5 Clean existing data: Ensure all events have mapped categories
     for (const event of allEvents) {
-      const mappedCat = authorEngine.mapCategory(event.category || "Growth");
+      const mappedCat = mapToChapter(event.category || "Growth");
       if (mappedCat !== event.category) {
         await supabase
           .from('life_events')
@@ -107,7 +99,7 @@ export async function POST(req: Request) {
 
     const chaptersMap = new Map<string, any[]>();
     for (const event of allEvents) {
-      const cat = authorEngine.mapCategory(event.category || "Growth");
+      const cat = mapToChapter(event.category || "Growth");
       if (!chaptersMap.has(cat)) {
         chaptersMap.set(cat, []);
       }
@@ -127,9 +119,8 @@ export async function POST(req: Request) {
     }
 
     // 4. Generate Chapters for each group
-    // First, clear existing chapters for a full re-organization
-    await supabase.from('chapters').delete().eq('user_id', userId);
-
+    // (We no longer delete all chapters, we upsert them based on name)
+    
     for (const chap of organization.chapters) {
       if (!chap.events || chap.events.length === 0) continue;
 
@@ -144,25 +135,26 @@ export async function POST(req: Request) {
       }));
 
       const storyContent = await authorEngine.generateChapter(chapterInput);
+      const originalSummaries = chapterEvents.map(e => e.summary).join('\n');
       
       // Determine dominant emotion and category (simple mode)
       const emotions = chapterEvents.map(e => e.emotion);
-      const categories = chapterEvents.map(e => e.category);
       const dominantEmotion = emotions.sort((a,b) => emotions.filter(v => v===a).length - emotions.filter(v => v===b).length).pop();
-      const dominantCategory = categories.sort((a,b) => categories.filter(v => v===a).length - categories.filter(v => v===b).length).pop();
 
-      // Create Chapter
+      // Create or Update Chapter
       const { data: chapter, error: chapterError } = await supabase
         .from('chapters')
-        .insert({
+        .upsert({
           user_id: userId,
-          title: chap.title,
+          name: chap.title,
           story_content: storyContent || chap.description,
+          authored_content: storyContent || chap.description,
+          original_content: originalSummaries,
           start_date: chapterEvents[0].created_at,
           end_date: chapterEvents[chapterEvents.length - 1].created_at,
           dominant_emotion: dominantEmotion,
-          dominant_categories: [dominantCategory]
-        })
+          dominant_categories: [chap.title]
+        }, { onConflict: 'user_id, name' })
         .select()
         .single();
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { ChatMessage } from '@/lib/services/chat-service';
 import { MapPin } from 'lucide-react';
 
@@ -15,7 +16,15 @@ export const MessageList = ({ messages }: { messages: ChatMessage[] }) => {
             )}
             
             {msg.type === 'image' && (
-              <img src={msg.media_url || ''} alt="Attachment" className="max-w-full rounded-lg object-cover" />
+              <div className="relative w-full aspect-video min-w-[200px]">
+                <Image 
+                  src={msg.media_url || ''} 
+                  alt="Attachment" 
+                  fill
+                  className="rounded-lg object-cover"
+                  unoptimized
+                />
+              </div>
             )}
             
             {msg.type === 'video' && (

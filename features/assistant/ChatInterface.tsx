@@ -29,23 +29,20 @@ export const ChatInterface = () => {
     }
   }, [messages]);
 
-  const handleSendMessage = async (message: Omit<ChatMessage, 'id' | 'created_at'>) => {
+  const handleSendMessage = async (input: { 
+    type: 'text' | 'image' | 'video' | 'audio' | 'location';
+    content: string | File | null;
+    metadata?: any;
+  }) => {
     const user = await authService.getUser();
     if (!user) return;
     
     const newMessage = await chatService.sendMessage({ 
-      ...message, 
+      ...input, 
       user_id: user.id
     });
     setMessages(prev => [...prev, newMessage]);
 
-    // Process message for LifeBook
-    await fetch('/api/chat/process', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messageId: newMessage.id, userId: user.id })
-    });
-    
     // Reload messages to get potential AI reply
     const data = await chatService.fetchMessages(user.id);
     setMessages(data);
