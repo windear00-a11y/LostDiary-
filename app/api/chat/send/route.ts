@@ -5,6 +5,10 @@ import { analyzeEntries } from "@/ai-core/pattern-detector";
 import { isImportantMessage } from "@/lib/utils/importance";
 import { mapToChapter } from "@/lib/utils/chapters";
 import { isHighValueResponse } from "@/lib/utils/quality";
+import { chapterService } from "@/lib/services/chapter-service";
+import { eventEngine } from "@/lib/services/event-engine";
+import { brain } from "@/lib/services/brain";
+import { profileService } from "@/lib/services/profile-service";
 
 const supabase = createClient();
 const authorEngine = new LifeAuthorEngine(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
@@ -35,26 +39,7 @@ export async function POST(req: Request) {
     const contextMessages = recentMessages?.map(m => m.authored_content || m.content || "") || [];
     const patterns = analyzeEntries(contextMessages);
     
-    // STEP 2: Consolidated AI Pipeline
-    const isImportant = isImportantMessage({ content, type });
-    
-    if (role === 'user' && type === 'text' && content) {
-      try {
-        const result = await authorEngine.processMessageConsolidated(
-          content, 
-          { recent_messages: contextMessages.slice(0, 5) } as any, 
-          patterns
-        );
-        authored_content = result.authored;
-        // Only extract event if message is deemed important
-        extractedEvent = isImportant ? result.event : null;
-        aiResponse = result.response;
-      } catch (error) {
-        console.error("Consolidated AI processing failed:", error);
-      }
-    }
-
-    // STEP 3: Save user message
+    // STEP 2: Save user message
     const { data: message, error } = await supabase
       .from('chat_messages')
       .insert({
@@ -71,6 +56,33 @@ export async function POST(req: Request) {
       .single();
 
     if (error) throw error;
+
+    // STEP 3: Consolidated AI Pipeline
+    const isImportant = isImportantMessage({ content, type });
+    
+    if (role === 'user' && type === 'text' && content) {
+      try {
+        // Use eventEngine for extraction
+        extractedEvent = isImportant ? await eventEngine.extractEvent(content, process.env.NEXT_PUBLIC_GEMINI_API_KEY!) : null;
+        
+        // Determine if we should respond
+        const shouldRespond = await brain.shouldRespond(user_id, { content, emotion: extractedEvent?.emotion }, patterns);
+        
+        // Generate AI response
+        const result = await authorEngine.processMessageConsolidated(
+          content, 
+          { recent_messages: contextMessages.slice(0, 5) } as any, 
+          patterns,
+          !shouldRespond // skipResponse if brain says no
+        );
+        aiResponse = result.response;
+        
+        // Track interaction
+        await profileService.updateInteraction(user_id, shouldRespond);
+      } catch (error) {
+        console.error("Consolidated AI processing failed:", error);
+      }
+    }
 
     // STEP 4: Save Life Event if extracted
     if (extractedEvent && message) {
@@ -111,31 +123,12 @@ export async function POST(req: Request) {
         summary: extractedEvent.summary,
         emotion: extractedEvent.emotion,
         category: extractedEvent.category,
-        intensity: extractedEvent.intensity || 'medium'
+        intensity: extractedEvent.intensity || 5
       });
 
-      // STEP 5: Update Chapter Narrative (Incremental)
-      try {
-        const { data: events } = await supabase
-          .from('life_events')
-          .select('*')
-          .eq('user_id', user_id)
-          .eq('chapter_name', chapterName)
-          .order('created_at', { ascending: false })
-          .limit(10);
-
-        if (events && events.length > 0 && chapterId) {
-          const narrative = await authorEngine.generateChapter(events);
-          if (narrative) {
-            await supabase.from('chapters').update({
-              story_content: narrative,
-              end_date: events[0].created_at,
-              dominant_categories: [chapterName]
-            }).eq('id', chapterId);
-          }
-        }
-      } catch (chapterErr) {
-        console.error("Chapter update failed:", chapterErr);
+      // STEP 5: Update Chapter Narrative (Async)
+      if (chapterId) {
+        chapterService.updateNarrativeAsync(user_id, chapterId, chapterName, authorEngine);
       }
     }
 

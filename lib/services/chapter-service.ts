@@ -66,5 +66,30 @@ export const chapterService = {
       console.error("Error fetching chapter:", error);
       return null;
     }
+  },
+
+  async updateNarrativeAsync(userId: string, chapterId: string, chapterName: string, authorEngine: any) {
+    try {
+      const { data: events } = await supabase
+        .from('life_events')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('chapter_name', chapterName)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (events && events.length > 0) {
+        const narrative = await authorEngine.generateNarrative(events);
+        if (narrative) {
+          await supabase.from('chapters').update({
+            story_content: narrative.narrative,
+            end_date: events[0].created_at,
+            dominant_categories: [chapterName]
+          }).eq('id', chapterId);
+        }
+      }
+    } catch (err) {
+      console.error("Async narrative update failed:", err);
+    }
   }
 };

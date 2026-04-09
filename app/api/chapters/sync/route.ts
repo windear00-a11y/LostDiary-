@@ -134,7 +134,9 @@ export async function POST(req: Request) {
         date: format(new Date(e.created_at), 'MMM d, yyyy')
       }));
 
-      const storyContent = await authorEngine.generateChapter(chapterInput);
+      const chapterData = await authorEngine.generateNarrative(chapterInput);
+      if (!chapterData) continue;
+
       const originalSummaries = chapterEvents.map(e => e.summary).join('\n');
       
       // Determine dominant emotion and category (simple mode)
@@ -147,8 +149,8 @@ export async function POST(req: Request) {
         .upsert({
           user_id: userId,
           name: chap.title,
-          story_content: storyContent || chap.description,
-          authored_content: storyContent || chap.description,
+          story_content: chapterData.summary,
+          authored_content: chapterData.narrative,
           original_content: originalSummaries,
           start_date: chapterEvents[0].created_at,
           end_date: chapterEvents[chapterEvents.length - 1].created_at,

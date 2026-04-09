@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
-import { Send, Image as ImageIcon, Mic, Video, Camera, MapPin, Loader2, Square } from 'lucide-react';
+import { Send, Image as ImageIcon, Mic, Video, Camera, MapPin, Loader2, Square, Plus } from 'lucide-react';
 import { chatService } from '@/lib/services/chat-service';
 import { authService } from '@/lib/services/auth-service';
 
@@ -9,6 +9,7 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
   const [text, setText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showActions, setShowActions] = useState(false);
   
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
@@ -111,66 +112,43 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
   };
 
   return (
-    <div className="p-4 border-t border-gray-100 dark:border-[#2E2E2E] bg-white dark:bg-[#0A0A0A]">
-      <div className="flex items-center gap-2">
+    <div className="p-6 border-t border-gray-100 dark:border-[#2E2E2E] bg-[#fdfcfb] dark:bg-[#0d0d0d]">
+      <div className="flex items-center gap-4 bg-white dark:bg-[#1A1A1A] p-2 rounded-full border border-gray-100 dark:border-[#2E2E2E] shadow-sm">
         {/* Hidden File Inputs */}
         <input type="file" accept="image/*" className="hidden" ref={imageRef} onChange={(e) => handleFileUpload(e, 'image')} />
         <input type="file" accept="video/*" className="hidden" ref={videoRef} onChange={(e) => handleFileUpload(e, 'video')} />
         <input type="file" accept="image/*" capture="environment" className="hidden" ref={cameraRef} onChange={(e) => handleFileUpload(e, 'image')} />
 
         <button 
-          onClick={() => imageRef.current?.click()} 
-          disabled={isUploading || isRecording}
-          className="p-2 text-gray-400 hover:text-indigo-600 disabled:opacity-50"
+          onClick={() => setShowActions(!showActions)}
+          className="p-3 text-gray-400 hover:text-[#6366F1] transition-colors"
         >
-          <ImageIcon className="w-5 h-5" />
+          <Plus className={`w-6 h-6 transition-transform ${showActions ? 'rotate-45' : ''}`} />
         </button>
-        
-        <button 
-          onClick={toggleRecording} 
-          disabled={isUploading}
-          className={`p-2 transition-colors disabled:opacity-50 ${isRecording ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-indigo-600'}`}
-        >
-          {isRecording ? <Square className="w-5 h-5 fill-current" /> : <Mic className="w-5 h-5" />}
-        </button>
-        
-        <button 
-          onClick={() => videoRef.current?.click()} 
-          disabled={isUploading || isRecording}
-          className="p-2 text-gray-400 hover:text-indigo-600 disabled:opacity-50"
-        >
-          <Video className="w-5 h-5" />
-        </button>
-        
-        <button 
-          onClick={() => cameraRef.current?.click()} 
-          disabled={isUploading || isRecording}
-          className="p-2 text-gray-400 hover:text-indigo-600 disabled:opacity-50"
-        >
-          <Camera className="w-5 h-5" />
-        </button>
-        
-        <button 
-          onClick={handleLocation} 
-          disabled={isUploading || isRecording}
-          className="p-2 text-gray-400 hover:text-indigo-600 disabled:opacity-50"
-        >
-          <MapPin className="w-5 h-5" />
-        </button>
+
+        {showActions && (
+          <div className="flex items-center gap-2 animate-in fade-in zoom-in duration-200">
+            <button onClick={() => imageRef.current?.click()} className="p-2 text-gray-400 hover:text-[#6366F1]"><ImageIcon className="w-5 h-5" /></button>
+            <button onClick={toggleRecording} className={`p-2 transition-colors ${isRecording ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-[#6366F1]'}`}><Mic className="w-5 h-5" /></button>
+            <button onClick={() => videoRef.current?.click()} className="p-2 text-gray-400 hover:text-[#6366F1]"><Video className="w-5 h-5" /></button>
+            <button onClick={() => cameraRef.current?.click()} className="p-2 text-gray-400 hover:text-[#6366F1]"><Camera className="w-5 h-5" /></button>
+            <button onClick={handleLocation} className="p-2 text-gray-400 hover:text-[#6366F1]"><MapPin className="w-5 h-5" /></button>
+          </div>
+        )}
         
         <input 
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSendText()}
           disabled={isUploading || isRecording}
-          className="flex-1 p-2 rounded-full bg-gray-50 dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#2E2E2E] disabled:opacity-50"
-          placeholder={isRecording ? "Recording audio..." : isUploading ? "Uploading..." : "Type a message..."}
+          className="flex-1 p-3 bg-transparent outline-none text-[#111827] dark:text-[#fdfcfb] placeholder:text-gray-400"
+          placeholder={isRecording ? "Recording audio..." : isUploading ? "Uploading..." : "Type your thoughts..."}
         />
         
         <button 
           onClick={handleSendText} 
           disabled={!text.trim() || isUploading || isRecording}
-          className="p-2 text-indigo-600 disabled:opacity-50"
+          className="p-3 bg-[#6366F1] text-white rounded-full hover:bg-[#4f46e5] transition-all disabled:opacity-50"
         >
           {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
         </button>
