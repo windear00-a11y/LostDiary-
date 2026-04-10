@@ -9,6 +9,7 @@ interface StoryProgressBarProps {
 
 export const StoryProgressBar: React.FC<StoryProgressBarProps> = ({ count }) => {
   const target = 5;
+  const remaining = Math.max(0, target - count);
   const progress = Math.min(count / target, 1);
   
   return (
@@ -27,11 +28,11 @@ export const StoryProgressBar: React.FC<StoryProgressBarProps> = ({ count }) => 
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-2"
         >
-          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400 dark:text-gray-500">
-            Your story is growing...
-          </span>
-          <span className="text-[10px] font-mono text-gray-300 dark:text-gray-700">
-            {Math.round(progress * 100)}%
+          <span className="text-[10px] font-medium tracking-wide text-gray-400 dark:text-gray-500">
+            {remaining > 0 
+              ? `${remaining} more moment${remaining === 1 ? '' : 's'} to unlock next chapter`
+              : "Chapter unlocked! Keep writing your story."
+            }
           </span>
         </motion.div>
       </div>

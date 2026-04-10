@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { Sparkles, BookOpen } from 'lucide-react';
+import { Sparkles, BookOpen, Share2 } from 'lucide-react';
 
 interface StoryPreviewProps {
   story: string;
@@ -10,6 +10,24 @@ interface StoryPreviewProps {
 }
 
 export const StoryPreview = ({ story, onClose }: StoryPreviewProps) => {
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My WinDear Moment',
+          text: story,
+          url: window.location.href,
+        });
+      } catch (err) {
+        console.error('Error sharing:', err);
+      }
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      navigator.clipboard.writeText(story);
+      alert('Story copied to clipboard!');
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -22,18 +40,27 @@ export const StoryPreview = ({ story, onClose }: StoryPreviewProps) => {
       </div>
 
       <div className="relative z-10 space-y-4">
-        <div className="flex items-center gap-2">
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="p-2 bg-indigo-100 dark:bg-indigo-900/40 rounded-full"
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <motion.div 
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.5, duration: 0.8 }}
+              className="p-2 bg-indigo-100 dark:bg-indigo-900/40 rounded-full"
+            >
+              <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            </motion.div>
+            <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
+              Your Story
+            </h3>
+          </div>
+          <button 
+            onClick={handleShare}
+            className="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 rounded-full transition-colors"
+            aria-label="Share this moment"
           >
-            <Sparkles className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-          </motion.div>
-          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
-            Your Story
-          </h3>
+            <Share2 className="w-4 h-4" />
+          </button>
         </div>
 
         <div className="space-y-3">

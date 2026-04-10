@@ -29,11 +29,11 @@ export default function LandingPage() {
             className="space-y-4"
           >
             <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight leading-[1.1]">
-              This app turns your <br />
-              <span className="italic text-indigo-600 dark:text-indigo-400">life into a story.</span>
+              WinDear turns <br />
+              <span className="italic text-indigo-600 dark:text-indigo-400">your life into your story.</span>
             </h1>
             <p className="text-xl text-gray-500 dark:text-gray-400 max-w-xl mx-auto font-serif italic">
-              A companion that listens, reflects, and helps you see the beauty in your daily journey.
+              A companion that listens, reflects, and helps you find the beauty in your journey.
             </p>
           </motion.div>
 
@@ -89,7 +89,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-bold">1. Write</h3>
               <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-                Share your thoughts, photos, or voice. No pressure, just honest moments.
+                Share your thoughts, photos, or voice. Just honest moments from your life.
               </p>
             </div>
             <div className="space-y-4">
@@ -98,7 +98,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-bold">2. Reflect</h3>
               <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-                WinDear listens and finds the patterns, emotions, and beauty in your day.
+                WinDear listens, finding the patterns and beauty unique to your journey.
               </p>
             </div>
             <div className="space-y-4">
@@ -107,7 +107,7 @@ export default function LandingPage() {
               </div>
               <h3 className="text-xl font-bold">3. Grow</h3>
               <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
-                Watch your story grow into a beautiful narrative of your personal evolution.
+                Watch your story evolve into a beautiful narrative of your personal growth.
               </p>
             </div>
           </div>

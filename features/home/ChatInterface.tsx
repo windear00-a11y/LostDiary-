@@ -42,10 +42,12 @@ export const ChatInterface = () => {
         
         Rules:
         1. Tone: Personal, intimate, and deeply reflective. Write as if you are a gentle, observant narrator.
-        2. Focus on the essence of what the person is feeling or experiencing. 
+        2. Focus on the essence of what the person is feeling or experiencing.
         3. Include a subtle "internal monologue" or "quiet realization".
-        4. Start directly with the story. No intro.
-        5. Language: Simple, human, and grounded.
+        4. Add reflection sentences and internal thoughts to make it deeply personal.
+        5. Keep it subtle and real. Avoid clichés.
+        6. Start directly with the story. No intro.
+        7. Language: Simple, human, and grounded.
         
         Entries:
         ${context}`,
@@ -146,8 +148,8 @@ export const ChatInterface = () => {
         ) : messages.length === 0 ? (
           <div className="py-12 text-center space-y-8">
             <div className="space-y-2">
-              <h2 className="text-3xl font-serif italic text-gray-800 dark:text-gray-200">This app turns your life into a story.</h2>
-              <p className="text-gray-500 dark:text-gray-400">Start writing to begin your journey.</p>
+              <h2 className="text-3xl font-serif italic text-gray-800 dark:text-gray-200">WinDear turns your life into your story.</h2>
+              <p className="text-gray-500 dark:text-gray-400">Share a moment to continue your journey.</p>
             </div>
             <div className="grid gap-3 max-w-sm mx-auto">
               {prompts.map((prompt, i) => (
