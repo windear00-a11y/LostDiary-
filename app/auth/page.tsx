@@ -9,144 +9,182 @@ import { useAuth } from '@/components/auth/auth-provider';
 import { logger } from '@/lib/logger';
 
 function AuthForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [identifier, setIdentifier] = useState('');
+  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<'identifier' | 'otp'>('identifier');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const router = useRouter();
   const { loading } = useAuth();
 
-  const handleAuth = async (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return;
+    if (!identifier) return;
     setIsSubmitting(true);
     setMessage(null);
 
     try {
-      if (isSignUp) {
-        await authService.signUp(email, password);
-        setMessage({ type: 'success', text: 'Account created! You can now sign in.' });
-        setIsSignUp(false);
-      } else {
-        await authService.signIn(email, password);
-        router.push('/assistant');
-      }
+      await authService.signInWithOtp(identifier);
+      setStep('otp');
+      setMessage({ type: 'success', text: 'OTP sent! Please check your inbox or phone.' });
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Authentication failed' });
+      setMessage({ type: 'error', text: err.message || 'Failed to send OTP' });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <main className="min-h-screen bg-[#F9FAFB] dark:bg-[#0A0A0A] flex flex-col items-center justify-center p-4 sm:p-6 pt-safe pb-safe relative overflow-hidden transition-colors duration-300">
-      {/* Background Gradients */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-[120px] opacity-60" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-yellow-50 dark:bg-yellow-900/10 rounded-full blur-[120px] opacity-60" />
-      </div>
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otp) return;
+    setIsSubmitting(true);
+    setMessage(null);
 
+    try {
+      await authService.verifyOtp(identifier, otp);
+      router.push('/home');
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Verification failed' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsSubmitting(true);
+      await authService.signInWithGoogle();
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Google login failed' });
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 w-full max-w-md space-y-8"
+        className="w-full max-w-sm space-y-12 text-center"
       >
-        <div className="text-center space-y-6">
-          <button 
-            onClick={() => router.push('/')}
-            className="inline-flex items-center gap-2 text-sm text-[#6B7280] dark:text-gray-400 hover:text-[#111827] dark:hover:text-[#F9FAFB] transition-colors group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Back to Home
-          </button>
-          
-          <div className="flex flex-col items-center gap-4">
-            <div className="w-12 h-12 bg-white dark:bg-[#1A1A1A] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-[#2E2E2E]">
-              <Book className="w-6 h-6 text-[#6366F1]" />
+        <div className="space-y-4">
+          <div className="flex justify-center">
+            <div className="w-12 h-12 bg-white dark:bg-[#161616] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-gray-800/50">
+              <Book className="w-6 h-6 text-indigo-500" />
             </div>
-            <h1 className="text-3xl font-serif italic tracking-tight text-[#111827] dark:text-[#F9FAFB]">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
-            </h1>
           </div>
+          <h1 className="text-3xl font-serif italic tracking-tight">WinDear</h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Your private story begins here.</p>
         </div>
 
-        <div className="bg-white dark:bg-[#1A1A1A] p-8 rounded-[2.5rem] shadow-xl shadow-indigo-100/20 dark:shadow-none border border-gray-100 dark:border-[#2E2E2E] space-y-6">
-          <form onSubmit={handleAuth} className="space-y-4">
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9CA3AF] dark:text-gray-500" />
-              <input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-[#262626] border-none rounded-2xl text-sm text-[#111827] dark:text-[#F9FAFB] focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all outline-none"
-              />
-            </div>
-            <div className="relative">
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-4 bg-gray-50 dark:bg-[#262626] border-none rounded-2xl text-sm text-[#111827] dark:text-[#F9FAFB] focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-900/30 transition-all outline-none"
-              />
-            </div>
-            {!isSignUp && (
-              <button
-                type="button"
-                onClick={() => router.push('/auth/forgot-password')}
-                className="text-sm text-[#6366F1] dark:text-indigo-400 hover:text-[#4F46E5] dark:hover:text-indigo-300 w-full text-right"
-              >
-                Forgot password?
-              </button>
-            )}
-            <button
-              type="submit"
-              disabled={isSubmitting || loading || !email || !password}
-              className="w-full bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] py-4 rounded-2xl font-medium hover:bg-[#1f2937] dark:hover:bg-white transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>{isSignUp ? 'Creating...' : 'Signing in...'}</span>
-                </>
-              ) : isSignUp ? 'Sign Up' : 'Sign In'}
-            </button>
-          </form>
-
-          <button
-            onClick={() => setIsSignUp(!isSignUp)}
-            className="w-full text-center text-sm text-[#6B7280] dark:text-gray-400 hover:text-[#111827] dark:hover:text-[#F9FAFB]"
-          >
-            {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Sign Up'}
-          </button>
-
+        <div className="space-y-6">
           <AnimatePresence mode="wait">
+            {step === 'identifier' ? (
+              <motion.form 
+                key="identifier"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                onSubmit={handleSendOtp} 
+                className="space-y-4"
+              >
+                <input
+                  type="text"
+                  placeholder="Email or Phone number"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  required
+                  className="w-full px-6 py-4 bg-white dark:bg-[#161616] border border-gray-100 dark:border-gray-800/50 rounded-2xl text-sm focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !identifier}
+                  className="w-full bg-[#111827] dark:bg-[#fdfcfb] text-white dark:text-[#111827] py-4 rounded-2xl font-medium hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Continue'}
+                </button>
+              </motion.form>
+            ) : (
+              <motion.form 
+                key="otp"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                onSubmit={handleVerifyOtp} 
+                className="space-y-4"
+              >
+                <input
+                  type="text"
+                  placeholder="Enter OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value)}
+                  required
+                  className="w-full px-6 py-4 bg-white dark:bg-[#161616] border border-gray-100 dark:border-gray-800/50 rounded-2xl text-sm text-center tracking-[0.5em] font-bold focus:ring-2 focus:ring-indigo-500/20 transition-all outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !otp}
+                  className="w-full bg-[#111827] dark:bg-[#fdfcfb] text-white dark:text-[#111827] py-4 rounded-2xl font-medium hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Verify'}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setStep('identifier')}
+                  className="text-xs text-gray-400 hover:text-indigo-500 transition-colors"
+                >
+                  Change email or phone
+                </button>
+              </motion.form>
+            )}
+          </AnimatePresence>
+
+          {step === 'identifier' && (
+            <>
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-100 dark:border-gray-800/50"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase tracking-widest">
+                  <span className="bg-[#fdfcfb] dark:bg-[#0d0d0d] px-4 text-gray-400">or</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleGoogleLogin}
+                disabled={isSubmitting}
+                className="w-full bg-white dark:bg-[#161616] border border-gray-100 dark:border-gray-800/50 py-4 rounded-2xl font-medium hover:bg-gray-50 dark:hover:bg-[#1a1a1a] transition-all flex items-center justify-center gap-3 text-sm"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                </svg>
+                Continue with Google
+              </button>
+            </>
+          )}
+
+          <AnimatePresence>
             {message && (
               <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className={`text-xs p-4 rounded-xl ${
+                  message.type === 'success' ? 'bg-green-50/50 text-green-600' : 'bg-red-50/50 text-red-600'
+                }`}
               >
-                <div className={`flex items-center gap-3 text-sm p-4 rounded-xl ${
-                  message.type === 'success' ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-                }`}>
-                  {message.type === 'error' && <AlertCircle className="w-4 h-4 shrink-0" />}
-                  <span className="flex-1">{message.text}</span>
-                </div>
+                {message.text}
               </motion.div>
             )}
           </AnimatePresence>
         </div>
 
-        {/* Footer Links */}
-        <div className="flex justify-center gap-6 text-[10px] uppercase tracking-[0.2em] text-[#6B7280] dark:text-gray-500 font-medium pt-4">
-          <p>&copy; {new Date().getFullYear()} WinDear</p>
-        </div>
+        <p className="text-[10px] uppercase tracking-[0.4em] text-gray-400">
+          &copy; {new Date().getFullYear()} WinDear
+        </p>
       </motion.div>
     </main>
   );

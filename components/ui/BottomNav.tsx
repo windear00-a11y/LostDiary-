@@ -10,9 +10,8 @@ export const BottomNav = () => {
   const router = useRouter();
 
   const navItems = [
-    { name: 'Assistant', icon: MessageSquare, path: '/assistant' },
-    { name: 'LifeBook', icon: BookOpen, path: '/book' },
-    { name: 'Profile', icon: User, path: '/profile' },
+    { name: 'Chat', icon: MessageSquare, path: '/home' },
+    { name: 'Book', icon: BookOpen, path: '/story' },
   ];
 
   // Don't show on landing page or auth page

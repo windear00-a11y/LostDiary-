@@ -16,45 +16,49 @@ export const BookRenderer = ({ chapters }: BookRendererProps) => {
   if (!chapters || chapters.length === 0) {
     return (
       <div className="py-20 text-center">
-        <p className="text-gray-400 italic font-serif text-lg">Your story is waiting to be written...</p>
+        <p className="text-gray-400 italic font-serif text-xl">Your story is waiting to be written...</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-[700px] mx-auto py-20 px-6 font-serif">
+    <div className="max-w-[650px] mx-auto font-serif selection:bg-indigo-100/30">
       {chapters.map((chapter, index) => (
         <article 
           key={chapter.id}
-          className="mb-24"
+          className="mb-32"
         >
           {/* Chapter Heading */}
-          <header className="mb-16">
-            <h2 className="text-4xl font-serif font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+          <header className="mb-16 text-center">
+            <div className="text-[10px] uppercase tracking-[0.5em] text-gray-400 mb-4">Chapter {index + 1}</div>
+            <h2 className="text-4xl font-serif font-medium text-gray-900 dark:text-gray-100 tracking-tight">
               {chapter.name}
             </h2>
+            <div className="mt-6 flex justify-center">
+              <div className="w-8 h-px bg-gray-200 dark:bg-gray-800" />
+            </div>
           </header>
 
           {/* Narrative Content */}
-          <div className="text-xl leading-relaxed text-gray-800 dark:text-gray-200">
+          <div className="text-xl md:text-2xl leading-[1.8] text-gray-800 dark:text-gray-200 space-y-10 text-justify hyphens-auto">
             {chapter.authored_content ? (
               chapter.authored_content.split('\n').filter(p => p.trim()).map((paragraph, pIdx) => (
                 <p 
                   key={pIdx} 
-                  className="mb-8"
+                  className="first-letter:text-4xl first-letter:font-bold first-letter:mr-1 first-letter:float-left first-letter:leading-none"
                 >
                   {paragraph}
                 </p>
               ))
             ) : (
-              <p className="italic text-gray-400">This chapter is still being synthesized...</p>
+              <p className="italic text-gray-400 text-center">This chapter is still being synthesized...</p>
             )}
           </div>
 
           {/* Chapter Divider */}
           {index < chapters.length - 1 && (
-            <div className="my-24 flex justify-center opacity-30">
-              <div className="w-16 h-px bg-gray-300 dark:bg-gray-700" />
+            <div className="my-32 flex justify-center opacity-20">
+              <div className="text-2xl tracking-[1em] text-gray-400">***</div>
             </div>
           )}
         </article>

@@ -1,180 +1,78 @@
 'use client';
 
-import { Book, CloudRain, Sparkles, Brain, Heart, ShieldCheck, MessageSquareOff, PenLine, Lightbulb, TrendingUp, Smile, Calendar, Lock } from 'lucide-react';
+import { Book, Sparkles, PenLine, Heart, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
 
 export default function LandingPage() {
-  const { user, loading } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
   const handleCTA = () => {
     if (user) {
-      router.push('/assistant');
+      router.push('/home');
     } else {
       router.push('/auth');
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] overflow-hidden relative transition-colors duration-300">
-      {/* Soft Background Gradient */}
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-50 dark:bg-indigo-900/10 rounded-full blur-[120px] opacity-60" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-yellow-50 dark:bg-yellow-900/10 rounded-full blur-[120px] opacity-60" />
-      </div>
-
-      {/* Navbar */}
-      <nav className="relative z-10 max-w-7xl mx-auto px-8 py-8 flex justify-between items-center">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white dark:bg-[#1A1A1A] rounded-xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-[#2E2E2E]">
-            <Book className="w-4 h-4 text-[#6366F1]" />
-          </div>
-          <span className="text-xl font-serif italic tracking-tight text-[#111827] dark:text-[#F9FAFB]">WinDear</span>
-        </div>
-        <div className="flex items-center gap-4 sm:gap-6">
-          {user && (
-            <button 
-              onClick={() => router.push('/profile')}
-              className="text-sm font-medium text-[#6B7280] hover:text-[#111827] transition-colors"
-            >
-              Profile
-            </button>
-          )}
-          <button 
-            onClick={handleCTA}
-            className="text-sm font-medium text-[#6B7280] hover:text-[#111827] transition-colors"
-          >
-            {user ? 'Go to App' : 'Sign In'}
-          </button>
-        </div>
-      </nav>
-
-      {/* Hero Content */}
-      <div className="relative z-10 max-w-5xl mx-auto px-6 pt-24 pb-32 flex flex-col items-center text-center">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="space-y-8"
-        >
-          <div className="space-y-6">
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-[#111827] dark:text-[#F9FAFB] leading-[1.1]">
-              Your AI Diary
-            </h1>
-            <p className="text-xl md:text-2xl text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed max-w-2xl mx-auto">
-              Understand your thoughts. Write freely. Get instant AI insights about your emotions, patterns, and clarity.
-            </p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8">
-            <button 
-              onClick={handleCTA}
-              className="w-full sm:w-auto bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] px-10 py-5 rounded-2xl text-lg font-semibold hover:bg-[#1f2937] dark:hover:bg-white transition-all shadow-xl shadow-indigo-200 dark:shadow-none active:scale-95"
-            >
-              Start Writing
-            </button>
-            <button 
-              onClick={() => {
-                const element = document.getElementById('how-it-works');
-                element?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="w-full sm:w-auto bg-white dark:bg-transparent text-[#111827] dark:text-[#F9FAFB] px-10 py-5 rounded-2xl text-lg font-semibold border border-gray-200 dark:border-[#2E2E2E] hover:bg-gray-50 dark:hover:bg-[#1A1A1A] transition-all active:scale-95"
-            >
-              View Demo
-            </button>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Problem-Solution Section */}
-      <section className="relative z-10 max-w-7xl mx-auto px-8 py-32 border-t border-gray-100">
-        <div className="text-center mb-20 space-y-4">
-          <h2 className="text-4xl font-serif italic text-[#111827]">Why WinDear?</h2>
-          <p className="text-[#6B7280] max-w-md mx-auto">Because your thoughts deserve to be understood.</p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
-          <motion.div 
+    <main className="min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] text-[#111827] dark:text-[#fdfcfb] selection:bg-indigo-100 selection:text-indigo-900">
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 px-6">
+        <div className="max-w-4xl mx-auto text-center space-y-8">
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="bg-gray-50/50 p-12 rounded-[3rem] border border-gray-100 space-y-12"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="space-y-4"
           >
-            <div className="space-y-4">
-              <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#6B7280]">THE STRUGGLE</span>
-              <h3 className="text-3xl font-serif italic text-[#111827]">Feeling overwhelmed?</h3>
-            </div>
-            <div className="space-y-8">
-              <div className="flex gap-6 items-start">
-                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
-                  <CloudRain className="w-5 h-5 text-gray-400" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">Scattered Thoughts</p>
-                  <p className="text-sm text-[#6B7280]">Hard to focus when your mind is racing.</p>
-                </div>
-              </div>
-              <div className="flex gap-6 items-start">
-                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
-                  <Brain className="w-5 h-5 text-gray-400" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">Unclear Emotions</p>
-                  <p className="text-sm text-[#6B7280]">Not sure why you feel the way you do.</p>
-                </div>
-              </div>
-              <div className="flex gap-6 items-start">
-                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
-                  <MessageSquareOff className="w-5 h-5 text-gray-400" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">No Feedback</p>
-                  <p className="text-sm text-[#6B7280]">Traditional diaries don&apos;t talk back.</p>
-                </div>
-              </div>
-            </div>
+            <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight leading-[1.1]">
+              This app turns your <br />
+              <span className="italic text-indigo-600 dark:text-indigo-400">life into a story.</span>
+            </h1>
+            <p className="text-xl text-gray-500 dark:text-gray-400 max-w-xl mx-auto font-serif italic">
+              A companion that listens, reflects, and helps you see the beauty in your daily journey.
+            </p>
           </motion.div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="flex justify-center"
+          >
+            <button 
+              onClick={handleCTA}
+              className="group relative px-8 py-4 bg-[#111827] dark:bg-[#fdfcfb] text-white dark:text-[#111827] rounded-full text-lg font-medium transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+            >
+              Start your story
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Demo Preview Section */}
+      <section className="py-20 px-6">
+        <div className="max-w-3xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="bg-white p-12 rounded-[3rem] shadow-xl shadow-indigo-100/20 border border-indigo-50 space-y-12"
+            className="relative p-10 md:p-16 bg-white dark:bg-[#161616] rounded-[40px] border border-gray-100 dark:border-gray-800/50 shadow-2xl shadow-indigo-100/20 dark:shadow-none"
           >
-            <div className="space-y-4">
-              <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#6366F1]">THE SOLUTION</span>
-              <h3 className="text-3xl font-serif italic text-[#111827]">Find clarity instantly.</h3>
+            <div className="absolute top-8 left-8">
+              <Sparkles className="w-5 h-5 text-amber-400" />
             </div>
-            <div className="space-y-8">
-              <div className="flex gap-6 items-start">
-                <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
-                  <Sparkles className="w-5 h-5 text-[#6366F1]" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">AI Insights</p>
-                  <p className="text-sm text-[#6B7280]">Get immediate feedback on your thoughts.</p>
-                </div>
-              </div>
-              <div className="flex gap-6 items-start">
-                <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
-                  <Heart className="w-5 h-5 text-[#6366F1]" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">Emotional Tracking</p>
-                  <p className="text-sm text-[#6B7280]">Understand your mood patterns over time.</p>
-                </div>
-              </div>
-              <div className="flex gap-6 items-start">
-                <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
-                  <ShieldCheck className="w-5 h-5 text-[#6366F1]" />
-                </div>
-                <div className="space-y-1">
-                  <p className="font-medium text-[#111827]">Private & Secure</p>
-                  <p className="text-sm text-[#6B7280]">Your data is encrypted and safe.</p>
-                </div>
+            <div className="space-y-6 font-serif italic text-xl md:text-2xl leading-relaxed text-gray-800 dark:text-gray-200">
+              <p>
+                &ldquo;Today, the rain felt different. It wasn&apos;t just water falling from the sky; it was a quiet invitation to slow down. I noticed how the coffee steam curled against the window, a small dance in a busy world...&rdquo;
+              </p>
+              <div className="pt-6 border-t border-gray-50 dark:border-gray-800/50 flex items-center justify-between">
+                <span className="text-xs uppercase tracking-widest font-bold text-indigo-500">WinDear Narrative</span>
+                <span className="text-xs text-gray-400">Chapter 1: The Quiet Morning</span>
               </div>
             </div>
           </motion.div>
@@ -182,169 +80,73 @@ export default function LandingPage() {
       </section>
 
       {/* How it Works Section */}
-      <section id="how-it-works" className="relative z-10 max-w-7xl mx-auto px-8 py-32">
-        <div className="text-center mb-20 space-y-4">
-          <h2 className="text-4xl font-serif italic text-[#111827]">How it Works</h2>
-          <p className="text-[#6B7280] max-w-md mx-auto">Three simple steps to a clearer mind.</p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-8">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="group bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all duration-500 text-center space-y-6"
-          >
-            <div className="w-16 h-16 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto group-hover:bg-indigo-50 transition-colors duration-500">
-              <PenLine className="w-6 h-6 text-gray-400 group-hover:text-[#6366F1] transition-colors duration-500" />
-            </div>
-            <div className="space-y-3">
-              <h3 className="text-xl font-serif italic text-[#111827]">1. Write</h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">Pour your thoughts out freely.</p>
-            </div>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="group bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all duration-500 text-center space-y-6"
-          >
-            <div className="w-16 h-16 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto group-hover:bg-indigo-50 transition-colors duration-500">
-              <Lightbulb className="w-6 h-6 text-gray-400 group-hover:text-[#6366F1] transition-colors duration-500" />
-            </div>
-            <div className="space-y-3">
-              <h3 className="text-xl font-serif italic text-[#111827]">2. Analyze</h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">AI detects patterns and emotions.</p>
-            </div>
-          </motion.div>
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="group bg-white p-10 rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-xl hover:shadow-indigo-100/30 transition-all duration-500 text-center space-y-6"
-          >
-            <div className="w-16 h-16 bg-gray-50 rounded-3xl flex items-center justify-center mx-auto group-hover:bg-indigo-50 transition-colors duration-500">
-              <TrendingUp className="w-6 h-6 text-gray-400 group-hover:text-[#6366F1] transition-colors duration-500" />
-            </div>
-            <div className="space-y-3">
-              <h3 className="text-xl font-serif italic text-[#111827]">3. Grow</h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">Gain insights and improve your well-being.</p>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <div className="mt-48 max-w-5xl mx-auto">
-        <div className="text-center mb-16 space-y-4">
-          <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#6366F1]">FEATURES</span>
-          <h2 className="text-4xl font-serif italic text-[#111827]">Everything you need.</h2>
-        </div>
-        <div className="grid md:grid-cols-2 gap-12">
-          <div className="flex gap-6 items-start">
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
-              <Sparkles className="w-5 h-5 text-[#6366F1]" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h3 className="font-medium text-[#111827]">AI Insights</h3>
-                <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-widest rounded-full">New</span>
-              </div>
-              <p className="text-sm text-[#6B7280] leading-relaxed">Deep emotional analysis and reflections on your journey.</p>
-            </div>
-          </div>
-          <div className="flex gap-6 items-start">
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
-              <Smile className="w-5 h-5 text-[#6366F1]" />
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <h3 className="font-medium text-[#111827]">Mood Tracking</h3>
-                <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 text-[10px] font-bold uppercase tracking-widest rounded-full">New</span>
-              </div>
-              <p className="text-sm text-[#6B7280] leading-relaxed">Automatically track your mood based on what you write.</p>
-            </div>
-          </div>
-          <div className="flex gap-6 items-start">
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
-              <Calendar className="w-5 h-5 text-[#6366F1]" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-medium text-[#111827]">Daily Prompts</h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">Never stare at a blank page again.</p>
-            </div>
-          </div>
-          <div className="flex gap-6 items-start">
-            <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center shrink-0">
-              <ShieldCheck className="w-5 h-5 text-[#6366F1]" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-medium text-[#111827]">Secure Storage</h3>
-              <p className="text-sm text-[#6B7280] leading-relaxed">Your data is safe and private.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Trust and Privacy Section */}
-      <div className="mt-48 max-w-4xl mx-auto bg-white p-12 md:p-16 rounded-[3rem] border border-gray-100 shadow-sm text-center space-y-10">
-        <div className="flex justify-center">
-          <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center">
-            <Lock className="w-6 h-6 text-[#6366F1]" />
-          </div>
-        </div>
-        <div className="space-y-4">
-          <h2 className="text-3xl font-serif italic text-[#111827]">Your data is private & encrypted.</h2>
-          <p className="text-[#6B7280] max-w-lg mx-auto leading-relaxed">
-            We believe your thoughts belong to you.
-          </p>
-        </div>
-      </div>
-
-      {/* Final CTA Section */}
-      <section className="relative z-10 max-w-7xl mx-auto px-8 py-48 text-center">
-        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-indigo-50 rounded-full blur-[120px] opacity-40" />
-        </div>
-        <div className="relative z-10 space-y-10">
-          <motion.h2 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-5xl md:text-6xl font-serif italic tracking-tight text-[#111827]"
-          >
-            Ready to start?
-          </motion.h2>
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="space-y-8"
-          >
+      <section className="py-32 px-6 bg-gray-50/50 dark:bg-[#0a0a0a]">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-3 gap-16">
             <div className="space-y-4">
-              <button 
-                onClick={handleCTA}
-                className="bg-[#111827] text-white px-14 py-6 rounded-full text-lg font-medium hover:bg-[#1f2937] transition-all shadow-2xl shadow-gray-200 active:scale-95"
-              >
-                Start Writing Now
-              </button>
-              <p className="text-[10px] uppercase tracking-[0.3em] text-[#6B7280] font-bold">
-                Free to use.
+              <div className="w-12 h-12 bg-white dark:bg-[#161616] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-gray-800/50">
+                <PenLine className="w-5 h-5 text-indigo-500" />
+              </div>
+              <h3 className="text-xl font-bold">1. Write</h3>
+              <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+                Share your thoughts, photos, or voice. No pressure, just honest moments.
               </p>
             </div>
-            <p className="text-sm text-[#6B7280] font-serif italic tracking-wide">
-              Join thousands of others finding clarity.
-            </p>
-          </motion.div>
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-white dark:bg-[#161616] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-gray-800/50">
+                <Sparkles className="w-5 h-5 text-indigo-500" />
+              </div>
+              <h3 className="text-xl font-bold">2. Reflect</h3>
+              <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+                WinDear listens and finds the patterns, emotions, and beauty in your day.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div className="w-12 h-12 bg-white dark:bg-[#161616] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-gray-800/50">
+                <Heart className="w-5 h-5 text-indigo-500" />
+              </div>
+              <h3 className="text-xl font-bold">3. Grow</h3>
+              <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
+                Watch your story grow into a beautiful narrative of your personal evolution.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Landing Footer */}
-      <footer className="relative z-10 py-12 text-center space-y-4">
-        <p className="text-[10px] uppercase tracking-[0.4em] text-[#6B7280] opacity-50">
-          &copy; {new Date().getFullYear()} WinDear
+      {/* Emotional Hook Section */}
+      <section className="py-48 px-6 text-center">
+        <div className="max-w-2xl mx-auto space-y-12">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="space-y-6"
+          >
+            <h2 className="text-3xl md:text-4xl font-serif italic leading-tight">
+              &ldquo;Your life is already a masterpiece. <br />
+              We just help you read it.&rdquo;
+            </h2>
+            <div className="w-12 h-px bg-indigo-200 dark:bg-indigo-900 mx-auto" />
+          </motion.div>
+          
+          <button 
+            onClick={handleCTA}
+            className="text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-widest text-xs hover:tracking-[0.3em] transition-all"
+          >
+            Begin your journey &rarr;
+          </button>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="py-12 px-6 border-t border-gray-100 dark:border-gray-900 text-center">
+        <div className="flex items-center justify-center gap-2 mb-4">
+          <Book className="w-4 h-4 text-indigo-500" />
+          <span className="font-serif italic text-sm">WinDear</span>
+        </div>
+        <p className="text-[10px] uppercase tracking-[0.4em] text-gray-400">
+          &copy; {new Date().getFullYear()} WinDear. Your story is safe.
         </p>
       </footer>
     </main>
