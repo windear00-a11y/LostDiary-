@@ -10,7 +10,7 @@ export const BottomNav = () => {
   const router = useRouter();
 
   const navItems = [
-    { name: 'Chat', icon: MessageSquare, path: '/home' },
+    { name: 'Write', icon: MessageSquare, path: '/home' },
     { name: 'Book', icon: BookOpen, path: '/story' },
   ];
 

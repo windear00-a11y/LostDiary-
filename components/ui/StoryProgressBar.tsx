@@ -12,7 +12,7 @@ export const StoryProgressBar: React.FC<StoryProgressBarProps> = ({ count }) => 
   const progress = Math.min(count / target, 1);
   
   return (
-    <div className="fixed top-0 left-0 right-0 z-[100] pointer-events-none">
+    <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
       <div className="w-full h-1 bg-gray-100 dark:bg-gray-900 overflow-hidden">
         <motion.div 
           initial={{ width: 0 }}

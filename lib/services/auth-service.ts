@@ -6,11 +6,16 @@ export const authService = {
   async getUser() {
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
-      if (error) throw error;
+      if (error) {
+        if (error.message === 'Auth session missing!') {
+          return null;
+        }
+        throw error;
+      }
       return user;
     } catch (error) {
       console.error("Error getting user:", error);
-      throw error;
+      return null;
     }
   },
 
