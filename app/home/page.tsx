@@ -1,6 +1,7 @@
 'use client';
 
 import { ChatInterface } from '@/features/home/ChatInterface';
+import { Header } from '@/components/ui/Header';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -25,6 +26,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-bg-light dark:bg-bg-dark flex flex-col">
+      <Header />
       <main className="flex-1 overflow-hidden">
         <ChatInterface />
       </main>

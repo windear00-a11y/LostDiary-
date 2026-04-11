@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { chatService, ChatMessage } from '@/lib/services/chat-service';
 import { authService } from '@/lib/services/auth-service';
+import { useUIStore } from '@/lib/store/use-ui-store';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { StoryPreview } from './StoryPreview';
@@ -22,7 +23,40 @@ const SkeletonLoader = () => (
   </div>
 );
 
+const EMPTY_STATE: Record<string, { 
+  title: string; 
+  subtitle: string; 
+  actions: { icon: any; label: string; color: string; prompt?: string; path?: string }[] 
+}> = {
+  en: { 
+    title: "How was your day?", 
+    subtitle: "Every moment becomes part of your story.",
+    actions: [
+      { icon: Sparkles, label: "Today's Story", color: "text-indigo-500", prompt: "Analyze my recent events and ask me a personalized question about my day to help me write today's story." },
+      { icon: PenLine, label: "Write a Memory", color: "text-emerald-500", prompt: "Look at my past memories and ask me a thoughtful question to help me start writing a new memory." },
+      { icon: Heart, label: "How did it feel?", color: "text-rose-500", prompt: "Based on my emotional history, ask me a gentle question about how I'm feeling right now." },
+      { icon: BookOpen, label: "View LifeBook", color: "text-amber-500", path: "/story" },
+    ]
+  },
+  hi: { 
+    title: "आज आपका दिन कैसा रहा?", 
+    subtitle: "हर पल आपकी कहानी का हिस्सा बनता है।",
+    actions: [
+      { icon: Sparkles, label: "आज की कहानी", color: "text-indigo-500", prompt: "Analyze my recent events and ask me a personalized question about my day to help me write today's story." },
+      { icon: PenLine, label: "एक याद लिखें", color: "text-emerald-500", prompt: "Look at my past memories and ask me a thoughtful question to help me start writing a new memory." },
+      { icon: Heart, label: "कैसा महसूस हुआ?", color: "text-rose-500", prompt: "Based on my emotional history, ask me a gentle question about how I'm feeling right now." },
+      { icon: BookOpen, label: "लाइफबुक देखें", color: "text-amber-500", path: "/story" },
+    ]
+  },
+};
+
+import { useRouter } from 'next/navigation';
+
 export const ChatInterface = () => {
+  const router = useRouter();
+  const { language } = useUIStore();
+  const t = EMPTY_STATE[language] || EMPTY_STATE.en;
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -114,6 +148,8 @@ export const ChatInterface = () => {
     }
   }, [messages, isThinking, isAnalyzing]);
 
+  const { language } = useUIStore();
+
   const handleSendMessage = async (input: { 
     type: 'text' | 'image' | 'video' | 'audio' | 'location';
     content: string | File | null;
@@ -128,7 +164,8 @@ export const ChatInterface = () => {
     try {
       const newMessage = await chatService.sendMessage({ 
         ...input, 
-        user_id: user.id
+        user_id: user.id,
+        metadata: { ...input.metadata, language }
       });
       setMessages(prev => [...prev, newMessage]);
       setIsThinking(true);
@@ -174,27 +211,29 @@ export const ChatInterface = () => {
             >
               <div className="space-y-4">
                 <h2 className="text-4xl md:text-5xl font-serif font-medium text-gray-900 dark:text-gray-100 px-4 tracking-tight">
-                  आज आपका दिन कैसा रहा?
+                  {t.title}
                 </h2>
                 <p className="text-lg text-gray-500 dark:text-gray-400 font-serif italic">
-                  Every moment becomes part of your story.
+                  {t.subtitle}
                 </p>
               </div>
               
               <div className="grid grid-cols-2 gap-4 w-full max-w-md px-4">
-                {[
-                  { icon: <Sparkles className="w-5 h-5 text-indigo-500" />, label: "आज की कहानी" },
-                  { icon: <PenLine className="w-5 h-5 text-emerald-500" />, label: "एक याद लिखें" },
-                  { icon: <Heart className="w-5 h-5 text-rose-500" />, label: "कैसा महसूस हुआ?" },
-                  { icon: <BookOpen className="w-5 h-5 text-amber-500" />, label: "लाइफबुक देखें" },
-                ].map((action, i) => (
+                {t.actions.map((action, i) => (
                   <motion.button
                     key={i}
                     whileHover={{ scale: 1.02, backgroundColor: 'rgba(0,0,0,0.02)' }}
                     whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      if (action.path) {
+                        router.push(action.path);
+                      } else if (action.prompt) {
+                        handleSendMessage({ type: 'text', content: action.prompt });
+                      }
+                    }}
                     className="flex items-center gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-white/5 shadow-sm transition-all text-left"
                   >
-                    <div className="shrink-0">{action.icon}</div>
+                    <div className="shrink-0"><action.icon className={`w-5 h-5 ${action.color}`} /></div>
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-300 font-serif italic">{action.label}</span>
                   </motion.button>
                 ))}

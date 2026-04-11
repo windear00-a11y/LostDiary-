@@ -15,6 +15,7 @@ export interface PipelineInput {
   };
   contextMessages: string[];
   apiKey: string;
+  language?: string;
   recentEvents?: any[]; // For narrative generation
 }
 
@@ -68,7 +69,7 @@ export class PipelineController {
     let isHighValue = false;
     
     if (decisions.shouldRespond) {
-      aiResponse = await this.generateResponse(input.message.content, patterns);
+      aiResponse = await this.generateResponse(input.message.content, patterns, input.language);
       if (aiResponse) {
         const responseText = `${aiResponse.emotion_reflection}\n\n${aiResponse.validation}\n\n${aiResponse.insight}\n\n${aiResponse.gentle_suggestion}\n\n${aiResponse.short_reply}`;
         isHighValue = isHighValueResponse(responseText);
@@ -193,24 +194,32 @@ Rules:
     }
   }
 
-  private async generateResponse(content: string, patterns: PatternReport): Promise<any | null> {
+  private async generateResponse(content: string, patterns: PatternReport, language?: string): Promise<any | null> {
     const toneMode = AIPersonality.selectTone({ input: content, patterns });
     const toneInstructions = AIPersonality.getToneInstructions(toneMode);
     
     const systemInstruction = `
 You are an AI life author and behavioral intelligence system.
 Goal: Generate a warm, understanding companion response.
+
+Special Context:
+If the user's input starts with "Analyze my recent events" or similar suggestion prompts, DO NOT just summarize. Instead:
+1. Briefly look at their past events/memories.
+2. Ask ONE deep, personalized, and open-ended question that helps them elaborate on that specific suggestion.
+3. Make them feel like you remember their journey.
+
 Output:
 {
   "emotion_reflection": "Reflect user's feeling naturally",
   "validation": "Make user feel heard",
-  "insight": "Meaningful observation",
-  "gentle_suggestion": "Soft guidance",
-  "short_reply": "Casual sign-off"
+  "insight": "Meaningful observation or a guided question based on their history",
+  "gentle_suggestion": "Soft guidance to help them write",
+  "short_reply": "A warm question to start the conversation"
 }
 Rules:
 - ${AIPersonality.systemInstruction}
 - ${toneInstructions}
+- Language: Respond in ${language || 'the user\'s language'}.
 - Output ONLY a valid JSON object.
 `;
     try {

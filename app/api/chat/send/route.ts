@@ -19,6 +19,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { role, type, content, media_url, metadata, user_id } = body;
+    const language = metadata?.language || 'en';
 
     if (!user_id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
@@ -56,7 +57,8 @@ export async function POST(req: Request) {
       userId: user_id,
       message: { role, type, content },
       contextMessages,
-      apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY!
+      apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY!,
+      language
     });
 
     // Track interaction

@@ -1,10 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, User, Settings, Book, LogOut, Heart } from 'lucide-react';
+import { 
+  X, User, Settings, Book, LogOut, Heart, Search, 
+  Sparkles, BookOpen, PenLine, History, ChevronRight,
+  Plus, MessageSquare
+} from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
+import { chapterService, Chapter } from '@/lib/services/chapter-service';
+import { ALLOWED_CHAPTERS } from '@/lib/utils/chapters';
 
 interface SideDrawerProps {
   isOpen: boolean;
@@ -14,12 +20,17 @@ interface SideDrawerProps {
 export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const [chapters, setChapters] = useState<Chapter[]>([]);
 
-  const menuItems = [
-    { icon: User, label: 'Profile', path: '/profile' },
-    { icon: Book, label: 'My Story', path: '/story' },
-    { icon: Heart, label: 'Calm Mode', action: () => console.log('Calm mode toggled') },
-    { icon: Settings, label: 'Settings', path: '/settings' },
+  useEffect(() => {
+    if (isOpen && user) {
+      chapterService.fetchChapters(user.id).then(setChapters);
+    }
+  }, [isOpen, user]);
+
+  const quickActions = [
+    { icon: BookOpen, label: 'लाइफबुक', path: '/story', color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-500/10' },
+    { icon: Sparkles, label: 'झलक', path: '/story?view=insights', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
   ];
 
   return (
@@ -32,7 +43,7 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-[60]"
+            className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-[60]"
           />
 
           {/* Drawer */}
@@ -41,48 +52,133 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 bottom-0 w-[280px] bg-white dark:bg-[#1A1A1D] z-[70] shadow-2xl flex flex-col"
+            className="fixed top-0 left-0 bottom-0 w-[300px] bg-[#fdfcfb] dark:bg-[#0d0d0d] z-[70] shadow-2xl flex flex-col border-r border-gray-100 dark:border-white/5"
           >
-            <div className="p-6 flex items-center justify-between border-b border-gray-100 dark:border-white/5">
-              <span className="font-serif italic text-xl font-bold text-accent">WinDear</span>
-              <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
-                <X className="w-5 h-5 text-gray-400" />
-              </button>
-            </div>
-
-            <div className="flex-1 py-6 px-4 space-y-2">
-              {menuItems.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    if (item.path) router.push(item.path);
-                    if (item.action) item.action();
-                    onClose();
-                  }}
-                  className="w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-white/5 transition-colors text-gray-600 dark:text-gray-300 group"
-                >
-                  <item.icon className="w-5 h-5 group-hover:text-accent transition-colors" />
-                  <span className="font-medium">{item.label}</span>
+            {/* Header */}
+            <div className="p-6 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+                  <Book className="w-5 h-5 text-white" />
+                </div>
+                <span className="font-serif italic text-xl font-bold tracking-tight text-gray-900 dark:text-[#fdfcfb]">WinDear</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <button className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
+                  <Search className="w-4 h-4 text-gray-400" />
                 </button>
-              ))}
+                <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
+                  <X className="w-5 h-5 text-gray-400" />
+                </button>
+              </div>
             </div>
 
-            <div className="p-6 border-t border-gray-100 dark:border-white/5">
+            <div className="flex-1 overflow-y-auto px-4 space-y-8 py-2">
+              {/* Quick Actions Grid */}
+              <div className="grid grid-cols-2 gap-3">
+                {quickActions.map((action) => (
+                  <button
+                    key={action.label}
+                    onClick={() => {
+                      router.push(action.path);
+                      onClose();
+                    }}
+                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white dark:bg-white/5 border border-gray-100 dark:border-white/5 hover:scale-[1.02] transition-all shadow-sm"
+                  >
+                    <div className={`w-10 h-10 ${action.bg} rounded-full flex items-center justify-center`}>
+                      <action.icon className={`w-5 h-5 ${action.color}`} />
+                    </div>
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">{action.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Chapters Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">अध्याय (Chapters)</h3>
+                  <button className="text-[10px] font-bold text-indigo-500 hover:underline">सभी देखें</button>
+                </div>
+                <div className="space-y-1">
+                  {ALLOWED_CHAPTERS.map((chapterName) => {
+                    const hasData = chapters.some(c => c.name === chapterName);
+                    return (
+                      <button
+                        key={chapterName}
+                        onClick={() => {
+                          router.push('/story');
+                          onClose();
+                        }}
+                        className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white dark:hover:bg-white/5 transition-all group border border-transparent hover:border-gray-100 dark:hover:border-white/5"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${hasData ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-gray-800'}`} />
+                          <span className={`text-sm font-serif italic ${hasData ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
+                            {chapterName}
+                          </span>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-all" />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Recent Section */}
+              <div className="space-y-4">
+                <h3 className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold px-2">हालिया यादें (Recent)</h3>
+                <div className="space-y-1">
+                  {chapters.slice(0, 3).map((chapter) => (
+                    <button
+                      key={chapter.id}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white dark:hover:bg-white/5 transition-all text-left group"
+                    >
+                      <History className="w-4 h-4 text-gray-300 group-hover:text-indigo-400" />
+                      <span className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1 font-serif italic">
+                        {chapter.summary || `${chapter.name} की कहानी...`}
+                      </span>
+                    </button>
+                  ))}
+                  {chapters.length === 0 && (
+                    <p className="text-[10px] text-gray-400 italic px-2">अभी कोई यादें नहीं हैं...</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 space-y-3">
               <button
                 onClick={() => {
-                  signOut();
+                  router.push('/home');
                   onClose();
                 }}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                className="w-full flex items-center justify-center gap-2 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-indigo-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                <LogOut className="w-5 h-5" />
-                <span className="font-medium">Sign Out</span>
+                <Plus className="w-5 h-5" />
+                नई याद लिखें (New Entry)
               </button>
-              
-              <div className="mt-6 text-center">
-                <p className="text-[10px] uppercase tracking-[0.3em] text-gray-400">
-                  Your story is private
-                </p>
+
+              <div className="flex items-center gap-2 p-2">
+                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-white/10">
+                  {user?.email ? (
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="avatar" />
+                  ) : (
+                    <User className="w-5 h-5 text-gray-400" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate">{user?.email?.split('@')[0] || 'User'}</p>
+                  <p className="text-[10px] text-gray-400 truncate">Premium Member</p>
+                </div>
+                <button 
+                  onClick={() => {
+                    signOut();
+                    onClose();
+                  }}
+                  className="p-2 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors text-rose-500"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </motion.div>
