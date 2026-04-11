@@ -11,7 +11,7 @@ interface LifeBookPreviewProps {
   refreshTrigger?: number;
 }
 
-export const LifeBookPreview = ({ userId, refreshTrigger }: LifeBookPreviewProps) => {
+export const StoryPreviewCard = ({ userId, refreshTrigger }: LifeBookPreviewProps) => {
   const [latestChapter, setLatestChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
