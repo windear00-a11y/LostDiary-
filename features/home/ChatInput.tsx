@@ -62,7 +62,7 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-3 md:p-4 z-40">
+    <div className="fixed bottom-0 left-0 right-0 p-2 md:p-3 z-40">
       <div className="max-w-3xl mx-auto relative">
         {/* Attachment Bottom Sheet (Simplified as a floating menu for now) */}
         <AnimatePresence>
@@ -71,7 +71,7 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute bottom-16 left-0 bg-white dark:bg-[#1A1A1D] rounded-2xl p-3 shadow-2xl border border-gray-100 dark:border-white/5 grid grid-cols-3 gap-4 min-w-[200px]"
+              className="absolute bottom-14 left-0 bg-white dark:bg-[#1A1A1D] rounded-2xl p-3 shadow-2xl border border-gray-100 dark:border-white/5 grid grid-cols-3 gap-4 min-w-[200px]"
             >
               <button onClick={() => imageRef.current?.click()} className="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-colors">
                 <ImageIcon className="w-5 h-5 text-accent" />
@@ -89,7 +89,7 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
           )}
         </AnimatePresence>
 
-        <div className="relative flex items-end gap-2 bg-white dark:bg-[#1A1A1D] p-1.5 pl-3 rounded-[28px] premium-shadow border border-gray-100 dark:border-white/5 transition-all focus-within:ring-2 focus-within:ring-accent/20">
+        <div className="relative flex items-end gap-2 bg-white dark:bg-[#1A1A1D] p-2 pl-4 rounded-[24px] premium-shadow border border-gray-100 dark:border-white/5 transition-all focus-within:ring-2 focus-within:ring-accent/20">
           <input type="file" accept="image/*" className="hidden" ref={imageRef} onChange={(e) => handleFileUpload(e, 'image')} />
           <input type="file" accept="video/*" className="hidden" ref={videoRef} onChange={(e) => handleFileUpload(e, 'video')} />
           <input type="file" accept="image/*" capture="environment" className="hidden" ref={cameraRef} onChange={(e) => handleFileUpload(e, 'image')} />
@@ -98,7 +98,7 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
             onClick={() => setShowActions(!showActions)}
             className="p-2 text-gray-400 hover:text-accent transition-colors shrink-0"
           >
-            <Plus className={`w-5 h-5 transition-transform duration-300 ${showActions ? 'rotate-45' : ''}`} />
+            <Plus className={`w-4.5 h-4.5 transition-transform duration-300 ${showActions ? 'rotate-45' : ''}`} />
           </button>
 
           <textarea 
@@ -116,10 +116,10 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
             whileTap={{ scale: 0.95 }}
             onClick={handleSendText} 
             disabled={!text.trim() || isUploading || sendState !== 'idle'}
-            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 shadow-lg ${
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all shrink-0 shadow-lg ${
               sendState === 'success' 
-                ? 'bg-emerald-500' 
-                : 'bg-gradient-to-tr from-accent to-[#8B85FF]'
+                ? 'bg-gradient-to-tr from-emerald-400 to-emerald-500' 
+                : 'bg-gradient-to-tr from-[#8B85FF] to-[#A5A0FF]'
             } text-white disabled:opacity-30`}
           >
             <AnimatePresence mode="wait">
@@ -131,7 +131,7 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 </motion.div>
               ) : sendState === 'success' ? (
                 <motion.div 
@@ -139,9 +139,9 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
                   initial={{ opacity: 0, scale: 0.5, rotate: -45 }} 
                   animate={{ opacity: 1, scale: 1, rotate: 0 }} 
                   exit={{ opacity: 0, scale: 0.5 }}
-                  transition={{ duration: 0.3, type: "spring", stiffness: 300, damping: 20 }}
+                  transition={{ duration: 0.3, type: "spring", stiffness: 400, damping: 25 }}
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-3.5 h-3.5" />
                 </motion.div>
               ) : (
                 <motion.div 
@@ -151,7 +151,7 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
                   exit={{ opacity: 0, scale: 0.8 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ArrowUp className="w-4 h-4" />
+                  <ArrowUp className="w-3.5 h-3.5" />
                 </motion.div>
               )}
             </AnimatePresence>

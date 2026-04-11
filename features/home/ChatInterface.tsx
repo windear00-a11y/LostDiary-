@@ -170,7 +170,7 @@ export const ChatInterface = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4 -mt-10"
+              className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4 -mt-16"
             >
               <h2 className="text-4xl md:text-5xl font-serif font-medium text-text-light dark:text-gray-100 tracking-wide">
                 What stayed with you today?
