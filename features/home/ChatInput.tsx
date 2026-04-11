@@ -1,37 +1,41 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Send, Image as ImageIcon, Mic, Video, Camera, MapPin, Loader2, Square, Plus } from 'lucide-react';
-import { chatService } from '@/lib/services/chat-service';
-import { authService } from '@/lib/services/auth-service';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Image as ImageIcon, Mic, Video, Camera, MapPin, Loader2, Plus, Check, ArrowUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Promise<void> }) => {
   const [text, setText] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [sendState, setSendState] = useState<'idle' | 'sending' | 'success'>('idle');
   
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSendText = async () => {
-    if (!text.trim() || isUploading) return;
-    await onSendMessage({ type: 'text', content: text });
-    setText('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+    if (!text.trim() || isUploading || sendState !== 'idle') return;
+    
+    setSendState('sending');
+    try {
+      await onSendMessage({ type: 'text', content: text });
+      setText('');
+      if (textareaRef.current) textareaRef.current.style.height = 'auto';
+      
+      setSendState('success');
+      setTimeout(() => setSendState('idle'), 2000);
+    } catch (error) {
+      setSendState('idle');
     }
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
     e.target.style.height = 'auto';
-    e.target.style.height = `${e.target.scrollHeight}px`;
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -47,134 +51,94 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
 
     try {
       setIsUploading(true);
+      setShowActions(false);
       await onSendMessage({ type, content: file });
     } catch (error) {
       console.error(`Error sending ${type}:`, error);
-      alert(`Failed to send ${type}`);
     } finally {
       setIsUploading(false);
-      if (e.target) e.target.value = ''; // reset input
-    }
-  };
-
-  const handleLocation = async () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
-
-    setIsUploading(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          await onSendMessage({ 
-            type: 'location', 
-            content: `📍 Shared location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, 
-            metadata: { latitude, longitude } 
-          });
-        } catch (error) {
-          console.error("Error sending location:", error);
-          alert("Failed to send location");
-        } finally {
-          setIsUploading(false);
-        }
-      },
-      (error) => {
-        console.error("Error getting location:", error);
-        alert("Failed to get location");
-        setIsUploading(false);
-      }
-    );
-  };
-
-  const toggleRecording = async () => {
-    if (isRecording) {
-      mediaRecorderRef.current?.stop();
-      setIsRecording(false);
-    } else {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        const recorder = new MediaRecorder(stream);
-        audioChunksRef.current = [];
-        
-        recorder.ondataavailable = (e) => {
-          if (e.data.size > 0) audioChunksRef.current.push(e.data);
-        };
-        
-        recorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          const file = new File([audioBlob], 'recording.webm', { type: 'audio/webm' });
-          
-          try {
-            setIsUploading(true);
-            await onSendMessage({ type: 'audio', content: file });
-          } catch (error) {
-            console.error("Error sending audio:", error);
-            alert("Failed to send audio");
-          } finally {
-            setIsUploading(false);
-            // Stop all tracks to release microphone
-            stream.getTracks().forEach(track => track.stop());
-          }
-        };
-        
-        recorder.start();
-        setIsRecording(true);
-        mediaRecorderRef.current = recorder;
-      } catch (error) {
-        console.error("Error accessing microphone:", error);
-        alert("Microphone access denied or not available");
-      }
+      if (e.target) e.target.value = '';
     }
   };
 
   return (
-    <div className="p-4 md:p-6 border-t border-gray-100 dark:border-[#2E2E2E] bg-[#fdfcfb] dark:bg-[#0d0d0d]">
-      <div className="flex items-end gap-2 md:gap-4 bg-white dark:bg-[#1A1A1A] p-2 rounded-[24px] md:rounded-full border border-gray-100 dark:border-[#2E2E2E] shadow-sm">
-        {/* Hidden File Inputs */}
-        <input type="file" accept="image/*" className="hidden" ref={imageRef} onChange={(e) => handleFileUpload(e, 'image')} />
-        <input type="file" accept="video/*" className="hidden" ref={videoRef} onChange={(e) => handleFileUpload(e, 'video')} />
-        <input type="file" accept="image/*" capture="environment" className="hidden" ref={cameraRef} onChange={(e) => handleFileUpload(e, 'image')} />
+    <div className="fixed bottom-0 left-0 right-0 p-6 z-40">
+      <div className="max-w-3xl mx-auto relative">
+        {/* Attachment Bottom Sheet (Simplified as a floating menu for now) */}
+        <AnimatePresence>
+          {showActions && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              className="absolute bottom-20 left-0 bg-white dark:bg-[#1A1A1D] rounded-3xl p-4 shadow-2xl border border-gray-100 dark:border-white/5 grid grid-cols-3 gap-4 min-w-[240px]"
+            >
+              <button onClick={() => imageRef.current?.click()} className="flex flex-col items-center gap-2 p-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-2xl transition-colors">
+                <ImageIcon className="w-6 h-6 text-accent" />
+                <span className="text-[10px] font-medium text-gray-500">Photo</span>
+              </button>
+              <button className="flex flex-col items-center gap-2 p-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-2xl transition-colors">
+                <Mic className="w-6 h-6 text-accent" />
+                <span className="text-[10px] font-medium text-gray-500">Voice</span>
+              </button>
+              <button onClick={() => cameraRef.current?.click()} className="flex flex-col items-center gap-2 p-3 hover:bg-gray-50 dark:hover:bg-white/5 rounded-2xl transition-colors">
+                <Camera className="w-6 h-6 text-accent" />
+                <span className="text-[10px] font-medium text-gray-500">Camera</span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        <div className="flex items-center">
+        <div className="relative flex items-end gap-2 bg-white dark:bg-[#1A1A1D] p-2 pl-4 rounded-[32px] premium-shadow border border-gray-100 dark:border-white/5 transition-all focus-within:ring-2 focus-within:ring-accent/20">
+          <input type="file" accept="image/*" className="hidden" ref={imageRef} onChange={(e) => handleFileUpload(e, 'image')} />
+          <input type="file" accept="video/*" className="hidden" ref={videoRef} onChange={(e) => handleFileUpload(e, 'video')} />
+          <input type="file" accept="image/*" capture="environment" className="hidden" ref={cameraRef} onChange={(e) => handleFileUpload(e, 'image')} />
+
           <button 
             onClick={() => setShowActions(!showActions)}
-            className="p-2 md:p-3 text-gray-400 hover:text-[#6366F1] transition-colors shrink-0"
+            className="p-3 text-gray-400 hover:text-accent transition-colors shrink-0"
           >
-            <Plus className={`w-5 h-5 md:w-6 md:h-6 transition-transform ${showActions ? 'rotate-45' : ''}`} />
+            <Plus className={`w-6 h-6 transition-transform duration-300 ${showActions ? 'rotate-45' : ''}`} />
           </button>
 
-          {showActions && (
-            <div className="flex items-center gap-1 md:gap-2 animate-in fade-in zoom-in duration-200">
-              <button onClick={() => imageRef.current?.click()} className="p-2 text-gray-400 hover:text-[#6366F1]"><ImageIcon className="w-4 h-4 md:w-5 md:h-5" /></button>
-              <button onClick={toggleRecording} className={`p-2 transition-colors ${isRecording ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-[#6366F1]'}`}><Mic className="w-4 h-4 md:w-5 md:h-5" /></button>
-              <button onClick={() => videoRef.current?.click()} className="p-2 text-gray-400 hover:text-[#6366F1]"><Video className="w-4 h-4 md:w-5 md:h-5" /></button>
-              <button onClick={() => cameraRef.current?.click()} className="p-2 text-gray-400 hover:text-[#6366F1]"><Camera className="w-4 h-4 md:w-5 md:h-5" /></button>
-              <button onClick={handleLocation} className="p-2 text-gray-400 hover:text-[#6366F1]"><MapPin className="w-4 h-4 md:w-5 md:h-5" /></button>
-            </div>
-          )}
+          <textarea 
+            ref={textareaRef}
+            value={text}
+            onChange={handleTextChange}
+            onKeyDown={handleKeyDown}
+            rows={1}
+            className="flex-1 py-3 bg-transparent outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 resize-none max-h-32 overflow-y-auto font-medium"
+            placeholder="Type your moment..."
+          />
+
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={handleSendText} 
+            disabled={!text.trim() || isUploading || sendState !== 'idle'}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shrink-0 ${
+              sendState === 'success' ? 'bg-emerald-500' : 'bg-accent'
+            } text-white disabled:opacity-30`}
+          >
+            <AnimatePresence mode="wait">
+              {sendState === 'sending' ? (
+                <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                </motion.div>
+              ) : sendState === 'success' ? (
+                <motion.div key="success" initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+                  <Check className="w-5 h-5" />
+                </motion.div>
+              ) : (
+                <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <ArrowUp className="w-5 h-5" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.button>
         </div>
-        
-        <textarea 
-          ref={textareaRef}
-          value={text}
-          onChange={handleTextChange}
-          onKeyDown={handleKeyDown}
-          disabled={isUploading || isRecording}
-          rows={1}
-          className="flex-1 p-2 md:p-3 bg-transparent outline-none text-[#111827] dark:text-[#fdfcfb] placeholder:text-gray-400 resize-none max-h-32 overflow-y-auto"
-          placeholder={isRecording ? "Recording audio..." : isUploading ? "Uploading..." : "Type your thoughts..."}
-        />
-        
-        <button 
-          onClick={handleSendText} 
-          disabled={!text.trim() || isUploading || isRecording}
-          className="p-2 md:p-3 bg-[#6366F1] text-white rounded-full hover:bg-[#4f46e5] transition-all disabled:opacity-50 shrink-0"
-        >
-          {isUploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
-        </button>
       </div>
     </div>
   );
 };
+

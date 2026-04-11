@@ -138,14 +138,14 @@ export default function ProfilePage() {
 
   if (loading && !profile) {
     return (
-      <div className="min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-[#6366F1] animate-spin" />
+      <div className="min-h-screen bg-bg-light dark:bg-bg-dark flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-accent animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] pb-32">
+    <div className="min-h-screen bg-bg-light dark:bg-bg-dark pb-32">
       <Header />
       
       <main className="max-w-2xl mx-auto px-6 pt-24">
@@ -165,12 +165,12 @@ export default function ProfilePage() {
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-[#1A1A1A] rounded-[32px] p-8 shadow-sm border border-gray-100 dark:border-[#2E2E2E]"
+          className="bg-white dark:bg-[#1A1A1D] rounded-[32px] p-8 shadow-sm border border-gray-100 dark:border-white/5"
         >
           {/* Avatar Section */}
           <div className="flex flex-col items-center mb-8">
             <div className="relative group">
-              <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-[#2E2E2E] border-4 border-white dark:border-[#1A1A1A] shadow-xl relative">
+              <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-white/5 border-4 border-white dark:border-[#1A1A1D] shadow-xl relative">
                 {profile?.avatar_url ? (
                   <Image 
                     src={profile.avatar_url} 
@@ -202,7 +202,7 @@ export default function ProfilePage() {
               <button 
                 onClick={generateAIAvatar}
                 disabled={isGenerating}
-                className="absolute -bottom-2 -right-2 p-3 bg-[#6366F1] text-white rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
+                className="absolute -bottom-2 -right-2 p-3 bg-accent text-white rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
                 title="Generate AI Avatar"
               >
                 <Sparkles className="w-5 h-5" />
@@ -221,7 +221,7 @@ export default function ProfilePage() {
                 <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Display Name</label>
                 <button 
                   onClick={() => setIsEditing(!isEditing)}
-                  className="text-[#6366F1] hover:underline text-sm flex items-center gap-1"
+                  className="text-accent hover:underline text-sm flex items-center gap-1"
                 >
                   {isEditing ? <Save className="w-4 h-4" onClick={handleSaveProfile} /> : <Edit2 className="w-4 h-4" />}
                 </button>
@@ -232,11 +232,11 @@ export default function ProfilePage() {
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full p-3 bg-gray-50 dark:bg-[#0d0d0d] border border-gray-100 dark:border-[#2E2E2E] rounded-xl outline-none focus:border-[#6366F1] transition-colors"
+                  className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-accent transition-colors"
                   placeholder="Your name"
                 />
               ) : (
-                <h2 className="text-2xl font-serif font-medium text-gray-900 dark:text-[#fdfcfb]">
+                <h2 className="text-2xl font-serif font-medium text-gray-900 dark:text-gray-100">
                   {profile?.display_name || user?.email?.split('@')[0] || 'Anonymous'}
                 </h2>
               )}
@@ -248,7 +248,7 @@ export default function ProfilePage() {
                 <textarea 
                   value={bio}
                   onChange={(e) => setBio(e.target.value)}
-                  className="w-full p-3 bg-gray-50 dark:bg-[#0d0d0d] border border-gray-100 dark:border-[#2E2E2E] rounded-xl outline-none focus:border-[#6366F1] transition-colors resize-none h-24"
+                  className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-accent transition-colors resize-none h-24"
                   placeholder="Tell WinDear about yourself..."
                 />
               ) : (
@@ -259,10 +259,10 @@ export default function ProfilePage() {
             </div>
 
             {profile?.personality_summary && (
-              <div className="p-4 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100/50 dark:border-indigo-900/20">
+              <div className="p-4 bg-accent/5 rounded-2xl border border-accent/10">
                 <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-[#6366F1]" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#6366F1]">AI Insight</span>
+                  <Sparkles className="w-4 h-4 text-accent" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-accent">AI Insight</span>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                   {profile.personality_summary}
@@ -272,10 +272,10 @@ export default function ProfilePage() {
           </div>
 
           {/* Actions */}
-          <div className="mt-12 pt-8 border-t border-gray-100 dark:border-[#2E2E2E]">
+          <div className="mt-12 pt-8 border-t border-gray-100 dark:border-white/5">
             <button 
               onClick={() => signOut()}
-              className="w-full flex items-center justify-center gap-2 p-4 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl transition-colors font-medium"
+              className="w-full flex items-center justify-center gap-2 p-4 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-2xl transition-colors font-medium"
             >
               <LogOut className="w-5 h-5" />
               Sign Out
@@ -290,3 +290,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

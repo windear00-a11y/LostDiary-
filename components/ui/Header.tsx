@@ -1,28 +1,41 @@
 'use client';
 
-import { User } from 'lucide-react';
-import { StreakBadge } from '@/components/retention/StreakBadge';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { Menu, BookOpen } from 'lucide-react';
+import { SideDrawer } from './SideDrawer';
+import { motion } from 'motion/react';
 
 export const Header = () => {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
   return (
-    <header className="h-16 border-b border-gray-100 dark:border-[#2E2E2E] bg-white/80 dark:bg-[#0A0A0A]/80 backdrop-blur-md sticky top-0 z-40 flex items-center px-4 md:px-6 justify-between">
-      <Link href="/home" className="flex items-center gap-4 hover:opacity-80 transition-opacity">
-        <span className="font-black text-xl tracking-tighter bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
-          WinDear
-        </span>
-      </Link>
-      
-      <div className="flex items-center gap-2 md:gap-4">
-        <StreakBadge />
-        <Link 
-          href="/profile"
-          className="p-2 hover:bg-gray-100 dark:hover:bg-[#1A1A1A] rounded-full transition-colors text-gray-400 hover:text-indigo-600"
-          aria-label="Profile"
+    <>
+      <div className="fixed top-6 left-6 right-6 z-50 flex items-center justify-between pointer-events-none">
+        {/* Hamburger Button */}
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsDrawerOpen(true)}
+          className="w-10 h-10 rounded-full glass premium-shadow flex items-center justify-center pointer-events-auto transition-all"
         >
-          <User className="w-5 h-5" />
+          <Menu className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+        </motion.button>
+
+        {/* Book Button */}
+        <Link href="/story" className="pointer-events-auto">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-10 h-10 rounded-full glass premium-shadow flex items-center justify-center transition-all"
+          >
+            <BookOpen className="w-5 h-5 text-accent" />
+          </motion.button>
         </Link>
       </div>
-    </header>
+
+      <SideDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+    </>
   );
 };
+

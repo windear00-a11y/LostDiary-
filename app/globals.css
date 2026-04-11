@@ -1,9 +1,36 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@theme {
+  --color-accent: #6C63FF;
+  --color-bg-light: #F4F5F7;
+  --color-chat-light: #FFFFFF;
+  --color-text-light: #1A1A1A;
+  --color-bg-dark: #0F0F10;
+  --color-chat-dark: #1A1A1D;
+  --color-text-dark: #E5E7EB;
+}
+
 @layer base {
   html, body {
-    @apply w-full overflow-x-hidden;
+    @apply w-full overflow-x-hidden antialiased;
+    background-color: var(--color-bg-light);
+    color: var(--color-text-light);
+  }
+
+  .dark body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-text-dark);
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-md bg-white/70 dark:bg-black/40 border border-white/20 dark:border-white/5;
+  }
+  
+  .premium-shadow {
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
   }
 }
 

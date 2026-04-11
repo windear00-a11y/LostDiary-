@@ -66,7 +66,6 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
                 <PageTransition>
                   {children}
                 </PageTransition>
-                <BottomNav />
               </ErrorBoundary>
             </AuthProvider>
           </Suspense>

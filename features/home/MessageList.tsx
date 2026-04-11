@@ -8,19 +8,20 @@ import { motion } from 'motion/react';
 
 export const MessageList = ({ messages }: { messages: ChatMessage[] }) => {
   return (
-    <div className="space-y-12">
+    <div className="space-y-10">
       {messages.map((msg) => (
         <motion.div 
           key={msg.id} 
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
           className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
         >
-          <div className={`max-w-[90%] md:max-w-[80%] ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-            <div className={`p-6 rounded-3xl font-serif text-lg leading-relaxed ${
+          <div className={`max-w-[85%] md:max-w-[75%] ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
+            <div className={`px-6 py-4 rounded-[24px] font-serif text-lg leading-relaxed shadow-sm border border-gray-100 dark:border-white/5 ${
               msg.role === 'user' 
-                ? 'bg-[#111827] text-[#fdfcfb] dark:bg-[#fdfcfb] dark:text-[#111827]' 
-                : 'bg-gray-50 text-[#111827] dark:bg-[#1A1A1A] dark:text-[#fdfcfb]'
+                ? 'bg-accent text-white' 
+                : 'bg-white dark:bg-[#1A1A1D] text-gray-900 dark:text-gray-100'
             }`}>
               {msg.type === 'text' && (
                 <p className="whitespace-pre-wrap">{msg.content}</p>
@@ -64,3 +65,4 @@ export const MessageList = ({ messages }: { messages: ChatMessage[] }) => {
     </div>
   );
 };
+

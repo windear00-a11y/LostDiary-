@@ -25,7 +25,7 @@ export default function StoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] flex flex-col">
+    <div className="min-h-screen bg-bg-light dark:bg-bg-dark flex flex-col">
       <Header />
       <main className="flex-1">
         <BookView />

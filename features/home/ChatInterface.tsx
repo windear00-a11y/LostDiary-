@@ -7,9 +7,10 @@ import { authService } from '@/lib/services/auth-service';
 import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { StoryPreview } from './StoryPreview';
-import { StoryProgressBar } from '@/components/ui/StoryProgressBar';
 import { StoryPreviewCard } from '@/features/story/StoryPreviewCard';
 import { GoogleGenAI } from "@google/genai";
+import { Header } from '@/components/ui/Header';
+import { Loader2 } from 'lucide-react';
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
@@ -33,8 +34,6 @@ export const ChatInterface = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const userMessageCount = messages.filter(m => m.role === 'user').length;
 
   useEffect(() => {
     if (error) {
@@ -158,96 +157,89 @@ export const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full relative">
-      <StoryProgressBar count={userMessageCount} />
+    <div className="flex flex-col h-screen bg-bg-light dark:bg-bg-dark transition-colors duration-500">
+      <Header />
       
-      <AnimatePresence>
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="absolute top-20 left-6 right-6 z-50 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl text-sm text-rose-600 dark:text-rose-400 text-center font-serif italic"
-          >
-            {error}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-12 px-6 py-8 scrollbar-hide">
-        {loading ? (
-          <SkeletonLoader />
-        ) : messages.length === 0 ? (
-          <div className="py-12 text-center space-y-8">
-            <div className="space-y-2">
-              <h2 className="text-3xl font-serif italic text-gray-800 dark:text-gray-200">WinDear turns your life into your story.</h2>
-              <p className="text-gray-500 dark:text-gray-400">Share a moment to continue your journey.</p>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide pt-24 pb-32">
+        <div className="max-w-3xl mx-auto px-6">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center h-[60vh]">
+              <Loader2 className="w-8 h-8 text-accent animate-spin" />
             </div>
-            <div className="grid gap-3 max-w-sm mx-auto">
-              {prompts.map((prompt, i) => (
-                <button
-                  key={i}
-                  onClick={() => handleSendMessage({ type: 'text', content: prompt })}
-                  className="p-4 text-sm text-left bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#2E2E2E] rounded-2xl hover:border-[#6366F1] transition-all text-gray-600 dark:text-gray-300"
-                >
-                  {prompt}
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <>
-            {userId && <StoryPreviewCard userId={userId} refreshTrigger={refreshKey} />}
-            
-            <MessageList messages={messages} />
-            
-            {wowStory && (
-              <StoryPreview story={wowStory} />
-            )}
+          ) : messages.length === 0 ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4"
+            >
+              <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 dark:text-gray-100">
+                What stayed with you today?
+              </h2>
+              <p className="text-lg text-gray-500 dark:text-gray-400 font-serif italic">
+                Every moment becomes part of your story.
+              </p>
+            </motion.div>
+          ) : (
+            <div className="space-y-8">
+              {userId && <StoryPreviewCard userId={userId} refreshTrigger={refreshKey} />}
+              
+              <MessageList messages={messages} />
+              
+              {wowStory && (
+                <StoryPreview story={wowStory} />
+              )}
 
-            {isAnalyzing && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2 text-xs font-serif italic text-indigo-400"
-              >
-                Analyzing your moment...
-              </motion.div>
-            )}
+              <AnimatePresence>
+                {isAnalyzing && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="flex justify-center"
+                  >
+                    <div className="px-4 py-2 bg-white/50 dark:bg-white/5 backdrop-blur-md rounded-full border border-gray-100 dark:border-white/5 text-[11px] font-medium text-gray-400 uppercase tracking-widest">
+                      Saving your moment...
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-            <AnimatePresence>
-              {showHint && (
+              <AnimatePresence>
+                {showHint && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="flex justify-center"
+                  >
+                    <div className="bg-accent/10 text-accent px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                      This might become a chapter
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {isThinking && (
                 <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/30 text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-widest"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center gap-3 text-xs font-serif italic text-gray-400"
                 >
-                  This might become a chapter
+                  <div className="flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  WinDear is reflecting...
                 </motion.div>
               )}
-            </AnimatePresence>
+            </div>
+          )}
+        </div>
+      </div>
 
-            {isThinking && (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center gap-2 text-xs font-serif italic text-gray-400"
-              >
-                <div className="flex gap-1">
-                  <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                </div>
-                WinDear is reflecting...
-              </motion.div>
-            )}
-          </>
-        )}
-      </div>
-      <div className="mt-auto">
-        <ChatInput onSendMessage={handleSendMessage} />
-      </div>
+      <ChatInput onSendMessage={handleSendMessage} />
     </div>
   );
 };
+
