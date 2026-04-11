@@ -8,11 +8,10 @@ export interface ChatMessage {
   role: 'user' | 'diary';
   type: 'text' | 'image' | 'video' | 'audio' | 'location';
   content: string | null;
-  original_content: string | null;
-  authored_content: string | null;
   media_url: string | null;
   metadata: any | null;
   created_at: string;
+  event_score?: number;
 }
 
 export const chatService = {

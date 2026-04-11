@@ -72,7 +72,7 @@ export const LifeBookPreview = ({ userId, refreshTrigger }: LifeBookPreviewProps
             {latestChapter.name}
           </h4>
           <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed font-serif italic">
-            {latestChapter.story_content || "Your narrative is being woven from your latest entries..."}
+            {latestChapter.narrative || latestChapter.summary || "Your narrative is being woven from your latest entries..."}
           </p>
         </div>
 

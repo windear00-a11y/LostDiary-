@@ -3,46 +3,46 @@ import { createClient } from "@/lib/supabase";
 const supabase = createClient();
 
 export interface UserProfile {
-  user_id: string;
+  id: string;
   display_name: string | null;
   avatar_url: string | null;
   bio: string | null;
   personality_summary: string | null;
-  responsivenessLevel: number; // 0-1
-  emotionalSensitivity: number; // 0-1
-  engagementLevel: number; // 0-1
-  interactionFrequency: number;
-  lastResponseAt: string;
+  responsiveness_level: number; // 0-1
+  emotional_sensitivity: number; // 0-1
+  engagement_level: number; // 0-1
+  interaction_frequency: number;
+  last_response_at: string;
   updated_at: string;
 }
 
 export const profileService = {
   async getProfile(userId: string): Promise<UserProfile> {
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select('*')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single();
 
     if (error || !data) {
       // Default profile
       const defaultProfile = {
-        user_id: userId,
+        id: userId,
         display_name: null,
         avatar_url: null,
         bio: null,
         personality_summary: null,
-        responsivenessLevel: 0.5,
-        emotionalSensitivity: 0.5,
-        engagementLevel: 0.5,
-        interactionFrequency: 0,
-        lastResponseAt: new Date().toISOString(),
+        responsiveness_level: 0.5,
+        emotional_sensitivity: 0.5,
+        engagement_level: 0.5,
+        interaction_frequency: 0,
+        last_response_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
       
       // Try to create it if it doesn't exist
       const { data: newData } = await supabase
-        .from('user_profiles')
+        .from('users')
         .insert(defaultProfile)
         .select()
         .single();
@@ -54,9 +54,9 @@ export const profileService = {
 
   async updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('users')
       .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('user_id', userId)
+      .eq('id', userId)
       .select()
       .single();
 
@@ -90,16 +90,16 @@ export const profileService = {
     const profile = await this.getProfile(userId);
     
     // Simple engagement tracking logic
-    const newInteractionFrequency = profile.interactionFrequency + 1;
-    const newEngagementLevel = Math.min(1, profile.engagementLevel + (wasResponded ? 0.05 : 0.01));
+    const newInteractionFrequency = profile.interaction_frequency + 1;
+    const newEngagementLevel = Math.min(1, profile.engagement_level + (wasResponded ? 0.05 : 0.01));
     
     await supabase
-      .from('user_profiles')
-      .upsert({
-        user_id: userId,
-        interactionFrequency: newInteractionFrequency,
-        engagementLevel: newEngagementLevel,
-        lastResponseAt: new Date().toISOString(),
-      });
+      .from('users')
+      .update({
+        interaction_frequency: newInteractionFrequency,
+        engagement_level: newEngagementLevel,
+        last_response_at: new Date().toISOString(),
+      })
+      .eq('id', userId);
   }
 };

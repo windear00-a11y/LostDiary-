@@ -17,10 +17,18 @@ export default function ProfilePage() {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [bio, setBio] = useState('');
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   const loadProfile = React.useCallback(async () => {
     if (!user) return;
@@ -31,6 +39,7 @@ export default function ProfilePage() {
       setBio(data.bio || '');
     } catch (error) {
       console.error("Error loading profile:", error);
+      setError("Failed to load profile. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -52,6 +61,7 @@ export default function ProfilePage() {
       setIsEditing(false);
     } catch (error) {
       console.error("Error saving profile:", error);
+      setError("Failed to save changes. Please check your connection.");
     } finally {
       setLoading(false);
     }
@@ -61,9 +71,15 @@ export default function ProfilePage() {
     if (!user) return;
     try {
       setIsGenerating(true);
+      setError(null);
       
       // 1. Get context from diary entries
       const messages = await chatService.fetchMessages(user.id);
+      if (messages.length < 3) {
+        setError("WinDear needs at least 3 entries to understand your persona.");
+        return;
+      }
+
       const recentContext = messages
         .filter(m => m.role === 'user')
         .slice(-10)
@@ -114,6 +130,7 @@ export default function ProfilePage() {
       }
     } catch (error) {
       console.error("Error generating avatar:", error);
+      setError("AI generation failed. Please try again in a moment.");
     } finally {
       setIsGenerating(false);
     }
@@ -132,6 +149,19 @@ export default function ProfilePage() {
       <Header />
       
       <main className="max-w-2xl mx-auto px-6 pt-24">
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="mb-6 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl text-sm text-rose-600 dark:text-rose-400 text-center font-serif italic"
+            >
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

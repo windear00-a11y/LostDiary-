@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { chatService, ChatMessage } from '@/lib/services/chat-service';
 import { authService } from '@/lib/services/auth-service';
 import { MessageList } from './MessageList';
@@ -24,7 +24,10 @@ const SkeletonLoader = () => (
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const [wowStory, setWowStory] = useState<string | null>(null);
   const [hasShownWow, setHasShownWow] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -32,6 +35,20 @@ export const ChatInterface = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const userMessageCount = messages.filter(m => m.role === 'user').length;
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => setError(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (showHint) {
+      const timer = setTimeout(() => setShowHint(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showHint]);
 
   const generateWowStory = React.useCallback(async (userMessages: ChatMessage[]) => {
     try {
@@ -65,7 +82,7 @@ export const ChatInterface = () => {
   const prompts = [
     "आज आपका दिन कैसा रहा?",
     "कोई ऐसी बात जो आज आपको अच्छी लगी?",
-    "क्या कुछ ऐसा है जो आपको परेशान कर रहा है?",
+    "क्या कुछ ऐसा है जो आज आपको परेशान कर रहा है?",
     "आज आपने अपने बारे में क्या नया सीखा?"
   ];
 
@@ -74,13 +91,17 @@ export const ChatInterface = () => {
       const user = await authService.getUser();
       if (user) {
         setUserId(user.id);
-        const data = await chatService.fetchMessages(user.id);
-        setMessages(data);
-        
-        // Check if we should show the wow moment on load
-        const userMessages = data.filter(m => m.role === 'user');
-        if (userMessages.length >= 3 && userMessages.length <= 5) {
-          generateWowStory(userMessages);
+        try {
+          const data = await chatService.fetchMessages(user.id);
+          setMessages(data);
+          
+          // Check if we should show the wow moment on load
+          const userMessages = data.filter(m => m.role === 'user');
+          if (userMessages.length >= 3 && userMessages.length <= 5) {
+            generateWowStory(userMessages);
+          }
+        } catch (err) {
+          setError("Failed to load your story. Please check your connection.");
         }
       }
       setLoading(false);
@@ -92,7 +113,7 @@ export const ChatInterface = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, isThinking]);
+  }, [messages, isThinking, isAnalyzing]);
 
   const handleSendMessage = async (input: { 
     type: 'text' | 'image' | 'video' | 'audio' | 'location';
@@ -102,14 +123,21 @@ export const ChatInterface = () => {
     const user = await authService.getUser();
     if (!user) return;
     
-    const newMessage = await chatService.sendMessage({ 
-      ...input, 
-      user_id: user.id
-    });
-    setMessages(prev => [...prev, newMessage]);
-    setIsThinking(true);
+    setIsAnalyzing(true);
+    setError(null);
 
     try {
+      const newMessage = await chatService.sendMessage({ 
+        ...input, 
+        user_id: user.id
+      });
+      setMessages(prev => [...prev, newMessage]);
+      setIsThinking(true);
+
+      if (newMessage.event_score && newMessage.event_score > 7) {
+        setShowHint(true);
+      }
+
       // Reload messages to get potential AI reply
       const data = await chatService.fetchMessages(user.id);
       setMessages(data);
@@ -120,8 +148,12 @@ export const ChatInterface = () => {
       if (userMessages.length >= 3 && userMessages.length <= 5 && !hasShownWow) {
         generateWowStory(userMessages);
       }
+    } catch (err) {
+      console.error("Failed to send message:", err);
+      setError("WinDear couldn't hear that. Please try sending again.");
     } finally {
       setIsThinking(false);
+      setIsAnalyzing(false);
     }
   };
 
@@ -129,18 +161,18 @@ export const ChatInterface = () => {
     <div className="flex flex-col h-full relative">
       <StoryProgressBar count={userMessageCount} />
       
-      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2, duration: 2 }}
-          className="px-4 py-1.5 bg-white/50 dark:bg-black/20 backdrop-blur-md border border-white/20 dark:border-white/5 rounded-full shadow-sm"
-        >
-          <span className="text-[10px] uppercase tracking-[0.3em] font-bold text-gray-400 dark:text-gray-500">
-            Your story is being written
-          </span>
-        </motion.div>
-      </div>
+      <AnimatePresence>
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="absolute top-20 left-6 right-6 z-50 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl text-sm text-rose-600 dark:text-rose-400 text-center font-serif italic"
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto space-y-12 px-6 py-8 scrollbar-hide">
         {loading ? (
@@ -172,6 +204,29 @@ export const ChatInterface = () => {
             {wowStory && (
               <StoryPreview story={wowStory} />
             )}
+
+            {isAnalyzing && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex items-center gap-2 text-xs font-serif italic text-indigo-400"
+              >
+                Analyzing your moment...
+              </motion.div>
+            )}
+
+            <AnimatePresence>
+              {showHint && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-xl border border-indigo-100 dark:border-indigo-900/30 text-[10px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-widest"
+                >
+                  This might become a chapter
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {isThinking && (
               <motion.div 

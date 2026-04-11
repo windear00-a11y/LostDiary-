@@ -41,8 +41,8 @@ export const BookRenderer = ({ chapters }: BookRendererProps) => {
 
           {/* Narrative Content */}
           <div className="text-xl md:text-2xl leading-[1.8] text-gray-800 dark:text-gray-200 space-y-10 text-justify hyphens-auto">
-            {chapter.authored_content ? (
-              chapter.authored_content.split('\n').filter(p => p.trim()).map((paragraph, pIdx) => (
+            {chapter.narrative ? (
+              chapter.narrative.split('\n').filter(p => p.trim()).map((paragraph, pIdx) => (
                 <p 
                   key={pIdx} 
                   className="first-letter:text-4xl first-letter:font-bold first-letter:mr-1 first-letter:float-left first-letter:leading-none"

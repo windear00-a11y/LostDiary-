@@ -23,7 +23,7 @@ export const MessageList = ({ messages }: { messages: ChatMessage[] }) => {
                 : 'bg-gray-50 text-[#111827] dark:bg-[#1A1A1A] dark:text-[#fdfcfb]'
             }`}>
               {msg.type === 'text' && (
-                <p className="whitespace-pre-wrap">{msg.original_content || msg.content}</p>
+                <p className="whitespace-pre-wrap">{msg.content}</p>
               )}
               
               {msg.type === 'image' && (

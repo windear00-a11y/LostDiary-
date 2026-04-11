@@ -1,17 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from "@/lib/supabase";
-import { LifeAuthorEngine } from "@/ai-core/life-author";
-import { analyzeEntries } from "@/ai-core/pattern-detector";
-import { isImportantMessage } from "@/lib/utils/importance";
+import { AIOrchestrator } from "@/ai-core/ai-orchestrator";
 import { mapToChapter } from "@/lib/utils/chapters";
-import { isHighValueResponse } from "@/lib/utils/quality";
 import { chapterService } from "@/lib/services/chapter-service";
-import { eventEngine } from "@/lib/services/event-engine";
-import { brain } from "@/lib/services/brain";
 import { profileService } from "@/lib/services/profile-service";
+import { PipelineController } from "@/ai-core/pipeline-controller";
 
 const supabase = createClient();
-const authorEngine = new LifeAuthorEngine(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
+const orchestrator = new AIOrchestrator(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
+const pipelineForAsync = new PipelineController(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
 
 export async function POST(req: Request) {
   try {
@@ -22,22 +19,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    let original_content = content;
-    let authored_content = content;
-    let extractedEvent = null;
-    let aiResponse = null;
-
     // STEP 1: Fetch context for AI
     const { data: recentMessages } = await supabase
       .from('chat_messages')
-      .select('authored_content, content')
+      .select('content')
       .eq('user_id', user_id)
       .eq('role', 'user')
       .order('created_at', { ascending: false })
       .limit(10);
 
-    const contextMessages = recentMessages?.map(m => m.authored_content || m.content || "") || [];
-    const patterns = analyzeEntries(contextMessages);
+    const contextMessages = recentMessages?.map(m => m.content || "") || [];
     
     // STEP 2: Save user message
     const { data: message, error } = await supabase
@@ -47,8 +38,6 @@ export async function POST(req: Request) {
         role,
         type,
         content,
-        original_content,
-        authored_content,
         media_url,
         metadata: metadata || {}
       })
@@ -57,36 +46,22 @@ export async function POST(req: Request) {
 
     if (error) throw error;
 
-    // STEP 3: Consolidated AI Pipeline
-    const isImportant = isImportantMessage({ content, type });
-    
+    // Run Orchestrator
+    const pipelineOutput = await orchestrator.processInteraction({
+      userId: user_id,
+      message: { role, type, content },
+      contextMessages,
+      apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY!
+    });
+
+    // Track interaction
     if (role === 'user' && type === 'text' && content) {
-      try {
-        // Use eventEngine for extraction
-        extractedEvent = isImportant ? await eventEngine.extractEvent(content, process.env.NEXT_PUBLIC_GEMINI_API_KEY!) : null;
-        
-        // Determine if we should respond
-        const shouldRespond = await brain.shouldRespond(user_id, { content, emotion: extractedEvent?.emotion }, patterns);
-        
-        // Generate AI response
-        const result = await authorEngine.processMessageConsolidated(
-          content, 
-          { recent_messages: contextMessages.slice(0, 5) } as any, 
-          patterns,
-          !shouldRespond // skipResponse if brain says no
-        );
-        aiResponse = result.response;
-        
-        // Track interaction
-        await profileService.updateInteraction(user_id, shouldRespond);
-      } catch (error) {
-        console.error("Consolidated AI processing failed:", error);
-      }
+      await profileService.updateInteraction(user_id, pipelineOutput.shouldRespond);
     }
 
-    // STEP 4: Save Life Event if extracted
-    if (extractedEvent && message) {
-      const chapterName = mapToChapter(extractedEvent.category);
+    // Save Life Event if extracted
+    if (pipelineOutput.extractedEvent && message) {
+      const chapterName = mapToChapter(pipelineOutput.extractedEvent.category);
       
       // Ensure chapter exists
       let chapterId = null;
@@ -119,36 +94,34 @@ export async function POST(req: Request) {
         user_id,
         message_id: message.id,
         chapter_id: chapterId,
-        chapter_name: chapterName,
-        summary: extractedEvent.summary,
-        emotion: extractedEvent.emotion,
-        category: extractedEvent.category,
-        intensity: extractedEvent.intensity || 5
+        summary: pipelineOutput.extractedEvent.summary,
+        emotion: pipelineOutput.extractedEvent.emotion,
+        event_score: pipelineOutput.extractedEvent.score || 5
       });
 
-      // STEP 5: Update Chapter Narrative (Async)
+      // Update Chapter Narrative (Async)
       if (chapterId) {
-        chapterService.updateNarrativeAsync(user_id, chapterId, chapterName, authorEngine);
+        chapterService.updateNarrativeAsync(user_id, chapterId, chapterName, pipelineForAsync);
       }
     }
 
-    // STEP 6: Save AI Response if generated and high-value
-    if (aiResponse) {
+    // Save AI Response if generated and high-value
+    if (pipelineOutput.aiResponse && pipelineOutput.isHighValue) {
+      const aiResponse = pipelineOutput.aiResponse;
       const responseText = `${aiResponse.emotion_reflection}\n\n${aiResponse.validation}\n\n${aiResponse.insight}\n\n${aiResponse.gentle_suggestion}\n\n${aiResponse.short_reply}`;
       
-      if (isHighValueResponse(responseText)) {
-        await supabase.from('chat_messages').insert({
-          user_id,
-          role: 'diary',
-          type: 'text',
-          content: responseText,
-          original_content: responseText,
-          authored_content: responseText
-        });
-      }
+      await supabase.from('chat_messages').insert({
+        user_id,
+        role: 'diary',
+        type: 'text',
+        content: responseText
+      });
     }
 
-    return NextResponse.json(message);
+    return NextResponse.json({
+      ...message,
+      event_score: pipelineOutput.extractedEvent?.score || 0
+    });
   } catch (error: any) {
     console.error("Send message error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

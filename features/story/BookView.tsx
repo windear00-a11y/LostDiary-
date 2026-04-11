@@ -8,7 +8,7 @@ import { chatService } from '@/lib/services/chat-service';
 import { authService } from '@/lib/services/auth-service';
 import { BookRenderer } from './BookRenderer';
 import { InsightsView } from './InsightsView';
-import { LifeAuthorEngine } from '@/ai-core/life-author';
+import { PipelineController } from '@/ai-core/pipeline-controller';
 import { analyzeEntries } from '@/ai-core/pattern-detector';
 
 const SkeletonLoader = () => (
@@ -50,11 +50,13 @@ export const BookView = () => {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [openingText, setOpeningText] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'narrative' | 'insights'>('narrative');
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setError(null);
       try {
         const user = await authService.getUser();
         if (user) {
@@ -66,15 +68,18 @@ export const BookView = () => {
           setChapters(chaptersData);
 
           // Generate dynamic opening
-          const authorEngine = new LifeAuthorEngine(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
-          const patterns = analyzeEntries(messagesData.map(m => m.content || ""));
-          const allEvents = chaptersData.flatMap(c => c.events || []);
-          
-          const opening = await authorEngine.generateOpening(allEvents, patterns);
-          setOpeningText(opening);
+          if (chaptersData.length > 0) {
+            const pipeline = new PipelineController(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
+            const patterns = analyzeEntries(messagesData.map(m => m.content || ""));
+            const allEvents = chaptersData.flatMap(c => c.events || []);
+            
+            const opening = await pipeline.generateOpening(allEvents, patterns);
+            setOpeningText(opening);
+          }
         }
       } catch (error) {
         console.error("Failed to load data", error);
+        setError("Failed to load your LifeBook. Please check your connection.");
       } finally {
         setLoading(false);
       }
@@ -84,6 +89,22 @@ export const BookView = () => {
 
   if (loading) {
     return <SkeletonLoader />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] flex flex-col items-center justify-center p-10 text-center">
+        <div className="space-y-6 max-w-sm">
+          <p className="text-rose-500 font-serif italic">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:underline"
+          >
+            Try Refreshing
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
