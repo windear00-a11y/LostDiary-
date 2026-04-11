@@ -170,9 +170,9 @@ export const ChatInterface = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4"
+              className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4 -mt-10"
             >
-              <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 dark:text-gray-100">
+              <h2 className="text-4xl md:text-5xl font-serif font-medium text-text-light dark:text-gray-100 tracking-wide">
                 What stayed with you today?
               </h2>
               <p className="text-lg text-gray-500 dark:text-gray-400 font-serif italic">
@@ -180,7 +180,7 @@ export const ChatInterface = () => {
               </p>
             </motion.div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-6">
               {userId && <StoryPreviewCard userId={userId} refreshTrigger={refreshKey} />}
               
               <MessageList messages={messages} />
@@ -223,7 +223,7 @@ export const ChatInterface = () => {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex items-center gap-3 text-xs font-serif italic text-gray-400"
+                  className="flex items-center gap-2 text-xs font-serif italic text-gray-400"
                 >
                   <div className="flex gap-1">
                     <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />

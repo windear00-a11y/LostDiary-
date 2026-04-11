@@ -17,7 +17,7 @@ export const Header = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsDrawerOpen(true)}
-          className="w-10 h-10 rounded-full glass premium-shadow flex items-center justify-center pointer-events-auto transition-all"
+          className="w-10 h-10 rounded-full bg-white/90 dark:bg-black/85 backdrop-blur-md shadow-sm border border-white/20 dark:border-white/5 flex items-center justify-center pointer-events-auto transition-all"
         >
           <Menu className="w-5 h-5 text-gray-600 dark:text-gray-300" />
         </motion.button>
@@ -27,7 +27,7 @@ export const Header = () => {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="w-10 h-10 rounded-full glass premium-shadow flex items-center justify-center transition-all"
+            className="w-10 h-10 rounded-full bg-white/90 dark:bg-black/85 backdrop-blur-md shadow-sm border border-white/20 dark:border-white/5 flex items-center justify-center transition-all"
           >
             <BookOpen className="w-5 h-5 text-accent" />
           </motion.button>
