@@ -1,17 +1,22 @@
 import { NextResponse } from 'next/server';
-import { createClient } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { AIOrchestrator } from "@/ai-core/ai-orchestrator";
 import { mapToChapter } from "@/lib/utils/chapters";
 import { chapterService } from "@/lib/services/chapter-service";
 import { profileService } from "@/lib/services/profile-service";
 import { PipelineController } from "@/ai-core/pipeline-controller";
 
-const supabase = createClient();
-const orchestrator = new AIOrchestrator(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
-const pipelineForAsync = new PipelineController(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
-
 export async function POST(req: Request) {
   try {
+    const supabase = getSupabase();
+    if (!supabase) return NextResponse.json({ error: 'Supabase not initialized' }, { status: 500 });
+
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey) return NextResponse.json({ error: 'API Key is required' }, { status: 500 });
+
+    const orchestrator = new AIOrchestrator(apiKey);
+    const pipelineForAsync = new PipelineController(apiKey);
+
     const body = await req.json();
     const { role, type, content, media_url, metadata, user_id } = body;
 

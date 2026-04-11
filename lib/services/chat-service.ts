@@ -1,6 +1,4 @@
-import { createClient } from "@/lib/supabase";
-
-const supabase = createClient();
+import { getSupabase } from "@/lib/supabase";
 
 export interface ChatMessage {
   id: string;
@@ -16,6 +14,8 @@ export interface ChatMessage {
 
 export const chatService = {
   async fetchMessages(userId: string): Promise<ChatMessage[]> {
+    const supabase = getSupabase();
+    if (!supabase) return [];
     const { data, error } = await supabase
       .from('chat_messages')
       .select('*')
@@ -69,6 +69,8 @@ export const chatService = {
   },
 
   async uploadMedia(file: File, userId: string): Promise<string> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     

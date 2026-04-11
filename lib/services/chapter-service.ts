@@ -1,6 +1,4 @@
-import { createClient } from "@/lib/supabase";
-
-const supabase = createClient();
+import { getSupabase } from "@/lib/supabase";
 
 export interface Chapter {
   id: string;
@@ -17,6 +15,8 @@ export interface Chapter {
 
 export const chapterService = {
   async fetchChapters(userId: string): Promise<Chapter[]> {
+    const supabase = getSupabase();
+    if (!supabase) return [];
     try {
       const query = supabase
         .from('chapters')
@@ -48,6 +48,8 @@ export const chapterService = {
   },
 
   async fetchChapterById(chapterId: string): Promise<Chapter | null> {
+    const supabase = getSupabase();
+    if (!supabase) return null;
     try {
       const { data, error } = await supabase
         .from('chapters')
@@ -64,6 +66,8 @@ export const chapterService = {
   },
 
   async updateNarrativeAsync(userId: string, chapterId: string, chapterName: string, pipeline: any) {
+    const supabase = getSupabase();
+    if (!supabase) return;
     try {
       const { data: events } = await supabase
         .from('life_events')

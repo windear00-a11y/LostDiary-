@@ -53,8 +53,6 @@ export const viewport: Viewport = {
   ],
 };
 
-import { BottomNav } from '@/components/ui/BottomNav';
-
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${cormorant.variable}`}>

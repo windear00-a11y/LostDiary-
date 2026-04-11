@@ -1,9 +1,9 @@
-import { createClient } from "@/lib/supabase";
-
-const supabase = createClient();
+import { getSupabase } from "@/lib/supabase";
 
 export const authService = {
   async getUser() {
+    const supabase = getSupabase();
+    if (!supabase) return null;
     try {
       const { data: { user }, error } = await supabase.auth.getUser();
       if (error) {
@@ -20,6 +20,8 @@ export const authService = {
   },
 
   async signOut() {
+    const supabase = getSupabase();
+    if (!supabase) return;
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -30,6 +32,8 @@ export const authService = {
   },
 
   async signUp(email: string, pass: string) {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -44,6 +48,8 @@ export const authService = {
   },
 
   async signIn(email: string, pass: string) {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -58,6 +64,8 @@ export const authService = {
   },
 
   async signInWithGoogle() {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -74,6 +82,8 @@ export const authService = {
   },
 
   async signInWithOtp(emailOrPhone: string) {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     try {
       const isPhone = /^\+?[1-9]\d{1,14}$/.test(emailOrPhone);
       const { data, error } = await supabase.auth.signInWithOtp(
@@ -90,6 +100,8 @@ export const authService = {
   },
 
   async verifyOtp(emailOrPhone: string, token: string) {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     try {
       const isPhone = /^\+?[1-9]\d{1,14}$/.test(emailOrPhone);
       const { data, error } = await supabase.auth.verifyOtp({
@@ -106,6 +118,8 @@ export const authService = {
   },
 
   async resetPassword(email: string) {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/auth/update-password`,
@@ -118,6 +132,8 @@ export const authService = {
   },
 
   async updatePassword(password: string) {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) throw error;

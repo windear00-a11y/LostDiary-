@@ -10,7 +10,7 @@ import { StoryPreview } from './StoryPreview';
 import { StoryPreviewCard } from '@/features/story/StoryPreviewCard';
 import { GoogleGenAI } from "@google/genai";
 import { Header } from '@/components/ui/Header';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Image as ImageIcon, Sparkles, PenLine, Heart, BookOpen } from 'lucide-react';
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
@@ -170,14 +170,35 @@ export const ChatInterface = () => {
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4 -mt-16"
+              className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-12 py-12"
             >
-              <h2 className="text-4xl md:text-5xl font-serif font-medium text-text-light dark:text-gray-100 tracking-wide">
-                What stayed with you today?
-              </h2>
-              <p className="text-lg text-gray-500 dark:text-gray-400 font-serif italic">
-                Every moment becomes part of your story.
-              </p>
+              <div className="space-y-4">
+                <h2 className="text-4xl md:text-5xl font-serif font-medium text-gray-900 dark:text-gray-100 px-4 tracking-tight">
+                  आज आपका दिन कैसा रहा?
+                </h2>
+                <p className="text-lg text-gray-500 dark:text-gray-400 font-serif italic">
+                  Every moment becomes part of your story.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 w-full max-w-md px-4">
+                {[
+                  { icon: <Sparkles className="w-5 h-5 text-indigo-500" />, label: "आज की कहानी" },
+                  { icon: <PenLine className="w-5 h-5 text-emerald-500" />, label: "एक याद लिखें" },
+                  { icon: <Heart className="w-5 h-5 text-rose-500" />, label: "कैसा महसूस हुआ?" },
+                  { icon: <BookOpen className="w-5 h-5 text-amber-500" />, label: "लाइफबुक देखें" },
+                ].map((action, i) => (
+                  <motion.button
+                    key={i}
+                    whileHover={{ scale: 1.02, backgroundColor: 'rgba(0,0,0,0.02)' }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-white/5 shadow-sm transition-all text-left"
+                  >
+                    <div className="shrink-0">{action.icon}</div>
+                    <span className="text-sm font-medium text-gray-600 dark:text-gray-300 font-serif italic">{action.label}</span>
+                  </motion.button>
+                ))}
+              </div>
             </motion.div>
           ) : (
             <div className="space-y-6">

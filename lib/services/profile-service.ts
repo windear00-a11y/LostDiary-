@@ -1,6 +1,4 @@
-import { createClient } from "@/lib/supabase";
-
-const supabase = createClient();
+import { getSupabase } from "@/lib/supabase";
 
 export interface UserProfile {
   id: string;
@@ -18,6 +16,8 @@ export interface UserProfile {
 
 export const profileService = {
   async getProfile(userId: string): Promise<UserProfile> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     const { data, error } = await supabase
       .from('users')
       .select('*')
@@ -53,6 +53,8 @@ export const profileService = {
   },
 
   async updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     const { data, error } = await supabase
       .from('users')
       .update({ ...updates, updated_at: new Date().toISOString() })
@@ -65,6 +67,8 @@ export const profileService = {
   },
 
   async uploadAvatar(userId: string, base64Image: string): Promise<string> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
     const res = await fetch(base64Image);
     const blob = await res.blob();
     
@@ -87,6 +91,8 @@ export const profileService = {
   },
 
   async updateInteraction(userId: string, wasResponded: boolean): Promise<void> {
+    const supabase = getSupabase();
+    if (!supabase) return;
     const profile = await this.getProfile(userId);
     
     // Simple engagement tracking logic

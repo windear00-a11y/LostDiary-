@@ -1,13 +1,14 @@
-import { createClient } from "@/lib/supabase";
+import { getSupabase } from "@/lib/supabase";
 import { PipelineController } from "@/ai-core/pipeline-controller";
 import { format } from "date-fns";
 import { isImportantMessage } from "@/lib/utils/importance";
 import { mapToChapter } from "@/lib/utils/chapters";
 
-const supabase = createClient();
-
 export async function POST(req: Request) {
   try {
+    const supabase = getSupabase();
+    if (!supabase) return new Response("Supabase not initialized", { status: 500 });
+
     const { userId } = await req.json();
     if (!userId) return new Response("Missing userId", { status: 400 });
 
