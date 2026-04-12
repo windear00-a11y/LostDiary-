@@ -1,18 +1,18 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image as ImageIcon, Mic, Video, Camera, MapPin, Loader2, Plus, Check, ArrowUp, AudioLines, AlertCircle, Info } from 'lucide-react';
+import { Send, Image as ImageIcon, Mic, Video, Camera, MapPin, Loader2, Plus, Check, ArrowUp, AudioLines, AlertCircle, Info, Trash2, Square } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { useUIStore } from '@/lib/store/use-ui-store';
 
 const UPLOAD_TIPS = {
   en: {
-    dos: ["Use clear, high-quality images", "Keep videos under 30 seconds", "Add a caption for context"],
+    dos: ["Use clear, high-quality images", "Keep videos under 30 seconds", "Send a text message after to explain the photo"],
     donts: ["Don't upload blurry or dark media", "Avoid large files (>10MB)", "Don't close the app during upload"]
   },
   hi: {
-    dos: ["साफ और अच्छी क्वालिटी की फोटो का उपयोग करें", "वीडियो को 30 सेकंड से कम रखें", "संदर्भ के लिए कैप्शन जोड़ें"],
+    dos: ["साफ और अच्छी क्वालिटी की फोटो का उपयोग करें", "वीडियो को 30 सेकंड से कम रखें", "फोटो के बाद उसे समझाने के लिए एक मैसेज भेजें"],
     donts: ["धुंधली या अंधेरी फोटो अपलोड न करें", "बड़ी फाइलों (>10MB) से बचें", "अपलोड के दौरान ऐप बंद न करें"]
   }
 };
@@ -38,7 +38,11 @@ const PLACEHOLDERS: Record<string, string> = {
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Promise<void> }) => {
+export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: { 
+  onSendMessage: (msg: any) => Promise<void>,
+  replyingTo?: any,
+  onClearReply?: () => void
+}) => {
   const { language } = useUIStore();
   const [text, setText] = useState('');
   const [caretCoords, setCaretCoords] = useState({ x: 0, y: 0 });
@@ -47,6 +51,7 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
   const [uploadStatus, setUploadStatus] = useState<string>('');
   const [fileError, setFileError] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
   const [showActions, setShowActions] = useState(false);
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'success'>('idle');
   
@@ -54,21 +59,128 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
   const videoRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleSendText = async () => {
     if (!text.trim() || isUploading || sendState !== 'idle') return;
     
     setSendState('sending');
     try {
-      await onSendMessage({ type: 'text', content: text });
+      await onSendMessage({ 
+        type: 'text', 
+        content: text,
+        metadata: replyingTo ? { reply_to: replyingTo } : undefined
+      });
       setText('');
       if (textareaRef.current) textareaRef.current.style.height = 'auto';
+      if (onClearReply) onClearReply();
       
       setSendState('success');
       setTimeout(() => setSendState('idle'), 2000);
     } catch (error) {
       setSendState('idle');
     }
+  };
+
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        if (audioChunksRef.current.length > 0) {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const audioFile = new File([audioBlob], 'voice_message.webm', { type: 'audio/webm' });
+          
+          setIsUploading(true);
+          setUploadStatus(language === 'hi' ? 'ऑडियो भेजा जा रहा है...' : 'Sending audio...');
+          try {
+            await onSendMessage({ type: 'audio', content: audioFile });
+            setUploadStatus(language === 'hi' ? 'पूरा हुआ!' : 'Complete!');
+          } catch (error) {
+            console.error('Error sending audio:', error);
+          } finally {
+            setTimeout(() => setIsUploading(false), 1000);
+          }
+        }
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingTime(0);
+      timerRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      setShowActions(false);
+    } catch (err) {
+      console.error("Microphone access denied", err);
+      setFileError(language === 'hi' ? 'माइक्रोफ़ोन की अनुमति नहीं है' : 'Microphone access denied');
+      setTimeout(() => setFileError(null), 3000);
+    }
+  };
+
+  const stopRecording = (cancel = false) => {
+    if (cancel) {
+      audioChunksRef.current = [];
+    }
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+    if (timerRef.current) clearInterval(timerRef.current);
+  };
+
+  const shareLocation = () => {
+    if (!navigator.geolocation) {
+      setFileError(language === 'hi' ? 'लोकेशन सपोर्ट नहीं है' : 'Geolocation is not supported');
+      setTimeout(() => setFileError(null), 3000);
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadStatus(language === 'hi' ? 'लोकेशन प्राप्त की जा रही है...' : 'Getting location...');
+    setShowActions(false);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          await onSendMessage({
+            type: 'location',
+            content: `Shared a location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+            metadata: { latitude, longitude }
+          });
+          setUploadStatus(language === 'hi' ? 'पूरा हुआ!' : 'Complete!');
+        } catch (error) {
+          console.error('Error sending location:', error);
+          setFileError(language === 'hi' ? 'लोकेशन भेजने में विफल' : 'Failed to send location');
+        } finally {
+          setTimeout(() => setIsUploading(false), 1000);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setFileError(language === 'hi' ? 'लोकेशन प्राप्त करने में विफल' : 'Failed to get location');
+        setIsUploading(false);
+        setTimeout(() => setFileError(null), 3000);
+      }
+    );
   };
 
   const updateCaretCoords = () => {
@@ -245,19 +357,23 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="absolute bottom-14 left-0 bg-white dark:bg-[#1A1A1D] rounded-2xl p-3 shadow-2xl border border-gray-100 dark:border-white/5 grid grid-cols-3 gap-4 min-w-[200px]"
+              className="absolute bottom-14 left-0 bg-white dark:bg-[#1A1A1D] rounded-2xl p-3 shadow-2xl border border-gray-100 dark:border-white/5 grid grid-cols-4 gap-4 min-w-[260px]"
             >
               <button onClick={() => imageRef.current?.click()} className="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-colors">
                 <ImageIcon className="w-5 h-5 text-accent" />
                 <span className="text-[9px] font-medium text-gray-500">Photo</span>
               </button>
-              <button className="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-colors">
+              <button onClick={startRecording} className="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-colors">
                 <Mic className="w-5 h-5 text-accent" />
                 <span className="text-[9px] font-medium text-gray-500">Voice</span>
               </button>
               <button onClick={() => cameraRef.current?.click()} className="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-colors">
                 <Camera className="w-5 h-5 text-accent" />
                 <span className="text-[9px] font-medium text-gray-500">Camera</span>
+              </button>
+              <button onClick={shareLocation} className="flex flex-col items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-xl transition-colors">
+                <MapPin className="w-5 h-5 text-accent" />
+                <span className="text-[9px] font-medium text-gray-500">Location</span>
               </button>
             </motion.div>
           )}
@@ -278,92 +394,141 @@ export const ChatInput = ({ onSendMessage }: { onSendMessage: (msg: any) => Prom
             <Plus className={`w-6 h-6 transition-transform duration-300 ${showActions ? 'rotate-45' : ''}`} />
           </motion.button>
 
-          {/* Main Input Pill */}
-          <div className="flex-1 relative flex items-center gap-2 bg-white/85 dark:bg-black/80 backdrop-blur-md p-1.5 pl-4 rounded-full shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 overflow-hidden">
-            {/* Magic Glow */}
-            <AnimatePresence>
-              {isFocused && text.length > 0 && (
-                <motion.div
-                  animate={{ 
-                    left: caretCoords.x - 20, 
-                    top: caretCoords.y - 10,
-                  }}
-                  transition={{ type: "spring", damping: 30, stiffness: 200, mass: 0.5 }}
-                  className="absolute w-12 h-12 rounded-full bg-indigo-500/20 blur-xl pointer-events-none z-0"
-                  style={{ mixBlendMode: 'screen' }}
-                />
-              )}
-            </AnimatePresence>
-
-            <textarea 
-              ref={textareaRef}
-              value={text}
-              onChange={handleTextChange}
-              onKeyDown={handleKeyDown}
-              onFocus={() => {
-                setIsFocused(true);
-                setTimeout(updateCaretCoords, 0);
-              }}
-              onBlur={() => setIsFocused(false)}
-              onClick={updateCaretCoords}
-              onKeyUp={updateCaretCoords}
-              rows={1}
-              className="flex-1 py-2 bg-transparent outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 resize-none max-h-32 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative"
-              placeholder={PLACEHOLDERS[language] || PLACEHOLDERS.en}
-            />
-
-            <div className="flex items-center gap-1 pr-1">
-              <button className="p-2 text-gray-400 hover:text-accent transition-colors">
-                <Mic className="w-5 h-5" />
-              </button>
-
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleSendText} 
-                disabled={!text.trim() || isUploading || sendState !== 'idle'}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 shadow-lg ${
-                  sendState === 'success' 
-                    ? 'bg-gradient-to-tr from-emerald-400 to-emerald-500' 
-                    : 'bg-gradient-to-tr from-[#8B85FF] to-[#A5A0FF]'
-                } text-white disabled:opacity-30`}
+          {/* Reply Context UI */}
+          <AnimatePresence>
+            {replyingTo && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: 'auto' }}
+                exit={{ opacity: 0, y: 10, height: 0 }}
+                className="absolute bottom-full left-12 right-0 mb-2 bg-white/90 dark:bg-[#1A1A1D]/90 backdrop-blur-md rounded-2xl p-3 shadow-sm border border-gray-100 dark:border-white/5 flex items-start gap-3 overflow-hidden"
               >
-                <AnimatePresence mode="wait">
-                  {sendState === 'sending' ? (
-                    <motion.div 
-                      key="sending" 
-                      initial={{ opacity: 0, scale: 0.8 }} 
-                      animate={{ opacity: 1, scale: 1 }} 
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    </motion.div>
-                  ) : sendState === 'success' ? (
-                    <motion.div 
-                      key="success" 
-                      initial={{ opacity: 0, scale: 0.5, rotate: -45 }} 
-                      animate={{ opacity: 1, scale: 1, rotate: 0 }} 
-                      exit={{ opacity: 0, scale: 0.5 }}
-                      transition={{ duration: 0.3, type: "spring", stiffness: 400, damping: 25 }}
-                    >
-                      <Check className="w-4 h-4" />
-                    </motion.div>
-                  ) : (
-                    <motion.div 
-                      key="idle" 
-                      initial={{ opacity: 0, scale: 0.8 }} 
-                      animate={{ opacity: 1, scale: 1 }} 
-                      exit={{ opacity: 0, scale: 0.8 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ArrowUp className="w-4 h-4" />
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.button>
+                <div className="w-1 h-full absolute left-0 top-0 bottom-0 bg-indigo-500 rounded-l-2xl" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mb-1">
+                    Replying to {replyingTo.role === 'user' ? 'yourself' : 'WinDear'}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 truncate font-serif italic">
+                    {replyingTo.content || 'Attachment'}
+                  </p>
+                </div>
+                <button onClick={onClearReply} className="p-1 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full text-gray-400 transition-colors">
+                  <Plus className="w-4 h-4 rotate-45" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Main Input Pill or Recording UI */}
+          {isRecording ? (
+            <div className="flex-1 flex items-center justify-between bg-rose-50 dark:bg-rose-500/10 backdrop-blur-md p-1.5 px-4 rounded-full border border-rose-200 dark:border-rose-500/20 animate-pulse shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)]">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
+                <span className="text-rose-600 dark:text-rose-400 font-mono font-medium">{formatTime(recordingTime)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={() => stopRecording(true)} className="p-2 text-gray-400 hover:text-rose-500 transition-colors">
+                  <Trash2 className="w-5 h-5" />
+                </button>
+                <button onClick={() => stopRecording(false)} className="w-10 h-10 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg hover:bg-rose-600 transition-colors">
+                  <Square className="w-4 h-4 fill-current" />
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="flex-1 relative flex items-center gap-2 bg-white/85 dark:bg-black/80 backdrop-blur-md p-1.5 pl-4 rounded-full shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 overflow-hidden">
+              {/* Magic Glow */}
+              <AnimatePresence>
+                {isFocused && text.length > 0 && (
+                  <motion.div
+                    animate={{ 
+                      left: caretCoords.x - 20, 
+                      top: caretCoords.y - 10,
+                    }}
+                    transition={{ type: "spring", damping: 30, stiffness: 200, mass: 0.5 }}
+                    className="absolute w-12 h-12 rounded-full bg-indigo-500/20 blur-xl pointer-events-none z-0"
+                    style={{ mixBlendMode: 'screen' }}
+                  />
+                )}
+              </AnimatePresence>
+
+              <textarea 
+                ref={textareaRef}
+                value={text}
+                onChange={handleTextChange}
+                onKeyDown={handleKeyDown}
+                onFocus={() => {
+                  setIsFocused(true);
+                  setTimeout(updateCaretCoords, 0);
+                }}
+                onBlur={() => setIsFocused(false)}
+                onClick={updateCaretCoords}
+                onKeyUp={updateCaretCoords}
+                rows={1}
+                className="flex-1 py-2 bg-transparent outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 resize-none max-h-32 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative"
+                placeholder={PLACEHOLDERS[language] || PLACEHOLDERS.en}
+              />
+
+              <div className="flex items-center gap-1 pr-1">
+                {!text.trim() ? (
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={startRecording} 
+                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 shadow-lg bg-gradient-to-tr from-emerald-400 to-emerald-500 text-white"
+                  >
+                    <Mic className="w-5 h-5" />
+                  </motion.button>
+                ) : (
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={handleSendText} 
+                    disabled={!text.trim() || isUploading || sendState !== 'idle'}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 shadow-lg ${
+                      sendState === 'success' 
+                        ? 'bg-gradient-to-tr from-emerald-400 to-emerald-500' 
+                        : 'bg-gradient-to-tr from-[#8B85FF] to-[#A5A0FF]'
+                    } text-white disabled:opacity-30`}
+                  >
+                    <AnimatePresence mode="wait">
+                      {sendState === 'sending' ? (
+                        <motion.div 
+                          key="sending" 
+                          initial={{ opacity: 0, scale: 0.8 }} 
+                          animate={{ opacity: 1, scale: 1 }} 
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        </motion.div>
+                      ) : sendState === 'success' ? (
+                        <motion.div 
+                          key="success" 
+                          initial={{ opacity: 0, scale: 0.5, rotate: -45 }} 
+                          animate={{ opacity: 1, scale: 1, rotate: 0 }} 
+                          exit={{ opacity: 0, scale: 0.5 }}
+                          transition={{ duration: 0.3, type: "spring", stiffness: 400, damping: 25 }}
+                        >
+                          <Check className="w-4 h-4" />
+                        </motion.div>
+                      ) : (
+                        <motion.div 
+                          key="idle" 
+                          initial={{ opacity: 0, scale: 0.8 }} 
+                          animate={{ opacity: 1, scale: 1 }} 
+                          exit={{ opacity: 0, scale: 0.8 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <ArrowUp className="w-4 h-4" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
