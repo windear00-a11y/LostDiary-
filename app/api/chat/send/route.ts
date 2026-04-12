@@ -18,7 +18,7 @@ export async function POST(req: Request) {
     const pipelineForAsync = new PipelineController(apiKey);
 
     const body = await req.json();
-    const { role, type, content, media_url, metadata, user_id } = body;
+    const { role, type, content, media_url, metadata, user_id, session_id } = body;
     const language = metadata?.language || 'en';
 
     if (!user_id) {
@@ -26,13 +26,19 @@ export async function POST(req: Request) {
     }
 
     // STEP 1: Fetch context for AI
-    const { data: recentMessages } = await supabase
+    let query = supabase
       .from('chat_messages')
       .select('content')
       .eq('user_id', user_id)
       .eq('role', 'user')
       .order('created_at', { ascending: false })
       .limit(10);
+
+    if (session_id) {
+      query = query.eq('session_id', session_id);
+    }
+
+    const { data: recentMessages } = await query;
 
     const contextMessages = recentMessages?.map(m => m.content || "") || [];
     
@@ -41,6 +47,7 @@ export async function POST(req: Request) {
       .from('chat_messages')
       .insert({
         user_id,
+        session_id,
         role,
         type,
         content,
@@ -119,6 +126,7 @@ export async function POST(req: Request) {
       
       await supabase.from('chat_messages').insert({
         user_id,
+        session_id,
         role: 'diary',
         type: 'text',
         content: responseText

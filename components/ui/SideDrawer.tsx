@@ -10,6 +10,7 @@ import {
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
 import { chapterService, Chapter } from '@/lib/services/chapter-service';
+import { chatService, ChatSession } from '@/lib/services/chat-service';
 import { ALLOWED_CHAPTERS } from '@/lib/utils/chapters';
 
 interface SideDrawerProps {
@@ -21,10 +22,12 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
   const { user, signOut } = useAuth();
   const router = useRouter();
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
 
   useEffect(() => {
     if (isOpen && user) {
       chapterService.fetchChapters(user.id).then(setChapters);
+      chatService.fetchSessions(user.id).then(setSessions);
     }
   }, [isOpen, user]);
 
@@ -90,6 +93,42 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                     <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">{action.label}</span>
                   </button>
                 ))}
+              </div>
+
+              {/* Chat History Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">चैट हिस्ट्री (Chat History)</h3>
+                  <button 
+                    onClick={() => {
+                      router.push('/');
+                      onClose();
+                    }}
+                    className="text-[10px] font-bold text-indigo-500 hover:underline flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> नई चैट
+                  </button>
+                </div>
+                <div className="space-y-1">
+                  {sessions.map((session) => (
+                    <button
+                      key={session.id}
+                      onClick={() => {
+                        router.push(`/?session=${session.id}`);
+                        onClose();
+                      }}
+                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white dark:hover:bg-white/5 transition-all text-left group"
+                    >
+                      <MessageSquare className="w-4 h-4 text-gray-300 group-hover:text-indigo-400 shrink-0" />
+                      <span className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1 font-serif italic">
+                        {session.title}
+                      </span>
+                    </button>
+                  ))}
+                  {sessions.length === 0 && (
+                    <p className="text-[10px] text-gray-400 italic px-2">अभी कोई चैट हिस्ट्री नहीं है...</p>
+                  )}
+                </div>
               </div>
 
               {/* Chapters Section */}

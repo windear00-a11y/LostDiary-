@@ -1,8 +1,17 @@
 import { getSupabase } from "@/lib/supabase";
 
+export interface ChatSession {
+  id: string;
+  user_id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ChatMessage {
   id: string;
   user_id: string;
+  session_id?: string;
   role: 'user' | 'diary';
   type: 'text' | 'image' | 'video' | 'audio' | 'location';
   content: string | null;
@@ -13,14 +22,52 @@ export interface ChatMessage {
 }
 
 export const chatService = {
-  async fetchMessages(userId: string): Promise<ChatMessage[]> {
+  async fetchSessions(userId: string): Promise<ChatSession[]> {
     const supabase = getSupabase();
     if (!supabase) return [];
     const { data, error } = await supabase
+      .from('chat_sessions')
+      .select('*')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching sessions:", error);
+      return [];
+    }
+    return data || [];
+  },
+
+  async createSession(userId: string, title: string = "New Chat"): Promise<ChatSession> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
+    const { data, error } = await supabase
+      .from('chat_sessions')
+      .insert({ user_id: userId, title })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async fetchMessages(userId: string, sessionId?: string | null): Promise<ChatMessage[]> {
+    const supabase = getSupabase();
+    if (!supabase) return [];
+    
+    let query = supabase
       .from('chat_messages')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: true });
+
+    if (sessionId) {
+      query = query.eq('session_id', sessionId);
+    } else {
+      query = query.is('session_id', null);
+    }
+
+    const { data, error } = await query;
 
     if (error) throw error;
     return data || [];
@@ -28,11 +75,12 @@ export const chatService = {
 
   async sendMessage(input: {
     user_id: string;
+    session_id?: string;
     type: 'text' | 'image' | 'video' | 'audio' | 'location';
     content: string | File | null;
     metadata?: any;
   }): Promise<ChatMessage> {
-    const { type, content, metadata, user_id } = input;
+    const { type, content, metadata, user_id, session_id } = input;
     
     // Handle input types:
     // - text → store directly in content
@@ -52,6 +100,7 @@ export const chatService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         user_id,
+        session_id,
         role: 'user',
         type,
         content: finalContent,

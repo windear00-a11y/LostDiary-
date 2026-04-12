@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { chatService, ChatMessage } from '@/lib/services/chat-service';
 import { authService } from '@/lib/services/auth-service';
@@ -50,15 +51,21 @@ const EMPTY_STATE: Record<string, {
   },
 };
 
-import { useRouter } from 'next/navigation';
-
 export const ChatInterface = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const sessionIdFromUrl = searchParams.get('session');
+  
   const { language } = useUIStore();
   const t = EMPTY_STATE[language] || EMPTY_STATE.en;
 
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionIdFromUrl);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setCurrentSessionId(sessionIdFromUrl);
+  }, [sessionIdFromUrl]);
   const [error, setError] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -175,7 +182,7 @@ export const ChatInterface = () => {
       if (user) {
         setUserId(user.id);
         try {
-          const data = await chatService.fetchMessages(user.id);
+          const data = await chatService.fetchMessages(user.id, currentSessionId);
           const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
           setMessages(visibleMessages);
           
@@ -191,7 +198,7 @@ export const ChatInterface = () => {
       setLoading(false);
     };
     loadMessages();
-  }, [generateWowStory]);
+  }, [generateWowStory, currentSessionId]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -207,11 +214,24 @@ export const ChatInterface = () => {
     const user = await authService.getUser();
     if (!user) return;
     
+    let activeSessionId = currentSessionId;
+    if (!activeSessionId) {
+      try {
+        const newSession = await chatService.createSession(user.id, "Chat " + new Date().toLocaleDateString());
+        activeSessionId = newSession.id;
+        setCurrentSessionId(activeSessionId);
+        window.history.replaceState(null, '', `/?session=${activeSessionId}`);
+      } catch (err) {
+        console.error("Failed to create session:", err);
+      }
+    }
+
     // Optimistic UI Update: Show user message instantly
     const tempId = `temp-${Date.now()}`;
     const optimisticMsg: ChatMessage = {
       id: tempId,
       user_id: user.id,
+      session_id: activeSessionId || undefined,
       role: 'user',
       type: input.type,
       content: typeof input.content === 'string' ? input.content : (input.type === 'image' ? '📷 Image' : '📎 Attachment'),
@@ -231,6 +251,7 @@ export const ChatInterface = () => {
       const newMessage = await chatService.sendMessage({ 
         ...input, 
         user_id: user.id,
+        session_id: activeSessionId || undefined,
         metadata: { ...input.metadata, language }
       });
       
@@ -241,7 +262,7 @@ export const ChatInterface = () => {
       }
 
       // Reload messages to get the real user message (replacing temp) and potential AI reply
-      const data = await chatService.fetchMessages(user.id);
+      const data = await chatService.fetchMessages(user.id, activeSessionId);
       const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
       setMessages(visibleMessages);
       setRefreshKey(prev => prev + 1);
@@ -269,6 +290,19 @@ export const ChatInterface = () => {
       
       <Header />
       
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-full shadow-lg flex items-center gap-2"
+          >
+            <span className="text-xs font-medium text-red-600 dark:text-red-400">{error}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide pt-24 pb-6 relative z-10">
         <div className="max-w-3xl mx-auto px-6">
           <AnimatePresence mode="wait">

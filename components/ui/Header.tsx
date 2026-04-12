@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, BookOpen, User, Languages } from 'lucide-react';
+import { Menu, Book, Sparkles } from 'lucide-react';
 import { SideDrawer } from './SideDrawer';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { motion } from 'motion/react';
@@ -32,9 +32,16 @@ export const Header = () => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-10 h-10 rounded-full bg-white/85 dark:bg-black/80 backdrop-blur-md shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 flex items-center justify-center transition-all"
+              className="relative w-10 h-10 rounded-full bg-white/85 dark:bg-black/80 backdrop-blur-md shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 flex items-center justify-center transition-all group"
             >
-              <BookOpen className="w-5 h-5 text-indigo-500" />
+              <Book className="w-5 h-5 text-indigo-500 group-hover:text-indigo-600 transition-colors" />
+              <motion.div 
+                animate={{ rotate: [0, 15, -15, 0], scale: [1, 1.2, 1] }}
+                transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                className="absolute -top-1 -right-1"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-400 drop-shadow-sm" />
+              </motion.div>
             </motion.button>
           </Link>
         </div>
