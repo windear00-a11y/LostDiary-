@@ -148,8 +148,6 @@ export const ChatInterface = () => {
     }
   }, [messages, isThinking, isAnalyzing]);
 
-  const { language } = useUIStore();
-
   const handleSendMessage = async (input: { 
     type: 'text' | 'image' | 'video' | 'audio' | 'location';
     content: string | File | null;
