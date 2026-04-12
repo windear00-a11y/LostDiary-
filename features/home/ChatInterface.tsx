@@ -104,6 +104,35 @@ export const ChatInterface = () => {
     }
   }, [messages, isThinking, isAnalyzing]);
 
+  const generateDynamicPrompt = async (actionPrompt: string) => {
+    try {
+      const context = messages.slice(-5).map(m => m.content).join('\n');
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: `You are a gentle, empathetic journaling assistant. 
+        The user wants to write a diary entry. 
+        Based on their recent diary entries (if any) and the following instruction, generate a single, short, thoughtful question to help them start writing.
+        
+        Instruction: ${actionPrompt}
+        Language: ${language === 'hi' ? 'Hindi' : 'English'}
+        
+        Recent entries:
+        ${context || 'No recent entries.'}
+        
+        Return ONLY the question, nothing else. Keep it under 15 words.`,
+      });
+
+      if (response.text) {
+        setThoughtStarter(response.text.trim());
+      } else {
+        setThoughtStarter(language === 'hi' ? "इस बारे में कुछ और बताएं..." : "Tell me more about this...");
+      }
+    } catch (error) {
+      console.error("Error generating dynamic prompt:", error);
+      setThoughtStarter(language === 'hi' ? "इस बारे में कुछ और बताएं..." : "Tell me more about this...");
+    }
+  };
+
   const generateWowStory = React.useCallback(async (userMessages: ChatMessage[]) => {
     try {
       const context = userMessages.map(m => m.content).join('\n');
@@ -270,21 +299,24 @@ export const ChatInterface = () => {
                           whileHover={selectedActionIndex === null ? { scale: 1.02, backgroundColor: 'rgba(0,0,0,0.02)' } : {}}
                           whileTap={selectedActionIndex === null ? { scale: 0.98 } : {}}
                           onClick={() => {
+                            if (selectedActionIndex === i) {
+                              setSelectedActionIndex(null);
+                              setThoughtStarter(null);
+                              return;
+                            }
                             if (selectedActionIndex !== null) return;
                             setSelectedActionIndex(i);
-                            setTimeout(() => {
-                              if (action.path) {
+                            
+                            if (action.path) {
+                              setTimeout(() => {
                                 router.push(action.path);
-                              } else if (action.prompt) {
-                                handleSendMessage({ 
-                                  type: 'text', 
-                                  content: action.prompt,
-                                  metadata: { is_hidden: true }
-                                });
-                              }
-                              // Reset after a delay so if they come back it's normal
-                              setTimeout(() => setSelectedActionIndex(null), 500);
-                            }, 500); // 500ms delay for the expansion animation
+                                setSelectedActionIndex(null);
+                              }, 500);
+                            } else if (action.prompt) {
+                              // Generate a dynamic prompt based on the action and past messages
+                              setThoughtStarter(language === 'hi' ? "सोच रहा हूँ..." : "Thinking...");
+                              generateDynamicPrompt(action.prompt);
+                            }
                           }}
                           className={`flex items-center gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-white/5 shadow-sm transition-all text-left ${selectedActionIndex === i ? 'col-span-2 bg-white dark:bg-white/10 shadow-md ring-2 ring-indigo-500/20' : ''}`}
                         >
@@ -395,6 +427,7 @@ export const ChatInterface = () => {
         <ChatInput 
           onSendMessage={async (msg) => {
             setThoughtStarter(null); // Hide thought starter on send
+            setSelectedActionIndex(null); // Hide expanded suggestion on send
             await handleSendMessage(msg);
           }} 
           replyingTo={replyingTo} 
