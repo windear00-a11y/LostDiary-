@@ -207,6 +207,23 @@ export const ChatInterface = () => {
     const user = await authService.getUser();
     if (!user) return;
     
+    // Optimistic UI Update: Show user message instantly
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: ChatMessage = {
+      id: tempId,
+      user_id: user.id,
+      role: 'user',
+      type: input.type,
+      content: typeof input.content === 'string' ? input.content : (input.type === 'image' ? '📷 Image' : '📎 Attachment'),
+      media_url: null,
+      metadata: { ...input.metadata, language },
+      created_at: new Date().toISOString()
+    };
+
+    if (!input.metadata?.is_hidden) {
+      setMessages(prev => [...prev, optimisticMsg]);
+    }
+
     setIsAnalyzing(true);
     setError(null);
 
@@ -217,17 +234,13 @@ export const ChatInterface = () => {
         metadata: { ...input.metadata, language }
       });
       
-      if (!newMessage.metadata?.is_hidden) {
-        setMessages(prev => [...prev, newMessage]);
-      }
-      
       setIsThinking(true);
 
       if (newMessage.event_score && newMessage.event_score > 7) {
         setShowHint(true);
       }
 
-      // Reload messages to get potential AI reply
+      // Reload messages to get the real user message (replacing temp) and potential AI reply
       const data = await chatService.fetchMessages(user.id);
       const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
       setMessages(visibleMessages);
@@ -241,6 +254,8 @@ export const ChatInterface = () => {
     } catch (err) {
       console.error("Failed to send message:", err);
       setError("WinDear couldn't hear that. Please try sending again.");
+      // Remove the optimistic message if it failed
+      setMessages(prev => prev.filter(m => m.id !== tempId));
     } finally {
       setIsThinking(false);
       setIsAnalyzing(false);
