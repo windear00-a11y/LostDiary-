@@ -272,7 +272,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 p-2 md:p-3 z-40">
+    <div className="w-full p-2 md:p-4 z-40 bg-bg-light dark:bg-bg-dark">
       <div className="max-w-3xl mx-auto relative">
         {/* File Error Message */}
         <AnimatePresence>

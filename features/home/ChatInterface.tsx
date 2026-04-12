@@ -254,7 +254,7 @@ export const ChatInterface = () => {
       
       <Header />
       
-      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide pt-24 pb-32 relative z-10">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide pt-24 pb-6 relative z-10">
         <div className="max-w-3xl mx-auto px-6">
           <AnimatePresence mode="wait">
             {loading ? (
@@ -318,10 +318,30 @@ export const ChatInterface = () => {
                               generateDynamicPrompt(action.prompt);
                             }
                           }}
-                          className={`flex items-center gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-white/5 shadow-sm transition-all text-left ${selectedActionIndex === i ? 'col-span-2 bg-white dark:bg-white/10 shadow-md ring-2 ring-indigo-500/20' : ''}`}
+                          className={`flex flex-col gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-white/5 shadow-sm transition-all text-left ${selectedActionIndex === i ? 'col-span-2 bg-white dark:bg-white/10 shadow-md ring-2 ring-indigo-500/20' : ''}`}
                         >
-                          <div className="shrink-0"><action.icon className={`w-5 h-5 ${action.color}`} /></div>
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-300 font-serif italic">{action.label}</span>
+                          <div className="flex items-center gap-3 w-full">
+                            <div className="shrink-0"><action.icon className={`w-5 h-5 ${action.color}`} /></div>
+                            <span className="text-sm font-medium text-gray-600 dark:text-gray-300 font-serif italic">{action.label}</span>
+                          </div>
+                          
+                          <AnimatePresence>
+                            {selectedActionIndex === i && thoughtStarter && (
+                              <motion.div 
+                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                className="w-full overflow-hidden"
+                              >
+                                <div className="p-3 bg-indigo-50/50 dark:bg-indigo-500/10 rounded-xl border border-indigo-100/50 dark:border-indigo-500/20">
+                                  <p className="text-sm text-indigo-700 dark:text-indigo-300 font-serif italic flex items-start gap-2">
+                                    <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
+                                    {thoughtStarter}
+                                  </p>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </motion.button>
                       );
                     })}
@@ -399,14 +419,14 @@ export const ChatInterface = () => {
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative shrink-0 z-40 bg-bg-light dark:bg-bg-dark">
         <AnimatePresence>
-          {thoughtStarter && (
+          {thoughtStarter && messages.length > 0 && (
             <motion.div
               initial={{ opacity: 0, y: 10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.95, filter: 'blur(4px)' }}
-              className="absolute bottom-full left-0 right-0 mb-4 flex justify-center pointer-events-none z-20"
+              className="absolute bottom-full left-0 right-0 mb-2 flex justify-center pointer-events-none z-20"
             >
               <div 
                 className="bg-white/90 dark:bg-[#1A1A1D]/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-lg border border-indigo-100 dark:border-indigo-500/20 pointer-events-auto cursor-pointer hover:scale-105 transition-transform"
