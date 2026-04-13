@@ -229,13 +229,15 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
     
     document.body.appendChild(mirror);
     const rect = marker.getBoundingClientRect();
-    const textareaRect = textarea.getBoundingClientRect();
+    const mirrorRect = mirror.getBoundingClientRect();
     const parentRect = textarea.parentElement?.getBoundingClientRect();
     
     if (parentRect) {
+      // Calculate position relative to the parent container
+      // We take the caret's position within the mirror and add the textarea's offset
       setCaretCoords({
-        x: rect.left - parentRect.left,
-        y: rect.top - parentRect.top
+        x: (rect.left - mirrorRect.left) + textarea.offsetLeft,
+        y: (rect.top - mirrorRect.top) + textarea.offsetTop
       });
     }
     
@@ -459,10 +461,6 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
             </div>
           ) : (
             <div className="flex-1 relative flex items-center gap-2 bg-white/85 dark:bg-black/80 backdrop-blur-md p-1.5 pl-4 rounded-full shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 transition-all focus-within:ring-2 focus-within:ring-indigo-500/20">
-              {/* Debug Coords */}
-              <div className="absolute -top-6 left-4 text-[8px] text-red-500 font-mono pointer-events-none z-50">
-                X:{Math.round(caretCoords.x)} Y:{Math.round(caretCoords.y)}
-              </div>
               {/* Magic Glow (Reactive Caret Follower) */}
               <AnimatePresence>
                 {isFocused && (
@@ -470,10 +468,10 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                     key="magic-glow"
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ 
-                      left: caretCoords.x - 64, 
-                      top: caretCoords.y - 64,
+                      left: caretCoords.x - 48, 
+                      top: caretCoords.y - 48,
                       // Bloom effect on typing, otherwise soft pulse
-                      scale: Date.now() - lastTyped < 100 ? [1.2, 1.3] : [1, 1.05, 1],
+                      scale: Date.now() - lastTyped < 100 ? [1.2, 1.4] : [1, 1.05, 1],
                       opacity: Date.now() - lastTyped < 100 ? 0.8 : [0.4, 0.6, 0.4],
                     }}
                     exit={{ opacity: 0, scale: 0 }}
@@ -483,7 +481,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                       scale: { duration: 0.2 },
                       opacity: { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
                     }}
-                    className="absolute w-32 h-32 rounded-full bg-purple-600/50 blur-xl pointer-events-none z-20 border-2 border-purple-500"
+                    className="absolute w-24 h-24 rounded-full bg-indigo-500/40 dark:bg-indigo-400/30 blur-2xl pointer-events-none z-0"
                     style={{ mixBlendMode: 'normal' }}
                   />
                 )}
