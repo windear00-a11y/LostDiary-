@@ -460,26 +460,44 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
               </div>
             </div>
           ) : (
-            <div className={`flex-1 relative flex items-end gap-2 p-1.5 pl-4 transition-all duration-500 ${
-              text.trim() || isFocused 
-                ? 'bg-cyan-500/80 dark:bg-cyan-600/80 backdrop-blur-md shadow-[0_0_30px_rgba(6,182,212,0.4),inset_0_0_15px_rgba(255,255,255,0.2)]' 
-                : 'bg-transparent'
-            }`}
-            style={(text.trim() || isFocused) ? {
-              borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%',
-            } : { borderRadius: '26px' }}>
+            <div className="flex-1 relative flex items-end gap-2 p-1.5 pl-4 transition-all duration-700">
               
-              {/* Cloud Bumps for Input */}
+              {/* Dynamic Smoke/Fog Glow Effect */}
               <AnimatePresence>
                 {(text.trim() || isFocused) && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    className="absolute inset-0 pointer-events-none"
+                    initial={{ opacity: 0, scale: 0.9, filter: 'blur(20px)' }}
+                    animate={{ 
+                      opacity: 1, 
+                      scale: 1, 
+                      filter: 'blur(15px)',
+                    }}
+                    exit={{ opacity: 0, scale: 0.9, filter: 'blur(20px)' }}
+                    className="absolute inset-0 pointer-events-none z-0 overflow-visible"
                   >
-                    <div className="absolute -top-3 left-1/4 w-8 h-8 bg-cyan-500/40 rounded-full blur-md" />
-                    <div className="absolute -top-2 right-1/3 w-6 h-6 bg-cyan-400/30 rounded-full blur-sm" />
+                    {/* Layered Smoke Blobs */}
+                    <motion.div 
+                      animate={{ 
+                        x: [0, 10, -10, 0],
+                        y: [0, -5, 5, 0],
+                        scale: [1, 1.1, 0.9, 1]
+                      }}
+                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 bg-cyan-400/20 dark:bg-cyan-500/20 rounded-[40%] blur-2xl" 
+                    />
+                    <motion.div 
+                      animate={{ 
+                        x: [0, -15, 15, 0],
+                        y: [0, 8, -8, 0],
+                        scale: [1, 0.8, 1.2, 1]
+                      }}
+                      transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-x-4 inset-y-2 bg-indigo-400/15 dark:bg-indigo-500/15 rounded-[50%] blur-3xl" 
+                    />
+                    <div className="absolute inset-0 bg-white/5 dark:bg-white/5 backdrop-blur-xl rounded-full" />
+                    
+                    {/* The "Center" Glow that follows the text area */}
+                    <div className="absolute inset-x-8 inset-y-1 bg-cyan-300/30 dark:bg-cyan-400/20 rounded-full blur-xl shadow-[0_0_40px_rgba(34,211,238,0.3)]" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -497,8 +515,10 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                 onClick={updateCaretCoords}
                 onKeyUp={updateCaretCoords}
                 rows={1}
-                className={`flex-1 py-2.5 bg-transparent outline-none resize-none max-h-40 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative selection:bg-white/20 transition-colors duration-500 ${
-                  text.trim() || isFocused ? 'text-white placeholder:text-white/60' : 'text-gray-900 dark:text-gray-100 placeholder:text-gray-400'
+                className={`flex-1 py-2.5 bg-transparent outline-none resize-none max-h-40 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative selection:bg-cyan-500/20 transition-all duration-500 ${
+                  text.trim() || isFocused 
+                    ? 'text-gray-800 dark:text-gray-100 placeholder:text-gray-400/60' 
+                    : 'text-gray-900 dark:text-gray-100 placeholder:text-gray-400'
                 }`}
                 placeholder={PLACEHOLDERS[language] || PLACEHOLDERS.en}
               />
@@ -508,14 +528,14 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                   {!text.trim() ? (
                     <motion.button 
                       key="mic"
-                      initial={{ x: -10, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      exit={{ x: 10, opacity: 0 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={startRecording} 
                       className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
-                        isFocused ? 'text-white' : 'text-gray-400 dark:text-gray-500'
+                        isFocused ? 'text-cyan-500' : 'text-gray-400 dark:text-gray-500'
                       }`}
                     >
                       <Mic className="w-5 h-5" />
@@ -530,7 +550,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                       whileTap={{ scale: 0.9 }}
                       onClick={handleSendText} 
                       disabled={!text.trim() || isUploading || sendState !== 'idle'}
-                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 bg-white text-cyan-600 shadow-lg"
+                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 bg-cyan-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)]"
                     >
                       <AnimatePresence mode="wait">
                         {sendState === 'sending' ? (
