@@ -59,18 +59,15 @@ export const ChatInterface = () => {
   const { language } = useUIStore();
   const t = EMPTY_STATE[language] || EMPTY_STATE.en;
 
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(sessionIdFromUrl);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
+  const lastSessionIdRef = useRef<string | null>(sessionIdFromUrl);
 
   // Debug visibility: Log messages state
   useEffect(() => {
     console.log("messages updated:", messages);
   }, [messages]);
 
-  useEffect(() => {
-    setCurrentSessionId(sessionIdFromUrl);
-  }, [sessionIdFromUrl]);
   const [error, setError] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -184,6 +181,12 @@ export const ChatInterface = () => {
 
   useEffect(() => {
     const loadMessages = async () => {
+      // If we are switching sessions, show loading
+      if (lastSessionIdRef.current !== sessionIdFromUrl) {
+        setLoading(true);
+        lastSessionIdRef.current = sessionIdFromUrl;
+      }
+
       // Skip loading if we are currently sending a message to prevent overwriting optimistic UI
       if (isSendingRef.current) {
         setLoading(false);
@@ -194,14 +197,14 @@ export const ChatInterface = () => {
       if (user) {
         setUserId(user.id);
         try {
-          const data = await chatService.fetchMessages(user.id, currentSessionId);
+          const data = await chatService.fetchMessages(user.id, sessionIdFromUrl);
           const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
           
-          console.log(`Loaded ${visibleMessages.length} messages for session ${currentSessionId}`);
+          console.log(`Loaded ${visibleMessages.length} messages for session ${sessionIdFromUrl}`);
 
           // Only update if we have messages, or if we are explicitly on the "New Chat" (null) session
           // This prevents overwriting optimistic messages with an empty array due to fetch lag
-          if (visibleMessages.length > 0 || currentSessionId === null) {
+          if (visibleMessages.length > 0 || sessionIdFromUrl === null) {
             setMessages(visibleMessages);
           }
           
@@ -217,7 +220,7 @@ export const ChatInterface = () => {
       setLoading(false);
     };
     loadMessages();
-  }, [generateWowStory, currentSessionId]);
+  }, [generateWowStory, sessionIdFromUrl]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -233,17 +236,22 @@ export const ChatInterface = () => {
     const user = await authService.getUser();
     if (!user) return;
     
+    if (isSendingRef.current) return;
     isSendingRef.current = true;
     
-    let activeSessionId = currentSessionId;
+    let activeSessionId = sessionIdFromUrl;
     if (!activeSessionId) {
       try {
         const newSession = await chatService.createSession(user.id, "Chat " + new Date().toLocaleDateString());
         activeSessionId = newSession.id;
-        setCurrentSessionId(activeSessionId);
-        window.history.replaceState(null, '', `/?session=${activeSessionId}`);
+        // Update URL to the new session
+        router.replace(`/?session=${activeSessionId}`, { scroll: false });
+        lastSessionIdRef.current = activeSessionId;
+        console.log("Created new session:", activeSessionId);
       } catch (err) {
         console.error("Failed to create session:", err);
+        isSendingRef.current = false;
+        return;
       }
     }
 
