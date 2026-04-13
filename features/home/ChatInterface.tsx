@@ -188,7 +188,12 @@ export const ChatInterface = () => {
         try {
           const data = await chatService.fetchMessages(user.id, currentSessionId);
           const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
-          setMessages(visibleMessages);
+          
+          // Only update messages if we actually have messages, or if we are explicitly loading an empty session
+          // This prevents accidental clears if a fetch fails or returns empty unexpectedly
+          if (visibleMessages.length > 0 || currentSessionId === null) {
+            setMessages(visibleMessages);
+          }
           
           // Check if we should show the wow moment on load
           const userMessages = visibleMessages.filter(m => m.role === 'user');
@@ -274,7 +279,15 @@ export const ChatInterface = () => {
       // Reload messages to get the real user message (replacing temp) and potential AI reply
       const data = await chatService.fetchMessages(user.id, activeSessionId);
       const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
-      setMessages(visibleMessages);
+      
+      if (visibleMessages.length > 0) {
+        setMessages(visibleMessages);
+      } else {
+        // Fallback: If fetchMessages returns empty (e.g. due to replication lag or RLS issue),
+        // we keep the optimistic message so the UI doesn't revert to the empty state.
+        console.warn("fetchMessages returned empty after successful send. Keeping optimistic message.");
+      }
+      
       setRefreshKey(prev => prev + 1);
 
       // Onboarding Wow Moment Trigger
