@@ -461,18 +461,18 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
             </div>
           ) : (
             <div className="flex-1 relative flex items-center gap-2 bg-white/85 dark:bg-black/80 backdrop-blur-md p-1.5 pl-4 rounded-full shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 transition-all focus-within:ring-2 focus-within:ring-indigo-500/20">
-              {/* Magic Glow (Reactive Caret Follower) */}
+              {/* Magic Glow (Directional Caret Follower) */}
               <AnimatePresence>
                 {isFocused && (
                   <motion.div
                     key="magic-glow"
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ 
-                      left: caretCoords.x - 48, 
-                      top: caretCoords.y - 48,
+                      left: caretCoords.x - 60, 
+                      top: caretCoords.y - 6,
                       // Bloom effect on typing, otherwise soft pulse
-                      scale: Date.now() - lastTyped < 100 ? [1.2, 1.4] : [1, 1.05, 1],
-                      opacity: Date.now() - lastTyped < 100 ? 0.8 : [0.4, 0.6, 0.4],
+                      scale: Date.now() - lastTyped < 100 ? [1.1, 1.2] : [1, 1.05, 1],
+                      opacity: Date.now() - lastTyped < 100 ? 0.7 : [0.3, 0.5, 0.3],
                     }}
                     exit={{ opacity: 0, scale: 0 }}
                     transition={{ 
@@ -481,7 +481,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                       scale: { duration: 0.2 },
                       opacity: { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
                     }}
-                    className="absolute w-24 h-24 rounded-full bg-indigo-500/40 dark:bg-indigo-400/30 blur-2xl pointer-events-none z-0"
+                    className="absolute w-16 h-10 rounded-full bg-gradient-to-r from-transparent to-indigo-500/40 dark:to-indigo-400/30 blur-xl pointer-events-none z-0"
                     style={{ mixBlendMode: 'normal' }}
                   />
                 )}
