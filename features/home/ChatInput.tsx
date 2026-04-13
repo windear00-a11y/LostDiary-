@@ -248,7 +248,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
     setText(e.target.value);
     setLastTyped(Date.now()); // Trigger bloom effect
     e.target.style.height = 'auto';
-    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
     setTimeout(updateCaretCoords, 0);
   };
 
@@ -460,7 +460,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
               </div>
             </div>
           ) : (
-            <div className="flex-1 relative flex items-center gap-2 bg-white/85 dark:bg-black/80 backdrop-blur-md p-1.5 pl-4 rounded-full shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 overflow-hidden">
+            <div className="flex-1 relative flex items-end gap-2 bg-white/85 dark:bg-black/80 backdrop-blur-md p-1.5 pl-4 rounded-[26px] shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 overflow-hidden">
               {/* Magic Glow (Cursor Height, Focused Left) */}
               <AnimatePresence>
                 {isFocused && (
@@ -511,11 +511,11 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                 onClick={updateCaretCoords}
                 onKeyUp={updateCaretCoords}
                 rows={1}
-                className="flex-1 py-2 bg-transparent outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 resize-none max-h-32 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative selection:bg-indigo-500/20"
+                className="flex-1 py-2.5 bg-transparent outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 resize-none max-h-40 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative selection:bg-indigo-500/20"
                 placeholder={PLACEHOLDERS[language] || PLACEHOLDERS.en}
               />
 
-              <div className="flex items-center gap-1 pr-1 overflow-hidden">
+              <div className="flex items-center gap-1 pr-1 pb-0.5 overflow-hidden">
                 <AnimatePresence mode="wait" initial={false}>
                   {!text.trim() ? (
                     <motion.button 

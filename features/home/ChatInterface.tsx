@@ -185,7 +185,10 @@ export const ChatInterface = () => {
   useEffect(() => {
     const loadMessages = async () => {
       // Skip loading if we are currently sending a message to prevent overwriting optimistic UI
-      if (isSendingRef.current) return;
+      if (isSendingRef.current) {
+        setLoading(false);
+        return;
+      }
 
       const user = await authService.getUser();
       if (user) {
@@ -194,11 +197,12 @@ export const ChatInterface = () => {
           const data = await chatService.fetchMessages(user.id, currentSessionId);
           const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
           
-          // Only update messages if we actually have messages, or if we are explicitly loading an empty session
-          // This prevents accidental clears if a fetch fails or returns empty unexpectedly
+          console.log(`Loaded ${visibleMessages.length} messages for session ${currentSessionId}`);
+
+          // Only update if we have messages, or if we are explicitly on the "New Chat" (null) session
+          // This prevents overwriting optimistic messages with an empty array due to fetch lag
           if (visibleMessages.length > 0 || currentSessionId === null) {
-            // Task 1: Fix state update (CRITICAL) - Use functional update
-            setMessages(() => visibleMessages);
+            setMessages(visibleMessages);
           }
           
           // Check if we should show the wow moment on load
@@ -274,6 +278,7 @@ export const ChatInterface = () => {
         metadata: { ...input.metadata, language }
       });
       
+      console.log("Message sent successfully:", newMessage);
       setIsThinking(true);
 
       if (newMessage.event_score && newMessage.event_score > 7) {
@@ -281,19 +286,22 @@ export const ChatInterface = () => {
       }
 
       // Update optimistic message to saved state before refetching to make it instant
-      setMessages(prev => prev.map(m => m.id === tempId ? { ...newMessage, status: 'saved' } : m));
+      setMessages(prev => {
+        const updated = prev.map(m => m.id === tempId ? { ...newMessage, status: 'saved' } : m);
+        console.log("Updated messages after send (optimistic -> saved):", updated.length);
+        return updated;
+      });
 
       // Reload messages to get the real user message (replacing temp) and potential AI reply
       const data = await chatService.fetchMessages(user.id, activeSessionId);
       const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
       
+      console.log("Fetched messages after send:", visibleMessages.length);
+      
       if (visibleMessages.length > 0) {
-        // Task 1: Fix state update (CRITICAL) - Use functional update
-        setMessages(() => visibleMessages);
+        setMessages(visibleMessages);
       } else {
-        // Fallback: If fetchMessages returns empty (e.g. due to replication lag or RLS issue),
-        // we keep the optimistic message so the UI doesn't revert to the empty state.
-        console.warn("fetchMessages returned empty after successful send. Keeping optimistic message.");
+        console.warn("fetchMessages returned empty after successful send. Keeping current state.");
       }
       
       setRefreshKey(prev => prev + 1);
@@ -337,7 +345,7 @@ export const ChatInterface = () => {
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide pt-24 pb-6 relative z-10">
         <div className="max-w-3xl mx-auto px-6">
-          <AnimatePresence mode="wait">
+          <AnimatePresence>
             {loading ? (
               <motion.div 
                 key="loading"
