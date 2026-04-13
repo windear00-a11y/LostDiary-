@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { chatService, ChatMessage } from '@/lib/services/chat-service';
 import { authService } from '@/lib/services/auth-service';
@@ -54,14 +54,28 @@ const EMPTY_STATE: Record<string, {
 export const ChatInterface = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionIdFromUrl = searchParams.get('session');
+  const params = useParams();
   
-  const { language } = useUIStore();
+  // Support both ?session= and /chat/[id]
+  const sessionIdFromUrl = (params.id as string) || searchParams.get('session');
+  
+  const { language, pendingMessage, setPendingMessage } = useUIStore();
   const t = EMPTY_STATE[language] || EMPTY_STATE.en;
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const lastSessionIdRef = useRef<string | null>(sessionIdFromUrl);
+
+  // Handle pending message from redirect
+  useEffect(() => {
+    if (pendingMessage && sessionIdFromUrl === pendingMessage.session_id) {
+      setMessages(prev => {
+        if (prev.some(m => m.id === pendingMessage.id)) return prev;
+        return [...prev, pendingMessage];
+      });
+      setPendingMessage(null);
+    }
+  }, [pendingMessage, sessionIdFromUrl, setPendingMessage]);
 
   // Debug visibility: Log messages state
   useEffect(() => {
@@ -238,29 +252,13 @@ export const ChatInterface = () => {
     
     if (isSendingRef.current) return;
     isSendingRef.current = true;
-    
-    let activeSessionId = sessionIdFromUrl;
-    if (!activeSessionId) {
-      try {
-        const newSession = await chatService.createSession(user.id, "Chat " + new Date().toLocaleDateString());
-        activeSessionId = newSession.id;
-        // Update URL to the new session
-        router.replace(`/?session=${activeSessionId}`, { scroll: false });
-        lastSessionIdRef.current = activeSessionId;
-        console.log("Created new session:", activeSessionId);
-      } catch (err) {
-        console.error("Failed to create session:", err);
-        isSendingRef.current = false;
-        return;
-      }
-    }
 
-    // Optimistic UI Update: Show user message instantly
+    // Define optimistic message early so it can be used for hand-off during redirect
     const tempId = `temp-${Date.now()}`;
     const optimisticMsg: ChatMessage = {
       id: tempId,
       user_id: user.id,
-      session_id: activeSessionId || undefined,
+      session_id: sessionIdFromUrl || undefined,
       role: 'user',
       type: input.type,
       content: typeof input.content === 'string' ? input.content : (input.type === 'image' ? '📷 Image' : '📎 Attachment'),
@@ -269,10 +267,29 @@ export const ChatInterface = () => {
       created_at: new Date().toISOString(),
       status: 'sending'
     };
+    
+    let activeSessionId = sessionIdFromUrl;
+    if (!activeSessionId) {
+      try {
+        const newSession = await chatService.createSession(user.id, "Chat " + new Date().toLocaleDateString());
+        activeSessionId = newSession.id;
+        
+        // Task: Preserving optimistic state during redirect
+        setPendingMessage({ ...optimisticMsg, session_id: activeSessionId });
+        
+        router.push(`/chat/${activeSessionId}`);
+        lastSessionIdRef.current = activeSessionId;
+        console.log("Created new session and redirecting:", activeSessionId);
+      } catch (err) {
+        console.error("Failed to create session:", err);
+        isSendingRef.current = false;
+        return;
+      }
+    }
 
     if (!input.metadata?.is_hidden) {
       // Task 1: Fix state update (CRITICAL) - Use functional update
-      setMessages(prev => [...prev, optimisticMsg]);
+      setMessages(prev => [...prev, { ...optimisticMsg, session_id: activeSessionId || undefined }]);
     }
 
     setIsAnalyzing(true);
@@ -364,7 +381,7 @@ export const ChatInterface = () => {
               >
                 <Loader2 className="w-8 h-8 text-accent animate-spin" />
               </motion.div>
-            ) : messages.length === 0 ? (
+            ) : (messages.length === 0 && !sessionIdFromUrl) ? (
               <motion.div 
                 key="empty"
                 initial={{ opacity: 0, y: 20 }}
@@ -451,6 +468,20 @@ export const ChatInterface = () => {
                     <StoryPreviewCard userId={userId} refreshTrigger={refreshKey} />
                   </div>
                 )}
+              </motion.div>
+            ) : (messages.length === 0 && sessionIdFromUrl) ? (
+              <motion.div 
+                key="session-empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4"
+              >
+                <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-500/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                  <PenLine className="w-8 h-8 text-indigo-500" />
+                </div>
+                <h2 className="text-2xl font-serif font-bold text-gray-900 dark:text-gray-100 italic">
+                  {language === 'hi' ? 'अपनी कहानी शुरू करें...' : 'Start your story...'}
+                </h2>
               </motion.div>
             ) : (
               <motion.div 

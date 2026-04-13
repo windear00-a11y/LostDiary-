@@ -114,7 +114,7 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                     <button
                       key={session.id}
                       onClick={() => {
-                        router.push(`/?session=${session.id}`);
+                        router.push(`/chat/${session.id}`);
                         onClose();
                       }}
                       className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white dark:hover:bg-white/5 transition-all text-left group"
