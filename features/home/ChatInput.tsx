@@ -468,21 +468,21 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                     key="magic-glow"
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ 
-                      left: caretCoords.x - 110, 
-                      top: caretCoords.y - 15,
+                      left: caretCoords.x - 60, 
+                      top: caretCoords.y - 20,
                       // Bloom effect on typing, otherwise soft pulse
                       scale: Date.now() - lastTyped < 100 ? [1.1, 1.2] : [1, 1.05, 1],
-                      opacity: Date.now() - lastTyped < 100 ? 1 : [0.7, 0.9, 0.7],
+                      opacity: Date.now() - lastTyped < 100 ? 1 : [0.6, 0.8, 0.6],
                     }}
                     exit={{ opacity: 0, scale: 0 }}
                     transition={{ 
-                      left: { type: "spring", damping: 30, stiffness: 250, mass: 0.3 },
-                      top: { type: "spring", damping: 30, stiffness: 250, mass: 0.3 },
+                      left: { type: "spring", damping: 35, stiffness: 300, mass: 0.2 },
+                      top: { type: "spring", damping: 35, stiffness: 300, mass: 0.2 },
                       scale: { duration: 0.2 },
-                      opacity: { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
+                      opacity: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
                     }}
-                    className="absolute w-32 h-12 rounded-full bg-gradient-to-r from-transparent via-indigo-500/40 to-indigo-600 dark:via-indigo-400/30 dark:to-indigo-300 blur-lg pointer-events-none z-0"
-                    style={{ mixBlendMode: 'normal' }}
+                    className="absolute w-40 h-16 rounded-full bg-gradient-to-r from-transparent via-indigo-500/25 via-purple-500/35 via-indigo-500/25 to-transparent blur-xl pointer-events-none z-0"
+                    style={{ mixBlendMode: 'plus-lighter' }}
                   />
                 )}
               </AnimatePresence>
