@@ -8,13 +8,19 @@ export function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !key) {
-    // During build time, we might not have these variables. 
-    // We should only throw if we are actually trying to use the client in a context that requires it.
+  if (!url || !key || url === 'your-supabase-url' || key === 'your-supabase-anon-key') {
+    const msg = 'Supabase environment variables (NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY) are missing or using placeholder values. Please configure them in the AI Studio Settings.';
     if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
-      console.warn('Supabase environment variables are missing during server-side execution.');
+      console.warn(msg);
+    } else {
+      console.error(msg);
     }
     return null;
+  }
+
+  // Safe diagnostic for debugging "Invalid API key"
+  if (typeof window !== 'undefined') {
+    console.log(`[Supabase Debug] URL: ${url.substring(0, 15)}..., Key Length: ${key.length}, Key Starts With: ${key.substring(0, 5)}...`);
   }
 
   supabaseInstance = createSupabaseClient(url, key);

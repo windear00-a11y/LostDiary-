@@ -93,8 +93,11 @@ export const authService = {
       );
       if (error) throw error;
       return data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error sending OTP:", error);
+      if (error?.message?.includes('Invalid API key')) {
+        throw new Error("Supabase Auth Error: Invalid API Key. Please double-check your NEXT_PUBLIC_SUPABASE_ANON_KEY in the Settings.");
+      }
       throw error;
     }
   },
