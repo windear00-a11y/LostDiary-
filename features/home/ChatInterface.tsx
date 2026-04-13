@@ -63,6 +63,11 @@ export const ChatInterface = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Debug visibility: Log messages state
+  useEffect(() => {
+    console.log("messages updated:", messages);
+  }, [messages]);
+
   useEffect(() => {
     setCurrentSessionId(sessionIdFromUrl);
   }, [sessionIdFromUrl]);
@@ -192,7 +197,8 @@ export const ChatInterface = () => {
           // Only update messages if we actually have messages, or if we are explicitly loading an empty session
           // This prevents accidental clears if a fetch fails or returns empty unexpectedly
           if (visibleMessages.length > 0 || currentSessionId === null) {
-            setMessages(visibleMessages);
+            // Task 1: Fix state update (CRITICAL) - Use functional update
+            setMessages(() => visibleMessages);
           }
           
           // Check if we should show the wow moment on load
@@ -253,6 +259,7 @@ export const ChatInterface = () => {
     };
 
     if (!input.metadata?.is_hidden) {
+      // Task 1: Fix state update (CRITICAL) - Use functional update
       setMessages(prev => [...prev, optimisticMsg]);
     }
 
@@ -281,7 +288,8 @@ export const ChatInterface = () => {
       const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
       
       if (visibleMessages.length > 0) {
-        setMessages(visibleMessages);
+        // Task 1: Fix state update (CRITICAL) - Use functional update
+        setMessages(() => visibleMessages);
       } else {
         // Fallback: If fetchMessages returns empty (e.g. due to replication lag or RLS issue),
         // we keep the optimistic message so the UI doesn't revert to the empty state.

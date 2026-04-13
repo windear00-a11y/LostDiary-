@@ -1,3 +1,5 @@
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request) {
@@ -5,21 +7,41 @@ export async function GET(request: Request) {
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/home';
 
-  console.log('Auth Callback: Received request', { code: !!code, next });
-
   if (code) {
-    console.log('Auth Callback: Redirecting to /auth with code');
-    return NextResponse.redirect(`${origin}/auth?code=${code}&next=${encodeURIComponent(next)}`);
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            cookieStore.set({ name, value, ...options });
+          },
+          remove(name: string, options: CookieOptions) {
+            cookieStore.delete({ name, ...options });
+          },
+        },
+      }
+    );
+
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    
+    if (!error) {
+      // If we are in a popup, we might want to redirect to a "success" page 
+      // that sends a message to the opener and closes itself.
+      return NextResponse.redirect(`${origin}/auth/callback-success?next=${encodeURIComponent(next)}`);
+    }
+    
+    return NextResponse.redirect(`${origin}/auth?error=${encodeURIComponent(error.message)}`);
   }
 
   const error = searchParams.get('error');
-  const error_description = searchParams.get('error_description');
-
   if (error) {
-    console.error('Auth Callback: Error received', { error, error_description });
-    return NextResponse.redirect(`${origin}/auth?error=${encodeURIComponent(error_description || error)}`);
+    return NextResponse.redirect(`${origin}/auth?error=${encodeURIComponent(searchParams.get('error_description') || error)}`);
   }
 
-  console.warn('Auth Callback: Missing code and error');
   return NextResponse.redirect(`${origin}/auth?error=auth-code-missing`);
 }

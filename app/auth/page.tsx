@@ -15,7 +15,15 @@ function AuthForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { loading } = useAuth();
+
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error) {
+      setMessage({ type: 'error', text: decodeURIComponent(error) });
+    }
+  }, [searchParams]);
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -68,15 +68,19 @@ const SendingIndicator = () => {
 };
 
 export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], onReply?: (msg: ChatMessage) => void }) => {
+  // Task 4: Prevent undefined/null issues
+  if (!messages) return null;
+
   return (
     <div className="space-y-8 pb-4">
-      {messages.map((msg, index) => {
+      {/* Task 3: Fix message rendering - Use optional chaining and fallback key */}
+      {messages?.map((msg, index) => {
         const isUser = msg.role === 'user';
         const showAvatar = index === 0 || messages[index - 1].role !== msg.role;
 
         return (
           <motion.div 
-            key={msg.id} 
+            key={msg.id || index} 
             initial={{ opacity: 0, y: 10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
@@ -120,11 +124,14 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                   </div>
                 )}
 
+                {/* Task 6: Validate ChatBubble - Ensure it reads content correctly with fallback */}
                 {msg.type === 'text' && (
                   <div className="text-[15px] leading-relaxed font-serif italic whitespace-pre-wrap">
-                    {msg.content}
+                    {msg.content || msg.text || (
+                      <span className="opacity-50 italic">Empty message</span>
+                    )}
                     {/* Link Previews */}
-                    {extractUrls(msg.content || '').map((url, i) => (
+                    {extractUrls(msg.content || msg.text || '').map((url, i) => (
                       <a key={i} href={url} target="_blank" rel="noopener noreferrer" className={`block mt-3 p-3 rounded-xl border ${isUser ? 'bg-indigo-700/30 border-indigo-400/30' : 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'} hover:opacity-80 transition-opacity`}>
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isUser ? 'bg-indigo-500/50' : 'bg-white dark:bg-gray-700 shadow-sm'}`}>

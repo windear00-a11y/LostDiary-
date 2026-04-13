@@ -23,7 +23,15 @@ export function getSupabase() {
     console.log(`[Supabase Debug] URL: ${url.substring(0, 15)}..., Key Length: ${key.length}, Key Starts With: ${key.substring(0, 5)}...`);
   }
 
-  supabaseInstance = createSupabaseClient(url, key);
+  supabaseInstance = createSupabaseClient(url, key, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    }
+  });
   return supabaseInstance;
 }
 
