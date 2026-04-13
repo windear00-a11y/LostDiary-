@@ -18,16 +18,9 @@ export const chapterService = {
     const supabase = getSupabase();
     if (!supabase) return [];
     try {
-      const query = supabase
+      const { data, error } = await supabase
         .from('chapters')
-        .select('*, events:life_events(*)');
-
-      const queryString = JSON.stringify(query);
-      if (queryString.includes('chat_messages')) {
-        throw new Error("SECURITY VIOLATION: Book view cannot access chat_messages.");
-      }
-
-      const { data, error } = await query
+        .select('*, events:life_events(*)')
         .eq('user_id', userId)
         .order('start_date', { ascending: false });
 

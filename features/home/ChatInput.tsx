@@ -468,11 +468,11 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                     key="magic-glow"
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ 
-                      left: caretCoords.x - 60, 
-                      top: caretCoords.y - 6,
+                      left: caretCoords.x - 100, 
+                      top: caretCoords.y - 10,
                       // Bloom effect on typing, otherwise soft pulse
                       scale: Date.now() - lastTyped < 100 ? [1.1, 1.2] : [1, 1.05, 1],
-                      opacity: Date.now() - lastTyped < 100 ? 0.7 : [0.3, 0.5, 0.3],
+                      opacity: Date.now() - lastTyped < 100 ? 1 : [0.7, 0.9, 0.7],
                     }}
                     exit={{ opacity: 0, scale: 0 }}
                     transition={{ 
@@ -481,7 +481,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                       scale: { duration: 0.2 },
                       opacity: { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
                     }}
-                    className="absolute w-16 h-10 rounded-full bg-gradient-to-r from-transparent to-indigo-500/40 dark:to-indigo-400/30 blur-xl pointer-events-none z-0"
+                    className="absolute w-32 h-14 rounded-full bg-gradient-to-r from-transparent via-indigo-500/60 to-indigo-600 dark:via-indigo-400/40 dark:to-indigo-300 blur-xl pointer-events-none z-0"
                     style={{ mixBlendMode: 'normal' }}
                   />
                 )}
