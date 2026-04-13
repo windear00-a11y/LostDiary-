@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Image as ImageIcon, Mic, Video, Camera, MapPin, Loader2, Plus, Check, ArrowUp, AudioLines, AlertCircle, Info, Trash2, Square } from 'lucide-react';
+import { Send, Image as ImageIcon, Mic, Video, Camera, MapPin, Loader2, Plus, Check, ArrowUp, AudioLines, AlertCircle, Info, Trash2, Square, Feather } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { useUIStore } from '@/lib/store/use-ui-store';
