@@ -461,51 +461,40 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
             </div>
           ) : (
             <div className="flex-1 relative flex items-center gap-2 bg-white/85 dark:bg-black/80 backdrop-blur-md p-1.5 pl-4 rounded-full shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 overflow-hidden">
-              {/* Magic Glow (Directional Left-Only) */}
+              {/* Magic Glow (Cursor Height, Focused Left) */}
               <AnimatePresence>
                 {isFocused && (
                   <motion.div
                     key="magic-glow"
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ 
-                      left: caretCoords.x - 160, 
-                      top: caretCoords.y - 30,
+                      left: caretCoords.x - 100, 
+                      top: caretCoords.y + 4,
                       // Bloom effect on typing
-                      scale: Date.now() - lastTyped < 100 ? [1.1, 1.25] : [1, 1.05, 1],
-                      opacity: Date.now() - lastTyped < 100 ? 1 : [0.6, 0.8, 0.6],
+                      scale: Date.now() - lastTyped < 100 ? [1.1, 1.2] : [1, 1.05, 1],
+                      opacity: Date.now() - lastTyped < 100 ? 1 : [0.5, 0.7, 0.5],
                     }}
                     exit={{ opacity: 0, scale: 0 }}
                     transition={{ 
-                      left: { type: "spring", damping: 40, stiffness: 350, mass: 0.1 },
-                      top: { type: "spring", damping: 40, stiffness: 350, mass: 0.1 },
+                      left: { type: "spring", damping: 45, stiffness: 400, mass: 0.1 },
+                      top: { type: "spring", damping: 45, stiffness: 400, mass: 0.1 },
                       scale: { duration: 0.2 },
                       opacity: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
                     }}
-                    className="absolute w-80 h-24 rounded-full bg-[linear-gradient(to_right,transparent_0%,rgba(99,102,241,0.3)_30%,rgba(168,85,247,0.6)_50%,transparent_50%)] blur-2xl pointer-events-none z-0"
-                    style={{ 
-                      mixBlendMode: 'multiply',
-                      clipPath: 'inset(0 50% 0 0)'
-                    }}
+                    className="absolute w-48 h-6 rounded-full bg-[linear-gradient(to_right,transparent_0%,rgba(99,102,241,0.2)_20%,rgba(168,85,247,0.5)_50%,rgba(99,102,241,0.1)_80%,transparent_100%)] blur-lg pointer-events-none z-0"
+                    style={{ mixBlendMode: 'screen' }}
                   />
                 )}
               </AnimatePresence>
 
-              {/* Ink Wash Layer (Soft Paint Effect) */}
+              {/* Painted Text Background (Subtle Cyan Wash) */}
               <div 
-                className="absolute inset-0 pointer-events-none select-none px-4 py-2 font-serif italic text-sm md:text-base whitespace-pre-wrap break-words text-cyan-600/40 dark:text-cyan-300/20 blur-[1.5px] z-0 transition-opacity duration-700"
+                className="absolute inset-0 pointer-events-none select-none px-4 py-2 font-serif italic text-sm md:text-base whitespace-pre-wrap break-words z-0 opacity-0 transition-opacity duration-500"
                 style={{ opacity: text ? 1 : 0 }}
               >
-                {text}
-                {isFocused && (
-                  <motion.span 
-                    animate={{ 
-                      opacity: [0.3, 0.6, 0.3],
-                      scale: [1, 1.2, 1]
-                    }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="inline-block w-2 h-2 rounded-full bg-cyan-400/50 blur-[1px] ml-1"
-                  />
-                )}
+                <span className="text-transparent bg-cyan-500/10 dark:bg-cyan-400/5 rounded-sm px-0.5">
+                  {text}
+                </span>
               </div>
 
               <textarea 
@@ -521,7 +510,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                 onClick={updateCaretCoords}
                 onKeyUp={updateCaretCoords}
                 rows={1}
-                className="flex-1 py-2 bg-transparent outline-none text-gray-900/90 dark:text-gray-100/90 placeholder:text-gray-400 resize-none max-h-32 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative selection:bg-cyan-500/30"
+                className="flex-1 py-2 bg-transparent outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 resize-none max-h-32 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative selection:bg-cyan-500/30"
                 placeholder={PLACEHOLDERS[language] || PLACEHOLDERS.en}
               />
 
