@@ -464,38 +464,39 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
               {/* Magic Glow (Cursor Height, Focused Left) */}
               <AnimatePresence>
                 {isFocused && (
-                  <motion.div
-                    key="magic-glow"
-                    initial={{ opacity: 0, scale: 0 }}
-                    animate={{ 
-                      left: caretCoords.x - 100, 
-                      top: caretCoords.y + 4,
-                      // Bloom effect on typing
-                      scale: Date.now() - lastTyped < 100 ? [1.1, 1.2] : [1, 1.05, 1],
-                      opacity: Date.now() - lastTyped < 100 ? 1 : [0.5, 0.7, 0.5],
-                    }}
-                    exit={{ opacity: 0, scale: 0 }}
-                    transition={{ 
-                      left: { type: "spring", damping: 45, stiffness: 400, mass: 0.1 },
-                      top: { type: "spring", damping: 45, stiffness: 400, mass: 0.1 },
-                      scale: { duration: 0.2 },
-                      opacity: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
-                    }}
-                    className="absolute w-48 h-6 rounded-full bg-[linear-gradient(to_right,transparent_0%,rgba(99,102,241,0.2)_20%,rgba(168,85,247,0.5)_50%,rgba(99,102,241,0.1)_80%,transparent_100%)] blur-lg pointer-events-none z-0"
-                    style={{ mixBlendMode: 'screen' }}
-                  />
+                  <>
+                    {/* The "Paint" Trail (Cyan) */}
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ 
+                        left: caretCoords.x - 140, 
+                        top: caretCoords.y + 2,
+                        opacity: 0.4
+                      }}
+                      className="absolute w-32 h-7 bg-cyan-400/30 blur-md rounded-l-full pointer-events-none z-0"
+                      style={{ mixBlendMode: 'multiply' }}
+                    />
+                    {/* The Active Glow (Indigo/Purple) */}
+                    <motion.div
+                      key="magic-glow"
+                      initial={{ opacity: 0, scale: 0 }}
+                      animate={{ 
+                        left: caretCoords.x - 60, 
+                        top: caretCoords.y + 2,
+                        scale: Date.now() - lastTyped < 100 ? 1.1 : 1,
+                        opacity: 1,
+                      }}
+                      exit={{ opacity: 0, scale: 0 }}
+                      transition={{ 
+                        left: { type: "spring", damping: 30, stiffness: 300, mass: 0.1 },
+                        top: { type: "spring", damping: 30, stiffness: 300, mass: 0.1 },
+                      }}
+                      className="absolute w-20 h-7 rounded-full bg-gradient-to-r from-indigo-500/40 via-purple-500/50 to-transparent blur-md pointer-events-none z-0"
+                      style={{ mixBlendMode: 'multiply' }}
+                    />
+                  </>
                 )}
               </AnimatePresence>
-
-              {/* Painted Text Background (Subtle Cyan Wash) */}
-              <div 
-                className="absolute inset-0 pointer-events-none select-none px-4 py-2 font-serif italic text-sm md:text-base whitespace-pre-wrap break-words z-0 opacity-0 transition-opacity duration-500"
-                style={{ opacity: text ? 1 : 0 }}
-              >
-                <span className="text-transparent bg-cyan-500/10 dark:bg-cyan-400/5 rounded-sm px-0.5">
-                  {text}
-                </span>
-              </div>
 
               <textarea 
                 ref={textareaRef}
@@ -510,7 +511,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                 onClick={updateCaretCoords}
                 onKeyUp={updateCaretCoords}
                 rows={1}
-                className="flex-1 py-2 bg-transparent outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 resize-none max-h-32 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative selection:bg-cyan-500/30"
+                className="flex-1 py-2 bg-transparent outline-none text-gray-900 dark:text-gray-100 placeholder:text-gray-400 resize-none max-h-32 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative selection:bg-indigo-500/20"
                 placeholder={PLACEHOLDERS[language] || PLACEHOLDERS.en}
               />
 
