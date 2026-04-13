@@ -25,9 +25,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-bg-light dark:bg-bg-dark flex flex-col">
+    <div className="h-[100dvh] bg-bg-light dark:bg-bg-dark flex flex-col">
       <Header />
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-hidden relative">
         <ChatInterface />
       </main>
     </div>

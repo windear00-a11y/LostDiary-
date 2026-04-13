@@ -308,7 +308,7 @@ export const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-bg-light dark:bg-bg-dark transition-colors duration-500 relative">
+    <div className="flex flex-col h-full bg-bg-light dark:bg-bg-dark transition-colors duration-500 relative">
       {/* Subtle Chat Wallpaper Pattern */}
       <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       
@@ -492,40 +492,42 @@ export const ChatInterface = () => {
         </div>
       </div>
 
-      <div className="relative shrink-0 z-40 bg-bg-light dark:bg-bg-dark">
-        <AnimatePresence>
-          {thoughtStarter && messages.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95, filter: 'blur(4px)' }}
-              className="absolute bottom-full left-0 right-0 mb-2 flex justify-center pointer-events-none z-20"
-            >
-              <div 
-                className="bg-white/90 dark:bg-[#1A1A1D]/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-lg border border-indigo-100 dark:border-indigo-500/20 pointer-events-auto cursor-pointer hover:scale-105 transition-transform"
-                onClick={() => {
-                  // Pre-fill the input or just dismiss it
-                  setThoughtStarter(null);
-                }}
+      <div className="relative shrink-0 z-40 bg-bg-light dark:bg-bg-dark w-full">
+        <div className="pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2 px-4 max-w-3xl mx-auto w-full relative">
+          <AnimatePresence>
+            {thoughtStarter && messages.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95, filter: 'blur(4px)' }}
+                className="absolute bottom-full left-0 right-0 mb-4 flex justify-center pointer-events-none z-20"
               >
-                <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 font-serif italic flex items-center gap-2">
-                  <Sparkles className="w-3 h-3" />
-                  {thoughtStarter}
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <div 
+                  className="bg-white/90 dark:bg-[#1A1A1D]/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-lg border border-indigo-100 dark:border-indigo-500/20 pointer-events-auto cursor-pointer hover:scale-105 transition-transform"
+                  onClick={() => {
+                    // Pre-fill the input or just dismiss it
+                    setThoughtStarter(null);
+                  }}
+                >
+                  <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 font-serif italic flex items-center gap-2">
+                    <Sparkles className="w-3 h-3" />
+                    {thoughtStarter}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-        <ChatInput 
-          onSendMessage={async (msg) => {
-            setThoughtStarter(null); // Hide thought starter on send
-            setSelectedActionIndex(null); // Hide expanded suggestion on send
-            await handleSendMessage(msg);
-          }} 
-          replyingTo={replyingTo} 
-          onClearReply={() => setReplyingTo(null)} 
-        />
+          <ChatInput 
+            onSendMessage={async (msg) => {
+              setThoughtStarter(null); // Hide thought starter on send
+              setSelectedActionIndex(null); // Hide expanded suggestion on send
+              await handleSendMessage(msg);
+            }} 
+            replyingTo={replyingTo} 
+            onClearReply={() => setReplyingTo(null)} 
+          />
+        </div>
       </div>
     </div>
   );

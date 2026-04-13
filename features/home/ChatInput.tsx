@@ -55,6 +55,8 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
   const [showActions, setShowActions] = useState(false);
   const [sendState, setSendState] = useState<'idle' | 'sending' | 'success'>('idle');
   
+  const [lastTyped, setLastTyped] = useState(0);
+  
   const imageRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -223,6 +225,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
+    setLastTyped(Date.now()); // Trigger bloom effect
     e.target.style.height = 'auto';
     e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
     setTimeout(updateCaretCoords, 0);
@@ -436,18 +439,29 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
               </div>
             </div>
           ) : (
-            <div className="flex-1 relative flex items-center gap-2 bg-white/85 dark:bg-black/80 backdrop-blur-md p-1.5 pl-4 rounded-full shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 transition-all focus-within:ring-2 focus-within:ring-indigo-500/20 overflow-hidden">
-              {/* Magic Glow */}
+            <div className="flex-1 relative flex items-center gap-2 bg-white/85 dark:bg-black/80 backdrop-blur-md p-1.5 pl-4 rounded-full shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 transition-all focus-within:ring-2 focus-within:ring-indigo-500/20">
+              {/* Magic Glow (Reactive Caret Follower) */}
               <AnimatePresence>
-                {isFocused && text.length > 0 && (
+                {isFocused && (
                   <motion.div
+                    key="magic-glow"
+                    initial={{ opacity: 0, scale: 0 }}
                     animate={{ 
-                      left: caretCoords.x - 20, 
-                      top: caretCoords.y - 10,
+                      left: caretCoords.x - 24, 
+                      top: caretCoords.y - 16,
+                      // Bloom effect on typing, otherwise soft pulse
+                      scale: Date.now() - lastTyped < 100 ? [1.2, 1.3] : [1, 1.05, 1],
+                      opacity: Date.now() - lastTyped < 100 ? 0.8 : [0.3, 0.5, 0.3],
                     }}
-                    transition={{ type: "spring", damping: 30, stiffness: 200, mass: 0.5 }}
-                    className="absolute w-12 h-12 rounded-full bg-indigo-500/20 blur-xl pointer-events-none z-0"
-                    style={{ mixBlendMode: 'screen' }}
+                    exit={{ opacity: 0, scale: 0 }}
+                    transition={{ 
+                      left: { type: "spring", damping: 30, stiffness: 250, mass: 0.3 },
+                      top: { type: "spring", damping: 30, stiffness: 250, mass: 0.3 },
+                      scale: { duration: 0.2 },
+                      opacity: { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
+                    }}
+                    className="absolute w-16 h-16 rounded-full bg-indigo-500/40 dark:bg-indigo-400/30 blur-2xl pointer-events-none z-0"
+                    style={{ mixBlendMode: 'plus-lighter' }}
                   />
                 )}
               </AnimatePresence>
@@ -469,63 +483,75 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                 placeholder={PLACEHOLDERS[language] || PLACEHOLDERS.en}
               />
 
-              <div className="flex items-center gap-1 pr-1">
-                {!text.trim() ? (
-                  <motion.button 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={startRecording} 
-                    className="w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 shadow-lg bg-gradient-to-tr from-emerald-400 to-emerald-500 text-white"
-                  >
-                    <Mic className="w-5 h-5" />
-                  </motion.button>
-                ) : (
-                  <motion.button 
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleSendText} 
-                    disabled={!text.trim() || isUploading || sendState !== 'idle'}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 shadow-lg ${
-                      sendState === 'success' 
-                        ? 'bg-gradient-to-tr from-emerald-400 to-emerald-500' 
-                        : 'bg-gradient-to-tr from-[#8B85FF] to-[#A5A0FF]'
-                    } text-white disabled:opacity-30`}
-                  >
-                    <AnimatePresence mode="wait">
-                      {sendState === 'sending' ? (
-                        <motion.div 
-                          key="sending" 
-                          initial={{ opacity: 0, scale: 0.8 }} 
-                          animate={{ opacity: 1, scale: 1 }} 
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        </motion.div>
-                      ) : sendState === 'success' ? (
-                        <motion.div 
-                          key="success" 
-                          initial={{ opacity: 0, scale: 0.5, rotate: -45 }} 
-                          animate={{ opacity: 1, scale: 1, rotate: 0 }} 
-                          exit={{ opacity: 0, scale: 0.5 }}
-                          transition={{ duration: 0.3, type: "spring", stiffness: 400, damping: 25 }}
-                        >
-                          <Check className="w-4 h-4" />
-                        </motion.div>
-                      ) : (
-                        <motion.div 
-                          key="idle" 
-                          initial={{ opacity: 0, scale: 0.8 }} 
-                          animate={{ opacity: 1, scale: 1 }} 
-                          exit={{ opacity: 0, scale: 0.8 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <ArrowUp className="w-4 h-4" />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </motion.button>
-                )}
+              <div className="flex items-center gap-1 pr-1 overflow-hidden">
+                <AnimatePresence mode="wait" initial={false}>
+                  {!text.trim() ? (
+                    <motion.button 
+                      key="mic"
+                      initial={{ x: -10, opacity: 0, clipPath: 'inset(0 100% 0 0)' }}
+                      animate={{ x: 0, opacity: 1, clipPath: 'inset(0 0% 0 0)' }}
+                      exit={{ x: 10, opacity: 0, clipPath: 'inset(0 0 0 100%)' }}
+                      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={startRecording} 
+                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 shadow-lg bg-gradient-to-tr from-emerald-400 to-emerald-500 text-white"
+                    >
+                      <Mic className="w-5 h-5" />
+                    </motion.button>
+                  ) : (
+                    <motion.button 
+                      key="send"
+                      initial={{ x: -10, opacity: 0, clipPath: 'inset(0 100% 0 0)' }}
+                      animate={{ x: 0, opacity: 1, clipPath: 'inset(0 0% 0 0)' }}
+                      exit={{ x: 10, opacity: 0, clipPath: 'inset(0 0 0 100%)' }}
+                      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleSendText} 
+                      disabled={!text.trim() || isUploading || sendState !== 'idle'}
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 shadow-lg ${
+                        sendState === 'success' 
+                          ? 'bg-gradient-to-tr from-emerald-400 to-emerald-500' 
+                          : 'bg-gradient-to-tr from-[#8B85FF] to-[#A5A0FF]'
+                      } text-white disabled:opacity-30`}
+                    >
+                      <AnimatePresence mode="wait">
+                        {sendState === 'sending' ? (
+                          <motion.div 
+                            key="sending" 
+                            initial={{ opacity: 0, scale: 0.8 }} 
+                            animate={{ opacity: 1, scale: 1 }} 
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          </motion.div>
+                        ) : sendState === 'success' ? (
+                          <motion.div 
+                            key="success" 
+                            initial={{ opacity: 0, scale: 0.5, rotate: -45 }} 
+                            animate={{ opacity: 1, scale: 1, rotate: 0 }} 
+                            exit={{ opacity: 0, scale: 0.5 }}
+                            transition={{ duration: 0.3, type: "spring", stiffness: 400, damping: 25 }}
+                          >
+                            <Check className="w-4 h-4" />
+                          </motion.div>
+                        ) : (
+                          <motion.div 
+                            key="idle" 
+                            initial={{ opacity: 0, scale: 0.8 }} 
+                            animate={{ opacity: 1, scale: 1 }} 
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <Feather className="w-4 h-4" />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.button>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           )}
