@@ -462,42 +462,66 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
           ) : (
             <div className="flex-1 relative flex items-end gap-2 p-1.5 pl-4 transition-all duration-700">
               
-              {/* Dynamic Smoke/Fog Glow Effect */}
+              {/* Realistic Moving Cloud Effect */}
               <AnimatePresence>
                 {(text.trim() || isFocused) && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9, filter: 'blur(20px)' }}
-                    animate={{ 
-                      opacity: 1, 
-                      scale: 1, 
-                      filter: 'blur(15px)',
-                    }}
-                    exit={{ opacity: 0, scale: 0.9, filter: 'blur(20px)' }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
                     className="absolute inset-0 pointer-events-none z-0 overflow-visible"
                   >
-                    {/* Layered Smoke Blobs */}
+                    {/* Main Cloud Body - Multiple Overlapping Puffs */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      {/* Puff 1 */}
+                      <motion.div 
+                        animate={{ 
+                          x: [0, 15, -10, 0],
+                          y: [0, -8, 5, 0],
+                          scale: [1, 1.1, 0.95, 1]
+                        }}
+                        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute w-[110%] h-[120%] bg-cyan-400/20 dark:bg-cyan-500/15 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] blur-3xl" 
+                      />
+                      {/* Puff 2 */}
+                      <motion.div 
+                        animate={{ 
+                          x: [0, -12, 18, 0],
+                          y: [0, 10, -6, 0],
+                          scale: [1, 0.9, 1.1, 1]
+                        }}
+                        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                        className="absolute w-[100%] h-[110%] bg-white/10 dark:bg-white/5 rounded-[60%_40%_30%_70%/50%_60%_40%_50%] blur-2xl" 
+                      />
+                      {/* Puff 3 */}
+                      <motion.div 
+                        animate={{ 
+                          x: [0, 8, -15, 0],
+                          y: [0, -5, 12, 0],
+                        }}
+                        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                        className="absolute w-[90%] h-[100%] bg-cyan-300/10 dark:bg-cyan-400/10 rounded-full blur-xl" 
+                      />
+                    </div>
+
+                    {/* Moving Vapor/Mist Layer */}
                     <motion.div 
                       animate={{ 
-                        x: [0, 10, -10, 0],
-                        y: [0, -5, 5, 0],
-                        scale: [1, 1.1, 0.9, 1]
+                        backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
                       }}
-                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-0 bg-cyan-400/20 dark:bg-cyan-500/20 rounded-[40%] blur-2xl" 
-                    />
-                    <motion.div 
-                      animate={{ 
-                        x: [0, -15, 15, 0],
-                        y: [0, 8, -8, 0],
-                        scale: [1, 0.8, 1.2, 1]
+                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      className="absolute inset-0 opacity-40 dark:opacity-30 blur-md rounded-full"
+                      style={{
+                        background: 'radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%)',
+                        backgroundSize: '200% 200%'
                       }}
-                      transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-x-4 inset-y-2 bg-indigo-400/15 dark:bg-indigo-500/15 rounded-[50%] blur-3xl" 
                     />
-                    <div className="absolute inset-0 bg-white/5 dark:bg-white/5 backdrop-blur-xl rounded-full" />
+
+                    {/* Glassy Core for Text Legibility */}
+                    <div className="absolute inset-0 bg-white/5 dark:bg-white/5 backdrop-blur-2xl rounded-[30px] border border-white/10" />
                     
-                    {/* The "Center" Glow that follows the text area */}
-                    <div className="absolute inset-x-8 inset-y-1 bg-cyan-300/30 dark:bg-cyan-400/20 rounded-full blur-xl shadow-[0_0_40px_rgba(34,211,238,0.3)]" />
+                    {/* Subtle Internal Glow */}
+                    <div className="absolute inset-x-4 inset-y-1 bg-gradient-to-b from-white/10 to-transparent rounded-full blur-sm" />
                   </motion.div>
                 )}
               </AnimatePresence>
