@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 
     // Track interaction
     if (role === 'user' && type === 'text' && content) {
-      await profileService.updateInteraction(user_id, pipelineOutput.shouldRespond);
+      await profileService.updateInteraction(user_id, pipelineOutput.shouldRespond, supabase);
     }
 
     // Save Life Event if extracted
@@ -115,7 +115,7 @@ export async function POST(req: Request) {
 
       // Update Chapter Narrative (Async)
       if (chapterId) {
-        chapterService.updateNarrativeAsync(user_id, chapterId, chapterName, pipelineForAsync);
+        chapterService.updateNarrativeAsync(user_id, chapterId, chapterName, pipelineForAsync, supabase);
       }
     }
 

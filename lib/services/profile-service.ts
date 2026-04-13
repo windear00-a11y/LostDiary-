@@ -15,8 +15,8 @@ export interface UserProfile {
 }
 
 export const profileService = {
-  async getProfile(userId: string): Promise<UserProfile> {
-    const supabase = getSupabase();
+  async getProfile(userId: string, customSupabase?: any): Promise<UserProfile> {
+    const supabase = customSupabase || getSupabase();
     if (!supabase) throw new Error("Supabase not initialized");
     const { data, error } = await supabase
       .from('users')
@@ -90,10 +90,10 @@ export const profileService = {
     return publicUrlData.publicUrl;
   },
 
-  async updateInteraction(userId: string, wasResponded: boolean): Promise<void> {
-    const supabase = getSupabase();
+  async updateInteraction(userId: string, wasResponded: boolean, customSupabase?: any): Promise<void> {
+    const supabase = customSupabase || getSupabase();
     if (!supabase) return;
-    const profile = await this.getProfile(userId);
+    const profile = await this.getProfile(userId, supabase);
     
     // Simple engagement tracking logic
     const newInteractionFrequency = profile.interaction_frequency + 1;

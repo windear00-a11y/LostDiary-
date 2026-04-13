@@ -58,8 +58,8 @@ export const chapterService = {
     }
   },
 
-  async updateNarrativeAsync(userId: string, chapterId: string, chapterName: string, pipeline: any) {
-    const supabase = getSupabase();
+  async updateNarrativeAsync(userId: string, chapterId: string, chapterName: string, pipeline: any, customSupabase?: any) {
+    const supabase = customSupabase || getSupabase();
     if (!supabase) return;
     try {
       const { data: events } = await supabase
