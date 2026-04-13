@@ -82,8 +82,25 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
           <motion.div 
             key={msg.id || index} 
             initial={{ opacity: 0, y: 10, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+            animate={{ 
+              opacity: 1, 
+              y: 0, 
+              scale: 1,
+              ...(isUser ? {
+                y: [0, -4, 0],
+              } : {})
+            }}
+            transition={{ 
+              duration: 0.4, 
+              ease: [0.23, 1, 0.32, 1],
+              ...(isUser ? {
+                y: {
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }
+              } : {})
+            }}
             className={`flex items-end gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
           >
             {/* Avatar */}
@@ -110,11 +127,28 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                 </button>
               )}
 
-              <div className={`relative px-5 py-3.5 shadow-sm border ${
+              <div className={`relative px-5 py-3.5 ${
                 isUser 
-                  ? 'bg-indigo-600 border-indigo-500 text-white rounded-t-[24px] rounded-bl-[24px] rounded-br-[4px]' 
-                  : 'bg-white dark:bg-[#1A1A1D] border-gray-100 dark:border-white/5 text-gray-800 dark:text-gray-200 rounded-t-[24px] rounded-br-[24px] rounded-bl-[4px]'
-              }`}>
+                  ? 'bg-indigo-600/85 backdrop-blur-md text-white shadow-[0_0_25px_rgba(99,102,241,0.4),inset_0_0_15px_rgba(255,255,255,0.2)] border-none' 
+                  : 'bg-white dark:bg-[#1A1A1D] border-gray-100 dark:border-white/5 text-gray-800 dark:text-gray-200 rounded-t-[24px] rounded-br-[24px] rounded-bl-[4px] shadow-sm border'
+              }`}
+              style={isUser ? {
+                borderRadius: '30% 70% 70% 30% / 30% 30% 70% 70%',
+                borderBottomRightRadius: '4px'
+              } : {}}>
+                
+                {/* Cloud Bumps (Visual fluff) */}
+                {isUser && (
+                  <>
+                    <div className="absolute -top-2 left-1/4 w-6 h-6 bg-indigo-600/40 rounded-full blur-sm" />
+                    <div className="absolute -top-1 right-1/3 w-4 h-4 bg-indigo-600/30 rounded-full blur-xs" />
+                    {/* Thought Bubble Tail for User */}
+                    <div className="absolute -bottom-3 -right-1 flex flex-col items-end gap-1 pointer-events-none">
+                      <div className="w-3.5 h-3.5 bg-indigo-600/85 rounded-full shadow-[0_0_10px_rgba(99,102,241,0.3)]" />
+                      <div className="w-2 h-2 bg-indigo-600/70 rounded-full mr-1 shadow-[0_0_5px_rgba(99,102,241,0.2)]" />
+                    </div>
+                  </>
+                )}
                 
                 {/* Quoted Message (Reply Context) */}
                 {msg.metadata?.reply_to && (
