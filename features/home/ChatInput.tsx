@@ -66,6 +66,14 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  useEffect(() => {
+    const handleResize = () => updateCaretCoords();
+    window.addEventListener('resize', handleResize);
+    // Initial update
+    if (isFocused) updateCaretCoords();
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isFocused]);
+
   const handleSendText = async () => {
     if (!text.trim() || isUploading || sendState !== 'idle') return;
     
@@ -199,10 +207,18 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
     mirror.style.whiteSpace = 'pre-wrap';
     mirror.style.wordWrap = 'break-word';
     mirror.style.width = `${textarea.clientWidth}px`;
-    mirror.style.font = style.font;
+    
+    // Copy all relevant font styles for accurate measurement
+    mirror.style.fontFamily = style.fontFamily;
+    mirror.style.fontSize = style.fontSize;
+    mirror.style.fontWeight = style.fontWeight;
+    mirror.style.fontStyle = style.fontStyle;
+    mirror.style.letterSpacing = style.letterSpacing;
+    mirror.style.textTransform = style.textTransform;
     mirror.style.padding = style.padding;
     mirror.style.lineHeight = style.lineHeight;
     mirror.style.border = style.border;
+    mirror.style.boxSizing = style.boxSizing;
     
     const content = textarea.value.substring(0, selectionStart);
     mirror.textContent = content;
@@ -214,11 +230,14 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
     document.body.appendChild(mirror);
     const rect = marker.getBoundingClientRect();
     const textareaRect = textarea.getBoundingClientRect();
+    const parentRect = textarea.parentElement?.getBoundingClientRect();
     
-    setCaretCoords({
-      x: rect.left - textareaRect.left,
-      y: rect.top - textareaRect.top
-    });
+    if (parentRect) {
+      setCaretCoords({
+        x: rect.left - parentRect.left,
+        y: rect.top - parentRect.top
+      });
+    }
     
     document.body.removeChild(mirror);
   };
@@ -440,6 +459,10 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
             </div>
           ) : (
             <div className="flex-1 relative flex items-center gap-2 bg-white/85 dark:bg-black/80 backdrop-blur-md p-1.5 pl-4 rounded-full shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 transition-all focus-within:ring-2 focus-within:ring-indigo-500/20">
+              {/* Debug Coords */}
+              <div className="absolute -top-6 left-4 text-[8px] text-red-500 font-mono pointer-events-none z-50">
+                X:{Math.round(caretCoords.x)} Y:{Math.round(caretCoords.y)}
+              </div>
               {/* Magic Glow (Reactive Caret Follower) */}
               <AnimatePresence>
                 {isFocused && (
@@ -447,11 +470,11 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                     key="magic-glow"
                     initial={{ opacity: 0, scale: 0 }}
                     animate={{ 
-                      left: caretCoords.x - 24, 
-                      top: caretCoords.y - 16,
+                      left: caretCoords.x - 64, 
+                      top: caretCoords.y - 64,
                       // Bloom effect on typing, otherwise soft pulse
                       scale: Date.now() - lastTyped < 100 ? [1.2, 1.3] : [1, 1.05, 1],
-                      opacity: Date.now() - lastTyped < 100 ? 0.8 : [0.3, 0.5, 0.3],
+                      opacity: Date.now() - lastTyped < 100 ? 0.8 : [0.4, 0.6, 0.4],
                     }}
                     exit={{ opacity: 0, scale: 0 }}
                     transition={{ 
@@ -460,8 +483,8 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                       scale: { duration: 0.2 },
                       opacity: { duration: 1.2, repeat: Infinity, ease: "easeInOut" }
                     }}
-                    className="absolute w-16 h-16 rounded-full bg-indigo-500/40 dark:bg-indigo-400/30 blur-2xl pointer-events-none z-0"
-                    style={{ mixBlendMode: 'plus-lighter' }}
+                    className="absolute w-32 h-32 rounded-full bg-purple-600/50 blur-xl pointer-events-none z-20 border-2 border-purple-500"
+                    style={{ mixBlendMode: 'normal' }}
                   />
                 )}
               </AnimatePresence>
