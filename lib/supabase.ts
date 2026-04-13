@@ -35,6 +35,23 @@ export function getSupabase() {
   return supabaseInstance;
 }
 
+export function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceKey) {
+    console.error('Supabase Admin environment variables (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) are missing.');
+    return getSupabase(); // Fallback to anon client if admin key is missing
+  }
+
+  return createSupabaseClient(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+}
+
 // Deprecated: use getSupabase() instead for lazy loading
 export function createClient() {
   const client = getSupabase();

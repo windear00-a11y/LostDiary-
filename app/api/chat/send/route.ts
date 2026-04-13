@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSupabase } from "@/lib/supabase";
+import { getSupabaseAdmin } from "@/lib/supabase";
 import { AIOrchestrator } from "@/ai-core/ai-orchestrator";
 import { mapToChapter } from "@/lib/utils/chapters";
 import { chapterService } from "@/lib/services/chapter-service";
@@ -8,7 +8,7 @@ import { PipelineController } from "@/ai-core/pipeline-controller";
 
 export async function POST(req: Request) {
   try {
-    const supabase = getSupabase();
+    const supabase = getSupabaseAdmin();
     if (!supabase) return NextResponse.json({ error: 'Supabase not initialized' }, { status: 500 });
 
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
