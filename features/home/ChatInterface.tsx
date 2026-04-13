@@ -78,6 +78,7 @@ export const ChatInterface = () => {
   const [selectedActionIndex, setSelectedActionIndex] = useState<number | null>(null);
   const [thoughtStarter, setThoughtStarter] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isSendingRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (error) {
@@ -178,6 +179,9 @@ export const ChatInterface = () => {
 
   useEffect(() => {
     const loadMessages = async () => {
+      // Skip loading if we are currently sending a message to prevent overwriting optimistic UI
+      if (isSendingRef.current) return;
+
       const user = await authService.getUser();
       if (user) {
         setUserId(user.id);
@@ -214,6 +218,8 @@ export const ChatInterface = () => {
     const user = await authService.getUser();
     if (!user) return;
     
+    isSendingRef.current = true;
+    
     let activeSessionId = currentSessionId;
     if (!activeSessionId) {
       try {
@@ -237,7 +243,8 @@ export const ChatInterface = () => {
       content: typeof input.content === 'string' ? input.content : (input.type === 'image' ? '📷 Image' : '📎 Attachment'),
       media_url: null,
       metadata: { ...input.metadata, language },
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      status: 'sending'
     };
 
     if (!input.metadata?.is_hidden) {
@@ -261,6 +268,9 @@ export const ChatInterface = () => {
         setShowHint(true);
       }
 
+      // Update optimistic message to saved state before refetching to make it instant
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...newMessage, status: 'saved' } : m));
+
       // Reload messages to get the real user message (replacing temp) and potential AI reply
       const data = await chatService.fetchMessages(user.id, activeSessionId);
       const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
@@ -275,11 +285,12 @@ export const ChatInterface = () => {
     } catch (err) {
       console.error("Failed to send message:", err);
       setError("WinDear couldn't hear that. Please try sending again.");
-      // Remove the optimistic message if it failed
-      setMessages(prev => prev.filter(m => m.id !== tempId));
+      // Mark optimistic message as error instead of removing it
+      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, status: 'error' } : m));
     } finally {
       setIsThinking(false);
       setIsAnalyzing(false);
+      isSendingRef.current = false;
     }
   };
 

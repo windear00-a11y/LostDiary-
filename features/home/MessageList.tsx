@@ -1,7 +1,8 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { ChatMessage } from '@/lib/services/chat-service';
-import { MapPin, User, Sparkles, Reply, Feather, Link as LinkIcon } from 'lucide-react';
+import { MapPin, User, Sparkles, Reply, Feather, Link as LinkIcon, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 
 // Helper to extract URLs from text
@@ -9,6 +10,61 @@ const extractUrls = (text: string) => {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   const urls = text.match(urlRegex) || [];
   return urls;
+};
+
+const SendingIndicator = () => {
+  const [symbols, setSymbols] = useState([
+    { char: '?', color: 'text-cyan-400', glow: 'drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]' },
+    { char: '!', color: 'text-fuchsia-400', glow: 'drop-shadow-[0_0_6px_rgba(232,121,249,0.8)]' },
+    { char: '*', color: 'text-amber-400', glow: 'drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]' }
+  ]);
+  
+  useEffect(() => {
+    // Using soft, magical, and thought-provoking symbols suitable for a diary/AI companion
+    const chars = ['✧', '✦', '⋆', '°', '~', '*', '+', '?', '·', '∘'];
+    const colors = [
+      { c: 'text-cyan-400', g: 'drop-shadow-[0_0_6px_rgba(34,211,238,0.8)]' },
+      { c: 'text-fuchsia-400', g: 'drop-shadow-[0_0_6px_rgba(232,121,249,0.8)]' },
+      { c: 'text-amber-400', g: 'drop-shadow-[0_0_6px_rgba(251,191,36,0.8)]' },
+      { c: 'text-emerald-400', g: 'drop-shadow-[0_0_6px_rgba(52,211,153,0.8)]' },
+      { c: 'text-violet-400', g: 'drop-shadow-[0_0_6px_rgba(167,139,250,0.8)]' },
+      { c: 'text-rose-400', g: 'drop-shadow-[0_0_6px_rgba(251,113,133,0.8)]' }
+    ];
+
+    const interval = setInterval(() => {
+      setSymbols([0, 1, 2].map(() => {
+        const char = chars[Math.floor(Math.random() * chars.length)];
+        const style = colors[Math.floor(Math.random() * colors.length)];
+        return { char, color: style.c, glow: style.g };
+      }));
+    }, 600); // Slower interval for a softer feel
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="flex items-center space-x-0.5 font-bold text-[12px] tracking-tighter w-8 justify-center">
+      {symbols.map((sym, i) => (
+        <motion.span
+          key={i}
+          animate={{
+            y: [0, -3, 0],
+            opacity: [0.6, 1, 0.6],
+            scale: [0.9, 1.1, 0.9]
+          }}
+          transition={{
+            duration: 1.5,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.2
+          }}
+          className={`${sym.color} ${sym.glow} inline-block transition-colors duration-500`}
+        >
+          {sym.char}
+        </motion.span>
+      ))}
+    </div>
+  );
 };
 
 export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], onReply?: (msg: ChatMessage) => void }) => {
@@ -131,11 +187,18 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                   {isUser ? 'You' : 'WinDear'} • {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
                 {isUser && (
-                  msg.event_score && msg.event_score > 0 ? (
-                    <Sparkles className="w-3 h-3 text-indigo-400" />
-                  ) : (
-                    <Feather className="w-3 h-3 text-indigo-400/70" />
-                  )
+                  <div className="flex items-center gap-0.5">
+                    {msg.status === 'sending' && <SendingIndicator />}
+                    {msg.status === 'error' && <AlertCircle className="w-3 h-3 text-red-400" />}
+                    {(msg.status === 'saved' || !msg.status) && (
+                      <>
+                        <Feather className="w-3 h-3 text-indigo-400/70" />
+                        {msg.event_score && msg.event_score > 7 && (
+                          <Sparkles className="w-3 h-3 text-amber-400" />
+                        )}
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

@@ -19,6 +19,7 @@ export interface ChatMessage {
   metadata: any | null;
   created_at: string;
   event_score?: number;
+  status?: 'sending' | 'saved' | 'error';
 }
 
 export const chatService = {
