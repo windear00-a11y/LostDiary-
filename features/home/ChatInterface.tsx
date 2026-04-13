@@ -336,9 +336,10 @@ export const ChatInterface = () => {
       if (userMessages.length >= 3 && userMessages.length <= 5 && !hasShownWow) {
         generateWowStory(userMessages);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to send message:", err);
-      setError("WinDear couldn't hear that. Please try sending again.");
+      const errorMessage = err.message || "WinDear couldn't hear that. Please try sending again.";
+      setError(errorMessage);
       // Mark optimistic message as error instead of removing it
       setMessages(prev => prev.map(m => m.id === tempId ? { ...m, status: 'error' } : m));
     } finally {
