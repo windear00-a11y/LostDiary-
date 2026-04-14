@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { ChatMessage } from '@/lib/services/chat-service';
 import { MapPin, User, Sparkles, Reply, Feather, Link as LinkIcon, AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
+import Image from 'next/image';
 import CloudCanvas from './CloudCanvas';
 
 // Helper to extract URLs from text
@@ -73,7 +74,7 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
   if (!messages) return null;
 
   return (
-    <div className="space-y-8 pb-4">
+    <div className="space-y-24 pb-12">
       {/* Task 3: Fix message rendering - Use optional chaining and fallback key */}
       {messages?.map((msg, index) => {
         const isUser = msg.role === 'user';
@@ -128,7 +129,10 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                 </button>
               )}
 
-              <CloudCanvas side={isUser ? 'right' : 'left'}>
+              <CloudCanvas 
+                side={isUser ? 'right' : 'left'}
+                style={{ animationDelay: `${index * 0.7}s` }}
+              >
                 <div className="w-full">
                   {/* Quoted Message (Reply Context) */}
                   {msg.metadata?.reply_to && (
@@ -162,11 +166,12 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                   )}
                   
                   {msg.type === 'image' && (
-                    <div className="relative w-full overflow-hidden rounded-2xl mt-2 shadow-2xl">
-                      <img 
+                    <div className="relative w-full overflow-hidden rounded-2xl mt-2 shadow-2xl min-h-[120px]">
+                      <Image 
                         src={msg.media_url || ''} 
                         alt="Attachment" 
-                        className="w-full h-auto object-cover max-h-[120px]"
+                        fill
+                        className="object-cover"
                         referrerPolicy="no-referrer"
                       />
                     </div>

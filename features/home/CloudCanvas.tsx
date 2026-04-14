@@ -6,9 +6,10 @@ interface CloudCanvasProps {
   side: "left" | "right";
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
 }
 
-export default function CloudCanvas({ side, children, className = "" }: CloudCanvasProps) {
+export default function CloudCanvas({ side, children, className = "", style }: CloudCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<number>(null);
@@ -27,15 +28,15 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
         
         // Add padding and cap width based on parent container
         // Scale padding for smaller screens
-        const paddingX = parentWidth < 400 ? 80 : 120;
-        const paddingY = parentWidth < 400 ? 70 : 100;
+        const paddingX = parentWidth < 400 ? 120 : 180;
+        const paddingY = parentWidth < 400 ? 100 : 140;
         
         // Ensure we don't exceed parent width (minus some buffer for safety)
-        const maxWidth = Math.min(parentWidth - 10, 450);
+        const maxWidth = Math.min(parentWidth - 10, 500);
         
         setDimensions({ 
-          width: Math.min(maxWidth, Math.max(180, rect.width + paddingX)), 
-          height: Math.max(120, rect.height + paddingY) 
+          width: Math.min(maxWidth, Math.max(200, rect.width + paddingX)), 
+          height: Math.max(140, rect.height + paddingY) 
         });
       }
     };
@@ -58,8 +59,11 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
     if (!ctx) return;
 
     const { width, height } = dimensions;
-    canvas.width = width;
-    canvas.height = height;
+    const margin = 100; // Extra space around the canvas to prevent clipping
+    canvas.width = width + margin * 2;
+    canvas.height = height + margin * 2;
+    
+    ctx.translate(margin, margin);
 
     const color = side === "left" ? "34,211,238" : "168,85,247"; // Cyan vs Purple
 
@@ -184,12 +188,18 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
     <div 
       ref={containerRef} 
       className={`relative animate-float ${className}`}
-      style={{ width: dimensions.width, height: dimensions.height }}
+      style={{ width: dimensions.width, height: dimensions.height, ...style }}
     >
       {/* cloud canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 blur-[2px] pointer-events-none"
+        className="absolute pointer-events-none blur-[2px]"
+        style={{ 
+          top: -100, 
+          left: -100, 
+          width: dimensions.width + 200, 
+          height: dimensions.height + 200 
+        }}
       />
 
       {/* content wrapper */}

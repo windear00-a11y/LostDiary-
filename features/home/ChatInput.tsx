@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Image as ImageIcon, Mic, Video, Camera, MapPin, Loader2, Plus, Check, ArrowUp, AudioLines, AlertCircle, Info, Trash2, Square, Feather } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import CloudCanvas from './CloudCanvas';
 
 import { useUIStore } from '@/lib/store/use-ui-store';
 
@@ -47,6 +48,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
   const [text, setText] = useState('');
   const [caretCoords, setCaretCoords] = useState({ x: 0, y: 0 });
   const [isFocused, setIsFocused] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>('');
   const [fileError, setFileError] = useState<string | null>(null);
@@ -244,9 +246,17 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
     document.body.removeChild(mirror);
   };
 
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setText(e.target.value);
     setLastTyped(Date.now()); // Trigger bloom effect
+    setIsTyping(true);
+    
+    // Reset typing state after a short delay
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 300);
+    
     e.target.style.height = 'auto';
     e.target.style.height = `${Math.min(e.target.scrollHeight, 160)}px`;
     setTimeout(updateCaretCoords, 0);
@@ -296,7 +306,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
   };
 
   return (
-    <div className="w-full p-2 md:p-4 z-40 bg-bg-light dark:bg-bg-dark">
+    <div className="w-full p-2 md:p-4 z-40 bg-transparent backdrop-blur-[2px]">
       <div className="max-w-3xl mx-auto relative">
         {/* File Error Message */}
         <AnimatePresence>
@@ -460,134 +470,123 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
               </div>
             </div>
           ) : (
-            <div className="flex-1 relative flex items-end gap-2 p-1.5 pl-4 transition-all duration-700">
+            <div className="flex-1 relative flex items-end gap-2 transition-all duration-700">
               
-              {/* Realistic Moving Cloud Effect */}
+              {/* CloudCanvas as Input Background - Only visible when text exists */}
               <AnimatePresence>
-                {(text.trim() || isFocused) && (
+                {text.trim() && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="absolute inset-0 pointer-events-none z-0 overflow-visible"
+                    initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
+                    className="absolute inset-0 z-0"
                   >
-                    {/* Main Cloud Body - Multiple Overlapping Puffs */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      {/* Puff 1 */}
-                      <motion.div 
-                        animate={{ 
-                          x: [0, 15, -10, 0],
-                          y: [0, -8, 5, 0],
-                          scale: [1, 1.1, 0.95, 1]
-                        }}
-                        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-                        className="absolute w-[110%] h-[120%] bg-cyan-400/20 dark:bg-cyan-500/15 rounded-[40%_60%_70%_30%/40%_50%_60%_50%] blur-3xl" 
-                      />
-                      {/* Puff 2 */}
-                      <motion.div 
-                        animate={{ 
-                          x: [0, -12, 18, 0],
-                          y: [0, 10, -6, 0],
-                          scale: [1, 0.9, 1.1, 1]
-                        }}
-                        transition={{ duration: 15, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                        className="absolute w-[100%] h-[110%] bg-white/10 dark:bg-white/5 rounded-[60%_40%_30%_70%/50%_60%_40%_50%] blur-2xl" 
-                      />
-                      {/* Puff 3 */}
-                      <motion.div 
-                        animate={{ 
-                          x: [0, 8, -15, 0],
-                          y: [0, -5, 12, 0],
-                        }}
-                        transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                        className="absolute w-[90%] h-[100%] bg-cyan-300/10 dark:bg-cyan-400/10 rounded-full blur-xl" 
-                      />
-                    </div>
-
-                    {/* Moving Vapor/Mist Layer */}
-                    <motion.div 
-                      animate={{ 
-                        backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-                      }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-0 opacity-40 dark:opacity-30 blur-md rounded-full"
-                      style={{
-                        background: 'radial-gradient(circle at center, rgba(255,255,255,0.2) 0%, transparent 70%)',
-                        backgroundSize: '200% 200%'
-                      }}
-                    />
-
-                    {/* Glassy Core for Text Legibility */}
-                    <div className="absolute inset-0 bg-white/5 dark:bg-white/5 backdrop-blur-2xl rounded-[30px] border border-white/10" />
-                    
-                    {/* Subtle Internal Glow */}
-                    <div className="absolute inset-x-4 inset-y-1 bg-gradient-to-b from-white/10 to-transparent rounded-full blur-sm" />
+                    <CloudCanvas side="right" className="absolute inset-0">
+                      <div className="invisible whitespace-pre-wrap text-sm md:text-base font-serif italic">{text || ' '}</div>
+                    </CloudCanvas>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              <textarea 
-                ref={textareaRef}
-                value={text}
-                onChange={handleTextChange}
-                onKeyDown={handleKeyDown}
-                onFocus={() => {
-                  setIsFocused(true);
-                  setTimeout(updateCaretCoords, 0);
-                }}
-                onBlur={() => setIsFocused(false)}
-                onClick={updateCaretCoords}
-                onKeyUp={updateCaretCoords}
-                rows={1}
-                className={`flex-1 py-2.5 bg-transparent outline-none resize-none max-h-40 overflow-y-auto font-serif italic text-sm md:text-base custom-caret z-10 relative selection:bg-cyan-500/20 transition-all duration-500 ${
-                  text.trim() || isFocused 
-                    ? 'text-gray-800 dark:text-gray-100 placeholder:text-gray-400/60' 
-                    : 'text-gray-900 dark:text-gray-100 placeholder:text-gray-400'
-                }`}
-                placeholder={PLACEHOLDERS[language] || PLACEHOLDERS.en}
-              />
+              <div className="flex-1 relative z-10 flex items-end p-1.5 pl-4">
+                <textarea 
+                  ref={textareaRef}
+                  value={text}
+                  onChange={handleTextChange}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => {
+                    setIsFocused(true);
+                    setTimeout(updateCaretCoords, 0);
+                  }}
+                  onBlur={() => setIsFocused(false)}
+                  onClick={updateCaretCoords}
+                  onKeyUp={updateCaretCoords}
+                  rows={1}
+                  className={`flex-1 py-2.5 bg-transparent outline-none resize-none max-h-40 overflow-y-auto font-serif italic text-sm md:text-base z-10 relative selection:bg-cyan-500/20 transition-all duration-500 caret-transparent ${
+                    text.trim() || isFocused 
+                      ? 'text-gray-800 dark:text-gray-100 placeholder:text-gray-400/60' 
+                      : 'text-gray-900 dark:text-gray-100 placeholder:text-gray-400'
+                  }`}
+                  placeholder={PLACEHOLDERS[language] || PLACEHOLDERS.en}
+                />
 
-              <div className="flex items-center gap-1 pr-1 pb-0.5 overflow-hidden z-10">
-                <AnimatePresence mode="wait" initial={false}>
-                  {!text.trim() ? (
-                    <motion.button 
-                      key="mic"
+                {/* Feather Cursor */}
+                <AnimatePresence>
+                  {isFocused && (
+                    <motion.div
                       initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
+                      animate={{ 
+                        opacity: 1,
+                        left: caretCoords.x,
+                        top: caretCoords.y - 20 // Offset to align tip with caret
+                      }}
                       exit={{ opacity: 0 }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={startRecording} 
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
-                        isFocused ? 'text-cyan-500' : 'text-gray-400 dark:text-gray-500'
-                      }`}
+                      transition={{ type: 'spring', damping: 25, stiffness: 300, mass: 0.5 }}
+                      className="absolute pointer-events-none z-20"
                     >
-                      <Mic className="w-5 h-5" />
-                    </motion.button>
-                  ) : (
-                    <motion.button 
-                      key="send"
-                      initial={{ scale: 0, rotate: -45 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      exit={{ scale: 0, rotate: 45 }}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={handleSendText} 
-                      disabled={!text.trim() || isUploading || sendState !== 'idle'}
-                      className="w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 bg-cyan-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)]"
-                    >
-                      <AnimatePresence mode="wait">
-                        {sendState === 'sending' ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : sendState === 'success' ? (
-                          <Check className="w-4 h-4" />
-                        ) : (
-                          <Feather className="w-4 h-4" />
-                        )}
-                      </AnimatePresence>
-                    </motion.button>
+                      <div className="relative">
+                        <Feather className="w-5 h-5 text-gray-400 dark:text-gray-300 -rotate-45" />
+                        
+                        {/* Cyan Glow at the tip */}
+                        <motion.div 
+                          animate={{ 
+                            scale: isTyping ? [1, 1.8, 1.2] : [1, 1.3, 1],
+                            opacity: isTyping ? [0.6, 1, 0.8] : [0.4, 0.7, 0.4]
+                          }}
+                          transition={{ 
+                            duration: isTyping ? 0.2 : 2, 
+                            repeat: isTyping ? 0 : Infinity,
+                            ease: "easeInOut" 
+                          }}
+                          className="absolute -bottom-1 -left-1 w-4 h-4 bg-cyan-400 rounded-full blur-md shadow-[0_0_15px_rgba(34,211,238,0.8)]"
+                        />
+                      </div>
+                    </motion.div>
                   )}
                 </AnimatePresence>
+
+                <div className="flex items-center gap-1 pr-1 pb-0.5 overflow-hidden z-10">
+                  <AnimatePresence mode="wait" initial={false}>
+                    {!text.trim() ? (
+                      <motion.button 
+                        key="mic"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={startRecording} 
+                        className={`w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 ${
+                          isFocused ? 'text-cyan-500' : 'text-gray-400 dark:text-gray-500'
+                        }`}
+                      >
+                        <Mic className="w-5 h-5" />
+                      </motion.button>
+                    ) : (
+                      <motion.button 
+                        key="send"
+                        initial={{ scale: 0, rotate: -45 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: 45 }}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={handleSendText} 
+                        disabled={!text.trim() || isUploading || sendState !== 'idle'}
+                        className="w-10 h-10 rounded-full flex items-center justify-center transition-all shrink-0 bg-cyan-500 text-white shadow-[0_0_15px_rgba(6,182,212,0.4)]"
+                      >
+                        <AnimatePresence mode="wait">
+                          {sendState === 'sending' ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : sendState === 'success' ? (
+                            <Check className="w-4 h-4" />
+                          ) : (
+                            <Feather className="w-4 h-4" />
+                          )}
+                        </AnimatePresence>
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </div>
           )}

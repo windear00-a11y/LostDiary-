@@ -7,6 +7,7 @@ import {
   Sparkles, BookOpen, PenLine, History, ChevronRight,
   Plus, MessageSquare, Wand2, Loader2
 } from 'lucide-react';
+import Image from 'next/image';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
 import { chapterService, Chapter } from '@/lib/services/chapter-service';
@@ -237,9 +238,14 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
               </button>
 
               <div className="flex items-center gap-2 p-2">
-                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-white/10">
+                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-white/10 relative">
                   {user?.email ? (
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="avatar" />
+                    <Image 
+                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} 
+                      alt="avatar" 
+                      fill
+                      className="object-cover"
+                    />
                   ) : (
                     <User className="w-5 h-5 text-gray-400" />
                   )}
