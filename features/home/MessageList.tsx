@@ -127,70 +127,82 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                 </button>
               )}
 
-              <div className={`relative px-6 py-4 transition-all duration-700 ${
+              <div className={`relative px-8 py-6 transition-all duration-700 ${
                 isUser 
                   ? 'text-white' 
                   : 'text-white'
-              }`}
-              style={isUser ? {
-                borderRadius: '40% 60% 60% 40% / 40% 40% 60% 60%',
-              } : {
-                borderRadius: '60% 40% 40% 60% / 40% 60% 60% 40%',
-              }}>
-                {/* Realistic Cloud Background Layers */}
+              }`}>
+                {/* Realistic Cloud Background Layers (No Solid Background) */}
                 <div className="absolute inset-0 z-0 pointer-events-none overflow-visible">
-                  {/* Main Glow Layer */}
-                  <div className={`absolute inset-0 blur-2xl opacity-60 ${
-                    isUser ? 'bg-purple-600' : 'bg-cyan-500'
+                  {/* Outer Glow / Atmosphere */}
+                  <div className={`absolute -inset-8 blur-[40px] opacity-40 ${
+                    isUser ? 'bg-purple-600/50' : 'bg-cyan-500/50'
                   }`} />
                   
-                  {/* Textured Puffs */}
+                  {/* Primary Cloud Puff (Textured & Animated) */}
                   <motion.div 
                     animate={{ 
-                      scale: [1, 1.05, 0.95, 1],
-                      rotate: [0, 1, -1, 0]
+                      scale: [1, 1.1, 0.9, 1],
+                      rotate: [0, 2, -2, 0],
+                      opacity: [0.7, 0.8, 0.7]
                     }}
-                    transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-                    className={`absolute -inset-2 blur-xl opacity-40 rounded-full ${
-                      isUser ? 'bg-fuchsia-500' : 'bg-blue-400'
+                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                    className={`absolute inset-0 blur-2xl ${
+                      isUser ? 'bg-purple-500/60' : 'bg-cyan-400/60'
                     }`} 
+                    style={{
+                      borderRadius: isUser ? '40% 60% 60% 40% / 40% 40% 60% 60%' : '60% 40% 40% 60% / 40% 60% 60% 40%',
+                      boxShadow: isUser ? '0 0 40px rgba(168,85,247,0.4)' : '0 0 40px rgba(6,182,212,0.4)'
+                    }}
                   />
                   
+                  {/* Highlight Puff (Brighter) */}
                   <motion.div 
                     animate={{ 
-                      scale: [1, 0.95, 1.05, 1],
-                      x: [0, 5, -5, 0]
+                      scale: [1, 0.8, 1.2, 1],
+                      x: [0, 10, -10, 0]
                     }}
-                    transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                    className={`absolute -inset-4 blur-3xl opacity-30 rounded-full ${
-                      isUser ? 'bg-indigo-600' : 'bg-cyan-600'
+                    transition={{ duration: 12, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                    className={`absolute inset-4 blur-xl opacity-50 ${
+                      isUser ? 'bg-fuchsia-400/40' : 'bg-blue-300/40'
                     }`} 
+                    style={{ borderRadius: '50%' }}
                   />
 
-                  {/* Inner Core */}
-                  <div className={`absolute inset-0 backdrop-blur-md border border-white/10 ${
-                    isUser 
-                      ? 'bg-purple-600/80 shadow-[inset_0_0_20px_rgba(255,255,255,0.2)]' 
-                      : 'bg-cyan-600/80 shadow-[inset_0_0_20px_rgba(255,255,255,0.2)]'
-                  }`} 
-                  style={isUser ? {
-                    borderRadius: '40% 60% 60% 40% / 40% 40% 60% 60%',
-                  } : {
-                    borderRadius: '60% 40% 40% 60% / 40% 60% 60% 40%',
+                  {/* Foggy/Smoky Texture Overlay */}
+                  <div className="absolute inset-0 opacity-30 mix-blend-overlay"
+                    style={{
+                      backgroundImage: `radial-gradient(circle at 50% 50%, white 0%, transparent 70%)`,
+                      filter: 'url(#cloud-noise)'
+                    }}
+                  />
+
+                  {/* Glassy Core (For readability, but very transparent) */}
+                  <div className="absolute inset-0 backdrop-blur-xl bg-white/5 border border-white/10" 
+                  style={{
+                    borderRadius: isUser ? '40% 60% 60% 40% / 40% 40% 60% 60%' : '60% 40% 40% 60% / 40% 60% 60% 40%',
                   }} />
                 </div>
                 
                 {/* Cloud Bumps (Visual fluff) */}
                 <div className="absolute inset-0 pointer-events-none z-0">
-                  <div className={`absolute -top-3 ${isUser ? 'right-1/4' : 'left-1/4'} w-10 h-10 blur-md rounded-full ${isUser ? 'bg-purple-500/40' : 'bg-cyan-400/40'}`} />
-                  <div className={`absolute -bottom-2 ${isUser ? 'left-1/3' : 'right-1/3'} w-8 h-8 blur-sm rounded-full ${isUser ? 'bg-fuchsia-600/30' : 'bg-blue-500/30'}`} />
+                  <motion.div 
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 8, repeat: Infinity }}
+                    className={`absolute -top-6 ${isUser ? 'right-1/4' : 'left-1/4'} w-12 h-12 blur-xl rounded-full ${isUser ? 'bg-purple-400/40' : 'bg-cyan-300/40'}`} 
+                  />
+                  <motion.div 
+                    animate={{ y: [0, 5, 0] }}
+                    transition={{ duration: 10, repeat: Infinity }}
+                    className={`absolute -bottom-4 ${isUser ? 'left-1/3' : 'right-1/3'} w-10 h-10 blur-xl rounded-full ${isUser ? 'bg-fuchsia-500/30' : 'bg-blue-400/30'}`} 
+                  />
                 </div>
 
                 {/* Message Content (Z-index to stay above cloud) */}
                 <div className="relative z-10">
                   {/* Quoted Message (Reply Context) */}
                   {msg.metadata?.reply_to && (
-                    <div className={`mb-2 p-2 rounded-xl border-l-4 text-xs opacity-80 ${isUser ? 'bg-purple-900/40 border-purple-300' : 'bg-cyan-900/40 border-cyan-300'}`}>
+                    <div className={`mb-2 p-2 rounded-xl border-l-4 text-xs bg-white/10 backdrop-blur-sm ${isUser ? 'border-purple-300' : 'border-cyan-300'}`}>
                       <p className="font-bold mb-0.5">{msg.metadata.reply_to.role === 'user' ? 'You' : 'WinDear'}</p>
                       <p className="truncate font-serif italic">{msg.metadata.reply_to.content || 'Attachment'}</p>
                     </div>
@@ -198,15 +210,15 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
 
                   {/* Task 6: Validate ChatBubble - Ensure it reads content correctly with fallback */}
                   {msg.type === 'text' && (
-                    <div className="text-[15px] leading-relaxed font-serif italic whitespace-pre-wrap drop-shadow-sm">
+                    <div className="text-[16px] leading-relaxed font-serif italic whitespace-pre-wrap drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
                       {msg.content || msg.text || (
                         <span className="opacity-50 italic">Empty message</span>
                       )}
                       {/* Link Previews */}
                       {extractUrls(msg.content || msg.text || '').map((url, i) => (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className={`block mt-3 p-3 rounded-xl border ${isUser ? 'bg-purple-700/30 border-purple-400/30' : 'bg-cyan-700/30 border-cyan-400/30'} hover:opacity-80 transition-opacity`}>
+                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className={`block mt-3 p-3 rounded-xl border bg-white/10 border-white/20 hover:bg-white/20 transition-all`}>
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${isUser ? 'bg-purple-500/50' : 'bg-cyan-500/50'}`}>
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-white/20`}>
                               <LinkIcon className="w-5 h-5 text-white" />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -220,7 +232,7 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                   )}
                   
                   {msg.type === 'image' && (
-                    <div className="relative w-full overflow-hidden rounded-xl mt-1">
+                    <div className="relative w-full overflow-hidden rounded-xl mt-1 shadow-2xl">
                       <img 
                         src={msg.media_url || ''} 
                         alt="Attachment" 
@@ -231,7 +243,7 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                   )}
                   
                   {msg.type === 'video' && (
-                    <video src={msg.media_url || ''} controls className="max-w-full rounded-xl mt-1" />
+                    <video src={msg.media_url || ''} controls className="max-w-full rounded-xl mt-1 shadow-2xl" />
                   )}
                   
                   {msg.type === 'audio' && (
@@ -239,7 +251,7 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                   )}
                   
                   {msg.type === 'location' && msg.metadata?.latitude && msg.metadata?.longitude && (
-                    <div className="mt-1 rounded-xl overflow-hidden border border-white/10 bg-black/20">
+                    <div className="mt-1 rounded-xl overflow-hidden border border-white/20 bg-black/40 backdrop-blur-md">
                       <a 
                         href={`https://www.google.com/maps?q=${msg.metadata.latitude},${msg.metadata.longitude}`}
                         target="_blank"
@@ -249,7 +261,7 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                         <div className="bg-white/5 h-24 flex items-center justify-center transition-colors group-hover:bg-white/10">
                           <MapPin className="w-8 h-8 text-rose-500" />
                         </div>
-                        <div className="p-3 text-sm font-medium flex items-center justify-between border-t border-white/5">
+                        <div className="p-3 text-sm font-medium flex items-center justify-between border-t border-white/10">
                           <span className="text-white">View on Maps</span>
                           <span className="text-xs text-white/50 font-mono">
                             {msg.metadata.latitude.toFixed(4)}, {msg.metadata.longitude.toFixed(4)}
@@ -262,17 +274,33 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
 
                 {/* Thought Bubble Tail for User */}
                 {isUser && (
-                  <div className="absolute -bottom-4 -right-1 flex flex-col items-end gap-1 pointer-events-none">
-                    <div className="w-4 h-4 bg-purple-500/80 rounded-full shadow-[0_0_15px_rgba(168,85,247,0.4)]" />
-                    <div className="w-2.5 h-2.5 bg-purple-600/60 rounded-full mr-1 shadow-[0_0_8px_rgba(168,85,247,0.3)]" />
+                  <div className="absolute -bottom-6 -right-2 flex flex-col items-end gap-1.5 pointer-events-none">
+                    <motion.div 
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                      className="w-5 h-5 bg-purple-400/60 rounded-full blur-[2px] shadow-[0_0_20px_rgba(168,85,247,0.5)]" 
+                    />
+                    <motion.div 
+                      animate={{ scale: [1, 0.8, 1] }}
+                      transition={{ duration: 3, repeat: Infinity, delay: 1 }}
+                      className="w-3 h-3 bg-purple-500/40 rounded-full mr-1 blur-[1px]" 
+                    />
                   </div>
                 )}
 
-                {/* AI Tail (Optional, for symmetry) */}
+                {/* AI Tail */}
                 {!isUser && (
-                  <div className="absolute -bottom-4 -left-1 flex flex-col items-start gap-1 pointer-events-none">
-                    <div className="w-4 h-4 bg-cyan-500/80 rounded-full shadow-[0_0_15px_rgba(6,182,212,0.4)]" />
-                    <div className="w-2.5 h-2.5 bg-cyan-600/60 rounded-full ml-1 shadow-[0_0_8px_rgba(6,182,212,0.3)]" />
+                  <div className="absolute -bottom-6 -left-2 flex flex-col items-start gap-1.5 pointer-events-none">
+                    <motion.div 
+                      animate={{ scale: [1, 1.2, 1] }}
+                      transition={{ duration: 4, repeat: Infinity }}
+                      className="w-5 h-5 bg-cyan-400/60 rounded-full blur-[2px] shadow-[0_0_20px_rgba(6,182,212,0.5)]" 
+                    />
+                    <motion.div 
+                      animate={{ scale: [1, 0.8, 1] }}
+                      transition={{ duration: 3, repeat: Infinity, delay: 1 }}
+                      className="w-3 h-3 bg-cyan-500/40 rounded-full ml-1 blur-[1px]" 
+                    />
                   </div>
                 )}
               </div>
