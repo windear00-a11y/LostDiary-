@@ -517,28 +517,38 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                       initial={{ opacity: 0 }}
                       animate={{ 
                         opacity: 1,
-                        left: caretCoords.x,
-                        top: caretCoords.y - 20 // Offset to align tip with caret
+                        left: caretCoords.x - 4, // Align tip horizontally
+                        top: caretCoords.y - 22  // Align tip vertically
                       }}
                       exit={{ opacity: 0 }}
                       transition={{ type: 'spring', damping: 25, stiffness: 300, mass: 0.5 }}
                       className="absolute pointer-events-none z-20"
                     >
                       <div className="relative">
-                        <Feather className="w-5 h-5 text-gray-400 dark:text-gray-300 -rotate-45" />
+                        {/* Tilted Feather icon to look like a real quill */}
+                        <Feather className="w-6 h-6 text-gray-400 dark:text-gray-300 rotate-[15deg] transform-gpu" />
                         
-                        {/* Cyan Glow at the tip */}
+                        {/* Sharp, strong glow at the writing tip */}
                         <motion.div 
                           animate={{ 
-                            scale: isTyping ? [1, 1.8, 1.2] : [1, 1.3, 1],
-                            opacity: isTyping ? [0.6, 1, 0.8] : [0.4, 0.7, 0.4]
+                            scale: isTyping ? [1, 1.4, 1.1] : [1, 1.2, 1],
+                            opacity: isTyping ? [0.8, 1, 0.9] : [0.5, 0.8, 0.5]
                           }}
                           transition={{ 
-                            duration: isTyping ? 0.2 : 2, 
+                            duration: isTyping ? 0.15 : 2, 
                             repeat: isTyping ? 0 : Infinity,
                             ease: "easeInOut" 
                           }}
-                          className="absolute -bottom-1 -left-1 w-4 h-4 bg-cyan-400 rounded-full blur-md shadow-[0_0_15px_rgba(34,211,238,0.8)]"
+                          className="absolute bottom-[2px] left-[4px] w-1.5 h-1.5 bg-cyan-300 rounded-full blur-[1px] shadow-[0_0_8px_2px_rgba(34,211,238,1),0_0_15px_rgba(34,211,238,0.6)] z-30"
+                        />
+                        
+                        {/* Subtle outer mist around the tip */}
+                        <motion.div 
+                          animate={{ 
+                            opacity: isTyping ? 0.4 : 0.2,
+                            scale: isTyping ? 1.5 : 1
+                          }}
+                          className="absolute bottom-[-2px] left-0 w-4 h-4 bg-cyan-400/20 rounded-full blur-md -z-10"
                         />
                       </div>
                     </motion.div>
