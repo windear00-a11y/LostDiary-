@@ -33,15 +33,15 @@ export default function CloudCanvas({ side, children, className = "", style }: C
         const rect = content.getBoundingClientRect();
         const parentWidth = parent.offsetWidth;
         
-        // Padding that strongly favors width for a horizontal "bubble" look
-        const paddingX = parentWidth < 400 ? 140 : 200;
-        const paddingY = parentWidth < 400 ? 60 : 80;
+        // Padding that favors width but is more compact for small text
+        const paddingX = parentWidth < 400 ? 80 : 120;
+        const paddingY = parentWidth < 400 ? 50 : 70;
         
-        // Allow much more horizontal expansion
+        // Allow horizontal expansion but be smarter about small text
         const maxWidth = Math.min(parentWidth - 20, 750);
         
-        const newWidth = Math.min(maxWidth, Math.max(220, rect.width + paddingX));
-        const newHeight = Math.max(90, rect.height + paddingY);
+        const newWidth = Math.min(maxWidth, Math.max(120, rect.width + paddingX));
+        const newHeight = Math.max(80, rect.height + paddingY);
 
         // Only update if change is significant to reduce jitter
         if (Math.abs(newWidth - dimensions.width) > 2 || Math.abs(newHeight - dimensions.height) > 2) {
@@ -203,7 +203,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       />
 
       {/* content wrapper */}
-      <div className="absolute inset-0 flex items-center justify-center px-20 py-8 z-10">
+      <div className="absolute inset-0 flex items-center justify-center px-10 py-6 z-10">
         <div className="cloud-content text-white text-center leading-relaxed max-w-full">
           {children}
         </div>

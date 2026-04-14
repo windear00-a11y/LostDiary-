@@ -479,10 +479,10 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                     initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
                     animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
                     exit={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
-                    className="absolute inset-0 z-0"
+                    className="absolute inset-0 z-0 flex items-center justify-start"
                   >
-                    <CloudCanvas side="right" className="absolute inset-0">
-                      <div className="invisible whitespace-pre-wrap text-sm md:text-base font-serif italic">{text || ' '}</div>
+                    <CloudCanvas side="right">
+                      <div className="invisible whitespace-pre-wrap text-sm md:text-base font-serif italic pr-10">{text || ' '}</div>
                     </CloudCanvas>
                   </motion.div>
                 )}
