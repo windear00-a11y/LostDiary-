@@ -33,11 +33,11 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
     const drawPuff = (x: number, y: number, r: number, opacity: number) => {
       const gradient = ctx.createRadialGradient(x, y, 0, x, y, r);
       
-      const color = side === "left" ? "34,211,238" : "168,85,247"; // Cyan vs Purple
+      const color = side === "left" ? "0, 217, 255" : "168, 85, 247"; // Vibrant Cyan vs Purple
 
       gradient.addColorStop(0, `rgba(${color}, ${opacity})`);
-      gradient.addColorStop(0.3, `rgba(${color}, ${opacity * 0.5})`);
-      gradient.addColorStop(0.6, `rgba(${color}, ${opacity * 0.1})`);
+      gradient.addColorStop(0.4, `rgba(${color}, ${opacity * 0.6})`);
+      gradient.addColorStop(0.7, `rgba(${color}, ${opacity * 0.2})`);
       gradient.addColorStop(1, "rgba(255,255,255,0)");
 
       ctx.fillStyle = gradient;
@@ -47,27 +47,27 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
     };
 
     // Layer 1: Large, very faint "Mist" (Base layer)
-    for (let i = 0; i < 60; i++) {
-      const x = 60 + Math.random() * (width - 120);
-      const y = 60 + Math.random() * (height - 120);
-      const r = 40 + Math.random() * 60;
-      drawPuff(x, y, r, 0.15);
-    }
-
-    // Layer 2: Medium "Core" puffs (Defining the shape)
-    for (let i = 0; i < 150; i++) {
-      const x = 70 + Math.random() * (width - 140);
-      const y = 70 + Math.random() * (height - 140);
-      const r = 25 + Math.random() * 40;
+    for (let i = 0; i < 80; i++) {
+      const x = 50 + Math.random() * (width - 100);
+      const y = 50 + Math.random() * (height - 100);
+      const r = 35 + Math.random() * 55;
       drawPuff(x, y, r, 0.25);
     }
 
+    // Layer 2: Medium "Core" puffs (Defining the shape)
+    for (let i = 0; i < 180; i++) {
+      const x = 60 + Math.random() * (width - 120);
+      const y = 60 + Math.random() * (height - 120);
+      const r = 20 + Math.random() * 35;
+      drawPuff(x, y, r, 0.45);
+    }
+
     // Layer 3: Tiny "Dense Mist" particles (Adding texture)
-    for (let i = 0; i < 250; i++) {
-      const x = 80 + Math.random() * (width - 160);
-      const y = 80 + Math.random() * (height - 160);
-      const r = 5 + Math.random() * 15;
-      drawPuff(x, y, r, 0.4);
+    for (let i = 0; i < 300; i++) {
+      const x = 70 + Math.random() * (width - 140);
+      const y = 70 + Math.random() * (height - 140);
+      const r = 4 + Math.random() * 12;
+      drawPuff(x, y, r, 0.6);
     }
 
     // Optional: Add some "white" highlight puffs for depth
@@ -92,7 +92,7 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
       {/* cloud canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 blur-[3px] pointer-events-none"
+        className="absolute inset-0 blur-[0.5px] pointer-events-none"
       />
 
       {/* content */}

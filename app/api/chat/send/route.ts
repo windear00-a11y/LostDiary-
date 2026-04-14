@@ -119,17 +119,20 @@ export async function POST(req: Request) {
       }
     }
 
-    // Save AI Response if generated and high-value
-    if (pipelineOutput.aiResponse && pipelineOutput.isHighValue) {
-      const aiResponse = pipelineOutput.aiResponse;
-      const responseText = `${aiResponse.emotion_reflection}\n\n${aiResponse.validation}\n\n${aiResponse.insight}\n\n${aiResponse.gentle_suggestion}\n\n${aiResponse.short_reply}`;
+    // Save AI Response if generated
+    if (pipelineOutput.aiResponse) {
+      // Use the short_reply or generate a direct response if it exists
+      // For a "normal" chat, we want a direct conversational response.
+      // We'll use the short_reply as the main response for now, or fallback to a combined version if needed.
+      const responseText = pipelineOutput.aiResponse.short_reply || 
+                          `${pipelineOutput.aiResponse.validation} ${pipelineOutput.aiResponse.insight}`;
       
       await supabase.from('chat_messages').insert({
         user_id,
         session_id,
         role: 'diary',
         type: 'text',
-        content: responseText
+        content: responseText.trim()
       });
     }
 

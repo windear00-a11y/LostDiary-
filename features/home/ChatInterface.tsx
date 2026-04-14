@@ -27,27 +27,14 @@ const SkeletonLoader = () => (
 const EMPTY_STATE: Record<string, { 
   title: string; 
   subtitle: string; 
-  actions: { icon: any; label: string; color: string; prompt?: string; path?: string }[] 
 }> = {
   en: { 
-    title: "How was your day?", 
-    subtitle: "Every moment becomes part of your story.",
-    actions: [
-      { icon: Sparkles, label: "Today's Story", color: "text-indigo-500", prompt: "Analyze my recent events and ask me a personalized question about my day to help me write today's story." },
-      { icon: PenLine, label: "Write a Memory", color: "text-emerald-500", prompt: "Look at my past memories and ask me a thoughtful question to help me start writing a new memory." },
-      { icon: Heart, label: "How did it feel?", color: "text-rose-500", prompt: "Based on my emotional history, ask me a gentle question about how I'm feeling right now." },
-      { icon: BookOpen, label: "View LifeBook", color: "text-amber-500", path: "/story" },
-    ]
+    title: "Hello, I'm WinDear", 
+    subtitle: "Your AI companion. How can I help you today?",
   },
   hi: { 
-    title: "आज आपका दिन कैसा रहा?", 
-    subtitle: "हर पल आपकी कहानी का हिस्सा बनता है।",
-    actions: [
-      { icon: Sparkles, label: "आज की कहानी", color: "text-indigo-500", prompt: "Analyze my recent events and ask me a personalized question about my day to help me write today's story." },
-      { icon: PenLine, label: "एक याद लिखें", color: "text-emerald-500", prompt: "Look at my past memories and ask me a thoughtful question to help me start writing a new memory." },
-      { icon: Heart, label: "कैसा महसूस हुआ?", color: "text-rose-500", prompt: "Based on my emotional history, ask me a gentle question about how I'm feeling right now." },
-      { icon: BookOpen, label: "लाइफबुक देखें", color: "text-amber-500", path: "/story" },
-    ]
+    title: "नमस्ते, मैं WinDear हूँ", 
+    subtitle: "आपका AI साथी। आज मैं आपकी क्या मदद कर सकता हूँ?",
   },
 };
 
@@ -85,156 +72,11 @@ export const ChatInterface = () => {
   const [error, setError] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showHint, setShowHint] = useState(false);
-  const [wowStory, setWowStory] = useState<string | null>(null);
-  const [hasShownWow, setHasShownWow] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
-  const [selectedActionIndex, setSelectedActionIndex] = useState<number | null>(null);
-  const [thoughtStarter, setThoughtStarter] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isSendingRef = useRef<boolean>(false);
-
-  useEffect(() => {
-    if (error) {
-      const timer = setTimeout(() => setError(null), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (showHint) {
-      const timer = setTimeout(() => setShowHint(false), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showHint]);
-
-  // Generate a thought starter based on messages
-  useEffect(() => {
-    if (messages.length > 0 && !isThinking && !isAnalyzing) {
-      const timer = setTimeout(() => {
-         const prompts = [
-           "How did that make you feel?",
-           "What's on your mind right now?",
-           "Any highlights from today?",
-           "Tell me more about that."
-         ];
-         setThoughtStarter(prompts[Math.floor(Math.random() * prompts.length)]);
-      }, 5000); // Show prompt after 5 seconds of inactivity
-      return () => clearTimeout(timer);
-    } else {
-      setThoughtStarter(null);
-    }
-  }, [messages, isThinking, isAnalyzing]);
-
-  const generateDynamicPrompt = async (actionPrompt: string) => {
-    try {
-      const context = messages.slice(-5).map(m => m.content).join('\n');
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `You are a gentle, empathetic journaling assistant. 
-        The user wants to write a diary entry. 
-        Based on their recent diary entries (if any) and the following instruction, generate a single, short, thoughtful question to help them start writing.
-        
-        Instruction: ${actionPrompt}
-        Language: ${language === 'hi' ? 'Hindi' : 'English'}
-        
-        Recent entries:
-        ${context || 'No recent entries.'}
-        
-        Return ONLY the question, nothing else. Keep it under 15 words.`,
-      });
-
-      if (response.text) {
-        setThoughtStarter(response.text.trim());
-      } else {
-        setThoughtStarter(language === 'hi' ? "इस बारे में कुछ और बताएं..." : "Tell me more about this...");
-      }
-    } catch (error) {
-      console.error("Error generating dynamic prompt:", error);
-      setThoughtStarter(language === 'hi' ? "इस बारे में कुछ और बताएं..." : "Tell me more about this...");
-    }
-  };
-
-  const generateWowStory = React.useCallback(async (userMessages: ChatMessage[]) => {
-    try {
-      const context = userMessages.map(m => m.content).join('\n');
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `Based on these diary entries, write a very short, emotional, and clear "mini life story" (4-6 lines). 
-        
-        Rules:
-        1. Tone: Personal, intimate, and deeply reflective. Write as if you are a gentle, observant narrator.
-        2. Focus on the essence of what the person is feeling or experiencing.
-        3. Include a subtle "internal monologue" or "quiet realization".
-        4. Add reflection sentences and internal thoughts to make it deeply personal.
-        5. Keep it subtle and real. Avoid clichés.
-        6. Start directly with the story. No intro.
-        7. Language: Simple, human, and grounded.
-        
-        Entries:
-        ${context}`,
-      });
-
-      if (response.text) {
-        setWowStory(response.text);
-        setHasShownWow(true);
-      }
-    } catch (error) {
-      console.error("Error generating wow story:", error);
-    }
-  }, []);
-
-  const prompts = [
-    "आज आपका दिन कैसा रहा?",
-    "कोई ऐसी बात जो आज आपको अच्छी लगी?",
-    "क्या कुछ ऐसा है जो आज आपको परेशान कर रहा है?",
-    "आज आपने अपने बारे में क्या नया सीखा?"
-  ];
-
-  useEffect(() => {
-    const loadMessages = async () => {
-      // If we are switching sessions, show loading
-      if (lastSessionIdRef.current !== sessionIdFromUrl) {
-        setLoading(true);
-        lastSessionIdRef.current = sessionIdFromUrl;
-      }
-
-      // Skip loading if we are currently sending a message to prevent overwriting optimistic UI
-      if (isSendingRef.current) {
-        setLoading(false);
-        return;
-      }
-
-      const user = await authService.getUser();
-      if (user) {
-        setUserId(user.id);
-        try {
-          const data = await chatService.fetchMessages(user.id, sessionIdFromUrl);
-          const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
-          
-          console.log(`Loaded ${visibleMessages.length} messages for session ${sessionIdFromUrl}`);
-
-          // Only update if we have messages, or if we are explicitly on the "New Chat" (null) session
-          // This prevents overwriting optimistic messages with an empty array due to fetch lag
-          if (visibleMessages.length > 0 || sessionIdFromUrl === null) {
-            setMessages(visibleMessages);
-          }
-          
-          // Check if we should show the wow moment on load
-          const userMessages = visibleMessages.filter(m => m.role === 'user');
-          if (userMessages.length >= 3 && userMessages.length <= 5) {
-            generateWowStory(userMessages);
-          }
-        } catch (err) {
-          setError("Failed to load your story. Please check your connection.");
-        }
-      }
-      setLoading(false);
-    };
-    loadMessages();
-  }, [generateWowStory, sessionIdFromUrl]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -306,14 +148,9 @@ export const ChatInterface = () => {
       console.log("Message sent successfully:", newMessage);
       setIsThinking(true);
 
-      if (newMessage.event_score && newMessage.event_score > 7) {
-        setShowHint(true);
-      }
-
       // Update optimistic message to saved state before refetching to make it instant
       setMessages(prev => {
         const updated = prev.map(m => m.id === tempId ? { ...newMessage, status: 'saved' } : m);
-        console.log("Updated messages after send (optimistic -> saved):", updated.length);
         return updated;
       });
 
@@ -321,21 +158,11 @@ export const ChatInterface = () => {
       const data = await chatService.fetchMessages(user.id, activeSessionId);
       const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
       
-      console.log("Fetched messages after send:", visibleMessages.length);
-      
       if (visibleMessages.length > 0) {
         setMessages(visibleMessages);
-      } else {
-        console.warn("fetchMessages returned empty after successful send. Keeping current state.");
       }
       
       setRefreshKey(prev => prev + 1);
-
-      // Onboarding Wow Moment Trigger
-      const userMessages = visibleMessages.filter(m => m.role === 'user');
-      if (userMessages.length >= 3 && userMessages.length <= 5 && !hasShownWow) {
-        generateWowStory(userMessages);
-      }
     } catch (err: any) {
       console.error("Failed to send message:", err);
       const errorMessage = err.message || "WinDear couldn't hear that. Please try sending again.";
@@ -399,76 +226,6 @@ export const ChatInterface = () => {
                     {t.subtitle}
                   </p>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-4 w-full max-w-md px-4 relative">
-                  <AnimatePresence mode="popLayout">
-                    {t.actions.map((action, i) => {
-                      if (selectedActionIndex !== null && selectedActionIndex !== i) return null;
-                      return (
-                        <motion.button
-                          layout
-                          key={i}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9, filter: 'blur(4px)' }}
-                          whileHover={selectedActionIndex === null ? { scale: 1.02, backgroundColor: 'rgba(0,0,0,0.02)' } : {}}
-                          whileTap={selectedActionIndex === null ? { scale: 0.98 } : {}}
-                          onClick={() => {
-                            if (selectedActionIndex === i) {
-                              setSelectedActionIndex(null);
-                              setThoughtStarter(null);
-                              return;
-                            }
-                            if (selectedActionIndex !== null) return;
-                            setSelectedActionIndex(i);
-                            
-                            if (action.path) {
-                              setTimeout(() => {
-                                router.push(action.path);
-                                setSelectedActionIndex(null);
-                              }, 500);
-                            } else if (action.prompt) {
-                              // Generate a dynamic prompt based on the action and past messages
-                              setThoughtStarter(language === 'hi' ? "सोच रहा हूँ..." : "Thinking...");
-                              generateDynamicPrompt(action.prompt);
-                            }
-                          }}
-                          className={`flex flex-col gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-white/5 shadow-sm transition-all text-left ${selectedActionIndex === i ? 'col-span-2 bg-white dark:bg-white/10 shadow-md ring-2 ring-indigo-500/20' : ''}`}
-                        >
-                          <div className="flex items-center gap-3 w-full">
-                            <div className="shrink-0"><action.icon className={`w-5 h-5 ${action.color}`} /></div>
-                            <span className="text-sm font-medium text-gray-600 dark:text-gray-300 font-serif italic">{action.label}</span>
-                          </div>
-                          
-                          <AnimatePresence>
-                            {selectedActionIndex === i && thoughtStarter && (
-                              <motion.div 
-                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
-                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                className="w-full overflow-hidden"
-                              >
-                                <div className="p-3 bg-indigo-50/50 dark:bg-indigo-500/10 rounded-xl border border-indigo-100/50 dark:border-indigo-500/20">
-                                  <p className="text-sm text-indigo-700 dark:text-indigo-300 font-serif italic flex items-start gap-2">
-                                    <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
-                                    {thoughtStarter}
-                                  </p>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </motion.button>
-                      );
-                    })}
-                  </AnimatePresence>
-                </div>
-
-                {/* Show Story Preview in empty state instead of cluttering the chat */}
-                {userId && (
-                  <div className="w-full max-w-md px-4 pt-8">
-                    <StoryPreviewCard userId={userId} refreshTrigger={refreshKey} />
-                  </div>
-                )}
               </motion.div>
             ) : (messages.length === 0 && sessionIdFromUrl) ? (
               <motion.div 
@@ -478,10 +235,10 @@ export const ChatInterface = () => {
                 className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4"
               >
                 <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-500/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                  <PenLine className="w-8 h-8 text-indigo-500" />
+                  <Sparkles className="w-8 h-8 text-indigo-500" />
                 </div>
                 <h2 className="text-2xl font-serif font-bold text-gray-900 dark:text-gray-100 italic">
-                  {language === 'hi' ? 'अपनी कहानी शुरू करें...' : 'Start your story...'}
+                  {language === 'hi' ? 'नमस्ते! मैं आपकी क्या मदद कर सकता हूँ?' : 'Hello! How can I help you today?'}
                 </h2>
               </motion.div>
             ) : (
@@ -494,10 +251,6 @@ export const ChatInterface = () => {
               >
                 <MessageList messages={messages} onReply={setReplyingTo} />
                 
-                {wowStory && (
-                  <StoryPreview story={wowStory} />
-                )}
-
                 <AnimatePresence>
                   {isAnalyzing && (
                     <motion.div 
@@ -507,22 +260,7 @@ export const ChatInterface = () => {
                       className="flex justify-center"
                     >
                       <div className="px-4 py-2 bg-white/50 dark:bg-white/5 backdrop-blur-md rounded-full border border-gray-100 dark:border-white/5 text-[11px] font-medium text-gray-400 uppercase tracking-widest">
-                        Saving your moment...
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                <AnimatePresence>
-                  {showHint && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="flex justify-center"
-                    >
-                      <div className="bg-accent/10 text-accent px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                        This might become a chapter
+                        Sending...
                       </div>
                     </motion.div>
                   )}
@@ -539,7 +277,7 @@ export const ChatInterface = () => {
                       <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                       <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                     </div>
-                    WinDear is reflecting...
+                    WinDear is typing...
                   </motion.div>
                 )}
               </motion.div>
@@ -550,34 +288,8 @@ export const ChatInterface = () => {
 
       <div className="relative shrink-0 z-40 bg-bg-light dark:bg-bg-dark w-full">
         <div className="pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2 px-4 max-w-3xl mx-auto w-full relative">
-          <AnimatePresence>
-            {thoughtStarter && messages.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95, filter: 'blur(4px)' }}
-                className="absolute bottom-full left-0 right-0 mb-4 flex justify-center pointer-events-none z-20"
-              >
-                <div 
-                  className="bg-white/90 dark:bg-[#1A1A1D]/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-lg border border-indigo-100 dark:border-indigo-500/20 pointer-events-auto cursor-pointer hover:scale-105 transition-transform"
-                  onClick={() => {
-                    // Pre-fill the input or just dismiss it
-                    setThoughtStarter(null);
-                  }}
-                >
-                  <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 font-serif italic flex items-center gap-2">
-                    <Sparkles className="w-3 h-3" />
-                    {thoughtStarter}
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           <ChatInput 
             onSendMessage={async (msg) => {
-              setThoughtStarter(null); // Hide thought starter on send
-              setSelectedActionIndex(null); // Hide expanded suggestion on send
               await handleSendMessage(msg);
             }} 
             replyingTo={replyingTo} 

@@ -71,15 +71,14 @@ export class PipelineController {
     if (decisions.shouldRespond) {
       aiResponse = await this.generateResponse(input.message.content, patterns, input.language);
       if (aiResponse) {
-        const responseText = `${aiResponse.emotion_reflection}\n\n${aiResponse.validation}\n\n${aiResponse.insight}\n\n${aiResponse.gentle_suggestion}\n\n${aiResponse.short_reply}`;
-        isHighValue = isHighValueResponse(responseText);
+        isHighValue = isHighValueResponse(aiResponse);
       }
     }
 
     return {
       extractedEvent: filteredEvent,
       shouldRespond: decisions.shouldRespond,
-      aiResponse,
+      aiResponse: aiResponse ? { short_reply: aiResponse } : null,
       isHighValue,
       patterns,
       narrativeUpdate
@@ -194,43 +193,24 @@ Rules:
     }
   }
 
-  private async generateResponse(content: string, patterns: PatternReport, language?: string): Promise<any | null> {
-    const toneMode = AIPersonality.selectTone({ input: content, patterns });
-    const toneInstructions = AIPersonality.getToneInstructions(toneMode);
-    
+  private async generateResponse(content: string, patterns: PatternReport, language?: string): Promise<string | null> {
     const systemInstruction = `
-You are an AI life author and behavioral intelligence system.
-Goal: Generate a warm, understanding companion response.
+You are WinDear, a warm and friendly AI companion.
+Goal: Engage in a natural, helpful, and empathetic conversation with the user.
 
-Special Context:
-If the user's input starts with "Analyze my recent events" or similar suggestion prompts, DO NOT just summarize. Instead:
-1. Briefly look at their past events/memories.
-2. Ask ONE deep, personalized, and open-ended question that helps them elaborate on that specific suggestion.
-3. Make them feel like you remember their journey.
-
-Output:
-{
-  "emotion_reflection": "Reflect user's feeling naturally",
-  "validation": "Make user feel heard",
-  "insight": "Meaningful observation or a guided question based on their history",
-  "gentle_suggestion": "Soft guidance to help them write",
-  "short_reply": "A warm question to start the conversation"
-}
 Rules:
-- ${AIPersonality.systemInstruction}
-- ${toneInstructions}
-- Language: Respond in ${language || 'the user\'s language'}.
-- Output ONLY a valid JSON object.
+- Be concise but warm.
+- Respond in ${language || 'the user\'s language'}.
+- Avoid being overly formal or robotic.
+- Do NOT use a structured JSON format for the response text itself, just return the plain text of your reply.
 `;
     try {
       const response = await this.ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: [{ role: "user", parts: [{ text: content }] }],
-        config: { systemInstruction, temperature: 0.5, responseMimeType: "application/json" }
+        config: { systemInstruction, temperature: 0.7 }
       });
-      const text = response.text?.trim();
-      if (!text) return null;
-      return JSON.parse(text);
+      return response.text?.trim() || null;
     } catch (error) {
       console.error("Error generating response:", error);
       return null;
