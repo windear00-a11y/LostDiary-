@@ -135,5 +135,33 @@ export const chatService = {
       .getPublicUrl(fileName);
 
     return publicUrlData.publicUrl;
+  },
+
+  async updateSessionTitle(userId: string, sessionId: string, title: string): Promise<void> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
+    const { error } = await supabase
+      .from('chat_sessions')
+      .update({ title })
+      .eq('id', sessionId)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+  },
+
+  async generateSessionTitle(userId: string, sessionId: string): Promise<string> {
+    const response = await fetch('/api/chat/sessions/generate-title', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, session_id: sessionId })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to generate title');
+    }
+
+    const data = await response.json();
+    return data.title;
   }
 };

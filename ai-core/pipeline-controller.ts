@@ -194,6 +194,30 @@ Rules:
     }
   }
 
+  public async generateSessionTitle(messages: string[]): Promise<string | null> {
+    if (!messages || messages.length === 0) return null;
+    const systemInstruction = `
+You are a creative editor. Your goal is to generate a short, meaningful title (max 5-6 words) for a chat session based on the conversation history provided.
+Rules:
+1. The title should be evocative and capture the essence of the conversation.
+2. Avoid generic titles like "Chat Session" or "Conversation".
+3. Output ONLY the title string, no quotes or extra text.
+4. If the conversation is in Hindi, provide the title in Hindi (using Devanagari script).
+`;
+    const content = messages.join('\n');
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ role: "user", parts: [{ text: content }] }],
+        config: { systemInstruction, temperature: 0.7 }
+      });
+      return response.text?.trim() || null;
+    } catch (error) {
+      console.error("Error generating session title:", error);
+      return null;
+    }
+  }
+
   private async generateResponse(content: string, patterns: PatternReport, language?: string): Promise<any | null> {
     const toneMode = AIPersonality.selectTone({ input: content, patterns });
     const toneInstructions = AIPersonality.getToneInstructions(toneMode);

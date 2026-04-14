@@ -132,6 +132,41 @@ export async function POST(req: Request) {
         content: responseText
       });
     }
+    
+    // STEP 4: Update session title if generic (Async-ish)
+    if (session_id) {
+      const { data: session } = await supabase
+        .from('chat_sessions')
+        .select('title')
+        .eq('id', session_id)
+        .single();
+      
+      const isGeneric = !session?.title || 
+                        session.title === 'New Chat' || 
+                        session.title.startsWith('Chat ') || 
+                        session.title.includes(new Date().toLocaleDateString());
+
+      if (isGeneric) {
+        // Fetch last few messages to generate a good title
+        const { data: sessionMessages } = await supabase
+          .from('chat_messages')
+          .select('content')
+          .eq('session_id', session_id)
+          .order('created_at', { ascending: true })
+          .limit(5);
+        
+        if (sessionMessages && sessionMessages.length >= 2) {
+          const contents = sessionMessages.map(m => m.content || "");
+          const title = await pipelineForAsync.generateSessionTitle(contents);
+          if (title) {
+            await supabase
+              .from('chat_sessions')
+              .update({ title })
+              .eq('id', session_id);
+          }
+        }
+      }
+    }
 
     return NextResponse.json({
       ...message,

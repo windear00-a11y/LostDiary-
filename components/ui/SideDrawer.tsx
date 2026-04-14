@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, User, Settings, Book, LogOut, Heart, Search, 
   Sparkles, BookOpen, PenLine, History, ChevronRight,
-  Plus, MessageSquare
+  Plus, MessageSquare, Wand2, Loader2
 } from 'lucide-react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
@@ -23,6 +23,7 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
   const router = useRouter();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [isGeneratingTitles, setIsGeneratingTitles] = useState(false);
 
   useEffect(() => {
     if (isOpen && user) {
@@ -30,6 +31,30 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
       chatService.fetchSessions(user.id).then(setSessions);
     }
   }, [isOpen, user]);
+
+  const handleGenerateTitles = async () => {
+    if (!user || isGeneratingTitles) return;
+    setIsGeneratingTitles(true);
+    try {
+      const genericSessions = sessions.filter(s => 
+        !s.title || 
+        s.title === 'New Chat' || 
+        s.title.startsWith('Chat ') || 
+        s.title.includes(new Date().toLocaleDateString())
+      );
+
+      for (const session of genericSessions) {
+        try {
+          const newTitle = await chatService.generateSessionTitle(user.id, session.id);
+          setSessions(prev => prev.map(s => s.id === session.id ? { ...s, title: newTitle } : s));
+        } catch (err) {
+          console.error(`Failed to generate title for session ${session.id}:`, err);
+        }
+      }
+    } finally {
+      setIsGeneratingTitles(false);
+    }
+  };
 
   const quickActions = [
     { icon: BookOpen, label: 'लाइफबुक', path: '/story', color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-500/10' },
@@ -98,7 +123,21 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
               {/* Chat History Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
-                  <h3 className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">चैट हिस्ट्री (Chat History)</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">चैट हिस्ट्री</h3>
+                    <button 
+                      onClick={handleGenerateTitles}
+                      disabled={isGeneratingTitles}
+                      className="p-1 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-md transition-colors group relative"
+                      title="Generate titles for all chats"
+                    >
+                      {isGeneratingTitles ? (
+                        <Loader2 className="w-3 h-3 text-indigo-500 animate-spin" />
+                      ) : (
+                        <Wand2 className="w-3 h-3 text-gray-300 group-hover:text-indigo-500 transition-colors" />
+                      )}
+                    </button>
+                  </div>
                   <button 
                     onClick={() => {
                       router.push('/');
