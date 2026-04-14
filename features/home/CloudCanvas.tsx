@@ -27,25 +27,13 @@ export default function CloudCanvas({ side, children, className = "", style }: C
     const measure = () => {
       if (!containerRef.current) return;
       const content = containerRef.current.querySelector('.cloud-content');
-      const parent = containerRef.current.parentElement;
       
-      if (content && parent) {
+      if (content) {
         const rect = content.getBoundingClientRect();
-        const parentWidth = parent.offsetWidth;
         
-        // Padding that favors width but is more compact for small text
-        const paddingX = parentWidth < 400 ? 80 : 120;
-        const paddingY = parentWidth < 400 ? 50 : 70;
-        
-        // Allow horizontal expansion but be smarter about small text
-        const maxWidth = Math.min(parentWidth - 20, 750);
-        
-        const newWidth = Math.min(maxWidth, Math.max(120, rect.width + paddingX));
-        const newHeight = Math.max(80, rect.height + paddingY);
-
         // Only update if change is significant to reduce jitter
-        if (Math.abs(newWidth - dimensions.width) > 2 || Math.abs(newHeight - dimensions.height) > 2) {
-          setDimensions({ width: newWidth, height: newHeight });
+        if (Math.abs(rect.width - dimensions.width) > 2 || Math.abs(rect.height - dimensions.height) > 2) {
+          setDimensions({ width: rect.width, height: rect.height });
         }
       }
     };
@@ -187,8 +175,8 @@ export default function CloudCanvas({ side, children, className = "", style }: C
   return (
     <div 
       ref={containerRef} 
-      className={`relative animate-float ${className}`}
-      style={{ width: dimensions.width, height: dimensions.height, ...style }}
+      className={`relative inline-block animate-float ${className}`}
+      style={style}
     >
       {/* cloud canvas */}
       <canvas
@@ -203,8 +191,8 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       />
 
       {/* content wrapper */}
-      <div className="absolute inset-0 flex items-center justify-center px-10 py-6 z-10">
-        <div className="cloud-content text-white text-center leading-relaxed max-w-full">
+      <div className="relative z-10 cloud-content px-10 py-6 flex items-center justify-center min-w-[120px] min-h-[80px]">
+        <div className="text-white text-center leading-relaxed max-w-full">
           {children}
         </div>
       </div>
