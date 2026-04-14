@@ -13,7 +13,14 @@ export default function CloudCanvas({ side, children, className = "", style }: C
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<number>(null);
+  const particlesRef = useRef<any[]>([]);
+  const dimensionsRef = useRef({ width: 280, height: 140 });
   const [dimensions, setDimensions] = useState({ width: 280, height: 140 });
+
+  // Update ref whenever state changes
+  useEffect(() => {
+    dimensionsRef.current = dimensions;
+  }, [dimensions]);
 
   // Measure content size more reliably
   useEffect(() => {
@@ -26,30 +33,31 @@ export default function CloudCanvas({ side, children, className = "", style }: C
         const rect = content.getBoundingClientRect();
         const parentWidth = parent.offsetWidth;
         
-        // Add padding and cap width based on parent container
-        // Scale padding for smaller screens
-        const paddingX = parentWidth < 400 ? 120 : 180;
-        const paddingY = parentWidth < 400 ? 100 : 140;
+        // Tighter padding for better wrapping
+        const paddingX = parentWidth < 400 ? 100 : 140;
+        const paddingY = parentWidth < 400 ? 80 : 110;
         
-        // Ensure we don't exceed parent width (minus some buffer for safety)
-        const maxWidth = Math.min(parentWidth - 10, 500);
+        // Ensure we don't exceed parent width
+        const maxWidth = Math.min(parentWidth - 10, 550);
         
-        setDimensions({ 
-          width: Math.min(maxWidth, Math.max(200, rect.width + paddingX)), 
-          height: Math.max(140, rect.height + paddingY) 
-        });
+        const newWidth = Math.min(maxWidth, Math.max(180, rect.width + paddingX));
+        const newHeight = Math.max(110, rect.height + paddingY);
+
+        // Only update if change is significant to reduce jitter
+        if (Math.abs(newWidth - dimensions.width) > 2 || Math.abs(newHeight - dimensions.height) > 2) {
+          setDimensions({ width: newWidth, height: newHeight });
+        }
       }
     };
 
     measure();
-    // Use a small delay to ensure content is rendered
     const timer = setTimeout(measure, 50);
     window.addEventListener('resize', measure);
     return () => {
       window.removeEventListener('resize', measure);
       clearTimeout(timer);
     };
-  }, [children]);
+  }, [children, dimensions.width, dimensions.height]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -58,38 +66,19 @@ export default function CloudCanvas({ side, children, className = "", style }: C
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const { width, height } = dimensions;
-    const margin = 100; // Extra space around the canvas to prevent clipping
-    canvas.width = width + margin * 2;
-    canvas.height = height + margin * 2;
-    
-    ctx.translate(margin, margin);
+    const margin = 100;
+    const color = side === "left" ? "34,211,238" : "168,85,247";
 
-    const color = side === "left" ? "34,211,238" : "168,85,247"; // Cyan vs Purple
-
-    // Particle system for internal movement
-    interface Particle {
-      x: number;
-      y: number;
-      r: number;
-      opacity: number;
-      vx: number;
-      vy: number;
-      sharp: boolean;
-      isWhite?: boolean;
-    }
-
-    const particles: Particle[] = [];
-
-    // Initialize particles in a dense, overlapping distribution
-    const createParticles = () => {
-      const countMultiplier = Math.min(2, (width * height) / (280 * 140));
+    // Initialize particles ONLY IF they don't exist
+    if (particlesRef.current.length === 0) {
+      const { width, height } = dimensionsRef.current;
+      const countMultiplier = 1.5;
       
-      // Layer 1: Large "Mist" (Base layer)
+      // Layer 1: Large "Mist"
       for (let i = 0; i < 60 * countMultiplier; i++) {
-        particles.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.7),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.6),
+        particlesRef.current.push({
+          x: width / 2 + (Math.random() - 0.5) * width,
+          y: height / 2 + (Math.random() - 0.5) * height,
           r: 50 + Math.random() * 70,
           opacity: 0.12 + Math.random() * 0.08,
           vx: (Math.random() - 0.5) * 0.05,
@@ -97,11 +86,11 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           sharp: false
         });
       }
-      // Layer 2: Medium "Core" puffs (Defining the puffy shape)
-      for (let i = 0; i < 120 * countMultiplier; i++) {
-        particles.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.6),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.5),
+      // Layer 2: Medium "Core"
+      for (let i = 0; i < 100 * countMultiplier; i++) {
+        particlesRef.current.push({
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.8),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.7),
           r: 30 + Math.random() * 50,
           opacity: 0.2 + Math.random() * 0.15,
           vx: (Math.random() - 0.5) * 0.08,
@@ -109,11 +98,11 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           sharp: false
         });
       }
-      // Layer 3: Sharp "Definition" puffs
-      for (let i = 0; i < 60 * countMultiplier; i++) {
-        particles.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.5),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.4),
+      // Layer 3: Sharp "Definition"
+      for (let i = 0; i < 50 * countMultiplier; i++) {
+        particlesRef.current.push({
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.6),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.5),
           r: 15 + Math.random() * 30,
           opacity: 0.35 + Math.random() * 0.2,
           vx: (Math.random() - 0.5) * 0.1,
@@ -121,11 +110,11 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           sharp: true
         });
       }
-      // Layer 4: Highlights (White puffs)
-      for (let i = 0; i < 25 * countMultiplier; i++) {
-        particles.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.5),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.4),
+      // Layer 4: Highlights
+      for (let i = 0; i < 20 * countMultiplier; i++) {
+        particlesRef.current.push({
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.6),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.5),
           r: 12 + Math.random() * 30,
           opacity: 0.25 + Math.random() * 0.2,
           vx: (Math.random() - 0.5) * 0.07,
@@ -134,26 +123,34 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           isWhite: true
         });
       }
-    };
-
-    createParticles();
+    }
 
     const animate = () => {
-      // Clear the ENTIRE canvas including margins
+      const { width, height } = dimensionsRef.current;
+      
+      // Update canvas size if needed without clearing particles
+      if (canvas.width !== width + margin * 2 || canvas.height !== height + margin * 2) {
+        canvas.width = width + margin * 2;
+        canvas.height = height + margin * 2;
+      }
+
+      ctx.save();
+      ctx.translate(margin, margin);
       ctx.clearRect(-margin, -margin, canvas.width, canvas.height);
 
-      particles.forEach(p => {
+      particlesRef.current.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
 
-        // Soft bounce within elliptical bounds - slightly larger to fill space
+        // Soft bounce within current dimensions
         const dx = p.x - width / 2;
         const dy = p.y - height / 2;
-        const normalizedDist = (dx * dx) / Math.pow(width / 2 + 20, 2) + (dy * dy) / Math.pow(height / 2 + 10, 2);
+        const normalizedDist = (dx * dx) / Math.pow(width / 2 + 30, 2) + (dy * dy) / Math.pow(height / 2 + 20, 2);
         
         if (normalizedDist > 1) {
-          p.vx *= -1;
-          p.vy *= -1;
+          // Instead of hard bounce, gently pull back to center
+          p.vx -= dx * 0.0001;
+          p.vy -= dy * 0.0001;
         }
 
         const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
@@ -176,6 +173,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
         ctx.fill();
       });
 
+      ctx.restore();
       requestRef.current = requestAnimationFrame(animate);
     };
 
@@ -184,7 +182,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [side, dimensions]);
+  }, [side]); // Only re-run if side changes
 
   return (
     <div 
