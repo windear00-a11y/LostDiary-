@@ -65,8 +65,8 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       // Layer 1: Large "Mist"
       for (let i = 0; i < 60 * countMultiplier; i++) {
         particlesRef.current.push({
-          x: width / 2 + (Math.random() - 0.5) * width,
-          y: height / 2 + (Math.random() - 0.5) * height,
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.8),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.7),
           r: 50 + Math.random() * 70,
           opacity: 0.12 + Math.random() * 0.08,
           vx: (Math.random() - 0.5) * 0.05,
@@ -77,8 +77,8 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       // Layer 2: Medium "Core"
       for (let i = 0; i < 100 * countMultiplier; i++) {
         particlesRef.current.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.8),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.7),
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.6),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.5),
           r: 30 + Math.random() * 50,
           opacity: 0.2 + Math.random() * 0.15,
           vx: (Math.random() - 0.5) * 0.08,
@@ -89,8 +89,8 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       // Layer 3: Sharp "Definition"
       for (let i = 0; i < 50 * countMultiplier; i++) {
         particlesRef.current.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.6),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.5),
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.4),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.3),
           r: 15 + Math.random() * 30,
           opacity: 0.35 + Math.random() * 0.2,
           vx: (Math.random() - 0.5) * 0.1,
@@ -101,8 +101,8 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       // Layer 4: Highlights
       for (let i = 0; i < 20 * countMultiplier; i++) {
         particlesRef.current.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.6),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.5),
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.4),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.3),
           r: 12 + Math.random() * 30,
           opacity: 0.25 + Math.random() * 0.2,
           vx: (Math.random() - 0.5) * 0.07,
@@ -130,10 +130,10 @@ export default function CloudCanvas({ side, children, className = "", style }: C
         p.x += p.vx;
         p.y += p.vy;
 
-        // Soft bounce within current dimensions
+        // Soft bounce within current dimensions - much tighter to wrap text closely
         const dx = p.x - width / 2;
         const dy = p.y - height / 2;
-        const normalizedDist = (dx * dx) / Math.pow(width / 2 + 30, 2) + (dy * dy) / Math.pow(height / 2 + 20, 2);
+        const normalizedDist = (dx * dx) / Math.pow(width / 2 + 10, 2) + (dy * dy) / Math.pow(height / 2 + 5, 2);
         
         if (normalizedDist > 1) {
           // Instead of hard bounce, gently pull back to center
@@ -191,7 +191,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       />
 
       {/* content wrapper */}
-      <div className="relative z-10 cloud-content px-10 py-6 flex items-center justify-center min-w-[120px] min-h-[80px]">
+      <div className="relative z-10 cloud-content px-4 py-2 flex items-center justify-center min-w-[60px] min-h-[40px]">
         <div className="text-white text-center leading-relaxed max-w-full">
           {children}
         </div>
