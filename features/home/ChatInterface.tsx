@@ -370,7 +370,7 @@ export const ChatInterface = () => {
       </AnimatePresence>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide pt-24 pb-6 relative z-10">
-        <div className="max-w-3xl mx-auto px-6">
+        <div className="max-w-3xl mx-auto px-4 md:px-6">
           <AnimatePresence>
             {loading ? (
               <motion.div 

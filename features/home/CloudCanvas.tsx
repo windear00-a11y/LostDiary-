@@ -19,16 +19,23 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
     const measure = () => {
       if (!containerRef.current) return;
       const content = containerRef.current.querySelector('.cloud-content');
-      if (content) {
+      const parent = containerRef.current.parentElement;
+      
+      if (content && parent) {
         const rect = content.getBoundingClientRect();
-        // Add padding and cap width for mobile
-        const paddingX = 120; // More padding for mist
-        const paddingY = 100;
-        const maxWidth = Math.min(window.innerWidth - 40, 450);
+        const parentWidth = parent.offsetWidth;
+        
+        // Add padding and cap width based on parent container
+        // Scale padding for smaller screens
+        const paddingX = parentWidth < 400 ? 80 : 120;
+        const paddingY = parentWidth < 400 ? 70 : 100;
+        
+        // Ensure we don't exceed parent width (minus some buffer for safety)
+        const maxWidth = Math.min(parentWidth - 10, 450);
         
         setDimensions({ 
-          width: Math.min(maxWidth, Math.max(240, rect.width + paddingX)), 
-          height: Math.max(140, rect.height + paddingY) 
+          width: Math.min(maxWidth, Math.max(180, rect.width + paddingX)), 
+          height: Math.max(120, rect.height + paddingY) 
         });
       }
     };

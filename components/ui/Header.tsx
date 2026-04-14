@@ -12,7 +12,7 @@ export const Header = () => {
 
   return (
     <>
-      <div className="fixed top-6 left-6 right-6 z-50 flex items-center justify-between pointer-events-none">
+      <div className="fixed top-4 md:top-6 left-4 md:left-6 right-4 md:right-6 z-50 flex items-center justify-between pointer-events-none">
         {/* Hamburger Button */}
         <motion.button
           whileHover={{ scale: 1.05 }}
