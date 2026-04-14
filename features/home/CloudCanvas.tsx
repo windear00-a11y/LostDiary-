@@ -83,53 +83,53 @@ export default function CloudCanvas({ side, children, className = "", style }: C
 
     // Initialize particles in a dense, overlapping distribution
     const createParticles = () => {
-      const countMultiplier = Math.min(1.5, (width * height) / (280 * 140));
+      const countMultiplier = Math.min(2, (width * height) / (280 * 140));
       
-      // Layer 1: Large, very soft "Mist" (Base layer)
-      for (let i = 0; i < 40 * countMultiplier; i++) {
+      // Layer 1: Large "Mist" (Base layer)
+      for (let i = 0; i < 60 * countMultiplier; i++) {
         particles.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.6),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.5),
-          r: 45 + Math.random() * 65,
-          opacity: 0.08 + Math.random() * 0.05,
-          vx: (Math.random() - 0.5) * 0.04, // Very slow
-          vy: (Math.random() - 0.5) * 0.04,
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.7),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.6),
+          r: 50 + Math.random() * 70,
+          opacity: 0.12 + Math.random() * 0.08,
+          vx: (Math.random() - 0.5) * 0.05,
+          vy: (Math.random() - 0.5) * 0.05,
           sharp: false
         });
       }
-      // Layer 2: Medium "Core" puffs (Defining the shape)
-      for (let i = 0; i < 80 * countMultiplier; i++) {
+      // Layer 2: Medium "Core" puffs (Defining the puffy shape)
+      for (let i = 0; i < 120 * countMultiplier; i++) {
         particles.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.5),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.4),
-          r: 25 + Math.random() * 45,
-          opacity: 0.15 + Math.random() * 0.1,
-          vx: (Math.random() - 0.5) * 0.06, // Very slow
-          vy: (Math.random() - 0.5) * 0.06,
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.6),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.5),
+          r: 30 + Math.random() * 50,
+          opacity: 0.2 + Math.random() * 0.15,
+          vx: (Math.random() - 0.5) * 0.08,
+          vy: (Math.random() - 0.5) * 0.08,
           sharp: false
         });
       }
       // Layer 3: Sharp "Definition" puffs
-      for (let i = 0; i < 40 * countMultiplier; i++) {
+      for (let i = 0; i < 60 * countMultiplier; i++) {
         particles.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.4),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.3),
-          r: 12 + Math.random() * 22,
-          opacity: 0.25 + Math.random() * 0.15,
-          vx: (Math.random() - 0.5) * 0.08, // Very slow
-          vy: (Math.random() - 0.5) * 0.08,
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.5),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.4),
+          r: 15 + Math.random() * 30,
+          opacity: 0.35 + Math.random() * 0.2,
+          vx: (Math.random() - 0.5) * 0.1,
+          vy: (Math.random() - 0.5) * 0.1,
           sharp: true
         });
       }
-      // Layer 4: Highlights
-      for (let i = 0; i < 15 * countMultiplier; i++) {
+      // Layer 4: Highlights (White puffs)
+      for (let i = 0; i < 25 * countMultiplier; i++) {
         particles.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.4),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.3),
-          r: 10 + Math.random() * 25,
-          opacity: 0.15 + Math.random() * 0.15,
-          vx: (Math.random() - 0.5) * 0.05,
-          vy: (Math.random() - 0.5) * 0.05,
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.5),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.4),
+          r: 12 + Math.random() * 30,
+          opacity: 0.25 + Math.random() * 0.2,
+          vx: (Math.random() - 0.5) * 0.07,
+          vy: (Math.random() - 0.5) * 0.07,
           sharp: Math.random() > 0.5,
           isWhite: true
         });
@@ -161,12 +161,12 @@ export default function CloudCanvas({ side, children, className = "", style }: C
 
         if (p.sharp) {
           gradient.addColorStop(0, `rgba(${pColor}, ${p.opacity})`);
-          gradient.addColorStop(0.5, `rgba(${pColor}, ${p.opacity * 0.5})`);
+          gradient.addColorStop(0.6, `rgba(${pColor}, ${p.opacity * 0.7})`);
           gradient.addColorStop(1, "rgba(255,255,255,0)");
         } else {
           gradient.addColorStop(0, `rgba(${pColor}, ${p.opacity})`);
-          gradient.addColorStop(0.4, `rgba(${pColor}, ${p.opacity * 0.4})`);
-          gradient.addColorStop(0.8, `rgba(${pColor}, ${p.opacity * 0.1})`);
+          gradient.addColorStop(0.5, `rgba(${pColor}, ${p.opacity * 0.5})`);
+          gradient.addColorStop(0.9, `rgba(${pColor}, ${p.opacity * 0.1})`);
           gradient.addColorStop(1, "rgba(255,255,255,0)");
         }
 
@@ -195,7 +195,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       {/* cloud canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute pointer-events-none"
+        className="absolute pointer-events-none blur-[2px]"
         style={{ 
           top: -100, 
           left: -100, 
