@@ -139,16 +139,17 @@ export default function CloudCanvas({ side, children, className = "", style }: C
     createParticles();
 
     const animate = () => {
-      ctx.clearRect(0, 0, width, height);
+      // Clear the ENTIRE canvas including margins
+      ctx.clearRect(-margin, -margin, canvas.width, canvas.height);
 
       particles.forEach(p => {
         p.x += p.vx;
         p.y += p.vy;
 
-        // Soft bounce within elliptical bounds
+        // Soft bounce within elliptical bounds - slightly larger to fill space
         const dx = p.x - width / 2;
         const dy = p.y - height / 2;
-        const normalizedDist = (dx * dx) / Math.pow(width / 2 - 30, 2) + (dy * dy) / Math.pow(height / 2 - 20, 2);
+        const normalizedDist = (dx * dx) / Math.pow(width / 2 + 20, 2) + (dy * dy) / Math.pow(height / 2 + 10, 2);
         
         if (normalizedDist > 1) {
           p.vx *= -1;
@@ -160,13 +161,14 @@ export default function CloudCanvas({ side, children, className = "", style }: C
 
         if (p.sharp) {
           gradient.addColorStop(0, `rgba(${pColor}, ${p.opacity})`);
-          gradient.addColorStop(0.7, `rgba(${pColor}, ${p.opacity * 0.8})`);
+          gradient.addColorStop(0.5, `rgba(${pColor}, ${p.opacity * 0.5})`);
+          gradient.addColorStop(1, "rgba(255,255,255,0)");
         } else {
           gradient.addColorStop(0, `rgba(${pColor}, ${p.opacity})`);
-          gradient.addColorStop(0.3, `rgba(${pColor}, ${p.opacity * 0.5})`);
-          gradient.addColorStop(0.6, `rgba(${pColor}, ${p.opacity * 0.1})`);
+          gradient.addColorStop(0.4, `rgba(${pColor}, ${p.opacity * 0.4})`);
+          gradient.addColorStop(0.8, `rgba(${pColor}, ${p.opacity * 0.1})`);
+          gradient.addColorStop(1, "rgba(255,255,255,0)");
         }
-        gradient.addColorStop(1, "rgba(255,255,255,0)");
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -193,7 +195,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       {/* cloud canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute pointer-events-none blur-[2px]"
+        className="absolute pointer-events-none"
         style={{ 
           top: -100, 
           left: -100, 
@@ -204,7 +206,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
 
       {/* content wrapper */}
       <div className="absolute inset-0 flex items-center justify-center px-14 py-10 z-10">
-        <div className="cloud-content text-white text-center leading-relaxed max-w-full drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
+        <div className="cloud-content text-white text-center leading-relaxed max-w-full">
           {children}
         </div>
       </div>
