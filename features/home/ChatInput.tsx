@@ -517,8 +517,8 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                       initial={{ opacity: 0 }}
                       animate={{ 
                         opacity: 1,
-                        left: caretCoords.x - 4, // Align tip horizontally
-                        top: caretCoords.y - 22  // Align tip vertically
+                        left: caretCoords.x - 6, // Align tip horizontally
+                        top: caretCoords.y - 2   // Lowered to the baseline
                       }}
                       exit={{ opacity: 0 }}
                       transition={{ type: 'spring', damping: 25, stiffness: 300, mass: 0.5 }}
@@ -528,27 +528,27 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                         {/* Tilted Feather icon to look like a real quill */}
                         <Feather className="w-6 h-6 text-gray-400 dark:text-gray-300 rotate-[15deg] transform-gpu" />
                         
-                        {/* Sharp, strong glow at the writing tip */}
+                        {/* Sharp, strong glow at the writing tip - Indigo color for visibility */}
                         <motion.div 
                           animate={{ 
                             scale: isTyping ? [1, 1.4, 1.1] : [1, 1.2, 1],
-                            opacity: isTyping ? [0.8, 1, 0.9] : [0.5, 0.8, 0.5]
+                            opacity: isTyping ? [0.9, 1, 0.9] : [0.6, 0.9, 0.6]
                           }}
                           transition={{ 
                             duration: isTyping ? 0.15 : 2, 
                             repeat: isTyping ? 0 : Infinity,
                             ease: "easeInOut" 
                           }}
-                          className="absolute bottom-[2px] left-[4px] w-1.5 h-1.5 bg-cyan-300 rounded-full blur-[1px] shadow-[0_0_8px_2px_rgba(34,211,238,1),0_0_15px_rgba(34,211,238,0.6)] z-30"
+                          className="absolute bottom-[1px] left-[3px] w-1.5 h-1.5 bg-indigo-400 rounded-full blur-[0.5px] shadow-[0_0_8px_2px_rgba(99,102,241,1),0_0_15px_rgba(99,102,241,0.6)] z-30"
                         />
                         
-                        {/* Subtle outer mist around the tip */}
+                        {/* Subtle outer indigo mist around the tip */}
                         <motion.div 
                           animate={{ 
-                            opacity: isTyping ? 0.4 : 0.2,
+                            opacity: isTyping ? 0.5 : 0.3,
                             scale: isTyping ? 1.5 : 1
                           }}
-                          className="absolute bottom-[-2px] left-0 w-4 h-4 bg-cyan-400/20 rounded-full blur-md -z-10"
+                          className="absolute bottom-[-1px] left-[-1px] w-4 h-4 bg-indigo-500/20 rounded-full blur-md -z-10"
                         />
                       </div>
                     </motion.div>
