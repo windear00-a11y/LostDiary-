@@ -11,28 +11,32 @@ interface CloudCanvasProps {
 export default function CloudCanvas({ side, children, className = "" }: CloudCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<number>(null);
-  const [dimensions, setDimensions] = useState({ width: 300, height: 150 });
+  const [dimensions, setDimensions] = useState({ width: 280, height: 140 });
 
-  // Measure content size
+  // Measure content size more reliably
   useEffect(() => {
-    if (!contentRef.current) return;
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        // Add padding for the cloud mist (approx 80px total padding)
+    const measure = () => {
+      if (!containerRef.current) return;
+      const content = containerRef.current.querySelector('.cloud-content');
+      if (content) {
+        const rect = content.getBoundingClientRect();
+        // Add padding and cap width for mobile
+        const paddingX = 100;
+        const paddingY = 80;
+        const maxWidth = Math.min(window.innerWidth - 40, 450);
+        
         setDimensions({ 
-          width: Math.max(200, width + 100), 
-          height: Math.max(120, height + 80) 
+          width: Math.min(maxWidth, Math.max(220, rect.width + paddingX)), 
+          height: Math.max(130, rect.height + paddingY) 
         });
       }
-    });
+    };
 
-    observer.observe(contentRef.current);
-    return () => observer.disconnect();
-  }, []);
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [children]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -57,73 +61,56 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
       vy: number;
       sharp: boolean;
       isWhite?: boolean;
+      angle: number; // For elliptical movement
+      dist: number;
     }
 
     const particles: Particle[] = [];
 
-    // Initialize particles based on current dimensions
+    // Initialize particles in an elliptical distribution
     const createParticles = () => {
-      const countMultiplier = (width * height) / (300 * 150);
+      const baseCount = 150;
+      const countMultiplier = Math.min(2, (width * height) / (280 * 140));
+      const totalParticles = baseCount * countMultiplier;
       
-      // Mist
-      for (let i = 0; i < 25 * countMultiplier; i++) {
+      for (let i = 0; i < totalParticles; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random(); // 0 to 1
+        
+        // Elliptical distribution
+        const x = width / 2 + Math.cos(angle) * (width / 2 - 40) * dist;
+        const y = height / 2 + Math.sin(angle) * (height / 2 - 30) * dist;
+        
+        const type = Math.random();
+        let r, opacity, sharp, isWhite = false;
+
+        if (type < 0.2) { // Mist
+          r = 35 + Math.random() * 45;
+          opacity = 0.06 + Math.random() * 0.04;
+          sharp = false;
+        } else if (type < 0.6) { // Core
+          r = 15 + Math.random() * 25;
+          opacity = 0.12 + Math.random() * 0.08;
+          sharp = false;
+        } else if (type < 0.8) { // Sharp
+          r = 8 + Math.random() * 12;
+          opacity = 0.2 + Math.random() * 0.1;
+          sharp = true;
+        } else if (type < 0.95) { // Sparkles
+          r = 2 + Math.random() * 5;
+          opacity = 0.3 + Math.random() * 0.2;
+          sharp = false;
+        } else { // Highlights
+          r = 6 + Math.random() * 12;
+          opacity = 0.15 + Math.random() * 0.15;
+          sharp = Math.random() > 0.5;
+          isWhite = true;
+        }
+
         particles.push({
-          x: 40 + Math.random() * (width - 80),
-          y: 30 + Math.random() * (height - 60),
-          r: 30 + Math.random() * 50,
-          opacity: 0.08 + Math.random() * 0.05,
-          vx: (Math.random() - 0.5) * 0.1,
-          vy: (Math.random() - 0.5) * 0.1,
-          sharp: false
-        });
-      }
-      // Core
-      for (let i = 0; i < 50 * countMultiplier; i++) {
-        particles.push({
-          x: 50 + Math.random() * (width - 100),
-          y: 40 + Math.random() * (height - 80),
-          r: 20 + Math.random() * 35,
-          opacity: 0.15 + Math.random() * 0.1,
-          vx: (Math.random() - 0.5) * 0.2,
-          vy: (Math.random() - 0.5) * 0.2,
-          sharp: false
-        });
-      }
-      // Sharp Definition
-      for (let i = 0; i < 30 * countMultiplier; i++) {
-        particles.push({
-          x: 60 + Math.random() * (width - 120),
-          y: 50 + Math.random() * (height - 100),
-          r: 8 + Math.random() * 15,
-          opacity: 0.25 + Math.random() * 0.15,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          sharp: true
-        });
-      }
-      // Sparkles
-      for (let i = 0; i < 60 * countMultiplier; i++) {
-        particles.push({
-          x: 60 + Math.random() * (width - 120),
-          y: 50 + Math.random() * (height - 100),
-          r: 2 + Math.random() * 6,
-          opacity: 0.4 + Math.random() * 0.2,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          sharp: false
-        });
-      }
-      // Highlights
-      for (let i = 0; i < 12 * countMultiplier; i++) {
-        particles.push({
-          x: 60 + Math.random() * (width - 120),
-          y: 40 + Math.random() * (height - 80),
-          r: 6 + Math.random() * 15,
-          opacity: 0.2 + Math.random() * 0.2,
+          x, y, r, opacity, sharp, isWhite, angle, dist,
           vx: (Math.random() - 0.5) * 0.15,
-          vy: (Math.random() - 0.5) * 0.15,
-          sharp: Math.random() > 0.5,
-          isWhite: true
+          vy: (Math.random() - 0.5) * 0.15
         });
       }
     };
@@ -137,9 +124,15 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
         p.x += p.vx;
         p.y += p.vy;
 
-        // Dynamic boundaries based on current dimensions
-        if (p.x < 30 || p.x > width - 30) p.vx *= -1;
-        if (p.y < 20 || p.y > height - 20) p.vy *= -1;
+        // Soft bounce within elliptical bounds
+        const dx = p.x - width / 2;
+        const dy = p.y - height / 2;
+        const normalizedDist = (dx * dx) / Math.pow(width / 2 - 20, 2) + (dy * dy) / Math.pow(height / 2 - 15, 2);
+        
+        if (normalizedDist > 1) {
+          p.vx *= -0.8;
+          p.vy *= -0.8;
+        }
 
         const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
         const pColor = p.isWhite ? "255,255,255" : color;
@@ -179,15 +172,14 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
       {/* cloud canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 blur-[1.5px] pointer-events-none"
+        className="absolute inset-0 blur-[1.2px] pointer-events-none"
       />
 
-      {/* content wrapper for measurement */}
-      <div 
-        ref={contentRef}
-        className="absolute inset-0 flex items-center justify-center px-12 py-8 text-white text-center leading-relaxed z-10"
-      >
-        {children}
+      {/* content wrapper */}
+      <div className="absolute inset-0 flex items-center justify-center px-12 py-8 z-10">
+        <div className="cloud-content text-white text-center leading-relaxed max-w-full">
+          {children}
+        </div>
       </div>
     </div>
   );
