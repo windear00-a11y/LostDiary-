@@ -127,119 +127,144 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                 </button>
               )}
 
-              <div className={`relative px-6 py-4 max-w-[85%] md:max-w-[70%] text-white text-lg leading-snug rounded-[40px] backdrop-blur-xl transition-all duration-500 ${
-                !isUser ? "bg-cyan-400/20" : "bg-purple-500/20"
-              }`}>
-                {/* Glow Layer */}
+              <div className="relative max-w-[85%] md:max-w-[75%] group">
+                {/* 🌫️ OUTER GLOW (mist spread) */}
                 <div
                   className={`
-                    absolute inset-0 rounded-[40px] blur-2xl opacity-70 pointer-events-none
+                    absolute inset-0 scale-125 blur-3xl opacity-60 pointer-events-none
                     ${!isUser ? "bg-cyan-400" : "bg-purple-500"}
                   `}
+                  style={{
+                    borderRadius: '60% 40% 50% 70% / 60% 50% 70% 40%'
+                  }}
                 />
 
-                {/* Cloud texture illusion */}
-                <div
-                  className="absolute inset-0 rounded-[40px] bg-[radial-gradient(circle_at_30%_30%,white_10%,transparent_60%)] opacity-20 pointer-events-none"
-                />
+                {/* ☁️ MAIN CLOUD BODY */}
+                <motion.div
+                  className={`
+                    relative px-6 py-5 text-white text-lg leading-relaxed
+                    backdrop-blur-xl animate-float
+                    ${!isUser ? "bg-cyan-400/20" : "bg-purple-500/20"}
+                    shadow-[0_0_40px_rgba(168,85,247,0.6),0_0_80px_rgba(168,85,247,0.4)]
+                  `}
+                  style={{
+                    borderRadius: '60% 40% 50% 70% / 60% 50% 70% 40%',
+                    boxShadow: !isUser 
+                      ? '0 0 40px rgba(34,211,238,0.6), 0 0 80px rgba(34,211,238,0.4)' 
+                      : '0 0 40px rgba(168,85,247,0.6), 0 0 80px rgba(168,85,247,0.4)'
+                  }}
+                >
+                  {/* 🌈 INNER GLOW */}
+                  <div
+                    className={`
+                      absolute inset-0 rounded-[inherit] blur-2xl opacity-50 pointer-events-none
+                      ${!isUser ? "bg-cyan-300" : "bg-purple-400"}
+                    `}
+                  />
 
-                {/* Message Content (Z-index to stay above cloud) */}
-                <div className="relative z-10">
-                  {/* Quoted Message (Reply Context) */}
-                  {msg.metadata?.reply_to && (
-                    <div className={`mb-2 p-2 rounded-xl border-l-4 text-xs bg-white/10 backdrop-blur-sm ${!isUser ? 'border-cyan-300' : 'border-purple-300'}`}>
-                      <p className="font-bold mb-0.5">{msg.metadata.reply_to.role === 'user' ? 'You' : 'WinDear'}</p>
-                      <p className="truncate font-serif italic">{msg.metadata.reply_to.content || 'Attachment'}</p>
-                    </div>
-                  )}
+                  {/* 🌫️ NOISE TEXTURE (CSS fallback for noise) */}
+                  <div className="absolute inset-0 opacity-10 mix-blend-overlay pointer-events-none rounded-[inherit] bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
 
-                  {/* Task 6: Validate ChatBubble - Ensure it reads content correctly with fallback */}
-                  {msg.type === 'text' && (
-                    <div className="text-[16px] leading-relaxed font-serif italic whitespace-pre-wrap drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-                      {msg.content || msg.text || (
-                        <span className="opacity-50 italic">Empty message</span>
-                      )}
-                      {/* Link Previews */}
-                      {extractUrls(msg.content || msg.text || '').map((url, i) => (
-                        <a key={i} href={url} target="_blank" rel="noopener noreferrer" className={`block mt-3 p-3 rounded-xl border bg-white/10 border-white/20 hover:bg-white/20 transition-all`}>
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 bg-white/20`}>
-                              <LinkIcon className="w-5 h-5 text-white" />
+                  {/* ✨ LIGHT SPOT (cloud highlight) */}
+                  <div className="absolute top-2 left-4 w-20 h-10 bg-white/20 blur-xl rounded-full pointer-events-none" />
+
+                  {/* Message Content (Z-index to stay above cloud) */}
+                  <div className="relative z-10">
+                    {/* Quoted Message (Reply Context) */}
+                    {msg.metadata?.reply_to && (
+                      <div className={`mb-3 p-2.5 rounded-2xl border-l-4 text-xs bg-white/10 backdrop-blur-sm ${!isUser ? 'border-cyan-300' : 'border-purple-300'}`}>
+                        <p className="font-bold mb-1">{msg.metadata.reply_to.role === 'user' ? 'You' : 'WinDear'}</p>
+                        <p className="truncate font-serif italic opacity-80">{msg.metadata.reply_to.content || 'Attachment'}</p>
+                      </div>
+                    )}
+
+                    {/* Task 6: Validate ChatBubble - Ensure it reads content correctly with fallback */}
+                    {msg.type === 'text' && (
+                      <div className="text-[17px] leading-relaxed font-light tracking-wide whitespace-pre-wrap drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
+                        {msg.content || msg.text || (
+                          <span className="opacity-50 italic">Empty message</span>
+                        )}
+                        {/* Link Previews */}
+                        {extractUrls(msg.content || msg.text || '').map((url, i) => (
+                          <a key={i} href={url} target="_blank" rel="noopener noreferrer" className={`block mt-4 p-3 rounded-2xl border bg-white/10 border-white/20 hover:bg-white/20 transition-all`}>
+                            <div className="flex items-center gap-3">
+                              <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-white/20`}>
+                                <LinkIcon className="w-5 h-5 text-white" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-xs font-bold truncate text-white">Link Preview</p>
+                                <p className="text-[10px] truncate text-white/70">{new URL(url).hostname}</p>
+                              </div>
                             </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs font-bold truncate text-white">Link Preview</p>
-                              <p className="text-[10px] truncate text-white/70">{new URL(url).hostname}</p>
-                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {msg.type === 'image' && (
+                      <div className="relative w-full overflow-hidden rounded-2xl mt-2 shadow-2xl">
+                        <img 
+                          src={msg.media_url || ''} 
+                          alt="Attachment" 
+                          className="w-full h-auto object-cover max-h-[400px]"
+                          referrerPolicy="no-referrer"
+                        />
+                      </div>
+                    )}
+                    
+                    {msg.type === 'video' && (
+                      <video src={msg.media_url || ''} controls className="max-w-full rounded-2xl mt-2 shadow-2xl" />
+                    )}
+                    
+                    {msg.type === 'audio' && (
+                      <audio src={msg.media_url || ''} controls className="max-w-full mt-2" />
+                    )}
+                    
+                    {msg.type === 'location' && msg.metadata?.latitude && msg.metadata?.longitude && (
+                      <div className="mt-2 rounded-2xl overflow-hidden border border-white/20 bg-black/40 backdrop-blur-md">
+                        <a 
+                          href={`https://www.google.com/maps?q=${msg.metadata.latitude},${msg.metadata.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block relative group/map"
+                        >
+                          <div className="bg-white/5 h-24 flex items-center justify-center transition-colors group-hover/map:bg-white/10">
+                            <MapPin className="w-8 h-8 text-rose-500" />
+                          </div>
+                          <div className="p-3 text-sm font-medium flex items-center justify-between border-t border-white/10">
+                            <span className="text-white">View on Maps</span>
+                            <span className="text-xs text-white/50 font-mono">
+                              {msg.metadata.latitude.toFixed(4)}, {msg.metadata.longitude.toFixed(4)}
+                            </span>
                           </div>
                         </a>
-                      ))}
-                    </div>
-                  )}
-                  
-                  {msg.type === 'image' && (
-                    <div className="relative w-full overflow-hidden rounded-xl mt-1 shadow-2xl">
-                      <img 
-                        src={msg.media_url || ''} 
-                        alt="Attachment" 
-                        className="w-full h-auto object-cover max-h-[400px]"
-                        referrerPolicy="no-referrer"
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Thought Bubble Tail for User */}
+                  {isUser && (
+                    <div className="absolute -bottom-6 -right-2 flex flex-col items-end gap-1.5 pointer-events-none">
+                      <motion.div 
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        className="w-5 h-5 bg-purple-400/60 rounded-full blur-[2px] shadow-[0_0_20px_rgba(168,85,247,0.5)]" 
+                      />
+                      <motion.div 
+                        animate={{ scale: [1, 0.8, 1] }}
+                        transition={{ duration: 3, repeat: Infinity, delay: 1 }}
+                        className="w-3 h-3 bg-purple-500/40 rounded-full mr-1 blur-[1px]" 
                       />
                     </div>
                   )}
-                  
-                  {msg.type === 'video' && (
-                    <video src={msg.media_url || ''} controls className="max-w-full rounded-xl mt-1 shadow-2xl" />
-                  )}
-                  
-                  {msg.type === 'audio' && (
-                    <audio src={msg.media_url || ''} controls className="max-w-full mt-1" />
-                  )}
-                  
-                  {msg.type === 'location' && msg.metadata?.latitude && msg.metadata?.longitude && (
-                    <div className="mt-1 rounded-xl overflow-hidden border border-white/20 bg-black/40 backdrop-blur-md">
-                      <a 
-                        href={`https://www.google.com/maps?q=${msg.metadata.latitude},${msg.metadata.longitude}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block relative group"
-                      >
-                        <div className="bg-white/5 h-24 flex items-center justify-center transition-colors group-hover:bg-white/10">
-                          <MapPin className="w-8 h-8 text-rose-500" />
-                        </div>
-                        <div className="p-3 text-sm font-medium flex items-center justify-between border-t border-white/10">
-                          <span className="text-white">View on Maps</span>
-                          <span className="text-xs text-white/50 font-mono">
-                            {msg.metadata.latitude.toFixed(4)}, {msg.metadata.longitude.toFixed(4)}
-                          </span>
-                        </div>
-                      </a>
-                    </div>
-                  )}
-                </div>
 
-                {/* Thought Bubble Tail for User */}
-                {isUser && (
-                  <div className="absolute -bottom-6 -right-2 flex flex-col items-end gap-1.5 pointer-events-none">
-                    <motion.div 
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 4, repeat: Infinity }}
-                      className="w-5 h-5 bg-purple-400/60 rounded-full blur-[2px] shadow-[0_0_20px_rgba(168,85,247,0.5)]" 
-                    />
-                    <motion.div 
-                      animate={{ scale: [1, 0.8, 1] }}
-                      transition={{ duration: 3, repeat: Infinity, delay: 1 }}
-                      className="w-3 h-3 bg-purple-500/40 rounded-full mr-1 blur-[1px]" 
-                    />
-                  </div>
-                )}
-
-                {/* AI Tail */}
-                {!isUser && (
-                  <div className="absolute -bottom-6 -left-2 flex flex-col items-start gap-1.5 pointer-events-none">
-                    <motion.div 
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 4, repeat: Infinity }}
-                      className="w-5 h-5 bg-cyan-400/60 rounded-full blur-[2px] shadow-[0_0_20px_rgba(6,182,212,0.5)]" 
+                  {/* AI Tail */}
+                  {!isUser && (
+                    <div className="absolute -bottom-6 -left-2 flex flex-col items-start gap-1.5 pointer-events-none">
+                      <motion.div 
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 4, repeat: Infinity }}
+                        className="w-5 h-5 bg-cyan-400/60 rounded-full blur-[2px] shadow-[0_0_20px_rgba(6,182,212,0.5)]" 
                     />
                     <motion.div 
                       animate={{ scale: [1, 0.8, 1] }}
@@ -248,7 +273,8 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                     />
                   </div>
                 )}
-              </div>
+              </motion.div>
+            </div>
               
               {/* Timestamp placeholder or small label */}
               <div className={`flex items-center gap-1.5 px-2 ${isUser ? 'justify-end' : 'justify-start'}`}>

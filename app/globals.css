@@ -46,6 +46,16 @@
   .magic-pulse {
     animation: caret-blink 1.2s ease-in-out infinite;
   }
+
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+    100% { transform: translateY(0px); }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
 }
 
 @keyframes shimmer {
