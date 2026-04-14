@@ -133,7 +133,7 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                 side={isUser ? 'right' : 'left'}
                 style={{ animationDelay: `${index * 0.7}s` }}
               >
-                <div className="w-full">
+                <div className="max-w-full">
                   {/* Quoted Message (Reply Context) */}
                   {msg.metadata?.reply_to && (
                     <div className={`mb-3 p-2.5 rounded-2xl border-l-4 text-xs bg-white/10 backdrop-blur-sm ${!isUser ? 'border-cyan-300' : 'border-purple-300'}`}>
