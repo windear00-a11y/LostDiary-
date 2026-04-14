@@ -22,20 +22,25 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
       if (content) {
         const rect = content.getBoundingClientRect();
         // Add padding and cap width for mobile
-        const paddingX = 100;
-        const paddingY = 80;
+        const paddingX = 120; // More padding for mist
+        const paddingY = 100;
         const maxWidth = Math.min(window.innerWidth - 40, 450);
         
         setDimensions({ 
-          width: Math.min(maxWidth, Math.max(220, rect.width + paddingX)), 
-          height: Math.max(130, rect.height + paddingY) 
+          width: Math.min(maxWidth, Math.max(240, rect.width + paddingX)), 
+          height: Math.max(140, rect.height + paddingY) 
         });
       }
     };
 
     measure();
+    // Use a small delay to ensure content is rendered
+    const timer = setTimeout(measure, 50);
     window.addEventListener('resize', measure);
-    return () => window.removeEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+      clearTimeout(timer);
+    };
   }, [children]);
 
   useEffect(() => {
@@ -61,56 +66,61 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
       vy: number;
       sharp: boolean;
       isWhite?: boolean;
-      angle: number; // For elliptical movement
-      dist: number;
     }
 
     const particles: Particle[] = [];
 
-    // Initialize particles in an elliptical distribution
+    // Initialize particles in a dense, overlapping distribution
     const createParticles = () => {
-      const baseCount = 150;
-      const countMultiplier = Math.min(2, (width * height) / (280 * 140));
-      const totalParticles = baseCount * countMultiplier;
+      const countMultiplier = Math.min(1.5, (width * height) / (280 * 140));
       
-      for (let i = 0; i < totalParticles; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const dist = Math.random(); // 0 to 1
-        
-        // Elliptical distribution
-        const x = width / 2 + Math.cos(angle) * (width / 2 - 40) * dist;
-        const y = height / 2 + Math.sin(angle) * (height / 2 - 30) * dist;
-        
-        const type = Math.random();
-        let r, opacity, sharp, isWhite = false;
-
-        if (type < 0.2) { // Mist
-          r = 35 + Math.random() * 45;
-          opacity = 0.06 + Math.random() * 0.04;
-          sharp = false;
-        } else if (type < 0.6) { // Core
-          r = 15 + Math.random() * 25;
-          opacity = 0.12 + Math.random() * 0.08;
-          sharp = false;
-        } else if (type < 0.8) { // Sharp
-          r = 8 + Math.random() * 12;
-          opacity = 0.2 + Math.random() * 0.1;
-          sharp = true;
-        } else if (type < 0.95) { // Sparkles
-          r = 2 + Math.random() * 5;
-          opacity = 0.3 + Math.random() * 0.2;
-          sharp = false;
-        } else { // Highlights
-          r = 6 + Math.random() * 12;
-          opacity = 0.15 + Math.random() * 0.15;
-          sharp = Math.random() > 0.5;
-          isWhite = true;
-        }
-
+      // Layer 1: Large, very soft "Mist" (Base layer)
+      for (let i = 0; i < 40 * countMultiplier; i++) {
         particles.push({
-          x, y, r, opacity, sharp, isWhite, angle, dist,
-          vx: (Math.random() - 0.5) * 0.15,
-          vy: (Math.random() - 0.5) * 0.15
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.6),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.5),
+          r: 45 + Math.random() * 65,
+          opacity: 0.08 + Math.random() * 0.05,
+          vx: (Math.random() - 0.5) * 0.04, // Very slow
+          vy: (Math.random() - 0.5) * 0.04,
+          sharp: false
+        });
+      }
+      // Layer 2: Medium "Core" puffs (Defining the shape)
+      for (let i = 0; i < 80 * countMultiplier; i++) {
+        particles.push({
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.5),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.4),
+          r: 25 + Math.random() * 45,
+          opacity: 0.15 + Math.random() * 0.1,
+          vx: (Math.random() - 0.5) * 0.06, // Very slow
+          vy: (Math.random() - 0.5) * 0.06,
+          sharp: false
+        });
+      }
+      // Layer 3: Sharp "Definition" puffs
+      for (let i = 0; i < 40 * countMultiplier; i++) {
+        particles.push({
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.4),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.3),
+          r: 12 + Math.random() * 22,
+          opacity: 0.25 + Math.random() * 0.15,
+          vx: (Math.random() - 0.5) * 0.08, // Very slow
+          vy: (Math.random() - 0.5) * 0.08,
+          sharp: true
+        });
+      }
+      // Layer 4: Highlights
+      for (let i = 0; i < 15 * countMultiplier; i++) {
+        particles.push({
+          x: width / 2 + (Math.random() - 0.5) * (width * 0.4),
+          y: height / 2 + (Math.random() - 0.5) * (height * 0.3),
+          r: 10 + Math.random() * 25,
+          opacity: 0.15 + Math.random() * 0.15,
+          vx: (Math.random() - 0.5) * 0.05,
+          vy: (Math.random() - 0.5) * 0.05,
+          sharp: Math.random() > 0.5,
+          isWhite: true
         });
       }
     };
@@ -127,11 +137,11 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
         // Soft bounce within elliptical bounds
         const dx = p.x - width / 2;
         const dy = p.y - height / 2;
-        const normalizedDist = (dx * dx) / Math.pow(width / 2 - 20, 2) + (dy * dy) / Math.pow(height / 2 - 15, 2);
+        const normalizedDist = (dx * dx) / Math.pow(width / 2 - 30, 2) + (dy * dy) / Math.pow(height / 2 - 20, 2);
         
         if (normalizedDist > 1) {
-          p.vx *= -0.8;
-          p.vy *= -0.8;
+          p.vx *= -1;
+          p.vy *= -1;
         }
 
         const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
@@ -172,12 +182,12 @@ export default function CloudCanvas({ side, children, className = "" }: CloudCan
       {/* cloud canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 blur-[1.2px] pointer-events-none"
+        className="absolute inset-0 blur-[2px] pointer-events-none"
       />
 
       {/* content wrapper */}
-      <div className="absolute inset-0 flex items-center justify-center px-12 py-8 z-10">
-        <div className="cloud-content text-white text-center leading-relaxed max-w-full">
+      <div className="absolute inset-0 flex items-center justify-center px-14 py-10 z-10">
+        <div className="cloud-content text-white text-center leading-relaxed max-w-full drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
           {children}
         </div>
       </div>
