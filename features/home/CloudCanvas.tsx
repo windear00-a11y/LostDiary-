@@ -63,32 +63,51 @@ export default function CloudCanvas({ side, children, className = "", style }: C
     // Initialize particles ONLY IF they don't exist
     if (particlesRef.current.length === 0) {
       const { width, height } = dimensionsRef.current;
-      const countMultiplier = 0.5; // Even fewer particles for a cleaner look
+      const countMultiplier = 0.8; // Increased for better visibility
       
-      // Layer 1: Soft base puffs
-      for (let i = 0; i < 15 * countMultiplier; i++) {
+      // Layer 1: Soft base puffs (Increased opacity)
+      for (let i = 0; i < 20 * countMultiplier; i++) {
         particlesRef.current.push({
           x: width / 2 + (Math.random() - 0.5) * width,
           y: height / 2 + (Math.random() - 0.5) * height,
-          r: 30 + Math.random() * 40,
-          opacity: 0.08 + Math.random() * 0.05,
-          vx: (Math.random() - 0.5) * 0.005, // Almost static
+          r: 35 + Math.random() * 45,
+          opacity: 0.18 + Math.random() * 0.1, // Increased visibility
+          vx: (Math.random() - 0.5) * 0.005,
           vy: (Math.random() - 0.5) * 0.005,
           sharp: false,
-          isForeground: Math.random() < 0.1 // 10% chance to be in front
+          isForeground: Math.random() < 0.1
         });
       }
-      // Layer 2: Medium puffy circles
-      for (let i = 0; i < 25 * countMultiplier; i++) {
+      // Layer 2: Medium puffy circles (Increased opacity)
+      for (let i = 0; i < 35 * countMultiplier; i++) {
         particlesRef.current.push({
           x: width / 2 + (Math.random() - 0.5) * width,
           y: height / 2 + (Math.random() - 0.5) * height,
-          r: 20 + Math.random() * 30,
-          opacity: 0.12 + Math.random() * 0.08,
+          r: 25 + Math.random() * 35,
+          opacity: 0.22 + Math.random() * 0.15, // Increased visibility
           vx: (Math.random() - 0.5) * 0.008,
           vy: (Math.random() - 0.5) * 0.008,
           sharp: false,
-          isForeground: Math.random() < 0.1 // 10% chance to be in front
+          isForeground: Math.random() < 0.1
+        });
+      }
+
+      // Layer 3: The "Tail" - Points toward the sender
+      const tailX = side === "right" ? width * 0.85 : width * 0.15;
+      const tailY = height * 0.85;
+      
+      for (let i = 0; i < 10; i++) {
+        const offset = i * 5;
+        particlesRef.current.push({
+          x: side === "right" ? tailX + offset : tailX - offset,
+          y: tailY + offset * 0.4,
+          r: 18 - i * 1.5, // Tapering off
+          opacity: 0.25 - i * 0.02,
+          vx: (Math.random() - 0.5) * 0.005,
+          vy: (Math.random() - 0.5) * 0.005,
+          sharp: false,
+          isTail: true,
+          isForeground: false
         });
       }
     }
@@ -116,11 +135,12 @@ export default function CloudCanvas({ side, children, className = "", style }: C
         p.y += p.vy;
 
         // Soft bounce within current dimensions - very tight to text
+        // Don't pull tail particles back to center to maintain their shape
         const dx = p.x - width / 2;
         const dy = p.y - height / 2;
         const normalizedDist = (dx * dx) / Math.pow(width / 2 + 5, 2) + (dy * dy) / Math.pow(height / 2 + 2, 2);
         
-        if (normalizedDist > 1) {
+        if (normalizedDist > 1 && !p.isTail) {
           p.vx -= dx * 0.00002; // Barely moving
           p.vy -= dy * 0.00002;
         }
