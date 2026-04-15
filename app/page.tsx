@@ -20,7 +20,7 @@ export default function LandingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-transparent text-[#111827] dark:text-[#fdfcfb] selection:bg-indigo-100 selection:text-indigo-900">
+    <main className="min-h-screen bg-transparent text-slate-200 selection:bg-indigo-500/30 selection:text-indigo-200">
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-6">
         <div className="max-w-4xl mx-auto text-center space-y-8">
@@ -30,7 +30,7 @@ export default function LandingPage() {
             transition={{ duration: 0.8 }}
             className="space-y-4"
           >
-            <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight leading-[1.1]">
+            <h1 className="text-5xl md:text-7xl font-serif font-bold tracking-tight leading-[1.1] text-white">
               WinDear turns <br />
               <span className="italic text-indigo-600 dark:text-indigo-400">your life into your story.</span>
             </h1>
@@ -89,7 +89,7 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-white dark:bg-[#161616] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-gray-800/50">
                 <PenLine className="w-5 h-5 text-indigo-500" />
               </div>
-              <h3 className="text-xl font-bold">1. Write</h3>
+              <h3 className="text-xl font-bold text-white">1. Write</h3>
               <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
                 Share your thoughts, photos, or voice. Just honest moments from your life.
               </p>
@@ -98,7 +98,7 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-white dark:bg-[#161616] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-gray-800/50">
                 <Sparkles className="w-5 h-5 text-indigo-500" />
               </div>
-              <h3 className="text-xl font-bold">2. Reflect</h3>
+              <h3 className="text-xl font-bold text-white">2. Reflect</h3>
               <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
                 WinDear listens, finding the patterns and beauty unique to your journey.
               </p>
@@ -107,7 +107,7 @@ export default function LandingPage() {
               <div className="w-12 h-12 bg-white dark:bg-[#161616] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-gray-800/50">
                 <Heart className="w-5 h-5 text-indigo-500" />
               </div>
-              <h3 className="text-xl font-bold">3. Grow</h3>
+              <h3 className="text-xl font-bold text-white">3. Grow</h3>
               <p className="text-gray-500 dark:text-gray-400 leading-relaxed">
                 Watch your story evolve into a beautiful narrative of your personal growth.
               </p>
@@ -125,7 +125,7 @@ export default function LandingPage() {
             viewport={{ once: true }}
             className="space-y-6"
           >
-            <h2 className="text-3xl md:text-4xl font-serif italic leading-tight">
+            <h2 className="text-3xl md:text-4xl font-serif italic leading-tight text-slate-100">
               &ldquo;Your life is already a masterpiece. <br />
               We just help you read it.&rdquo;
             </h2>

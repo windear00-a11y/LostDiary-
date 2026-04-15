@@ -69,7 +69,7 @@ function AuthForm() {
   };
 
   return (
-    <main className="min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <main className="min-h-screen bg-transparent flex flex-col items-center justify-center p-6 relative overflow-hidden">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -154,7 +154,7 @@ function AuthForm() {
                   <div className="w-full border-t border-gray-100 dark:border-gray-800/50"></div>
                 </div>
                 <div className="relative flex justify-center text-xs uppercase tracking-widest">
-                  <span className="bg-[#fdfcfb] dark:bg-[#0d0d0d] px-4 text-gray-400">or</span>
+                  <span className="bg-[#02040a] px-4 text-gray-400">or</span>
                 </div>
               </div>
 
@@ -200,7 +200,7 @@ function AuthForm() {
 
 export default function AuthPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#F9FAFB] dark:bg-[#0A0A0A]"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#02040a]"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>}>
       <AuthForm />
     </Suspense>
   );

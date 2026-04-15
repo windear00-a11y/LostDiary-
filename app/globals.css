@@ -14,13 +14,13 @@
 @layer base {
   html, body {
     @apply w-full overflow-x-hidden antialiased;
-    background-color: transparent;
-    color: var(--color-text-light);
+    background-color: #02040a;
+    color: #f8fafc;
   }
 
   .dark body {
-    background-color: transparent;
-    color: var(--color-text-dark);
+    background-color: #02040a;
+    color: #f8fafc;
   }
 }
 
