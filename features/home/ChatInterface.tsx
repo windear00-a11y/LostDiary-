@@ -10,6 +10,7 @@ import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { StoryPreview } from './StoryPreview';
 import { StoryPreviewCard } from '@/features/story/StoryPreviewCard';
+import { FeatherGallery } from './FeatherGallery';
 import { GoogleGenAI } from "@google/genai";
 import { Header } from '@/components/ui/Header';
 import { Loader2, Image as ImageIcon, Sparkles, PenLine, Heart, BookOpen } from 'lucide-react';
@@ -37,6 +38,7 @@ const EMPTY_STATE: Record<string, {
       { icon: PenLine, label: "Write a Memory", color: "text-emerald-500", prompt: "Look at my past memories and ask me a thoughtful question to help me start writing a new memory." },
       { icon: Heart, label: "How did it feel?", color: "text-rose-500", prompt: "Based on my emotional history, ask me a gentle question about how I'm feeling right now." },
       { icon: BookOpen, label: "View LifeBook", color: "text-amber-500", path: "/story" },
+      { icon: Feather, label: "Preview Icons", color: "text-gray-400", isPreview: true },
     ]
   },
   hi: { 
@@ -47,6 +49,7 @@ const EMPTY_STATE: Record<string, {
       { icon: PenLine, label: "एक याद लिखें", color: "text-emerald-500", prompt: "Look at my past memories and ask me a thoughtful question to help me start writing a new memory." },
       { icon: Heart, label: "कैसा महसूस हुआ?", color: "text-rose-500", prompt: "Based on my emotional history, ask me a gentle question about how I'm feeling right now." },
       { icon: BookOpen, label: "लाइफबुक देखें", color: "text-amber-500", path: "/story" },
+      { icon: Feather, label: "Preview Icons", color: "text-gray-400", isPreview: true },
     ]
   },
 };
@@ -93,6 +96,7 @@ export const ChatInterface = () => {
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [selectedActionIndex, setSelectedActionIndex] = useState<number | null>(null);
   const [thoughtStarter, setThoughtStarter] = useState<string | null>(null);
+  const [showIconPreview, setShowIconPreview] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isSendingRef = useRef<boolean>(false);
 
@@ -357,6 +361,9 @@ export const ChatInterface = () => {
       <Header />
       
       <AnimatePresence>
+        {showIconPreview && (
+          <FeatherGallery onClose={() => setShowIconPreview(false)} />
+        )}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -420,6 +427,12 @@ export const ChatInterface = () => {
                               return;
                             }
                             if (selectedActionIndex !== null) return;
+                            
+                            if (action.isPreview) {
+                              setShowIconPreview(true);
+                              return;
+                            }
+
                             setSelectedActionIndex(i);
                             
                             if (action.path) {
@@ -576,6 +589,10 @@ export const ChatInterface = () => {
 
           <ChatInput 
             onSendMessage={async (msg) => {
+              if (msg.content === '/preview') {
+                setShowIconPreview(true);
+                return;
+              }
               setThoughtStarter(null); // Hide thought starter on send
               setSelectedActionIndex(null); // Hide expanded suggestion on send
               await handleSendMessage(msg);
