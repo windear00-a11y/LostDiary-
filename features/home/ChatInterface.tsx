@@ -13,7 +13,7 @@ import { StoryPreviewCard } from '@/features/story/StoryPreviewCard';
 import { FeatherGallery } from './FeatherGallery';
 import { GoogleGenAI } from "@google/genai";
 import { Header } from '@/components/ui/Header';
-import { Loader2, Image as ImageIcon, Sparkles, PenLine, Heart, BookOpen } from 'lucide-react';
+import { Loader2, Image as ImageIcon, Sparkles, PenLine, Heart, BookOpen, Feather } from 'lucide-react';
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
