@@ -46,7 +46,7 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
 }) => {
   const { language } = useUIStore();
   const [text, setText] = useState('');
-  const [caretCoords, setCaretCoords] = useState({ x: 0, y: 0 });
+  const [caretCoords, setCaretCoords] = useState({ x: 0, y: 0, height: 0 });
   const [isFocused, setIsFocused] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -236,10 +236,10 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
     
     if (parentRect) {
       // Calculate position relative to the parent container
-      // We take the caret's position within the mirror and add the textarea's offset
       setCaretCoords({
         x: (rect.left - mirrorRect.left) + textarea.offsetLeft,
-        y: (rect.top - mirrorRect.top) + textarea.offsetTop
+        y: (rect.top - mirrorRect.top) + textarea.offsetTop,
+        height: rect.height
       });
     }
     
@@ -517,39 +517,39 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                       initial={{ opacity: 0 }}
                       animate={{ 
                         opacity: 1,
-                        left: caretCoords.x - 6, // Align tip horizontally
-                        top: caretCoords.y - 2   // Lowered to the baseline
+                        left: caretCoords.x - 4, // Align tip horizontally
+                        top: caretCoords.y + caretCoords.height - 22 // Align tip with baseline
                       }}
                       exit={{ opacity: 0 }}
                       transition={{ type: 'spring', damping: 25, stiffness: 300, mass: 0.5 }}
                       className="absolute pointer-events-none z-20"
                     >
                       <div className="relative">
-                        {/* Tilted Feather icon to look like a real quill */}
-                        <Feather className="w-6 h-6 text-gray-400 dark:text-gray-300 rotate-[15deg] transform-gpu" />
-                        
-                        {/* Sharp, strong glow at the writing tip - Indigo color for visibility */}
+                        {/* Pin-point writing tip glow - White center for intense point */}
                         <motion.div 
                           animate={{ 
-                            scale: isTyping ? [1, 1.4, 1.1] : [1, 1.2, 1],
-                            opacity: isTyping ? [0.9, 1, 0.9] : [0.6, 0.9, 0.6]
+                            scale: isTyping ? [1, 1.2, 1] : [1, 1.1, 1],
+                            opacity: isTyping ? [0.9, 1, 0.9] : [0.7, 0.9, 0.7]
                           }}
                           transition={{ 
-                            duration: isTyping ? 0.15 : 2, 
+                            duration: isTyping ? 0.1 : 2, 
                             repeat: isTyping ? 0 : Infinity,
                             ease: "easeInOut" 
                           }}
-                          className="absolute bottom-[1px] left-[3px] w-1.5 h-1.5 bg-indigo-400 rounded-full blur-[0.5px] shadow-[0_0_8px_2px_rgba(99,102,241,1),0_0_15px_rgba(99,102,241,0.6)] z-30"
+                          className="absolute bottom-[3px] left-[3px] w-[1.5px] h-[1.5px] bg-white rounded-full z-10 shadow-[0_0_2px_1px_rgba(255,255,255,0.9)]"
                         />
                         
-                        {/* Subtle outer indigo mist around the tip */}
+                        {/* Soft outer indigo glow centered at the tip */}
                         <motion.div 
                           animate={{ 
-                            opacity: isTyping ? 0.5 : 0.3,
-                            scale: isTyping ? 1.5 : 1
+                            opacity: isTyping ? 0.7 : 0.5,
+                            scale: isTyping ? 1.2 : 1
                           }}
-                          className="absolute bottom-[-1px] left-[-1px] w-4 h-4 bg-indigo-500/20 rounded-full blur-md -z-10"
+                          className="absolute bottom-[-7px] left-[-7px] w-5 h-5 bg-indigo-500/40 rounded-full blur-md z-0"
                         />
+
+                        {/* Tilted Feather icon to look like a real quill - Higher Z to cover glow */}
+                        <Feather className="w-6 h-6 text-gray-400 dark:text-gray-300 rotate-[15deg] transform-gpu relative z-20" />
                       </div>
                     </motion.div>
                   )}

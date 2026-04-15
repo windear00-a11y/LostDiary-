@@ -10,7 +10,6 @@ import { MessageList } from './MessageList';
 import { ChatInput } from './ChatInput';
 import { StoryPreview } from './StoryPreview';
 import { StoryPreviewCard } from '@/features/story/StoryPreviewCard';
-import { FeatherGallery } from './FeatherGallery';
 import { GoogleGenAI } from "@google/genai";
 import { Header } from '@/components/ui/Header';
 import { Loader2, Image as ImageIcon, Sparkles, PenLine, Heart, BookOpen, Feather } from 'lucide-react';
@@ -38,7 +37,6 @@ const EMPTY_STATE: Record<string, {
       { icon: PenLine, label: "Write a Memory", color: "text-emerald-500", prompt: "Look at my past memories and ask me a thoughtful question to help me start writing a new memory." },
       { icon: Heart, label: "How did it feel?", color: "text-rose-500", prompt: "Based on my emotional history, ask me a gentle question about how I'm feeling right now." },
       { icon: BookOpen, label: "View LifeBook", color: "text-amber-500", path: "/story" },
-      { icon: Feather, label: "Preview Icons", color: "text-gray-400", isPreview: true },
     ]
   },
   hi: { 
@@ -49,7 +47,6 @@ const EMPTY_STATE: Record<string, {
       { icon: PenLine, label: "एक याद लिखें", color: "text-emerald-500", prompt: "Look at my past memories and ask me a thoughtful question to help me start writing a new memory." },
       { icon: Heart, label: "कैसा महसूस हुआ?", color: "text-rose-500", prompt: "Based on my emotional history, ask me a gentle question about how I'm feeling right now." },
       { icon: BookOpen, label: "लाइफबुक देखें", color: "text-amber-500", path: "/story" },
-      { icon: Feather, label: "Preview Icons", color: "text-gray-400", isPreview: true },
     ]
   },
 };
@@ -59,8 +56,8 @@ export const ChatInterface = () => {
   const searchParams = useSearchParams();
   const params = useParams();
   
-  // Support both ?session= and /chat/[id]
-  const sessionIdFromUrl = (params.id as string) || searchParams.get('session');
+  // Support session ID from query parameter
+  const sessionIdFromUrl = searchParams.get('session');
   
   const { language, pendingMessage, setPendingMessage } = useUIStore();
   const t = EMPTY_STATE[language] || EMPTY_STATE.en;
@@ -69,16 +66,33 @@ export const ChatInterface = () => {
   const [loading, setLoading] = useState(true);
   const lastSessionIdRef = useRef<string | null>(sessionIdFromUrl);
 
-  // Handle pending message from redirect
+  // Handle pending message from redirect - Unified logic
   useEffect(() => {
-    if (pendingMessage && sessionIdFromUrl === pendingMessage.session_id) {
-      setMessages(prev => {
-        if (prev.some(m => m.id === pendingMessage.id)) return prev;
-        return [...prev, pendingMessage];
-      });
-      setPendingMessage(null);
-    }
-  }, [pendingMessage, sessionIdFromUrl, setPendingMessage]);
+    const processPendingMessage = async () => {
+      if (pendingMessage && sessionIdFromUrl === pendingMessage.session_id && !isSendingRef.current) {
+        console.log("Processing pending message for session:", sessionIdFromUrl);
+        
+        // Add to local state optimistically if not already there
+        setMessages(prev => {
+          if (prev.some(m => m.id === pendingMessage.id)) return prev;
+          return [...prev, pendingMessage];
+        });
+
+        const msgToProcess = { ...pendingMessage };
+        setPendingMessage(null); // Clear immediately to prevent double processing
+
+        // Trigger the actual send logic
+        await performSendMessage({
+          type: msgToProcess.type as any,
+          content: msgToProcess.content,
+          metadata: msgToProcess.metadata,
+          tempId: msgToProcess.id
+        }, msgToProcess.session_id);
+      }
+    };
+    
+    processPendingMessage();
+  }, [pendingMessage, sessionIdFromUrl, setPendingMessage, performSendMessage]);
 
   // Debug visibility: Log messages state
   useEffect(() => {
@@ -96,7 +110,6 @@ export const ChatInterface = () => {
   const [replyingTo, setReplyingTo] = useState<ChatMessage | null>(null);
   const [selectedActionIndex, setSelectedActionIndex] = useState<number | null>(null);
   const [thoughtStarter, setThoughtStarter] = useState<string | null>(null);
-  const [showIconPreview, setShowIconPreview] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isSendingRef = useRef<boolean>(false);
 
@@ -205,12 +218,6 @@ export const ChatInterface = () => {
         lastSessionIdRef.current = sessionIdFromUrl;
       }
 
-      // Skip loading if we are currently sending a message to prevent overwriting optimistic UI
-      if (isSendingRef.current) {
-        setLoading(false);
-        return;
-      }
-
       const user = await authService.getUser();
       if (user) {
         setUserId(user.id);
@@ -220,11 +227,18 @@ export const ChatInterface = () => {
           
           console.log(`Loaded ${visibleMessages.length} messages for session ${sessionIdFromUrl}`);
 
-          // Only update if we have messages, or if we are explicitly on the "New Chat" (null) session
-          // This prevents overwriting optimistic messages with an empty array due to fetch lag
-          if (visibleMessages.length > 0 || sessionIdFromUrl === null) {
-            setMessages(visibleMessages);
-          }
+          setMessages(prev => {
+            // Preserve optimistic messages that are still sending or just saved
+            const optimisticIds = prev.filter(m => m.status === 'sending' || m.id.startsWith('temp-')).map(m => m.id);
+            const optimisticMessages = prev.filter(m => optimisticIds.includes(m.id));
+            
+            // Filter out server messages that are already represented by optimistic ones
+            const filteredServerMessages = visibleMessages.filter(m => !optimisticIds.includes(m.id));
+            
+            return [...filteredServerMessages, ...optimisticMessages].sort((a, b) => 
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
+          });
           
           // Check if we should show the wow moment on load
           const userMessages = visibleMessages.filter(m => m.role === 'user');
@@ -246,6 +260,67 @@ export const ChatInterface = () => {
     }
   }, [messages, isThinking, isAnalyzing]);
 
+  const performSendMessage = React.useCallback(async (input: { 
+    type: 'text' | 'image' | 'video' | 'audio' | 'location';
+    content: string | File | null;
+    metadata?: any;
+    tempId: string;
+  }, sessionId: string) => {
+    const user = await authService.getUser();
+    if (!user) return;
+
+    setIsAnalyzing(true);
+    setError(null);
+    isSendingRef.current = true;
+
+    try {
+      const newMessage = await chatService.sendMessage({ 
+        ...input, 
+        user_id: user.id,
+        session_id: sessionId,
+        metadata: { ...input.metadata, language }
+      });
+      
+      console.log("Message sent successfully:", newMessage);
+      setIsThinking(true);
+
+      if (newMessage.event_score && newMessage.event_score > 7) {
+        setShowHint(true);
+      }
+
+      // Update optimistic message to saved state
+      setMessages(prev => {
+        const updated = prev.map(m => m.id === input.tempId ? { ...newMessage, status: 'saved' } : m);
+        return updated;
+      });
+
+      // Reload messages to get potential AI reply
+      const data = await chatService.fetchMessages(user.id, sessionId);
+      const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
+      
+      if (visibleMessages.length > 0) {
+        setMessages(visibleMessages);
+      }
+      
+      setRefreshKey(prev => prev + 1);
+
+      // Onboarding Wow Moment Trigger
+      const userMessages = visibleMessages.filter(m => m.role === 'user');
+      if (userMessages.length >= 3 && userMessages.length <= 5 && !hasShownWow) {
+        generateWowStory(userMessages);
+      }
+    } catch (err: any) {
+      console.error("Failed to send message:", err);
+      const errorMessage = err.message || "WinDear couldn't hear that. Please try sending again.";
+      setError(errorMessage);
+      setMessages(prev => prev.map(m => m.id === input.tempId ? { ...m, status: 'error' } : m));
+    } finally {
+      setIsThinking(false);
+      setIsAnalyzing(false);
+      isSendingRef.current = false;
+    }
+  }, [language, hasShownWow, generateWowStory]);
+
   const handleSendMessage = async (input: { 
     type: 'text' | 'image' | 'video' | 'audio' | 'location';
     content: string | File | null;
@@ -255,9 +330,7 @@ export const ChatInterface = () => {
     if (!user) return;
     
     if (isSendingRef.current) return;
-    isSendingRef.current = true;
 
-    // Define optimistic message early so it can be used for hand-off during redirect
     const tempId = `temp-${Date.now()}`;
     const optimisticMsg: ChatMessage = {
       id: tempId,
@@ -273,84 +346,30 @@ export const ChatInterface = () => {
     };
     
     let activeSessionId = sessionIdFromUrl;
+    
+    // CASE 1: New Session needed
     if (!activeSessionId) {
       try {
         const newSession = await chatService.createSession(user.id, "Chat " + new Date().toLocaleDateString());
         activeSessionId = newSession.id;
         
-        // Task: Preserving optimistic state during redirect
+        // Handoff to the new page instance
         setPendingMessage({ ...optimisticMsg, session_id: activeSessionId });
-        
-        router.push(`/chat/${activeSessionId}`);
-        lastSessionIdRef.current = activeSessionId;
-        console.log("Created new session and redirecting:", activeSessionId);
+        router.push(`/home?session=${activeSessionId}`);
+        return; // Stop here, the new page will take over via useEffect
       } catch (err) {
         console.error("Failed to create session:", err);
-        isSendingRef.current = false;
+        setError("Failed to start a new story session.");
         return;
       }
     }
 
+    // CASE 2: Existing Session
     if (!input.metadata?.is_hidden) {
-      // Task 1: Fix state update (CRITICAL) - Use functional update
-      setMessages(prev => [...prev, { ...optimisticMsg, session_id: activeSessionId || undefined }]);
+      setMessages(prev => [...prev, optimisticMsg]);
     }
 
-    setIsAnalyzing(true);
-    setError(null);
-
-    try {
-      const newMessage = await chatService.sendMessage({ 
-        ...input, 
-        user_id: user.id,
-        session_id: activeSessionId || undefined,
-        metadata: { ...input.metadata, language }
-      });
-      
-      console.log("Message sent successfully:", newMessage);
-      setIsThinking(true);
-
-      if (newMessage.event_score && newMessage.event_score > 7) {
-        setShowHint(true);
-      }
-
-      // Update optimistic message to saved state before refetching to make it instant
-      setMessages(prev => {
-        const updated = prev.map(m => m.id === tempId ? { ...newMessage, status: 'saved' } : m);
-        console.log("Updated messages after send (optimistic -> saved):", updated.length);
-        return updated;
-      });
-
-      // Reload messages to get the real user message (replacing temp) and potential AI reply
-      const data = await chatService.fetchMessages(user.id, activeSessionId);
-      const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
-      
-      console.log("Fetched messages after send:", visibleMessages.length);
-      
-      if (visibleMessages.length > 0) {
-        setMessages(visibleMessages);
-      } else {
-        console.warn("fetchMessages returned empty after successful send. Keeping current state.");
-      }
-      
-      setRefreshKey(prev => prev + 1);
-
-      // Onboarding Wow Moment Trigger
-      const userMessages = visibleMessages.filter(m => m.role === 'user');
-      if (userMessages.length >= 3 && userMessages.length <= 5 && !hasShownWow) {
-        generateWowStory(userMessages);
-      }
-    } catch (err: any) {
-      console.error("Failed to send message:", err);
-      const errorMessage = err.message || "WinDear couldn't hear that. Please try sending again.";
-      setError(errorMessage);
-      // Mark optimistic message as error instead of removing it
-      setMessages(prev => prev.map(m => m.id === tempId ? { ...m, status: 'error' } : m));
-    } finally {
-      setIsThinking(false);
-      setIsAnalyzing(false);
-      isSendingRef.current = false;
-    }
+    await performSendMessage({ ...input, tempId }, activeSessionId);
   };
 
   return (
@@ -361,9 +380,6 @@ export const ChatInterface = () => {
       <Header />
       
       <AnimatePresence>
-        {showIconPreview && (
-          <FeatherGallery onClose={() => setShowIconPreview(false)} />
-        )}
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -428,11 +444,6 @@ export const ChatInterface = () => {
                             }
                             if (selectedActionIndex !== null) return;
                             
-                            if (action.isPreview) {
-                              setShowIconPreview(true);
-                              return;
-                            }
-
                             setSelectedActionIndex(i);
                             
                             if (action.path) {
@@ -589,10 +600,6 @@ export const ChatInterface = () => {
 
           <ChatInput 
             onSendMessage={async (msg) => {
-              if (msg.content === '/preview') {
-                setShowIconPreview(true);
-                return;
-              }
               setThoughtStarter(null); // Hide thought starter on send
               setSelectedActionIndex(null); // Hide expanded suggestion on send
               await handleSendMessage(msg);
@@ -605,4 +612,3 @@ export const ChatInterface = () => {
     </div>
   );
 };
-
