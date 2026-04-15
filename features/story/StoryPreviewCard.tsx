@@ -68,10 +68,10 @@ export const StoryPreviewCard = ({ userId, refreshTrigger }: LifeBookPreviewProp
         </div>
 
         <div className="space-y-2">
-          <h4 className="text-lg font-serif italic text-gray-900 dark:text-gray-100">
+          <h4 className="text-lg font-serif italic text-slate-900 dark:text-slate-100">
             {latestChapter.name}
           </h4>
-          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 leading-relaxed font-serif italic">
+          <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed font-serif italic">
             {latestChapter.narrative || latestChapter.summary || "Your narrative is being woven from your latest entries..."}
           </p>
         </div>
@@ -82,7 +82,7 @@ export const StoryPreviewCard = ({ userId, refreshTrigger }: LifeBookPreviewProp
               <div key={i} className="w-5 h-5 rounded-full border-2 border-white dark:border-[#1A1A1A] bg-indigo-100 dark:bg-indigo-900/40" />
             ))}
           </div>
-          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">
+          <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
             {latestChapter.events?.length || 0} moments captured
           </span>
         </div>

@@ -348,8 +348,9 @@ export const StarryBackground = ({ mode: propMode }: { mode?: SkyMode }) => {
         gradient.addColorStop(0, `rgb(2, 6, ${nightBlue})`); 
         gradient.addColorStop(1, '#000000');
       } else {
-        gradient.addColorStop(0, '#f8fafc');
-        gradient.addColorStop(1, '#e2e8f0');
+        // Soft morning sky gradient for light mode
+        gradient.addColorStop(0, '#f0f4f8');
+        gradient.addColorStop(1, '#ffffff');
       }
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);

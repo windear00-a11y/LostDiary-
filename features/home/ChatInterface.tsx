@@ -415,10 +415,10 @@ export const ChatInterface = () => {
                 className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-12 py-12"
               >
                 <div className="space-y-4">
-                  <h2 className="text-4xl md:text-5xl font-serif font-medium text-gray-900 dark:text-gray-100 px-4 tracking-tight">
+                  <h2 className="text-4xl md:text-5xl font-serif font-semibold text-slate-900 dark:text-white px-4 tracking-tight">
                     {t.title}
                   </h2>
-                  <p className="text-lg text-gray-500 dark:text-gray-400 font-serif italic">
+                  <p className="text-lg text-slate-700 dark:text-slate-300 font-serif italic font-medium">
                     {t.subtitle}
                   </p>
                 </div>
@@ -461,7 +461,7 @@ export const ChatInterface = () => {
                         >
                           <div className="flex items-center gap-3 w-full">
                             <div className="shrink-0"><action.icon className={`w-5 h-5 ${action.color}`} /></div>
-                            <span className="text-sm font-medium text-gray-600 dark:text-gray-300 font-serif italic">{action.label}</span>
+                            <span className="text-sm font-medium text-slate-700 dark:text-slate-200 font-serif italic">{action.label}</span>
                           </div>
                           
                           <AnimatePresence>
@@ -504,7 +504,7 @@ export const ChatInterface = () => {
                 <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-500/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
                   <PenLine className="w-8 h-8 text-indigo-500" />
                 </div>
-                <h2 className="text-2xl font-serif font-bold text-gray-900 dark:text-gray-100 italic">
+                <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-slate-100 italic">
                   {language === 'hi' ? 'अपनी कहानी शुरू करें...' : 'Start your story...'}
                 </h2>
               </motion.div>
@@ -530,7 +530,7 @@ export const ChatInterface = () => {
                       exit={{ opacity: 0, y: -10 }}
                       className="flex justify-center"
                     >
-                      <div className="px-4 py-2 bg-white/50 dark:bg-white/5 backdrop-blur-md rounded-full border border-gray-100 dark:border-white/5 text-[11px] font-medium text-gray-400 uppercase tracking-widest">
+                      <div className="px-4 py-2 bg-white/50 dark:bg-white/5 backdrop-blur-md rounded-full border border-gray-100 dark:border-white/5 text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
                         Saving your moment...
                       </div>
                     </motion.div>
@@ -556,7 +556,7 @@ export const ChatInterface = () => {
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex items-center gap-2 text-xs font-serif italic text-gray-400"
+                    className="flex items-center gap-2 text-xs font-serif italic text-slate-500 dark:text-slate-400"
                   >
                     <div className="flex gap-1">
                       <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />

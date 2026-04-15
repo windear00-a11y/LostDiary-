@@ -44,8 +44,8 @@ export const LanguageSwitcher = () => {
         onClick={() => setIsOpen(true)}
         className="w-10 h-10 rounded-full bg-white/85 dark:bg-black/80 backdrop-blur-md shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 flex flex-col items-center justify-center transition-all group"
       >
-        <Languages className="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-indigo-500 transition-colors" />
-        <span className="text-[7px] font-bold uppercase text-gray-400 mt-0.5">{language}</span>
+        <Languages className="w-5 h-5 text-slate-700 dark:text-slate-200 group-hover:text-indigo-500 transition-colors" />
+        <span className="text-[7px] font-bold uppercase text-slate-500 mt-0.5">{language}</span>
       </motion.button>
 
       <AnimatePresence>
@@ -74,12 +74,12 @@ export const LanguageSwitcher = () => {
                     <h3 className="font-serif italic text-lg font-bold">Choose Language</h3>
                   </div>
                   <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
-                    <X className="w-4 h-4 text-gray-400" />
+                    <X className="w-4 h-4 text-slate-400" />
                   </button>
                 </div>
 
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <input 
                     type="text"
                     placeholder="Search language..."
@@ -100,7 +100,7 @@ export const LanguageSwitcher = () => {
                       className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${
                         language === lang.code 
                           ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' 
-                          : 'hover:bg-gray-50 dark:hover:bg-white/5 text-gray-600 dark:text-gray-400'
+                          : 'hover:bg-gray-50 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400'
                       }`}
                     >
                       <div className="flex flex-col items-start">
@@ -111,7 +111,7 @@ export const LanguageSwitcher = () => {
                     </button>
                   ))}
                   {filteredLanguages.length === 0 && (
-                    <div className="py-8 text-center text-gray-400 text-xs italic">
+                    <div className="py-8 text-center text-slate-500 text-xs italic">
                       No languages found...
                     </div>
                   )}

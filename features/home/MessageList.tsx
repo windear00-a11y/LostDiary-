@@ -144,7 +144,7 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
 
                   {/* Message Content */}
                   {msg.type === 'text' && (
-                    <div className="text-[15px] md:text-[17px] leading-relaxed font-light tracking-wide whitespace-pre-wrap drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
+                    <div className="text-[15px] md:text-[17px] leading-relaxed font-normal tracking-wide whitespace-pre-wrap dark:drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
                       {msg.content || msg.text || (
                         <span className="opacity-50 italic">Empty message</span>
                       )}

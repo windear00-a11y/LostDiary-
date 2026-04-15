@@ -59,7 +59,7 @@ export const viewport: Viewport = {
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${cormorant.variable}`}>
-      <body className={`${inter.className} bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] min-h-screen transition-colors duration-300`} suppressHydrationWarning>
+      <body className={`${inter.className} bg-transparent text-[#111827] dark:text-[#F9FAFB] min-h-screen transition-colors duration-300`} suppressHydrationWarning>
         <Script 
           src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.min.js" 
           strategy="beforeInteractive" 

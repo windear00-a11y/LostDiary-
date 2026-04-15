@@ -20,7 +20,7 @@ export const Header = () => {
           onClick={() => setIsDrawerOpen(true)}
           className="w-10 h-10 rounded-full bg-white/85 dark:bg-black/80 backdrop-blur-md shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 flex items-center justify-center transition-all pointer-events-auto"
         >
-          <Menu className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          <Menu className="w-5 h-5 text-slate-700 dark:text-slate-200" />
         </motion.button>
 
         <div className="flex items-center gap-3 pointer-events-auto">

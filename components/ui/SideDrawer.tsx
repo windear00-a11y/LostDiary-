@@ -89,14 +89,14 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
                   <Book className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-serif italic text-xl font-bold tracking-tight text-gray-900 dark:text-[#fdfcfb]">WinDear</span>
+                <span className="font-serif italic text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">WinDear</span>
               </div>
               <div className="flex items-center gap-1">
                 <button className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
-                  <Search className="w-4 h-4 text-gray-400" />
+                  <Search className="w-4 h-4 text-slate-400" />
                 </button>
                 <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
-                  <X className="w-5 h-5 text-gray-400" />
+                  <X className="w-5 h-5 text-slate-400" />
                 </button>
               </div>
             </div>
@@ -116,7 +116,7 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                     <div className={`w-10 h-10 ${action.bg} rounded-full flex items-center justify-center`}>
                       <action.icon className={`w-5 h-5 ${action.color}`} />
                     </div>
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">{action.label}</span>
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">{action.label}</span>
                   </button>
                 ))}
               </div>
@@ -125,7 +125,7 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
                   <div className="flex items-center gap-2">
-                    <h3 className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">चैट हिस्ट्री</h3>
+                    <h3 className="text-[10px] uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 font-bold">चैट हिस्ट्री</h3>
                     <button 
                       onClick={handleGenerateTitles}
                       disabled={isGeneratingTitles}
@@ -135,7 +135,7 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                       {isGeneratingTitles ? (
                         <Loader2 className="w-3 h-3 text-indigo-500 animate-spin" />
                       ) : (
-                        <Wand2 className="w-3 h-3 text-gray-300 group-hover:text-indigo-500 transition-colors" />
+                        <Wand2 className="w-3 h-3 text-slate-300 group-hover:text-indigo-500 transition-colors" />
                       )}
                     </button>
                   </div>
@@ -159,14 +159,14 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                       }}
                       className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white dark:hover:bg-white/5 transition-all text-left group"
                     >
-                      <MessageSquare className="w-4 h-4 text-gray-300 group-hover:text-indigo-400 shrink-0" />
-                      <span className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1 font-serif italic">
+                      <MessageSquare className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 shrink-0" />
+                      <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1 font-serif italic">
                         {session.title}
                       </span>
                     </button>
                   ))}
                   {sessions.length === 0 && (
-                    <p className="text-[10px] text-gray-400 italic px-2">अभी कोई चैट हिस्ट्री नहीं है...</p>
+                    <p className="text-[10px] text-slate-500 italic px-2">अभी कोई चैट हिस्ट्री नहीं है...</p>
                   )}
                 </div>
               </div>
@@ -174,7 +174,7 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
               {/* Chapters Section */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
-                  <h3 className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold">अध्याय (Chapters)</h3>
+                  <h3 className="text-[10px] uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 font-bold">अध्याय (Chapters)</h3>
                   <button className="text-[10px] font-bold text-indigo-500 hover:underline">सभी देखें</button>
                 </div>
                 <div className="space-y-1">
@@ -190,12 +190,12 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                         className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-white dark:hover:bg-white/5 transition-all group border border-transparent hover:border-gray-100 dark:hover:border-white/5"
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full ${hasData ? 'bg-indigo-500' : 'bg-gray-200 dark:bg-gray-800'}`} />
-                          <span className={`text-sm font-serif italic ${hasData ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400'}`}>
+                          <div className={`w-2 h-2 rounded-full ${hasData ? 'bg-indigo-500' : 'bg-slate-200 dark:bg-slate-800'}`} />
+                          <span className={`text-sm font-serif italic ${hasData ? 'text-slate-900 dark:text-slate-100' : 'text-slate-500'}`}>
                             {chapterName}
                           </span>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-gray-300 opacity-0 group-hover:opacity-100 transition-all" />
+                        <ChevronRight className="w-4 h-4 text-slate-300 opacity-0 group-hover:opacity-100 transition-all" />
                       </button>
                     );
                   })}
@@ -204,21 +204,21 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
 
               {/* Recent Section */}
               <div className="space-y-4">
-                <h3 className="text-[10px] uppercase tracking-[0.3em] text-gray-400 font-bold px-2">हालिया यादें (Recent)</h3>
+                <h3 className="text-[10px] uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 font-bold px-2">हालिया यादें (Recent)</h3>
                 <div className="space-y-1">
                   {chapters.slice(0, 3).map((chapter) => (
                     <button
                       key={chapter.id}
                       className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white dark:hover:bg-white/5 transition-all text-left group"
                     >
-                      <History className="w-4 h-4 text-gray-300 group-hover:text-indigo-400" />
-                      <span className="text-xs text-gray-600 dark:text-gray-400 line-clamp-1 font-serif italic">
+                      <History className="w-4 h-4 text-slate-300 group-hover:text-indigo-400" />
+                      <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1 font-serif italic">
                         {chapter.summary || `${chapter.name} की कहानी...`}
                       </span>
                     </button>
                   ))}
                   {chapters.length === 0 && (
-                    <p className="text-[10px] text-gray-400 italic px-2">अभी कोई यादें नहीं हैं...</p>
+                    <p className="text-[10px] text-slate-500 italic px-2">अभी कोई यादें नहीं हैं...</p>
                   )}
                 </div>
               </div>
@@ -251,8 +251,8 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate">{user?.email?.split('@')[0] || 'User'}</p>
-                  <p className="text-[10px] text-gray-400 truncate">Premium Member</p>
+                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{user?.email?.split('@')[0] || 'User'}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">Premium Member</p>
                 </div>
                 <button 
                   onClick={() => {

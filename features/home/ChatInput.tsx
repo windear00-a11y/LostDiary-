@@ -504,8 +504,8 @@ export const ChatInput = ({ onSendMessage, replyingTo, onClearReply }: {
                   rows={1}
                   className={`flex-1 py-2.5 bg-transparent outline-none resize-none max-h-40 overflow-y-auto font-serif italic text-sm md:text-base z-10 relative selection:bg-cyan-500/20 transition-all duration-500 caret-transparent ${
                     text.trim() || isFocused 
-                      ? 'text-gray-800 dark:text-gray-100 placeholder:text-gray-400/60' 
-                      : 'text-gray-900 dark:text-gray-100 placeholder:text-gray-400'
+                      ? 'text-slate-800 dark:text-slate-100 placeholder:text-slate-400/60' 
+                      : 'text-slate-900 dark:text-slate-100 placeholder:text-slate-500'
                   }`}
                   placeholder={PLACEHOLDERS[language] || PLACEHOLDERS.en}
                 />

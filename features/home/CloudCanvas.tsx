@@ -1,5 +1,6 @@
 "use client";
 
+import { useTheme } from "next-themes";
 import { useEffect, useRef, useState } from "react";
 
 interface CloudCanvasProps {
@@ -10,6 +11,8 @@ interface CloudCanvasProps {
 }
 
 export default function CloudCanvas({ side, children, className = "", style }: CloudCanvasProps) {
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const foregroundCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -58,7 +61,11 @@ export default function CloudCanvas({ side, children, className = "", style }: C
     if (!ctx || !fgCtx) return;
 
     const margin = 50;
-    const color = side === "left" ? "34,211,238" : "168,85,247";
+    
+    // Adjust colors based on theme
+    const color = isDark 
+      ? (side === "left" ? "34,211,238" : "168,85,247") // Cyan/Purple for dark
+      : (side === "left" ? "186,230,253" : "233,213,255"); // Lighter blue/purple for light mode
 
     // Initialize particles ONLY IF they don't exist
     if (particlesRef.current.length === 0) {
@@ -71,7 +78,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           x: width / 2 + (Math.random() - 0.5) * width,
           y: height / 2 + (Math.random() - 0.5) * height,
           r: 35 + Math.random() * 45,
-          opacity: 0.18 + Math.random() * 0.1, // Increased visibility
+          opacity: isDark ? 0.18 + Math.random() * 0.1 : 0.25 + Math.random() * 0.1, // More opaque in light mode
           vx: (Math.random() - 0.5) * 0.005,
           vy: (Math.random() - 0.5) * 0.005,
           sharp: false,
@@ -84,7 +91,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           x: width / 2 + (Math.random() - 0.5) * width,
           y: height / 2 + (Math.random() - 0.5) * height,
           r: 25 + Math.random() * 35,
-          opacity: 0.22 + Math.random() * 0.15, // Increased visibility
+          opacity: isDark ? 0.22 + Math.random() * 0.15 : 0.3 + Math.random() * 0.15, // More opaque in light mode
           vx: (Math.random() - 0.5) * 0.008,
           vy: (Math.random() - 0.5) * 0.008,
           sharp: false,
@@ -110,7 +117,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           x: side === "right" ? tailBaseX + xOffset + jitterX : tailBaseX - xOffset + jitterX,
           y: tailBaseY + yOffset + jitterY,
           r: (6 + Math.random() * 8) * (1 - t * 0.5), // Small and tapering
-          opacity: (0.12 + Math.random() * 0.1) * (1 - t * 0.8), // Fading out
+          opacity: (isDark ? 0.12 + Math.random() * 0.1 : 0.2 + Math.random() * 0.1) * (1 - t * 0.8), // Fading out
           vx: (Math.random() - 0.5) * 0.01,
           vy: (Math.random() - 0.5) * 0.01,
           sharp: false,
@@ -181,7 +188,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
-  }, [side]); // Only re-run if side changes
+  }, [side, isDark]); // Re-run if side or theme changes
 
   return (
     <div 
@@ -203,7 +210,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
 
       {/* content wrapper */}
       <div className="relative z-10 cloud-content px-4 py-2 flex items-center justify-center min-w-[60px] min-h-[40px]">
-        <div className="text-white text-center leading-relaxed max-w-full">
+        <div className="text-slate-900 dark:text-white text-center leading-relaxed max-w-full">
           {children}
         </div>
       </div>
