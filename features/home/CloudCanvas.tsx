@@ -110,6 +110,23 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           isForeground: false
         });
       }
+
+      // Layer 4: Tail Fog - Many tiny, very soft particles
+      for (let i = 0; i < 25; i++) {
+        const t = Math.random();
+        const offset = t * 40;
+        particlesRef.current.push({
+          x: side === "right" ? tailX + offset + (Math.random() - 0.5) * 15 : tailX - offset + (Math.random() - 0.5) * 15,
+          y: tailY + offset * 0.4 + (Math.random() - 0.5) * 15,
+          r: 2 + Math.random() * 8,
+          opacity: 0.05 + Math.random() * 0.1,
+          vx: (Math.random() - 0.5) * 0.01,
+          vy: (Math.random() - 0.5) * 0.01,
+          sharp: false,
+          isTail: true,
+          isForeground: false
+        });
+      }
     }
 
     const animate = () => {
@@ -178,7 +195,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
   return (
     <div 
       ref={containerRef} 
-      className={`relative inline-block animate-float ${className}`}
+      className={`relative inline-block ${className}`}
       style={style}
     >
       {/* background cloud canvas */}
