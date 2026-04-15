@@ -92,34 +92,25 @@ export default function CloudCanvas({ side, children, className = "", style }: C
         });
       }
 
-      // Layer 3: The "Tail" - Points toward the sender
-      const tailX = side === "right" ? width * 0.85 : width * 0.15;
-      const tailY = height * 0.85;
+      // Layer 3: The "Smoke Tail" - Dense cluster of small particles for a fog effect
+      const tailBaseX = side === "right" ? width * 0.85 : width * 0.15;
+      const tailBaseY = height * 0.85;
       
-      for (let i = 0; i < 10; i++) {
-        const offset = i * 5;
-        particlesRef.current.push({
-          x: side === "right" ? tailX + offset : tailX - offset,
-          y: tailY + offset * 0.4,
-          r: 18 - i * 1.5, // Tapering off
-          opacity: 0.25 - i * 0.02,
-          vx: (Math.random() - 0.5) * 0.005,
-          vy: (Math.random() - 0.5) * 0.005,
-          sharp: false,
-          isTail: true,
-          isForeground: false
-        });
-      }
+      // Create a dense, twisted smoke trail using many small particles
+      for (let i = 0; i < 60; i++) {
+        const t = i / 60; // Progress along the tail (0 to 1)
+        const xOffset = t * 75; // Horizontal spread
+        const yOffset = t * 20; // Slight vertical drop for the twist
+        
+        // Add jitter to create a "smoke" texture
+        const jitterX = (Math.random() - 0.5) * 15 * (1 + t);
+        const jitterY = (Math.random() - 0.5) * 15 * (1 + t);
 
-      // Layer 4: Tail Fog - Many tiny, very soft particles
-      for (let i = 0; i < 25; i++) {
-        const t = Math.random();
-        const offset = t * 40;
         particlesRef.current.push({
-          x: side === "right" ? tailX + offset + (Math.random() - 0.5) * 15 : tailX - offset + (Math.random() - 0.5) * 15,
-          y: tailY + offset * 0.4 + (Math.random() - 0.5) * 15,
-          r: 2 + Math.random() * 8,
-          opacity: 0.05 + Math.random() * 0.1,
+          x: side === "right" ? tailBaseX + xOffset + jitterX : tailBaseX - xOffset + jitterX,
+          y: tailBaseY + yOffset + jitterY,
+          r: (6 + Math.random() * 8) * (1 - t * 0.5), // Small and tapering
+          opacity: (0.12 + Math.random() * 0.1) * (1 - t * 0.8), // Fading out
           vx: (Math.random() - 0.5) * 0.01,
           vy: (Math.random() - 0.5) * 0.01,
           sharp: false,
