@@ -54,61 +54,36 @@ export default function CloudCanvas({ side, children, className = "", style }: C
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const margin = 100;
+    const margin = 50;
     const color = side === "left" ? "34,211,238" : "168,85,247";
 
     // Initialize particles ONLY IF they don't exist
     if (particlesRef.current.length === 0) {
       const { width, height } = dimensionsRef.current;
-      const countMultiplier = 2.5; // Increased for more "puffs"
+      const countMultiplier = 0.5; // Even fewer particles for a cleaner look
       
-      // Layer 1: Large "Mist" (Base soft glow)
-      for (let i = 0; i < 40 * countMultiplier; i++) {
+      // Layer 1: Soft base puffs
+      for (let i = 0; i < 15 * countMultiplier; i++) {
         particlesRef.current.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.9),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.8),
-          r: 40 + Math.random() * 60,
+          x: width / 2 + (Math.random() - 0.5) * width,
+          y: height / 2 + (Math.random() - 0.5) * height,
+          r: 30 + Math.random() * 40,
           opacity: 0.08 + Math.random() * 0.05,
-          vx: (Math.random() - 0.5) * 0.02, // Much slower
-          vy: (Math.random() - 0.5) * 0.02,
+          vx: (Math.random() - 0.5) * 0.005, // Almost static
+          vy: (Math.random() - 0.5) * 0.005,
           sharp: false
         });
       }
-      // Layer 2: Medium "Puffy" circles (The main texture)
-      for (let i = 0; i < 120 * countMultiplier; i++) {
+      // Layer 2: Medium puffy circles
+      for (let i = 0; i < 25 * countMultiplier; i++) {
         particlesRef.current.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.8),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.7),
-          r: 20 + Math.random() * 40,
-          opacity: 0.15 + Math.random() * 0.1,
-          vx: (Math.random() - 0.5) * 0.03, // Much slower
-          vy: (Math.random() - 0.5) * 0.03,
+          x: width / 2 + (Math.random() - 0.5) * width,
+          y: height / 2 + (Math.random() - 0.5) * height,
+          r: 20 + Math.random() * 30,
+          opacity: 0.12 + Math.random() * 0.08,
+          vx: (Math.random() - 0.5) * 0.008,
+          vy: (Math.random() - 0.5) * 0.008,
           sharp: false
-        });
-      }
-      // Layer 3: Small "Definition" puffs (For that bubbly edge look)
-      for (let i = 0; i < 80 * countMultiplier; i++) {
-        particlesRef.current.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.7),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.6),
-          r: 10 + Math.random() * 20,
-          opacity: 0.25 + Math.random() * 0.15,
-          vx: (Math.random() - 0.5) * 0.04, // Much slower
-          vy: (Math.random() - 0.5) * 0.04,
-          sharp: true
-        });
-      }
-      // Layer 4: Highlights (Soft white puffs)
-      for (let i = 0; i < 30 * countMultiplier; i++) {
-        particlesRef.current.push({
-          x: width / 2 + (Math.random() - 0.5) * (width * 0.6),
-          y: height / 2 + (Math.random() - 0.5) * (height * 0.5),
-          r: 8 + Math.random() * 25,
-          opacity: 0.15 + Math.random() * 0.15,
-          vx: (Math.random() - 0.5) * 0.02,
-          vy: (Math.random() - 0.5) * 0.02,
-          sharp: Math.random() > 0.5,
-          isWhite: true
         });
       }
     }
@@ -116,7 +91,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
     const animate = () => {
       const { width, height } = dimensionsRef.current;
       
-      // Update canvas size if needed without clearing particles
+      // Update canvas size if needed
       if (canvas.width !== width + margin * 2 || canvas.height !== height + margin * 2) {
         canvas.width = width + margin * 2;
         canvas.height = height + margin * 2;
@@ -130,29 +105,23 @@ export default function CloudCanvas({ side, children, className = "", style }: C
         p.x += p.vx;
         p.y += p.vy;
 
-        // Soft bounce within current dimensions - tighter to wrap text closely
+        // Soft bounce within current dimensions - very tight to text
         const dx = p.x - width / 2;
         const dy = p.y - height / 2;
-        const normalizedDist = (dx * dx) / Math.pow(width / 2 + 15, 2) + (dy * dy) / Math.pow(height / 2 + 10, 2);
+        const normalizedDist = (dx * dx) / Math.pow(width / 2 + 5, 2) + (dy * dy) / Math.pow(height / 2 + 2, 2);
         
         if (normalizedDist > 1) {
-          // Instead of hard bounce, gently pull back to center
-          p.vx -= dx * 0.00005; // Even gentler pull
-          p.vy -= dy * 0.00005;
+          p.vx -= dx * 0.00002; // Barely moving
+          p.vy -= dy * 0.00002;
         }
 
         const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
         const pColor = p.isWhite ? "255,255,255" : color;
 
-        if (p.sharp) {
-          gradient.addColorStop(0, `rgba(${pColor}, ${p.opacity})`);
-          gradient.addColorStop(0.4, `rgba(${pColor}, ${p.opacity * 0.6})`);
-          gradient.addColorStop(1, "rgba(255,255,255,0)");
-        } else {
-          gradient.addColorStop(0, `rgba(${pColor}, ${p.opacity})`);
-          gradient.addColorStop(0.6, `rgba(${pColor}, ${p.opacity * 0.4})`);
-          gradient.addColorStop(1, "rgba(255,255,255,0)");
-        }
+        // Ultra-soft gradients for "puffy" look
+        gradient.addColorStop(0, `rgba(${pColor}, ${p.opacity})`);
+        gradient.addColorStop(0.5, `rgba(${pColor}, ${p.opacity * 0.3})`);
+        gradient.addColorStop(1, "rgba(255,255,255,0)");
 
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -180,12 +149,12 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       {/* cloud canvas */}
       <canvas
         ref={canvasRef}
-        className="absolute pointer-events-none blur-[2px]"
+        className="absolute pointer-events-none blur-[12px]"
         style={{ 
-          top: -100, 
-          left: -100, 
-          width: dimensions.width + 200, 
-          height: dimensions.height + 200 
+          top: -50, 
+          left: -50, 
+          width: dimensions.width + 100, 
+          height: dimensions.height + 100 
         }}
       />
 
