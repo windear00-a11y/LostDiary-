@@ -66,34 +66,6 @@ export const ChatInterface = () => {
   const [loading, setLoading] = useState(true);
   const lastSessionIdRef = useRef<string | null>(sessionIdFromUrl);
 
-  // Handle pending message from redirect - Unified logic
-  useEffect(() => {
-    const processPendingMessage = async () => {
-      if (pendingMessage && sessionIdFromUrl === pendingMessage.session_id && !isSendingRef.current) {
-        console.log("Processing pending message for session:", sessionIdFromUrl);
-        
-        // Add to local state optimistically if not already there
-        setMessages(prev => {
-          if (prev.some(m => m.id === pendingMessage.id)) return prev;
-          return [...prev, pendingMessage];
-        });
-
-        const msgToProcess = { ...pendingMessage };
-        setPendingMessage(null); // Clear immediately to prevent double processing
-
-        // Trigger the actual send logic
-        await performSendMessage({
-          type: msgToProcess.type as any,
-          content: msgToProcess.content,
-          metadata: msgToProcess.metadata,
-          tempId: msgToProcess.id
-        }, msgToProcess.session_id);
-      }
-    };
-    
-    processPendingMessage();
-  }, [pendingMessage, sessionIdFromUrl, setPendingMessage, performSendMessage]);
-
   // Debug visibility: Log messages state
   useEffect(() => {
     console.log("messages updated:", messages);
@@ -320,6 +292,34 @@ export const ChatInterface = () => {
       isSendingRef.current = false;
     }
   }, [language, hasShownWow, generateWowStory]);
+
+  // Handle pending message from redirect - Unified logic
+  useEffect(() => {
+    const processPendingMessage = async () => {
+      if (pendingMessage && sessionIdFromUrl === pendingMessage.session_id && !isSendingRef.current) {
+        console.log("Processing pending message for session:", sessionIdFromUrl);
+        
+        // Add to local state optimistically if not already there
+        setMessages(prev => {
+          if (prev.some(m => m.id === pendingMessage.id)) return prev;
+          return [...prev, pendingMessage];
+        });
+
+        const msgToProcess = { ...pendingMessage };
+        setPendingMessage(null); // Clear immediately to prevent double processing
+
+        // Trigger the actual send logic
+        await performSendMessage({
+          type: msgToProcess.type as any,
+          content: msgToProcess.content,
+          metadata: msgToProcess.metadata,
+          tempId: msgToProcess.id
+        }, msgToProcess.session_id);
+      }
+    };
+    
+    processPendingMessage();
+  }, [pendingMessage, sessionIdFromUrl, setPendingMessage, performSendMessage]);
 
   const handleSendMessage = async (input: { 
     type: 'text' | 'image' | 'video' | 'audio' | 'location';
