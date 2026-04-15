@@ -373,7 +373,7 @@ export const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-bg-light dark:bg-bg-dark transition-colors duration-500 relative">
+    <div className="flex flex-col h-full bg-transparent transition-colors duration-500 relative">
       {/* Subtle Chat Wallpaper Pattern */}
       <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
       

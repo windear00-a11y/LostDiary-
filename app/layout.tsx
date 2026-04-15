@@ -5,6 +5,9 @@ import { PageTransition } from '@/components/page-transition';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Suspense } from 'react';
+import Script from 'next/script';
+import { SkyProvider } from '@/lib/sky-context';
+import { StarryBackground } from '@/components/ui/StarryBackground';
 import './globals.css';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -57,16 +60,23 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${cormorant.variable}`}>
       <body className={`${inter.className} bg-[#F9FAFB] dark:bg-[#0A0A0A] text-[#111827] dark:text-[#F9FAFB] min-h-screen transition-colors duration-300`} suppressHydrationWarning>
+        <Script 
+          src="https://cdn.jsdelivr.net/npm/astronomy-engine@2.1.19/astronomy.min.js" 
+          strategy="beforeInteractive" 
+        />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Suspense fallback={null}>
-            <AuthProvider>
-              <ErrorBoundary>
-                <PageTransition>
-                  {children}
-                </PageTransition>
-              </ErrorBoundary>
-            </AuthProvider>
-          </Suspense>
+          <SkyProvider>
+            <StarryBackground />
+            <Suspense fallback={null}>
+              <AuthProvider>
+                <ErrorBoundary>
+                  <PageTransition>
+                    {children}
+                  </PageTransition>
+                </ErrorBoundary>
+              </AuthProvider>
+            </Suspense>
+          </SkyProvider>
         </ThemeProvider>
       </body>
     </html>

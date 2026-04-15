@@ -1,12 +1,14 @@
 'use client';
 
-import { Book, Sparkles, PenLine, Heart, ArrowRight } from 'lucide-react';
+import { Book, Sparkles, PenLine, Heart, ArrowRight, Sun, CloudRain, Zap } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/auth-provider';
+import { useSky } from '@/lib/sky-context';
 
 export default function LandingPage() {
   const { user } = useAuth();
+  const { mode, setMode } = useSky();
   const router = useRouter();
 
   const handleCTA = () => {
@@ -18,7 +20,7 @@ export default function LandingPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] text-[#111827] dark:text-[#fdfcfb] selection:bg-indigo-100 selection:text-indigo-900">
+    <main className="min-h-screen bg-transparent text-[#111827] dark:text-[#fdfcfb] selection:bg-indigo-100 selection:text-indigo-900">
       {/* Hero Section */}
       <section className="relative pt-32 pb-20 px-6">
         <div className="max-w-4xl mx-auto text-center space-y-8">
@@ -80,7 +82,7 @@ export default function LandingPage() {
       </section>
 
       {/* How it Works Section */}
-      <section className="py-32 px-6 bg-gray-50/50 dark:bg-[#0a0a0a]">
+      <section className="py-32 px-6 bg-transparent">
         <div className="max-w-5xl mx-auto">
           <div className="grid md:grid-cols-3 gap-16">
             <div className="space-y-4">
@@ -149,6 +151,31 @@ export default function LandingPage() {
           &copy; {new Date().getFullYear()} WinDear. Your story is safe.
         </p>
       </footer>
+
+      {/* Mood Switcher (Subtle) */}
+      <div className="fixed bottom-8 right-8 flex flex-col gap-2 z-50">
+        <button
+          onClick={() => setMode('calm')}
+          className={`p-3 rounded-full transition-all ${mode === 'calm' ? 'bg-indigo-500 text-white shadow-lg scale-110' : 'bg-white/80 dark:bg-black/80 text-gray-400 hover:text-indigo-500'}`}
+          title="Calm Mode"
+        >
+          <Sun className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => setMode('sad')}
+          className={`p-3 rounded-full transition-all ${mode === 'sad' ? 'bg-indigo-500 text-white shadow-lg scale-110' : 'bg-white/80 dark:bg-black/80 text-gray-400 hover:text-indigo-500'}`}
+          title="Sad Mode"
+        >
+          <CloudRain className="w-5 h-5" />
+        </button>
+        <button
+          onClick={() => setMode('energetic')}
+          className={`p-3 rounded-full transition-all ${mode === 'energetic' ? 'bg-indigo-500 text-white shadow-lg scale-110' : 'bg-white/80 dark:bg-black/80 text-gray-400 hover:text-indigo-500'}`}
+          title="Energetic Mode"
+        >
+          <Zap className="w-5 h-5" />
+        </button>
+      </div>
     </main>
   );
 }
