@@ -11,6 +11,7 @@ interface CloudCanvasProps {
 
 export default function CloudCanvas({ side, children, className = "", style }: CloudCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const foregroundCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const requestRef = useRef<number>(null);
   const particlesRef = useRef<any[]>([]);
@@ -49,10 +50,12 @@ export default function CloudCanvas({ side, children, className = "", style }: C
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const fgCanvas = foregroundCanvasRef.current;
+    if (!canvas || !fgCanvas) return;
 
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const fgCtx = fgCanvas.getContext("2d");
+    if (!ctx || !fgCtx) return;
 
     const margin = 50;
     const color = side === "left" ? "34,211,238" : "168,85,247";
@@ -71,7 +74,8 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           opacity: 0.08 + Math.random() * 0.05,
           vx: (Math.random() - 0.5) * 0.005, // Almost static
           vy: (Math.random() - 0.5) * 0.005,
-          sharp: false
+          sharp: false,
+          isForeground: Math.random() < 0.1 // 10% chance to be in front
         });
       }
       // Layer 2: Medium puffy circles
@@ -83,7 +87,8 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           opacity: 0.12 + Math.random() * 0.08,
           vx: (Math.random() - 0.5) * 0.008,
           vy: (Math.random() - 0.5) * 0.008,
-          sharp: false
+          sharp: false,
+          isForeground: Math.random() < 0.1 // 10% chance to be in front
         });
       }
     }
@@ -95,11 +100,16 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       if (canvas.width !== width + margin * 2 || canvas.height !== height + margin * 2) {
         canvas.width = width + margin * 2;
         canvas.height = height + margin * 2;
+        fgCanvas.width = width + margin * 2;
+        fgCanvas.height = height + margin * 2;
       }
 
       ctx.save();
+      fgCtx.save();
       ctx.translate(margin, margin);
+      fgCtx.translate(margin, margin);
       ctx.clearRect(-margin, -margin, canvas.width, canvas.height);
+      fgCtx.clearRect(-margin, -margin, fgCanvas.width, fgCanvas.height);
 
       particlesRef.current.forEach(p => {
         p.x += p.vx;
@@ -115,21 +125,26 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           p.vy -= dy * 0.00002;
         }
 
-        const gradient = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+        const targetCtx = p.isForeground ? fgCtx : ctx;
+        const gradient = targetCtx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
         const pColor = p.isWhite ? "255,255,255" : color;
 
         // Ultra-soft gradients for "puffy" look
-        gradient.addColorStop(0, `rgba(${pColor}, ${p.opacity})`);
-        gradient.addColorStop(0.5, `rgba(${pColor}, ${p.opacity * 0.3})`);
+        // Foreground particles are even more transparent
+        const currentOpacity = p.isForeground ? p.opacity * 0.4 : p.opacity;
+
+        gradient.addColorStop(0, `rgba(${pColor}, ${currentOpacity})`);
+        gradient.addColorStop(0.5, `rgba(${pColor}, ${currentOpacity * 0.3})`);
         gradient.addColorStop(1, "rgba(255,255,255,0)");
 
-        ctx.fillStyle = gradient;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
+        targetCtx.fillStyle = gradient;
+        targetCtx.beginPath();
+        targetCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        targetCtx.fill();
       });
 
       ctx.restore();
+      fgCtx.restore();
       requestRef.current = requestAnimationFrame(animate);
     };
 
@@ -146,7 +161,7 @@ export default function CloudCanvas({ side, children, className = "", style }: C
       className={`relative inline-block animate-float ${className}`}
       style={style}
     >
-      {/* cloud canvas */}
+      {/* background cloud canvas */}
       <canvas
         ref={canvasRef}
         className="absolute pointer-events-none blur-[12px]"
@@ -164,6 +179,18 @@ export default function CloudCanvas({ side, children, className = "", style }: C
           {children}
         </div>
       </div>
+
+      {/* foreground cloud canvas (renders over text) */}
+      <canvas
+        ref={foregroundCanvasRef}
+        className="absolute pointer-events-none blur-[15px] z-20"
+        style={{ 
+          top: -50, 
+          left: -50, 
+          width: dimensions.width + 100, 
+          height: dimensions.height + 100 
+        }}
+      />
     </div>
   );
 }
