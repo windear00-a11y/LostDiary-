@@ -56,38 +56,12 @@ export const InsightsView = () => {
   ];
 
   return (
-    <div className="space-y-12 py-12">
+    <div className="space-y-12 py-12 text-center">
       <div className="text-center space-y-2">
         <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-gray-400">Reflections</h3>
         <p className="font-serif italic text-gray-500">Subtle patterns in your journey</p>
       </div>
-
-      <div className="grid gap-8">
-        {insights.map((insight, i) => (
-          <motion.div
-            key={insight.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            className="flex items-start gap-6 group"
-          >
-            <div className={`mt-1 p-2 rounded-xl bg-gray-50 dark:bg-white/5 ${insight.color}`}>
-              <insight.icon className="w-5 h-5" />
-            </div>
-            <div className="space-y-1">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
-                {insight.label}
-              </h4>
-              <p className="text-lg font-serif text-gray-800 dark:text-gray-200">
-                {insight.value}
-              </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500 italic">
-                {insight.description}
-              </p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
+      <p className="text-gray-400 italic">Pattern analysis coming later.</p>
     </div>
   );
 };

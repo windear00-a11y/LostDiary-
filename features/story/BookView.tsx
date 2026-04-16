@@ -3,11 +3,10 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { BookOpen } from 'lucide-react';
-import { chapterService, Chapter } from '@/lib/services/chapter-service';
-import { chatService } from '@/lib/services/chat-service';
+import { coreService, Chapter } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { BookRenderer } from './BookRenderer';
-import { InsightsView } from './InsightsView';
+// import { InsightsView } from './InsightsView';
 import { PipelineController } from '@/ai-core/pipeline-controller';
 import { analyzeEntries } from '@/ai-core/pattern-detector';
 
@@ -61,8 +60,8 @@ export const BookView = () => {
         const user = await authService.getUser();
         if (user) {
           const [chaptersData, messagesData] = await Promise.all([
-            chapterService.fetchChapters(user.id),
-            chatService.fetchMessages(user.id)
+            coreService.fetchChapters(user.id),
+            coreService.fetchMessages(user.id)
           ]);
           
           setChapters(chaptersData);
@@ -128,6 +127,8 @@ export const BookView = () => {
             >
               Narrative
             </button>
+            {/* Reflections toggle disabled (Future feature) */}
+            {/*
             <button
               onClick={() => setView('insights')}
               className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
@@ -138,6 +139,7 @@ export const BookView = () => {
             >
               Reflections
             </button>
+            */}
           </div>
         </div>
 
@@ -187,9 +189,13 @@ export const BookView = () => {
             <BookRenderer chapters={chapters} />
           </div>
         ) : (
+          /* Future feature: InsightsView */
+          /*
           <div className="max-w-[500px] mx-auto">
             <InsightsView />
           </div>
+          */
+          null
         )}
       </div>
     </motion.div>

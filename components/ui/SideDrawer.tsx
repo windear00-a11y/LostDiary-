@@ -10,8 +10,7 @@ import {
 import Image from 'next/image';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
-import { chapterService, Chapter } from '@/lib/services/chapter-service';
-import { chatService, ChatSession } from '@/lib/services/chat-service';
+import { coreService, Chapter, ChatSession } from '@/lib/services/core-service';
 import { ALLOWED_CHAPTERS } from '@/lib/utils/chapters';
 
 interface SideDrawerProps {

@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
-import { chatService, ChatMessage } from '@/lib/services/chat-service';
+import { coreService, ChatMessage } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { MessageList } from './MessageList';
@@ -13,6 +13,7 @@ import { StoryPreviewCard } from '@/features/story/StoryPreviewCard';
 import { GoogleGenAI } from "@google/genai";
 import { Header } from '@/components/ui/Header';
 import { Loader2, Image as ImageIcon, Sparkles, PenLine, Heart, BookOpen, Feather } from 'lucide-react';
+import { generateStoryResponse } from '@/ai-core/ai-engine';
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
@@ -194,7 +195,7 @@ export const ChatInterface = () => {
       if (user) {
         setUserId(user.id);
         try {
-          const data = await chatService.fetchMessages(user.id, sessionIdFromUrl);
+          const data = await coreService.fetchMessages(user.id, sessionIdFromUrl);
           const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
           
           console.log(`Loaded ${visibleMessages.length} messages for session ${sessionIdFromUrl}`);
@@ -246,7 +247,7 @@ export const ChatInterface = () => {
     isSendingRef.current = true;
 
     try {
-      const newMessage = await chatService.sendMessage({ 
+      const newMessage = await coreService.sendMessage({ 
         ...input, 
         user_id: user.id,
         session_id: sessionId,
@@ -267,7 +268,7 @@ export const ChatInterface = () => {
       });
 
       // Reload messages to get potential AI reply
-      const data = await chatService.fetchMessages(user.id, sessionId);
+      const data = await coreService.fetchMessages(user.id, sessionId);
       const visibleMessages = data.filter(m => !m.metadata?.is_hidden);
       
       if (visibleMessages.length > 0) {
@@ -350,7 +351,7 @@ export const ChatInterface = () => {
     // CASE 1: New Session needed
     if (!activeSessionId) {
       try {
-        const newSession = await chatService.createSession(user.id, "Chat " + new Date().toLocaleDateString());
+        const newSession = await coreService.createSession(user.id, "Chat " + new Date().toLocaleDateString());
         activeSessionId = newSession.id;
         
         // Handoff to the new page instance
@@ -364,12 +365,44 @@ export const ChatInterface = () => {
       }
     }
 
-    // CASE 2: Existing Session
-    if (!input.metadata?.is_hidden) {
-      setMessages(prev => [...prev, optimisticMsg]);
+    // 1. Instantly render user message
+    setMessages(prev => [...prev, optimisticMsg]);
+    setThoughtStarter(null);
+    setSelectedActionIndex(null);
+
+    // 2. Show "Thinking..." loader
+    setIsThinking(true);
+
+    // 3. Call ai-engine.ts and backend in parallel
+    const aiResponsePromise = typeof input.content === 'string' 
+      ? generateStoryResponse(input.content, messages.slice(-5).map(m => ({ content: m.content, role: m.role })))
+      : Promise.resolve(null);
+
+    // Backend call for saving/background processing
+    const backendPromise = performSendMessage({ ...input, tempId }, activeSessionId);
+
+    // 4. On response, replace loader with AI message
+    const [aiResponse] = await Promise.all([aiResponsePromise, backendPromise]);
+
+    if (aiResponse) {
+      const aiMsg: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        user_id: user.id,
+        session_id: activeSessionId,
+        role: 'diary',
+        type: 'text',
+        content: aiResponse,
+        media_url: null,
+        metadata: {},
+        created_at: new Date().toISOString(),
+        status: 'saved'
+      };
+      
+      // 7. Smooth fade-in animation for AI message
+      setMessages(prev => [...prev, aiMsg]);
     }
 
-    await performSendMessage({ ...input, tempId }, activeSessionId);
+    setIsThinking(false);
   };
 
   return (
@@ -522,7 +555,7 @@ export const ChatInterface = () => {
                   <StoryPreview story={wowStory} />
                 )}
 
-                <AnimatePresence>
+                {/* <AnimatePresence>
                   {isAnalyzing && (
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
@@ -535,7 +568,7 @@ export const ChatInterface = () => {
                       </div>
                     </motion.div>
                   )}
-                </AnimatePresence>
+                </AnimatePresence> */}
 
                 <AnimatePresence>
                   {showHint && (
@@ -556,14 +589,25 @@ export const ChatInterface = () => {
                   <motion.div 
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="flex items-center gap-2 text-xs font-serif italic text-slate-500 dark:text-slate-400"
+                    className="flex flex-col gap-2"
                   >
-                    <div className="flex gap-1">
-                      <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    <div className="flex items-center gap-2 text-xs font-serif italic text-slate-500 dark:text-slate-400">
+                      <div className="flex gap-1">
+                        <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                      WinDear is reflecting...
                     </div>
-                    WinDear is reflecting...
+                    {/* Story moment hint for long responses */}
+                    <motion.p 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 3 }}
+                      className="text-[10px] text-slate-400 dark:text-slate-500 font-serif italic"
+                    >
+                      This feels like a story moment...
+                    </motion.p>
                   </motion.div>
                 )}
               </motion.div>

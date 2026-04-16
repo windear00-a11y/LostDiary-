@@ -1,5 +1,4 @@
 import { GoogleGenAI } from "@google/genai";
-import { PatternReport } from "./pattern-detector";
 import { isHighValueResponse } from "@/lib/utils/quality";
 import { mapToChapter } from "@/lib/utils/chapters";
 import { AIPersonality } from "./personality";
@@ -24,7 +23,6 @@ export interface PipelineOutput {
   shouldRespond: boolean;
   aiResponse: any | null;
   isHighValue: boolean;
-  patterns: PatternReport;
   narrativeUpdate: { summary: string; narrative: string } | null;
 }
 
@@ -35,7 +33,7 @@ export class PipelineController {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
-  async runPipeline(input: PipelineInput, decisions: OrchestrationDecisions, patterns: PatternReport): Promise<PipelineOutput> {
+  async runPipeline(input: PipelineInput, decisions: OrchestrationDecisions): Promise<PipelineOutput> {
     console.log("[Pipeline] Starting execution for user:", input.userId);
     
     // Step 1: Process user input
@@ -69,7 +67,7 @@ export class PipelineController {
     let isHighValue = false;
     
     if (decisions.shouldRespond) {
-      aiResponse = await this.generateResponse(input.message.content, patterns, input.language);
+      aiResponse = await this.generateResponse(input.message.content, input.language);
       if (aiResponse) {
         const responseText = `${aiResponse.emotion_reflection}\n\n${aiResponse.validation}\n\n${aiResponse.insight}\n\n${aiResponse.gentle_suggestion}\n\n${aiResponse.short_reply}`;
         isHighValue = isHighValueResponse(responseText);
@@ -81,7 +79,6 @@ export class PipelineController {
       shouldRespond: decisions.shouldRespond,
       aiResponse,
       isHighValue,
-      patterns,
       narrativeUpdate
     };
   }
@@ -135,9 +132,9 @@ Rules:
   }
 
   // --- Logic moved from life-author.ts ---
-  public async generateOpening(events: any[], patterns: PatternReport): Promise<string | null> {
+  public async generateOpening(events: any[]): Promise<string | null> {
     const systemInstruction = `
-You are an expert Story Builder. Your goal is to weave a list of life events and patterns into a powerful, cinematic opening paragraph for a LifeBook.
+You are an expert Story Builder. Your goal is to weave a list of life events into a powerful, cinematic opening paragraph for a LifeBook.
 Rules:
 1. Introduce the user as the main character.
 2. Set the overall tone of the life journey (struggles, growth, direction).
@@ -150,7 +147,6 @@ Rules:
 `;
     const structuredData = `
 Events: ${events.map(e => e.summary).join(', ')}
-Patterns: ${JSON.stringify(patterns)}
 `;
     try {
       const response = await this.ai.models.generateContent({
@@ -218,8 +214,8 @@ Rules:
     }
   }
 
-  private async generateResponse(content: string, patterns: PatternReport, language?: string): Promise<any | null> {
-    const toneMode = AIPersonality.selectTone({ input: content, patterns });
+  private async generateResponse(content: string, language?: string): Promise<any | null> {
+    const toneMode = AIPersonality.selectTone({ input: content });
     const toneInstructions = AIPersonality.getToneInstructions(toneMode);
     
     const systemInstruction = `

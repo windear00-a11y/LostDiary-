@@ -1,10 +1,7 @@
-import { PatternReport } from "./pattern-detector";
-
 export type ToneMode = "soft_support" | "friendly_casual" | "deep_reflective" | "light_witty";
 
 export interface ToneContext {
   input: string;
-  patterns: PatternReport;
   lastTone?: ToneMode;
 }
 
@@ -42,25 +39,18 @@ export const AIPersonality = {
   },
 
   selectTone(context: ToneContext): ToneMode {
-    const { input, patterns, lastTone } = context;
-    const { dominant_emotion, risk_flag } = patterns;
+    const { input, lastTone } = context;
 
-    let selectedTone: ToneMode;
+    let selectedTone: ToneMode = "friendly_casual";
 
-    if (risk_flag || dominant_emotion === "negative") {
-      selectedTone = "soft_support";
-    }
-    else if (input.length > 250 && dominant_emotion === "neutral") {
+    if (input.length > 250) {
       selectedTone = "deep_reflective";
     }
-    else if (dominant_emotion === "positive" && input.length < 100) {
+    else if (input.length < 100) {
       selectedTone = Math.random() < 0.2 ? "light_witty" : "friendly_casual";
     }
-    else {
-      selectedTone = "friendly_casual";
-    }
 
-    if (selectedTone === lastTone && !risk_flag && dominant_emotion !== "negative") {
+    if (selectedTone === lastTone) {
       if (selectedTone === "friendly_casual" && input.length > 150) {
         selectedTone = "deep_reflective";
       } else if (selectedTone === "deep_reflective") {

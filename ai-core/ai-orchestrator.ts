@@ -1,5 +1,4 @@
 import { profileService } from "@/lib/services/profile-service";
-import { PatternReport, analyzeEntries } from "./pattern-detector";
 import { PipelineController, PipelineInput, PipelineOutput } from "./pipeline-controller";
 import { isImportantMessage } from "@/lib/utils/importance";
 
@@ -18,8 +17,7 @@ export class AIOrchestrator {
 
   private async makeDecisions(
     userId: string,
-    message: { content: string; type: string; role: string },
-    patterns: PatternReport
+    message: { content: string; type: string; role: string }
   ): Promise<OrchestrationDecisions> {
     if (message.role !== 'user' || !message.content) {
       return { shouldExtractEvent: false, shouldRespond: false, shouldTriggerChapter: false };
@@ -35,12 +33,10 @@ export class AIOrchestrator {
     if (message.content.length > 80) score += 0.3;
     if (message.type !== "text") score += 0.2;
     if (message.content.includes("?")) score += 0.2;
-    if (patterns.dominant_emotion === "negative") score += 0.3;
     
     const threshold = 0.5 - (profile.responsiveness_level * 0.1) - (profile.emotional_sensitivity * 0.1) + ((1 - profile.engagement_level) * 0.2);
-    const isRepeated = patterns && patterns.risk_flag;
     
-    const shouldRespond = score > threshold || !!isRepeated;
+    const shouldRespond = score > threshold;
 
     // 3. Should Trigger Chapter?
     const shouldTriggerChapter = shouldExtractEvent;
@@ -55,11 +51,10 @@ export class AIOrchestrator {
   async processInteraction(input: PipelineInput): Promise<PipelineOutput> {
     console.log("[Orchestrator] Analyzing interaction for user:", input.userId);
     
-    const patterns = analyzeEntries(input.contextMessages);
-    const decisions = await this.makeDecisions(input.userId, input.message, patterns);
+    const decisions = await this.makeDecisions(input.userId, input.message);
 
     console.log("[Orchestrator] Decisions:", decisions);
 
-    return this.pipeline.runPipeline(input, decisions, patterns);
+    return this.pipeline.runPipeline(input, decisions);
   }
 }
