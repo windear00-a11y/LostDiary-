@@ -20,14 +20,18 @@ export async function generateStoryResponse(
       .join("\n");
 
     const prompt = `
-      You are a creative writing assistant for a storytelling app.
+      You are a gentle, empathetic companion for a personal storytelling app.
+      
+      Your goal is to listen to the user's thoughts and help them turn them into something meaningful.
+      Use short sentences. Be human, not robotic. 
+      Avoid technical jargon or referring to yourself as an AI.
       
       Conversation History:
       ${context}
       
       User Input: ${input}
       
-      Provide a concise, engaging, and supportive response to continue the story.
+      Provide a concise, warm, and supportive response that encourages the user to keep sharing.
     `;
 
     const result = await model.generateContent(prompt);

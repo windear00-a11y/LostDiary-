@@ -6,6 +6,7 @@ import { BookOpen } from 'lucide-react';
 import { coreService, Chapter } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { BookRenderer } from './BookRenderer';
+import { StoryReader } from './StoryReader';
 // import { InsightsView } from './InsightsView';
 import { PipelineController } from '@/ai-core/pipeline-controller';
 import { analyzeEntries } from '@/ai-core/pattern-detector';
@@ -170,32 +171,8 @@ export const BookView = () => {
               <GhostBook />
             </motion.div>
           </div>
-        ) : view === 'narrative' ? (
-          <div className="space-y-40">
-            {openingText && (
-              <motion.div 
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 2, delay: 0.5 }}
-                className="text-center space-y-12"
-              >
-                <div className="w-12 h-px bg-gray-200 dark:bg-gray-800 mx-auto" />
-                <div className="font-serif text-3xl md:text-4xl italic text-gray-800 dark:text-gray-200 leading-[1.6] tracking-tight max-w-2xl mx-auto">
-                  <p>&ldquo;{openingText}&rdquo;</p>
-                </div>
-                <div className="w-12 h-px bg-gray-200 dark:bg-gray-800 mx-auto" />
-              </motion.div>
-            )}
-            <BookRenderer chapters={chapters} />
-          </div>
         ) : (
-          /* Future feature: InsightsView */
-          /*
-          <div className="max-w-[500px] mx-auto">
-            <InsightsView />
-          </div>
-          */
-          null
+          <StoryReader chapters={chapters} onBack={() => window.history.back()} />
         )}
       </div>
     </motion.div>

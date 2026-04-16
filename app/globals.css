@@ -1,13 +1,12 @@
 @import "tailwindcss";
 
 @theme {
-  --color-accent: #6C63FF;
-  --color-bg-light: #F4F5F7;
-  --color-chat-light: #FFFFFF;
-  --color-text-light: #2A2A2A;
-  --color-bg-dark: #0F0F10;
-  --color-chat-dark: #1A1A1D;
-  --color-text-dark: #E5E7EB;
+  --color-bg-dark: #0d0d0d;
+  --color-ai-bubble: #6366f1;
+  --color-user-bubble: #22d3ee;
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #94a3b8;
+  --animate-smooth: transition-all duration-300 ease-in-out;
 }
 
 @layer base {

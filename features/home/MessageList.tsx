@@ -6,6 +6,7 @@ import { MapPin, User, Sparkles, Reply, Feather, Link as LinkIcon, AlertCircle }
 import { motion } from 'motion/react';
 import Image from 'next/image';
 import CloudCanvas from './CloudCanvas';
+import { TypingText } from './TypingText';
 
 // Helper to extract URLs from text
 const extractUrls = (text: string) => {
@@ -145,8 +146,12 @@ export const MessageList = ({ messages, onReply }: { messages: ChatMessage[], on
                   {/* Message Content */}
                   {msg.type === 'text' && (
                     <div className="text-[15px] md:text-[17px] leading-relaxed font-normal tracking-wide whitespace-pre-wrap dark:drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]">
-                      {msg.content || msg.text || (
-                        <span className="opacity-50 italic">Empty message</span>
+                      {isUser ? (
+                        msg.content || msg.text || (
+                          <span className="opacity-50 italic">Empty message</span>
+                        )
+                      ) : (
+                        <TypingText text={msg.content || msg.text || ''} />
                       )}
                       {/* Link Previews */}
                       {extractUrls(msg.content || msg.text || '').map((url, i) => (

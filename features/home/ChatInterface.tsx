@@ -12,8 +12,9 @@ import { StoryPreview } from './StoryPreview';
 import { StoryPreviewCard } from '@/features/story/StoryPreviewCard';
 import { GoogleGenAI } from "@google/genai";
 import { Header } from '@/components/ui/Header';
-import { Loader2, Image as ImageIcon, Sparkles, PenLine, Heart, BookOpen, Feather } from 'lucide-react';
+import { Loader2, Sparkles, PenLine, Heart, BookOpen } from 'lucide-react';
 import { generateStoryResponse } from '@/ai-core/ai-engine';
+import { OnboardingView } from './OnboardingView';
 
 const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
 
@@ -406,11 +407,12 @@ export const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-transparent transition-colors duration-500 relative">
-      {/* Subtle Chat Wallpaper Pattern */}
-      <div className="absolute inset-0 z-0 opacity-[0.03] dark:opacity-[0.02] pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
-      
-      <Header />
+    <div className="flex flex-col h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] transition-colors duration-500 relative">
+      {/* Immersive Top Bar */}
+      <div className="absolute top-0 left-0 right-0 z-50 p-6 flex flex-col items-center justify-center bg-gradient-to-b from-[#fdfcfb] to-transparent dark:from-[#0d0d0d] dark:to-transparent">
+        <h1 className="text-xl font-serif font-bold text-slate-900 dark:text-white tracking-tight">WinDear</h1>
+        <p className="text-xs font-serif italic text-slate-500 dark:text-slate-400 mt-1">I&apos;m listening...</p>
+      </div>
       
       <AnimatePresence>
         {error && (
@@ -418,15 +420,15 @@ export const ChatInterface = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-full shadow-lg flex items-center gap-2"
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-full shadow-lg flex items-center gap-2"
           >
             <span className="text-xs font-medium text-red-600 dark:text-red-400">{error}</span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide pt-24 pb-40 relative z-10">
-        <div className={`max-w-3xl mx-auto px-4 md:px-6 min-h-full flex flex-col ${messages.length > 0 ? 'justify-end' : ''}`}>
+      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-hide pt-28 pb-32 relative z-10">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 min-h-full flex flex-col justify-end">
           <AnimatePresence>
             {loading ? (
               <motion.div 
@@ -439,108 +441,7 @@ export const ChatInterface = () => {
                 <Loader2 className="w-8 h-8 text-accent animate-spin" />
               </motion.div>
             ) : (messages.length === 0 && !sessionIdFromUrl) ? (
-              <motion.div 
-                key="empty"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, filter: 'blur(4px)' }}
-                transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-12 py-12"
-              >
-                <div className="space-y-4">
-                  <h2 className="text-4xl md:text-5xl font-serif font-semibold text-slate-900 dark:text-white px-4 tracking-tight">
-                    {t.title}
-                  </h2>
-                  <p className="text-lg text-slate-700 dark:text-slate-300 font-serif italic font-medium">
-                    {t.subtitle}
-                  </p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4 w-full max-w-md px-4 relative">
-                  <AnimatePresence mode="popLayout">
-                    {t.actions.map((action, i) => {
-                      if (selectedActionIndex !== null && selectedActionIndex !== i) return null;
-                      return (
-                        <motion.button
-                          layout
-                          key={i}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.9, filter: 'blur(4px)' }}
-                          whileHover={selectedActionIndex === null ? { scale: 1.02, backgroundColor: 'rgba(0,0,0,0.02)' } : {}}
-                          whileTap={selectedActionIndex === null ? { scale: 0.98 } : {}}
-                          onClick={() => {
-                            if (selectedActionIndex === i) {
-                              setSelectedActionIndex(null);
-                              setThoughtStarter(null);
-                              return;
-                            }
-                            if (selectedActionIndex !== null) return;
-                            
-                            setSelectedActionIndex(i);
-                            
-                            if (action.path) {
-                              setTimeout(() => {
-                                router.push(action.path);
-                                setSelectedActionIndex(null);
-                              }, 500);
-                            } else if (action.prompt) {
-                              // Generate a dynamic prompt based on the action and past messages
-                              setThoughtStarter(language === 'hi' ? "सोच रहा हूँ..." : "Thinking...");
-                              generateDynamicPrompt(action.prompt);
-                            }
-                          }}
-                          className={`flex flex-col gap-3 p-4 rounded-2xl border border-gray-100 dark:border-white/5 bg-white/50 dark:bg-white/5 shadow-sm transition-all text-left ${selectedActionIndex === i ? 'col-span-2 bg-white dark:bg-white/10 shadow-md ring-2 ring-indigo-500/20' : ''}`}
-                        >
-                          <div className="flex items-center gap-3 w-full">
-                            <div className="shrink-0"><action.icon className={`w-5 h-5 ${action.color}`} /></div>
-                            <span className="text-sm font-medium text-slate-700 dark:text-slate-200 font-serif italic">{action.label}</span>
-                          </div>
-                          
-                          <AnimatePresence>
-                            {selectedActionIndex === i && thoughtStarter && (
-                              <motion.div 
-                                initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                                animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
-                                exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                                className="w-full overflow-hidden"
-                              >
-                                <div className="p-3 bg-indigo-50/50 dark:bg-indigo-500/10 rounded-xl border border-indigo-100/50 dark:border-indigo-500/20">
-                                  <p className="text-sm text-indigo-700 dark:text-indigo-300 font-serif italic flex items-start gap-2">
-                                    <Sparkles className="w-4 h-4 mt-0.5 shrink-0" />
-                                    {thoughtStarter}
-                                  </p>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </motion.button>
-                      );
-                    })}
-                  </AnimatePresence>
-                </div>
-
-                {/* Show Story Preview in empty state instead of cluttering the chat */}
-                {userId && (
-                  <div className="w-full max-w-md px-4 pt-8">
-                    <StoryPreviewCard userId={userId} refreshTrigger={refreshKey} />
-                  </div>
-                )}
-              </motion.div>
-            ) : (messages.length === 0 && sessionIdFromUrl) ? (
-              <motion.div 
-                key="session-empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-4"
-              >
-                <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-500/10 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                  <PenLine className="w-8 h-8 text-indigo-500" />
-                </div>
-                <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-slate-100 italic">
-                  {language === 'hi' ? 'अपनी कहानी शुरू करें...' : 'Start your story...'}
-                </h2>
-              </motion.div>
+              <OnboardingView onStart={() => {}} />
             ) : (
               <motion.div 
                 key="chat"
@@ -555,21 +456,6 @@ export const ChatInterface = () => {
                   <StoryPreview story={wowStory} />
                 )}
 
-                {/* <AnimatePresence>
-                  {isAnalyzing && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="flex justify-center"
-                    >
-                      <div className="px-4 py-2 bg-white/50 dark:bg-white/5 backdrop-blur-md rounded-full border border-gray-100 dark:border-white/5 text-[11px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-                        Saving your moment...
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence> */}
-
                 <AnimatePresence>
                   {showHint && (
                     <motion.div 
@@ -579,7 +465,7 @@ export const ChatInterface = () => {
                       className="flex justify-center"
                     >
                       <div className="bg-accent/10 text-accent px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest">
-                        This might become a chapter
+                        This feels special...
                       </div>
                     </motion.div>
                   )}
@@ -597,7 +483,7 @@ export const ChatInterface = () => {
                         <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                         <span className="w-1.5 h-1.5 bg-accent/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
-                      WinDear is reflecting...
+                      I&apos;m thinking about what you said...
                     </div>
                     {/* Story moment hint for long responses */}
                     <motion.p 
@@ -606,7 +492,7 @@ export const ChatInterface = () => {
                       transition={{ delay: 3 }}
                       className="text-[10px] text-slate-400 dark:text-slate-500 font-serif italic"
                     >
-                      This feels like a story moment...
+                      Let&apos;s turn this into something meaningful...
                     </motion.p>
                   </motion.div>
                 )}
@@ -616,36 +502,12 @@ export const ChatInterface = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 z-40 w-full pointer-events-none">
-        <div className="pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-2 px-4 max-w-3xl mx-auto w-full relative pointer-events-auto">
-          <AnimatePresence>
-            {thoughtStarter && messages.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95, filter: 'blur(4px)' }}
-                className="absolute bottom-full left-0 right-0 mb-4 flex justify-center pointer-events-none z-20"
-              >
-                <div 
-                  className="bg-white/90 dark:bg-[#1A1A1D]/90 backdrop-blur-md px-5 py-2.5 rounded-full shadow-lg border border-indigo-100 dark:border-indigo-500/20 pointer-events-auto cursor-pointer hover:scale-105 transition-transform"
-                  onClick={() => {
-                    // Pre-fill the input or just dismiss it
-                    setThoughtStarter(null);
-                  }}
-                >
-                  <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 font-serif italic flex items-center gap-2">
-                    <Sparkles className="w-3 h-3" />
-                    {thoughtStarter}
-                  </p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
+      <div className="sticky bottom-0 left-0 right-0 z-40 w-full bg-gradient-to-t from-[#fdfcfb] to-transparent dark:from-[#0d0d0d] dark:to-transparent">
+        <div className="pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-6 px-4 max-w-3xl mx-auto w-full">
           <ChatInput 
             onSendMessage={async (msg) => {
-              setThoughtStarter(null); // Hide thought starter on send
-              setSelectedActionIndex(null); // Hide expanded suggestion on send
+              setThoughtStarter(null);
+              setSelectedActionIndex(null);
               await handleSendMessage(msg);
             }} 
             replyingTo={replyingTo} 

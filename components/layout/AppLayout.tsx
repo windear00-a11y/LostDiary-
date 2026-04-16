@@ -16,8 +16,6 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </main>
       </div>
-
-      <MicroInteractionToast />
     </div>
   );
 };
