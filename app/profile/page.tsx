@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
-import { profileService, UserProfile } from '@/lib/services/profile-service';
-import { chatService } from '@/lib/services/chat-service';
+import { coreService, UserProfile } from '@/lib/services/core-service';
 import { GoogleGenAI } from "@google/genai";
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Camera, Sparkles, Loader2, LogOut, Save, Edit2 } from 'lucide-react';
@@ -33,7 +32,7 @@ export default function ProfilePage() {
   const loadProfile = React.useCallback(async () => {
     if (!user) return;
     try {
-      const data = await profileService.getProfile(user.id);
+      const data = await coreService.getProfile(user.id);
       setProfile(data);
       setDisplayName(data.display_name || '');
       setBio(data.bio || '');
@@ -53,7 +52,7 @@ export default function ProfilePage() {
     if (!user) return;
     try {
       setLoading(true);
-      const updated = await profileService.updateProfile(user.id, {
+      const updated = await coreService.updateProfile(user.id, {
         display_name: displayName,
         bio: bio
       });
@@ -74,7 +73,7 @@ export default function ProfilePage() {
       setError(null);
       
       // 1. Get context from diary entries
-      const messages = await chatService.fetchMessages(user.id);
+      const messages = await coreService.fetchMessages(user.id);
       if (messages.length < 3) {
         setError("WinDear needs at least 3 entries to understand your persona.");
         return;
@@ -121,8 +120,8 @@ export default function ProfilePage() {
 
       if (base64Image) {
         // 4. Upload and update profile
-        const publicUrl = await profileService.uploadAvatar(user.id, base64Image);
-        const updated = await profileService.updateProfile(user.id, {
+        const publicUrl = await coreService.uploadAvatar(user.id, base64Image);
+        const updated = await coreService.updateProfile(user.id, {
           avatar_url: publicUrl,
           personality_summary: visualPrompt
         });

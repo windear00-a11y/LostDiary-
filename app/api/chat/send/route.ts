@@ -72,6 +72,7 @@ export async function POST(req: Request) {
     }
 
     // Save AI Response if generated
+    let aiResponseText: string | null = null;
     if (pipelineOutput.shouldRespond) {
       aiResponseText = await generateStoryResponse(content, contextMessages);
       

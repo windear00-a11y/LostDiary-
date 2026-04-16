@@ -1,4 +1,4 @@
-import { profileService } from "@/lib/services/profile-service";
+import { coreService } from "@/lib/services/core-service";
 import { PipelineController, PipelineInput, PipelineOutput } from "./pipeline-controller";
 import { isImportantMessage } from "@/lib/utils/importance";
 
@@ -27,7 +27,7 @@ export class AIOrchestrator {
     const shouldExtractEvent = isImportantMessage({ content: message.content, type: message.type });
 
     // 2. Should Respond?
-    const profile = await profileService.getProfile(userId);
+    const profile = await coreService.getProfile(userId);
     
     let score = 0;
     if (message.content.length > 80) score += 0.3;

@@ -12,7 +12,7 @@ import { StoryPreview } from './StoryPreview';
 import { StoryPreviewCard } from '@/features/story/StoryPreviewCard';
 import { GoogleGenAI } from "@google/genai";
 import { Header } from '@/components/ui/Header';
-import { Loader2, Sparkles, PenLine, Heart, BookOpen } from 'lucide-react';
+import { Loader2, Sparkles, PenLine, Heart, BookOpen, Book, ChevronLeft } from 'lucide-react';
 import { generateStoryResponse } from '@/ai-core/ai-engine';
 import { OnboardingView } from './OnboardingView';
 
@@ -408,10 +408,36 @@ export const ChatInterface = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] transition-colors duration-500 relative">
-      {/* Immersive Top Bar */}
-      <div className="absolute top-0 left-0 right-0 z-50 p-6 flex flex-col items-center justify-center bg-gradient-to-b from-[#fdfcfb] to-transparent dark:from-[#0d0d0d] dark:to-transparent">
-        <h1 className="text-xl font-serif font-bold text-slate-900 dark:text-white tracking-tight">WinDear</h1>
-        <p className="text-xs font-serif italic text-slate-500 dark:text-slate-400 mt-1">I&apos;m listening...</p>
+      {/* Minimal Floating Top Bar */}
+      <div className="fixed top-0 left-0 right-0 z-50 p-6 flex justify-between items-center pointer-events-none">
+        <div className="pointer-events-auto">
+          {sessionIdFromUrl && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => router.push('/home')}
+              className="p-2.5 rounded-full bg-white/10 backdrop-blur-lg border border-white/10 text-slate-400 shadow-sm"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </motion.button>
+          )}
+        </div>
+        
+        <div className="absolute left-1/2 -translate-x-1/2 text-center flex flex-col items-center">
+          <h1 className="text-xl font-serif font-bold text-slate-900 dark:text-white tracking-tight">WinDear</h1>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400 hidden md:block">Listening</p>
+        </div>
+
+        <div className="pointer-events-auto">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => router.push('/story')}
+            className="p-2.5 rounded-full bg-white/10 backdrop-blur-lg border border-white/10 text-indigo-400 shadow-sm"
+          >
+            <Book className="w-5 h-5" />
+          </motion.button>
+        </div>
       </div>
       
       <AnimatePresence>

@@ -190,6 +190,22 @@ export const coreService = {
   },
 
   // Chapter
+  async fetchChapters(userId: string): Promise<Chapter[]> {
+    const supabase = getSupabase();
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from('chapters')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error("Error fetching chapters:", error);
+      return [];
+    }
+    return data || [];
+  },
+
   async autoSaveChapter(userId: string, content: string) {
     const supabase = getSupabase();
     if (!supabase) return;
