@@ -17,10 +17,15 @@ export const MessageList = ({ messages }: { messages: ChatMessage[] }) => {
         return (
           <motion.div 
             key={msg.id || index} 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-            className={`flex items-start gap-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ 
+              type: 'spring',
+              damping: 25,
+              stiffness: 200,
+              delay: 0.05
+            }}
+            className={`flex items-start gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
           >
             {/* Simple Avatar */}
             <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${

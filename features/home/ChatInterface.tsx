@@ -14,7 +14,7 @@ import { generateStoryResponse } from '@/ai-core/ai-engine';
 export const ChatInterface = () => {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session');
-  const { language } = useUIStore();
+  const { language, isInputFocused, setInputFocused } = useUIStore();
   
   // Minimal core state
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -52,6 +52,26 @@ export const ChatInterface = () => {
       });
     }
   }, [messages, isThinking]);
+
+  // Handle keyboard visibility (ios/android)
+  useEffect(() => {
+    const handleResize = () => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      return () => window.visualViewport?.removeEventListener('resize', handleResize);
+    }
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleSendMessage = async (input: { type: 'text'; content: string }) => {
     const user = await authService.getUser();
@@ -111,7 +131,19 @@ export const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-transparent relative overflow-hidden">
+    <div className="flex flex-col h-[100dvh] bg-transparent relative overflow-hidden">
+      {/* Focus Mode Overlay */}
+      <AnimatePresence>
+        {isInputFocused && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-30 bg-white/60 dark:bg-black/60 backdrop-blur-[2px] pointer-events-none"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Error Overlay */}
       <AnimatePresence>
         {error && (
@@ -129,7 +161,7 @@ export const ChatInterface = () => {
       {/* Main Chat Area */}
       <div 
         ref={scrollRef} 
-        className="flex-1 overflow-y-auto scrollbar-hide pt-20 pb-12 px-4 md:px-6"
+        className={`flex-1 overflow-y-auto scrollbar-hide pt-20 pb-4 px-4 md:px-6 transition-opacity duration-500 ${isInputFocused ? 'opacity-30 grayscale-[0.2]' : 'opacity-100'}`}
       >
         <div className="max-w-3xl mx-auto space-y-6">
           {loading ? (
@@ -137,41 +169,19 @@ export const ChatInterface = () => {
           ) : (
             <>
               <MessageList messages={messages} />
-              
-              {/* Thinking Indicator */}
-              <AnimatePresence>
-                {isThinking && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="flex flex-col gap-2 pl-4 border-l-2 border-indigo-500/20"
-                  >
-                    <div className="flex items-center gap-3 text-sm font-serif italic text-slate-500 dark:text-slate-400">
-                      <div className="flex gap-1">
-                        {[0, 1, 2].map((i) => (
-                          <motion.div 
-                            key={i}
-                            animate={{ opacity: [0.3, 1, 0.3] }} 
-                            transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }} 
-                            className="w-1.5 h-1.5 bg-indigo-400 rounded-full" 
-                          />
-                        ))}
-                      </div>
-                      Thinking...
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </>
           )}
         </div>
       </div>
 
       {/* Input Section */}
-      <div className="sticky bottom-0 left-0 right-0 z-40 p-4 pt-8 bg-gradient-to-t from-[#fdfcfb] via-[#fdfcfb]/90 to-transparent dark:from-[#0d0d0d] dark:via-[#0d0d0d]/90">
-        <div className="max-w-3xl mx-auto">
-          <ChatInput onSendMessage={handleSendMessage} disabled={isThinking} />
+      <div className={`sticky bottom-0 w-full z-40 bg-transparent px-4 pt-2 pb-[env(safe-area-inset-bottom)] transition-all duration-300 ${isInputFocused ? 'pb-8' : ''}`}>
+        <div className={`max-w-3xl mx-auto pb-4 transition-all duration-500 ${isInputFocused ? 'scale-[1.02]' : 'scale-100'}`}>
+          <ChatInput 
+            onSendMessage={handleSendMessage} 
+            disabled={isThinking} 
+            onFocusChange={setInputFocused}
+          />
         </div>
       </div>
     </div>

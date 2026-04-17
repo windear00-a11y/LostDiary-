@@ -9,12 +9,14 @@ interface UIState {
   language: string;
   pendingMessage: ChatMessage | null;
   activeView: 'chat' | 'story';
+  isInputFocused: boolean;
   setBottomSheetOpen: (isOpen: boolean) => void;
   setAIAssistantOpen: (isOpen: boolean) => void;
   setShowTranslated: (show: boolean) => void;
   setLanguage: (lang: string) => void;
   setPendingMessage: (msg: ChatMessage | null) => void;
   setActiveView: (view: 'chat' | 'story') => void;
+  setInputFocused: (focused: boolean) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -24,10 +26,12 @@ export const useUIStore = create<UIState>((set) => ({
   language: 'en',
   pendingMessage: null,
   activeView: 'chat',
+  isInputFocused: false,
   setBottomSheetOpen: (isOpen) => set({ isBottomSheetOpen: isOpen }),
   setAIAssistantOpen: (isOpen) => set({ isAIAssistantOpen: isOpen }),
   setShowTranslated: (show) => set({ showTranslated: show }),
   setLanguage: (lang) => set({ language: lang }),
   setPendingMessage: (msg) => set({ pendingMessage: msg }),
   setActiveView: (view) => set({ activeView: view }),
+  setInputFocused: (focused) => set({ isInputFocused: focused }),
 }));

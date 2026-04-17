@@ -12,13 +12,15 @@ import { Header } from '@/components/ui/Header';
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { activeView } = useUIStore();
+  const { activeView, isInputFocused } = useUIStore();
 
   if (!user) return null;
 
   return (
     <div className="h-[100dvh] bg-transparent overflow-hidden flex flex-col relative">
-      <Header />
+      <div className={`transition-all duration-700 ${isInputFocused ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
+        <Header />
+      </div>
       <main className="flex-1 w-full relative">
         <ChatInterface />
         
