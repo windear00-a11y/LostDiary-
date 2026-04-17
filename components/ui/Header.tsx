@@ -30,7 +30,7 @@ export const Header = () => {
           <motion.button
             whileTap={{ scale: 0.98 }}
             onClick={() => setActiveView(activeView === 'chat' ? 'story' : 'chat')}
-            className="w-10 h-10 rounded-full bg-indigo-600 shadow-lg shadow-indigo-500/20 flex items-center justify-center transition-all"
+            className="w-10 h-10 rounded-full bg-neutral-900/80 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all"
           >
             {activeView === 'story' ? (
               <MessageSquare className="w-5 h-5 text-white" />

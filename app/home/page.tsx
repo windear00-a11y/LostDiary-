@@ -17,7 +17,7 @@ export default function HomePage() {
   if (!user) return null;
 
   return (
-    <div className="h-[100dvh] bg-transparent overflow-hidden flex flex-col relative">
+    <div className="h-[100dvh] bg-neutral-950 overflow-hidden flex flex-col relative">
       <div className={`transition-all duration-700 ${isInputFocused ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
         <Header />
       </div>
@@ -32,9 +32,9 @@ export default function HomePage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="absolute inset-0 z-40 bg-[#fdfcfb] dark:bg-[#0d0d0d] overflow-y-auto"
+              className="absolute inset-0 z-40 bg-neutral-950 overflow-y-auto"
             >
-              <div className="pt-20"> {/* Offset for header if needed, but Header is fixed */}
+              <div className="pt-20">
                 <BookView />
               </div>
             </motion.div>

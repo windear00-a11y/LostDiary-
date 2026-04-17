@@ -76,22 +76,21 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
             className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-[60]"
           />
 
-          {/* Drawer */}
-          <motion.div
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed top-0 left-0 bottom-0 w-[85vw] max-w-[300px] bg-[#fdfcfb] dark:bg-[#0d0d0d] z-[70] shadow-2xl flex flex-col border-r border-gray-100 dark:border-white/5"
-          >
-            {/* Header */}
-            <div className="p-6 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                  <Book className="w-5 h-5 text-white" />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 left-0 bottom-0 w-[85vw] max-w-[300px] bg-neutral-950 z-[70] shadow-2xl flex flex-col border-r border-white/5"
+            >
+              {/* Header */}
+              <div className="p-6 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+                    <Book className="w-5 h-5 text-white/70" />
+                  </div>
+                  <span className="font-serif italic text-xl font-bold tracking-tight text-slate-50">WinDear</span>
                 </div>
-                <span className="font-serif italic text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">WinDear</span>
-              </div>
               <div className="flex items-center gap-1">
                 <button className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
                   <Search className="w-4 h-4 text-slate-400" />
@@ -107,35 +106,35 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
                   <h3 className="text-[10px] uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 font-bold">History</h3>
-                  <button 
-                    onClick={() => {
-                      setActiveView('chat');
-                      router.push('/home');
-                      onClose();
-                    }}
-                    className="text-[10px] font-bold text-indigo-500 hover:underline flex items-center gap-1"
-                  >
-                    <Plus className="w-3 h-3" /> New Chat
-                  </button>
-                </div>
-                <div className="space-y-1">
-                  {sessions.map((session) => (
-                    <button
-                      key={session.id}
+                    <button 
                       onClick={() => {
                         setActiveView('chat');
-                        router.push(`/home?session=${session.id}`);
+                        router.push('/home');
                         onClose();
                       }}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white dark:hover:bg-white/5 transition-all text-left group"
+                      className="text-[10px] font-bold text-white/50 hover:text-white/90 transition-colors flex items-center gap-1"
                     >
-                      <MessageSquare className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 shrink-0" />
-                      <span className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1">
-                        {session.title || 'Untitled Session'}
-                      </span>
+                      <Plus className="w-3 h-3" /> New Chat
                     </button>
-                   ))}
-                </div>
+                  </div>
+                  <div className="space-y-1">
+                    {sessions.map((session) => (
+                      <button
+                        key={session.id}
+                        onClick={() => {
+                          setActiveView('chat');
+                          router.push(`/home?session=${session.id}`);
+                          onClose();
+                        }}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all text-left group"
+                      >
+                        <MessageSquare className="w-4 h-4 text-slate-500 group-hover:text-white/70 shrink-0" />
+                        <span className="text-xs text-slate-400 line-clamp-1">
+                          {session.title || 'Untitled Session'}
+                        </span>
+                      </button>
+                     ))}
+                  </div>
               </div>
             </div>
 

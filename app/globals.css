@@ -11,15 +11,12 @@
 
 @layer base {
   html, body {
-    @apply w-full overflow-x-hidden antialiased;
-    background: linear-gradient(135deg, #02040a 0%, #0d0d1a 50%, #161b2e 100%);
-    background-attachment: fixed;
+    @apply w-full overflow-x-hidden antialiased bg-neutral-950;
     color: #f8fafc;
   }
 
   .dark body {
-    background: linear-gradient(135deg, #02040a 0%, #0d0d1a 50%, #161b2e 100%);
-    background-attachment: fixed;
+    @apply bg-neutral-950;
     color: #f8fafc;
   }
 }

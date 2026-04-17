@@ -96,7 +96,7 @@ export const BookView = () => {
           <p className="text-rose-500 font-serif italic">{error}</p>
           <button 
             onClick={() => window.location.reload()}
-            className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400 hover:underline"
+            className="text-xs font-bold uppercase tracking-widest text-neutral-400 hover:underline"
           >
             Try Refreshing
           </button>
@@ -120,7 +120,7 @@ export const BookView = () => {
               onClick={() => setView('narrative')}
               className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
                 view === 'narrative' 
-                  ? 'bg-white dark:bg-[#2E2E2E] text-indigo-600 dark:text-indigo-400 shadow-sm' 
+                  ? 'bg-white dark:bg-[#2E2E2E] text-neutral-900 dark:text-neutral-100 shadow-sm' 
                   : 'text-gray-400 hover:text-gray-600'
               }`}
             >
@@ -156,7 +156,7 @@ export const BookView = () => {
               <h2 className="text-4xl font-serif italic text-gray-400 dark:text-gray-600 tracking-tight">
                 Your story is waiting to be written...
               </h2>
-              <p className="text-gray-300 dark:text-gray-700 max-w-sm mx-auto leading-relaxed font-serif italic">
+              <p className="text-gray-300 dark:text-gray-600 max-w-sm mx-auto leading-relaxed font-serif italic">
                 जैसे-जैसे आप यादें साझा करेंगे, आपकी कहानी के पन्ने यहाँ खुद-ब-खुद जुड़ते जाएंगे।
               </p>
             </div>
