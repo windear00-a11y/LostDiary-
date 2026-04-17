@@ -84,29 +84,29 @@ export const ChatInterface = () => {
     setIsThinking(true);
 
     try {
-      // 2. Persistent Backend Call (This triggers AI orchestration and auto-saving chapters on server)
-      const persistentMsg = await coreService.sendMessage({
+      // 2. Persistent Backend Call
+      const result = await coreService.sendMessage({
         user_id: user.id,
         type: 'text',
         content: trimmedContent,
         metadata: { language: 'en' }
       });
 
-      // 3. Update messages after backend completes (it handles DB save for both user and AI)
-      // We fetch the latest messages to sync with the DB (including AI response)
-      const updatedMessages = await coreService.fetchMessages(user.id);
-      
-      // Filter out our optimistic/temp ones and replace with real ones
-      const lastAiResponse = updatedMessages.findLast(m => m.role === 'diary' && m.created_at >= userMsg.created_at);
-      
-      if (lastAiResponse) {
+      // 3. Update messages using the direct response from API
+      // result.aiResponse contains the companion's reply
+      if (result.aiResponse) {
         setMessages(prev => prev.map(m => 
-          m.id === aiTempId ? { ...m, id: lastAiResponse.id, content: lastAiResponse.content || "...", role: 'diary' } : m
+          m.id === aiTempId ? { 
+            ...m, 
+            id: `ai-${Date.now()}`, 
+            content: result.aiResponse.content, 
+            role: 'diary' 
+          } : m
         ));
       } else {
-        // Fallback if AI didn't respond or sync was slow
+        // Fallback if AI didn't respond (should be rare now)
         setMessages(prev => prev.map(m => 
-          m.id === aiTempId ? { ...m, content: "I've saved that to your LifeBook.", role: 'diary' } : m
+          m.id === aiTempId ? { ...m, content: "I've saved that for you.", role: 'diary' } : m
         ));
       }
     } catch (error) {

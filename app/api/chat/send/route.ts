@@ -126,7 +126,12 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({
-      ...message,
+      message,
+      aiResponse: aiResponseText ? {
+        role: 'diary',
+        content: aiResponseText,
+        created_at: new Date().toISOString()
+      } : null,
       event_score: pipelineOutput.extractedEvent?.score || 0
     });
   } catch (error: any) {
