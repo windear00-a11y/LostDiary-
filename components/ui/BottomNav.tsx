@@ -4,14 +4,16 @@ import React from 'react';
 import { MessageSquare, BookOpen, User } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
+import { useUIStore } from '@/lib/store/use-ui-store';
 
 export const BottomNav = () => {
   const pathname = usePathname();
   const router = useRouter();
+  const { activeView, setActiveView } = useUIStore();
 
   const navItems = [
-    { name: 'Write', icon: MessageSquare, path: '/home' },
-    { name: 'Book', icon: BookOpen, path: '/story' },
+    { name: 'Write', icon: MessageSquare, id: 'chat' },
+    { name: 'Book', icon: BookOpen, id: 'story' },
   ];
 
   // Don't show on landing page or auth page
@@ -22,13 +24,13 @@ export const BottomNav = () => {
       <div className="max-w-md mx-auto bg-white/80 dark:bg-[#1A1A1A]/80 backdrop-blur-xl border border-gray-100 dark:border-[#2E2E2E] rounded-full p-2 shadow-2xl shadow-indigo-100/20 pointer-events-auto">
         <div className="flex justify-between items-center px-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.path;
+            const isActive = activeView === item.id;
             const Icon = item.icon;
 
             return (
               <button
-                key={item.path}
-                onClick={() => router.push(item.path)}
+                key={item.id}
+                onClick={() => setActiveView(item.id as any)}
                 className="relative flex flex-col items-center py-2 px-6 rounded-full transition-all duration-300 group"
               >
                 {isActive && (

@@ -29,7 +29,18 @@ export const InsightsView = () => {
     loadInsights();
   }, []);
 
-  if (loading || !report) return null;
+  if (loading || !report) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 px-6 gap-6">
+        <div className="flex gap-1.5">
+          <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+          <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+          <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />
+        </div>
+        <p className="text-xs font-serif italic text-gray-400">Discovering patterns in your story...</p>
+      </div>
+    );
+  }
 
   const insights = [
     {

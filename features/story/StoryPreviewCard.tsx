@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, Sparkles, ChevronRight, Loader2 } from 'lucide-react';
-import { chapterService, Chapter } from '@/lib/services/chapter-service';
+import { BookOpen, Sparkles, ChevronRight } from 'lucide-react';
+import { coreService, Chapter } from '@/lib/services/core-service';
 import { useRouter } from 'next/navigation';
+import { useUIStore } from '@/lib/store/use-ui-store';
 
 interface LifeBookPreviewProps {
   userId: string;
@@ -15,11 +16,12 @@ export const StoryPreviewCard = ({ userId, refreshTrigger }: LifeBookPreviewProp
   const [latestChapter, setLatestChapter] = useState<Chapter | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const { setActiveView } = useUIStore();
 
   useEffect(() => {
     const loadLatest = async () => {
       try {
-        const chapters = await chapterService.fetchChapters(userId);
+        const chapters = await coreService.fetchChapters(userId);
         if (chapters && chapters.length > 0) {
           setLatestChapter(chapters[0]);
         }
@@ -35,8 +37,15 @@ export const StoryPreviewCard = ({ userId, refreshTrigger }: LifeBookPreviewProp
 
   if (loading) {
     return (
-      <div className="w-full h-32 bg-gray-50 dark:bg-[#1A1A1A] rounded-[2rem] animate-pulse flex items-center justify-center">
-        <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
+      <div className="w-full h-32 bg-gray-50 dark:bg-[#1A1A1A] rounded-[2rem] flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <motion.div 
+            animate={{ opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="w-1 h-1 bg-indigo-400 rounded-full"
+          />
+          <span className="text-[10px] text-slate-400 font-serif italic tracking-widest uppercase">Listening...</span>
+        </div>
       </div>
     );
   }
@@ -47,7 +56,7 @@ export const StoryPreviewCard = ({ userId, refreshTrigger }: LifeBookPreviewProp
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      onClick={() => router.push('/story')}
+      onClick={() => setActiveView('story')}
       className="group relative overflow-hidden bg-white dark:bg-[#1A1A1A] border border-gray-100 dark:border-[#2E2E2E] rounded-[2.5rem] p-6 shadow-sm hover:shadow-xl hover:shadow-indigo-100/20 transition-all duration-500 cursor-pointer mb-8"
     >
       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">

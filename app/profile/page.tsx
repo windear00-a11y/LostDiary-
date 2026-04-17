@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { coreService, UserProfile } from '@/lib/services/core-service';
 import { GoogleGenAI } from "@google/genai";
+import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Camera, Sparkles, Loader2, LogOut, Save, Edit2 } from 'lucide-react';
+import { User, Camera, Sparkles, LogOut, Save, Edit2 } from 'lucide-react';
 import { Header } from '@/components/ui/Header';
 
 import Image from 'next/image';
@@ -137,14 +138,14 @@ export default function ProfilePage() {
 
   if (loading && !profile) {
     return (
-      <div className="min-h-screen bg-bg-light dark:bg-bg-dark flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-accent animate-spin" />
+      <div className="min-h-screen bg-transparent flex items-center justify-center">
+        <LoadingSpace />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-bg-light dark:bg-bg-dark pb-32">
+    <div className="min-h-screen bg-transparent pb-32">
       <Header />
       
       <main className="max-w-2xl mx-auto px-6 pt-24">
@@ -192,7 +193,11 @@ export default function ProfilePage() {
                       exit={{ opacity: 0 }}
                       className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center"
                     >
-                      <Loader2 className="w-8 h-8 text-white animate-spin" />
+                      <div className="flex gap-1.5 px-3">
+                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0 }} className="w-2 h-2 bg-white rounded-full" />
+                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0.2 }} className="w-2 h-2 bg-white rounded-full" />
+                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0.4 }} className="w-2 h-2 bg-white rounded-full" />
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>

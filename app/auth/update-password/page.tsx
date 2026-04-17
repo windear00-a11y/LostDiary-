@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { authService } from '@/lib/services/auth-service';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useRouter } from 'next/navigation';
 
@@ -53,7 +53,13 @@ export default function UpdatePasswordPage() {
               disabled={isSubmitting || !password}
               className="w-full bg-[#111827] dark:bg-[#F9FAFB] text-white dark:text-[#0A0A0A] py-4 rounded-2xl font-medium hover:bg-[#1f2937] dark:hover:bg-white disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Update Password'}
+              {isSubmitting ? (
+                <div className="flex gap-1">
+                  <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 0.8, repeat: Infinity, delay: 0 }} className="w-1.5 h-1.5 bg-white dark:bg-[#0A0A0A] rounded-full" />
+                  <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 0.8, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 bg-white dark:bg-[#0A0A0A] rounded-full" />
+                  <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 0.8, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 bg-white dark:bg-[#0A0A0A] rounded-full" />
+                </div>
+              ) : 'Update Password'}
             </button>
           </form>
 

@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase';
 import { authService } from '@/lib/services/auth-service';
 import { useRouter, usePathname } from 'next/navigation';
 import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { LoadingSpace } from '@/components/ui/LoadingSpace';
 
 interface AuthContextType {
   user: User | null;
@@ -62,21 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const isAuthPage = pathname === '/auth';
-  const isAppPage = pathname === '/home' || pathname.startsWith('/home/') || pathname === '/story' || pathname === '/profile' || pathname === '/updates';
   const isLandingPage = pathname === '/';
-
-  const isRedirecting = (!loading && !user && isAppPage) || (!loading && user && (isAuthPage || isLandingPage));
-
-  // Route protection logic
-  useEffect(() => {
-    if (loading) return;
-
-    if (!user && isAppPage) {
-      router.push('/');
-    } else if (user && (isAuthPage || isLandingPage)) {
-      router.push('/home');
-    }
-  }, [user, loading, pathname, router, isAppPage, isAuthPage, isLandingPage]);
 
   const signOut = async () => {
     try {
@@ -87,8 +74,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const showLoader = loading || isRedirecting;
-
   return (
     <AuthContext.Provider value={{ user, loading, signOut }}>
       {!supabase ? (
@@ -98,11 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           <p className="text-sm text-gray-600 max-w-sm">
             The application could not connect to the authentication service. Please check your environment configuration.
           </p>
-        </div>
-      ) : showLoader ? (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-[#F9FAFB] gap-4">
-          <Loader2 className="w-8 h-8 text-[#6366F1] animate-spin" />
-          <p className="text-sm text-[#6B7280] font-medium animate-pulse">Checking your session...</p>
         </div>
       ) : (
         children

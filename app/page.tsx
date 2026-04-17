@@ -10,9 +10,7 @@ export default function LandingPage() {
 
   const handleStart = () => {
     setIsTransitioning(true);
-    setTimeout(() => {
-      router.push('/home');
-    }, 1500); // Allow time for animation
+    router.push('/home');
   };
 
   return (

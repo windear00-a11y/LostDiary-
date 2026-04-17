@@ -2,7 +2,7 @@
 
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { LoadingSpace } from '@/components/ui/LoadingSpace';
 
 function CallbackSuccessContent() {
   const router = useRouter();
@@ -27,9 +27,8 @@ function CallbackSuccessContent() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#fdfcfb] dark:bg-[#0d0d0d] p-6">
       <div className="text-center space-y-4">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500 mx-auto" />
-        <h2 className="text-xl font-serif italic">Completing login...</h2>
-        <p className="text-sm text-gray-500">You will be redirected shortly.</p>
+        <LoadingSpace message="Completing login..." />
+        <p className="text-xs text-gray-400 font-serif italic">You will be redirected shortly.</p>
       </div>
     </div>
   );
@@ -39,7 +38,7 @@ export default function CallbackSuccessPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-[#fdfcfb] dark:bg-[#0d0d0d]">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+        <LoadingSpace />
       </div>
     }>
       <CallbackSuccessContent />

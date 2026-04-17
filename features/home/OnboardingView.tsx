@@ -10,12 +10,12 @@ export const OnboardingView = ({ onStart }: { onStart: () => void }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="flex flex-col items-center justify-center min-h-screen p-6 text-center bg-[#fdfcfb] dark:bg-[#0d0d0d]"
+      className="flex flex-col items-center justify-center min-h-screen p-6 text-center bg-transparent"
     >
       <motion.div 
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        initial={{ y: 5, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className="space-y-6"
       >
         <div className="w-16 h-16 mx-auto bg-indigo-100 dark:bg-indigo-900/30 rounded-full flex items-center justify-center">

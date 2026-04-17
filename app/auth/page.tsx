@@ -2,9 +2,9 @@
 
 import { useState, Suspense } from 'react';
 import { authService } from '@/lib/services/auth-service';
-import { Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '@/components/auth/auth-provider';
+import { LoadingSpace } from '@/components/ui/LoadingSpace';
 
 function AuthForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +20,7 @@ function AuthForm() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0d0d0d] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <main className="min-h-screen bg-transparent text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Background Glow */}
       <div className="absolute w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] z-0" />
 
@@ -40,7 +40,13 @@ function AuthForm() {
             disabled={isSubmitting}
             className="w-full bg-white text-black py-4 rounded-full font-medium transition-all flex items-center justify-center gap-3 text-sm active:scale-[0.98] disabled:opacity-50"
           >
-            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+            {isSubmitting ? (
+              <div className="flex gap-1">
+                <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 0.8, repeat: Infinity, delay: 0 }} className="w-1.5 h-1.5 bg-black rounded-full" />
+                <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 0.8, repeat: Infinity, delay: 0.2 }} className="w-1.5 h-1.5 bg-black rounded-full" />
+                <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 0.8, repeat: Infinity, delay: 0.4 }} className="w-1.5 h-1.5 bg-black rounded-full" />
+              </div>
+            ) : (
               <>
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -52,12 +58,6 @@ function AuthForm() {
               </>
             )}
           </button>
-          
-          <button
-            className="w-full text-slate-500 py-2 rounded-full font-medium text-xs hover:text-slate-400 transition-colors"
-          >
-            Login with OTP
-          </button>
         </div>
       </motion.div>
     </main>
@@ -66,7 +66,7 @@ function AuthForm() {
 
 export default function AuthPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#0d0d0d]"><Loader2 className="w-8 h-8 animate-spin text-indigo-600" /></div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-transparent"><LoadingSpace /></div>}>
       <AuthForm />
     </Suspense>
   );

@@ -10,15 +10,12 @@ import { StoryReader } from './StoryReader';
 // import { InsightsView } from './InsightsView';
 import { PipelineController } from '@/ai-core/pipeline-controller';
 import { analyzeEntries } from '@/ai-core/pattern-detector';
+import { LoadingSpace } from '@/components/ui/LoadingSpace';
+import { useUIStore } from '@/lib/store/use-ui-store';
 
 const SkeletonLoader = () => (
-  <div className="max-w-[700px] mx-auto pt-20 px-6 space-y-8 animate-pulse">
-    <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-3/4"></div>
-    <div className="space-y-4">
-      <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full"></div>
-      <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-full"></div>
-      <div className="h-4 bg-gray-200 dark:bg-gray-800 rounded w-5/6"></div>
-    </div>
+  <div className="max-w-[700px] mx-auto pt-40 px-6">
+    <LoadingSpace message="Assembling your narrative..." />
   </div>
 );
 
@@ -52,6 +49,7 @@ export const BookView = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'narrative' | 'insights'>('narrative');
+  const { setActiveView } = useUIStore();
 
   useEffect(() => {
     const loadData = async () => {
@@ -93,7 +91,7 @@ export const BookView = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d] flex flex-col items-center justify-center p-10 text-center">
+      <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-10 text-center">
         <div className="space-y-6 max-w-sm">
           <p className="text-rose-500 font-serif italic">{error}</p>
           <button 
@@ -111,8 +109,8 @@ export const BookView = () => {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 1.2, ease: "easeOut" }}
-      className="bg-[#fdfcfb] dark:bg-[#0d0d0d] min-h-screen transition-colors duration-1000"
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="bg-transparent min-h-screen transition-colors duration-1000"
     >
       <div className="max-w-[800px] mx-auto pt-16 pb-48 px-10">
         {/* Subtle View Toggle */}
@@ -148,9 +146,9 @@ export const BookView = () => {
           <div className="space-y-20">
             <div className="text-center space-y-6">
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 1.5 }}
+                transition={{ duration: 0.3 }}
                 className="w-20 h-20 bg-gray-50 dark:bg-[#1A1A1A] rounded-full flex items-center justify-center mx-auto mb-8 opacity-30"
               >
                 <BookOpen className="w-8 h-8 text-gray-300" />
@@ -166,13 +164,13 @@ export const BookView = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 2, delay: 0.5 }}
+              transition={{ duration: 0.3 }}
             >
               <GhostBook />
             </motion.div>
           </div>
         ) : (
-          <StoryReader chapters={chapters} onBack={() => window.history.back()} />
+          <StoryReader chapters={chapters} onBack={() => setActiveView('chat')} />
         )}
       </div>
     </motion.div>

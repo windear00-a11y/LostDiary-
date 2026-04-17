@@ -1,33 +1,43 @@
 'use client';
 
 import { ChatInterface } from '@/features/home/ChatInterface';
-import { Header } from '@/components/ui/Header';
+import { BookView } from '@/features/story/BookView';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { LoadingSpace } from '@/components/ui/LoadingSpace';
+import { useUIStore } from '@/lib/store/use-ui-store';
+import { motion, AnimatePresence } from 'motion/react';
+import { Header } from '@/components/ui/Header';
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+  const { user } = useAuth();
+  const { activeView } = useUIStore();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/auth');
-    }
-  }, [user, loading, router]);
-
-  if (loading || !user) {
-    return (
-      <div className="min-h-screen bg-[#02040a] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  if (!user) return null;
 
   return (
-    <div className="h-[100dvh] bg-transparent">
-      <main className="h-full w-full relative">
+    <div className="h-[100dvh] bg-transparent overflow-hidden flex flex-col relative">
+      <Header />
+      <main className="flex-1 w-full relative">
         <ChatInterface />
+        
+        <AnimatePresence>
+          {activeView === 'story' && (
+            <motion.div
+              key="story-view"
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="absolute inset-0 z-40 bg-[#fdfcfb] dark:bg-[#0d0d0d] overflow-y-auto"
+            >
+              <div className="pt-20"> {/* Offset for header if needed, but Header is fixed */}
+                <BookView />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

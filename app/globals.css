@@ -12,12 +12,14 @@
 @layer base {
   html, body {
     @apply w-full overflow-x-hidden antialiased;
-    background-color: #02040a;
+    background: linear-gradient(135deg, #02040a 0%, #0d0d1a 50%, #161b2e 100%);
+    background-attachment: fixed;
     color: #f8fafc;
   }
 
   .dark body {
-    background-color: #02040a;
+    background: linear-gradient(135deg, #02040a 0%, #0d0d1a 50%, #161b2e 100%);
+    background-attachment: fixed;
     color: #f8fafc;
   }
 }
