@@ -6,6 +6,8 @@ import { ChatInput } from './ChatInput';
 import { generateStoryResponse } from '@/ai-core/ai-engine';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { User, Sparkles } from 'lucide-react';
+import { coreService } from '@/lib/services/core-service';
+import { authService } from '@/lib/services/auth-service';
 
 export interface ChatMessage {
   id: string;
@@ -19,6 +21,29 @@ export const ChatInterface = () => {
   const [isThinking, setIsThinking] = useState(false);
   const { setInputFocused, isInputFocused } = useUIStore();
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Fetch messages on mount
+  useEffect(() => {
+    const loadMessages = async () => {
+      const user = await authService.getUser();
+      if (user) {
+        try {
+          const history = await coreService.fetchMessages(user.id);
+          // Map backend roles to frontend roles
+          const mappedMessages = history.map(m => ({
+            id: m.id,
+            role: m.role as 'user' | 'diary',
+            content: m.content || "",
+            created_at: m.created_at
+          }));
+          setMessages(mappedMessages);
+        } catch (error) {
+          console.error("Failed to fetch messages:", error);
+        }
+      }
+    };
+    loadMessages();
+  }, []);
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -36,8 +61,10 @@ export const ChatInterface = () => {
 
   const handleSendMessage = async (input: { type: 'text'; content: string }) => {
     const trimmedContent = input.content.trim();
-    if (!trimmedContent || isThinking) return;
+    const user = await authService.getUser();
+    if (!trimmedContent || isThinking || !user) return;
 
+    // 1. Optimistic Update (Show user message instantly)
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -53,27 +80,39 @@ export const ChatInterface = () => {
       created_at: new Date().toISOString(),
     };
 
-    // ATOMIC UPDATE: Show both user message and AI placeholder instantly
     setMessages(prev => [...prev, userMsg, aiTempMsg]);
     setIsThinking(true);
 
     try {
-      // Prepare history including the current message for context
-      const history = [...messages.slice(-6), userMsg].map(m => ({
-        content: m.content,
-        role: m.role === 'user' ? 'user' : 'model'
-      })) as { content: string; role: 'user' | 'model' }[];
+      // 2. Persistent Backend Call (This triggers AI orchestration and auto-saving chapters on server)
+      const persistentMsg = await coreService.sendMessage({
+        user_id: user.id,
+        type: 'text',
+        content: trimmedContent,
+        metadata: { language: 'en' }
+      });
 
-      // Non-blocking background call
-      const response = await generateStoryResponse(trimmedContent, history);
-
-      // Replace placeholder with final response
-      setMessages(prev => prev.map(m => 
-        m.id === aiTempId ? { ...m, content: response || "...", role: 'diary' } : m
-      ));
+      // 3. Update messages after backend completes (it handles DB save for both user and AI)
+      // We fetch the latest messages to sync with the DB (including AI response)
+      const updatedMessages = await coreService.fetchMessages(user.id);
+      
+      // Filter out our optimistic/temp ones and replace with real ones
+      const lastAiResponse = updatedMessages.findLast(m => m.role === 'diary' && m.created_at >= userMsg.created_at);
+      
+      if (lastAiResponse) {
+        setMessages(prev => prev.map(m => 
+          m.id === aiTempId ? { ...m, id: lastAiResponse.id, content: lastAiResponse.content || "...", role: 'diary' } : m
+        ));
+      } else {
+        // Fallback if AI didn't respond or sync was slow
+        setMessages(prev => prev.map(m => 
+          m.id === aiTempId ? { ...m, content: "I've saved that to your LifeBook.", role: 'diary' } : m
+        ));
+      }
     } catch (error) {
+      console.error("Failed to sync message with backend:", error);
       setMessages(prev => prev.map(m => 
-        m.id === aiTempId ? { ...m, content: "I'm here, tell me more." } : m
+        m.id === aiTempId ? { ...m, content: "The diary is quiet, but your memory is safe." } : m
       ));
     } finally {
       setIsThinking(false);
