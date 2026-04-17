@@ -12,6 +12,7 @@ import { PipelineController } from '@/ai-core/pipeline-controller';
 import { analyzeEntries } from '@/ai-core/pattern-detector';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { useUIStore } from '@/lib/store/use-ui-store';
+import { LifeBookCover } from './LifeBookCover';
 
 const SkeletonLoader = () => (
   <div className="max-w-[700px] mx-auto pt-40 px-6">
@@ -46,6 +47,8 @@ const GhostBook = () => (
 export const BookView = () => {
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [openingText, setOpeningText] = useState<string | null>(null);
+  const [coverData, setCoverData] = useState<{ title: string; summary: string; aura: string } | null>(null);
+  const [showCover, setShowCover] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'narrative' | 'insights'>('narrative');
@@ -71,8 +74,13 @@ export const BookView = () => {
             const patterns = analyzeEntries(messagesData.map(m => m.content || ""));
             const allEvents = chaptersData.flatMap(c => c.events || []);
             
-            const opening = await pipeline.generateOpening(allEvents, patterns);
+            const [opening, cover] = await Promise.all([
+              pipeline.generateOpening(allEvents, patterns),
+              pipeline.generateBookCoverData(chaptersData)
+            ]);
+            
             setOpeningText(opening);
+            setCoverData(cover);
           }
         }
       } catch (error) {
@@ -87,6 +95,20 @@ export const BookView = () => {
 
   if (loading) {
     return <SkeletonLoader />;
+  }
+
+  const userDisplayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Soul';
+
+  if (chapters.length > 0 && showCover && coverData) {
+    return (
+      <div className="max-w-[1000px] mx-auto px-6 py-12">
+        <LifeBookCover 
+          data={coverData} 
+          userName={userDisplayName} 
+          onOpen={() => setShowCover(false)} 
+        />
+      </div>
+    );
   }
 
   if (error) {
@@ -170,7 +192,27 @@ export const BookView = () => {
             </motion.div>
           </div>
         ) : (
-          <StoryReader chapters={chapters} onBack={() => setActiveView('chat')} />
+          <div className="space-y-24">
+            {/* Dynamic Opening/Foreword */}
+            {openingText && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center space-y-8 mb-32"
+              >
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-px h-16 bg-gradient-to-b from-transparent via-slate-200 dark:via-white/10 to-transparent" />
+                  <span className="text-[10px] uppercase tracking-[0.6em] text-slate-400 font-bold">The Foreword</span>
+                </div>
+                <h1 className="text-4xl md:text-5xl font-serif italic text-slate-900 dark:text-white leading-tight max-w-2xl mx-auto">
+                  &ldquo;{openingText}&rdquo;
+                </h1>
+                <div className="w-16 h-px bg-slate-200 dark:bg-white/10 mx-auto" />
+              </motion.div>
+            )}
+            
+            <StoryReader chapters={chapters} onBack={() => setActiveView('chat')} />
+          </div>
         )}
       </div>
     </motion.div>

@@ -2,56 +2,96 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, Book, MessageSquare, PenLine } from 'lucide-react';
+import { Menu, Book, MessageSquare, PenLine, X, Sparkles } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { SideDrawer } from './SideDrawer';
 import { LanguageSwitcher } from './LanguageSwitcher';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useUIStore } from '@/lib/store/use-ui-store';
 
 export const Header = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { activeView, setActiveView } = useUIStore();
+  const { activeView, setActiveView, isInputFocused } = useUIStore();
+
+  const navItems = [
+    { id: 'chat', label: 'Chat', icon: MessageSquare },
+    { id: 'journal', label: 'Journal', icon: PenLine },
+    { id: 'story', label: 'Story', icon: Book },
+  ];
 
   return (
     <>
-      <div className="fixed top-4 md:top-6 left-4 md:left-6 right-4 md:right-6 z-50 flex items-center justify-between pointer-events-none">
-        {/* Menu Toggle */}
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => setIsDrawerOpen(true)}
-          className="w-10 h-10 rounded-full bg-white/80 dark:bg-black/80 backdrop-blur-md border border-white/20 dark:border-white/5 flex items-center justify-center transition-all pointer-events-auto"
-        >
-          <Menu className="w-5 h-5 text-slate-500" />
-        </motion.button>
-
-        {/* Navigation Toggles */}
-        <div className="flex items-center gap-2 bg-neutral-900/80 backdrop-blur-md border border-white/10 rounded-full p-1 shadow-2xl pointer-events-auto">
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setActiveView('chat')}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${activeView === 'chat' ? 'bg-white text-neutral-950 shadow-lg' : 'text-neutral-500 hover:text-white'}`}
+      {/* Top Bar: Minimal Menu Toggle */}
+      <AnimatePresence>
+        {!isInputFocused && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-6 left-6 z-50 pointer-events-auto"
           >
-            <MessageSquare className="w-4 h-4" />
-          </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setIsDrawerOpen(true)}
+              className="w-12 h-12 rounded-full bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center transition-all shadow-xl hover:bg-white/10"
+            >
+              <Menu className="w-5 h-5 text-white/60" />
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setActiveView('journal')}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${activeView === 'journal' ? 'bg-white text-neutral-950 shadow-lg' : 'text-neutral-500 hover:text-white'}`}
+      {/* Fluid Bottom Dock */}
+      <AnimatePresence>
+        {!isInputFocused && (
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 pointer-events-auto"
           >
-            <PenLine className="w-4 h-4" />
-          </motion.button>
-
-          <motion.button
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setActiveView('story')}
-            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${activeView === 'story' ? 'bg-white text-neutral-950 shadow-lg' : 'text-neutral-500 hover:text-white'}`}
-          >
-            <Book className="w-4 h-4" />
-          </motion.button>
-        </div>
-      </div>
+            <nav className="flex items-center gap-1.5 p-1.5 bg-neutral-900/40 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+              {navItems.map((item) => {
+                const isActive = activeView === item.id;
+                const Icon = item.icon;
+                
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveView(item.id as any)}
+                    className="relative px-4 py-3 flex items-center gap-2 rounded-full transition-all duration-500 overflow-hidden group"
+                  >
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-bg"
+                        className="absolute inset-0 bg-white shadow-xl shadow-white/10"
+                        transition={{ type: 'spring', damping: 20, stiffness: 180 }}
+                      />
+                    )}
+                    
+                    <Icon className={`w-4 h-4 relative z-10 transition-colors duration-500 ${isActive ? 'text-black' : 'text-white/40 group-hover:text-white/80'}`} />
+                    
+                    <AnimatePresence>
+                      {isActive && (
+                        <motion.span
+                          initial={{ width: 0, opacity: 0 }}
+                          animate={{ width: 'auto', opacity: 1 }}
+                          exit={{ width: 0, opacity: 0 }}
+                          className="text-[10px] uppercase tracking-widest font-bold whitespace-nowrap overflow-hidden relative z-10 text-black pr-1"
+                        >
+                          {item.label}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </button>
+                );
+              })}
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <SideDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
     </>

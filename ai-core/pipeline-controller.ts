@@ -24,13 +24,16 @@ export interface PipelineOutput {
   aiResponse: any | null;
   isHighValue: boolean;
   narrativeUpdate: { summary: string; narrative: string } | null;
+  personaUpdate: string | null;
 }
 
 export class PipelineController {
   private ai: GoogleGenAI;
+  private currentPersona: string = "";
 
-  constructor(apiKey: string) {
+  constructor(apiKey: string, persona?: string) {
     this.ai = new GoogleGenAI({ apiKey });
+    this.currentPersona = persona || "";
   }
 
   async runPipeline(input: PipelineInput, decisions: OrchestrationDecisions): Promise<PipelineOutput> {
@@ -61,7 +64,13 @@ export class PipelineController {
       narrativeUpdate = await this.generateNarrative(eventsForNarrative);
     }
 
-    // Step 7: Generate AI response (Bypassed in favor of primary ai-engine.ts)
+    // Step 7: Persona Update (Identity extraction)
+    let personaUpdate = null;
+    if (decisions.shouldExtractEvent) {
+      personaUpdate = await this.extractPersonaInsights(input.message.content, this.currentPersona);
+    }
+
+    // Step 8: Generate AI response (Bypassed in favor of primary ai-engine.ts)
     console.log("[Pipeline] Step 7: Generate AI response (Delegated to ai-engine)");
     let aiResponse = null;
     let isHighValue = false;
@@ -75,7 +84,8 @@ export class PipelineController {
       shouldRespond: decisions.shouldRespond,
       aiResponse: null,
       isHighValue: false,
-      narrativeUpdate
+      narrativeUpdate,
+      personaUpdate
     };
   }
 
@@ -182,6 +192,68 @@ Rules:
       return JSON.parse(text);
     } catch (error) {
       console.error("Error generating narrative:", error);
+      return null;
+    }
+  }
+
+  public async extractPersonaInsights(content: string, currentPersona: string): Promise<string | null> {
+    const systemInstruction = `
+You are a behavioral psychologist and biographer. Your task is to update a user's "Identity Profile" based on a new message.
+Current Profile: "${currentPersona || "Empty"}"
+New Message: "${content}"
+
+Instruction:
+1. BIO/TRAITS: Identify significant traits, interests, job roles, or values.
+2. TONE PREFERENCES (CRITICAL): If the user explicitly or implicitly gives feedback on your tone (e.g., "Don't be too poetic", "Speak in simple Hindi", "Talk like a friend"), capture this as a REWRITTEN COMMAND for the AI.
+3. LANGUAGE: Note the user's preferred language blend (e.g., "Prefers simple Hinglish", "Uses heavy English").
+
+Rules:
+- Synthesize into a cohesive description. 
+- ALWAYS prioritize explicit user instructions about tone/behavior at the top of the profile.
+- Output ONLY the updated profile string. No labels.
+- If the message says something like "simple baat karo," the updated profile MUST start with "TONE: User prefers simple, non-poetic language."
+`;
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ role: "user", parts: [{ text: content }] }],
+        config: { systemInstruction, temperature: 0.1 }
+      });
+      return response.text?.trim() || currentPersona;
+    } catch (error) {
+      console.error("Error extracting persona insights:", error);
+      return currentPersona;
+    }
+  }
+
+  public async generateBookCoverData(chapters: any[]): Promise<{ title: string; summary: string; aura: string } | null> {
+    if (!chapters || chapters.length === 0) return null;
+    
+    const systemInstruction = `
+You are a master Creative Director for a high-end publishing house. Your goal is to create a masterpiece cover for a "LifeBook".
+Rules:
+1. Title: Create a short, evocative book title based on the themes in the chapters (e.g., "The Resilience of Silence", "Autumn Spirits").
+2. Summary: A 1-2 line cohesive meta-summary of the journey so far.
+3. Aura: Pick a primary aesthetic vibe/color theme (e.g., "Midnight Indigo", "Warm Amber", "Emerald Growth").
+Output: ONLY a valid JSON object.
+{
+  "title": "...",
+  "summary": "...",
+  "aura": "..."
+}
+`;
+    const data = chapters.map(c => c.title).join(', ');
+    try {
+      const response = await this.ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{ role: "user", parts: [{ text: `Chapters: ${data}` }] }],
+        config: { systemInstruction, temperature: 0.8, responseMimeType: "application/json" }
+      });
+      const text = response.text?.trim();
+      if (!text) return null;
+      return JSON.parse(text);
+    } catch (error) {
+      console.error("Error generating book cover data:", error);
       return null;
     }
   }

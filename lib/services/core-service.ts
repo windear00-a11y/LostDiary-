@@ -248,22 +248,19 @@ export const coreService = {
 
   // Diary Entries (Raw Writing)
   async saveDiaryEntry(userId: string, content: string): Promise<DiaryEntry> {
-    const supabase = getSupabase();
-    if (!supabase) throw new Error("Supabase not initialized");
-    
-    const { data, error } = await supabase
-      .from('diary_entries')
-      .insert({
-        user_id: userId,
-        content: content,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select()
-      .single();
+    const response = await fetch('/api/journal/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, user_id: userId, content })
+    });
 
-    if (error) throw error;
-    return data;
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Failed to save diary entry');
+    }
+
+    const { entry } = await response.json();
+    return entry;
   },
 
   async fetchDiaryEntries(userId: string): Promise<DiaryEntry[]> {

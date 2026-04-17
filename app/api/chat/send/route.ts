@@ -13,9 +13,6 @@ export async function POST(req: Request) {
     const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) return NextResponse.json({ error: 'API Key is required' }, { status: 500 });
 
-    const orchestrator = new AIOrchestrator(apiKey);
-    const pipelineForAsync = new PipelineController(apiKey);
-
     const body = await req.json();
     const { role, type, content, media_url, metadata, user_id } = body;
     let { session_id } = body;
@@ -24,6 +21,11 @@ export async function POST(req: Request) {
     if (!user_id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
+
+    // STEP 1: Fetch user profile for context
+    const profile = await coreService.getProfile(user_id, supabase);
+    const orchestrator = new AIOrchestrator(apiKey, profile.personality_summary);
+    const pipelineForAsync = new PipelineController(apiKey, profile.personality_summary);
 
     // --- SMART SESSION MANAGEMENT ---
     if (!session_id) {
@@ -57,7 +59,6 @@ export async function POST(req: Request) {
     }
     // --------------------------------
 
-    // STEP 1: Fetch context for AI
     let query = supabase
       .from('chat_messages')
       .select('content, role')
@@ -74,7 +75,6 @@ export async function POST(req: Request) {
     const contextMessages = recentMessages?.map(m => ({ content: m.content || "", role: m.role })) || [];
     
     // STEP 2: Save user message with rich metadata
-    const pipelineForAsync = new PipelineController(apiKey);
     const analyzedEvent = await pipelineForAsync.extractLifeEvent(content);
     
     const enrichedMetadata = {
@@ -122,7 +122,7 @@ export async function POST(req: Request) {
       const profile = await coreService.getProfile(user_id, supabase);
       
       // Use the modern resilient engine with long-term memory
-      aiResponseText = await generateStoryResponse(content, contextMessages, profile.personality_summary) || null;
+      aiResponseText = await generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary) || null;
       
       if (aiResponseText) {
         await supabase.from('chat_messages').insert({
@@ -138,13 +138,21 @@ export async function POST(req: Request) {
       }
     }
     
-    // STEP 4: Update session title and user narrative (Async-ish)
+    // STEP 4: Update session title, user identity and narrative
     if (session_id) {
-      // 4.1 Update User Narrative/Memory
+      // 4.1 Update User Personality (The Persona/Atman)
+      if (pipelineOutput.personaUpdate) {
+        await supabase
+          .from('users')
+          .update({ personality_summary: pipelineOutput.personaUpdate })
+          .eq('id', user_id);
+      }
+
+      // 4.1 Update Story Memory/Bio (The Plot/Prarabdh)
       if (pipelineOutput.narrativeUpdate) {
         await supabase
           .from('users')
-          .update({ personality_summary: pipelineOutput.narrativeUpdate.summary })
+          .update({ bio: pipelineOutput.narrativeUpdate.summary })
           .eq('id', user_id);
       }
 

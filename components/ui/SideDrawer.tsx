@@ -28,12 +28,14 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
   const [activeTab, setActiveTab] = useState<'chats' | 'reflections'>('chats');
   const [isGeneratingTitles, setIsGeneratingTitles] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
 
   useEffect(() => {
     if (isOpen && user) {
       coreService.fetchChapters(user.id).then(setChapters);
       coreService.fetchSessions(user.id).then(setSessions);
       coreService.fetchDiaryEntries(user.id).then(setDiaryEntries);
+      coreService.getProfile(user.id).then(setProfile);
     }
   }, [isOpen, user]);
 
@@ -123,8 +125,26 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
 
               {activeTab === 'chats' ? (
                 /* Chat History Section */
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between px-2">
+                <div className="space-y-6">
+                  {/* Persona Insights Card */}
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="mx-2 p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-white/10 relative overflow-hidden group"
+                  >
+                    <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-40 transition-opacity">
+                      <Sparkles className="w-8 h-8 text-indigo-400" />
+                    </div>
+                    <h4 className="text-[9px] uppercase tracking-widest text-indigo-400 font-bold mb-2 flex items-center gap-1.5">
+                      <Heart className="w-2.5 h-2.5" /> Who You Are (Insights)
+                    </h4>
+                    <p className="text-xs text-slate-300 italic leading-relaxed font-serif">
+                      {profile?.personality_summary || "WinDear is still listening and learning the patterns of your soul..."}
+                    </p>
+                  </motion.div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between px-2">
                     <h3 className="text-[10px] uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 font-bold">Recent</h3>
                     <button 
                       onClick={() => {
@@ -156,7 +176,8 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                     ))}
                   </div>
                 </div>
-              ) : (
+              </div>
+            ) : (
                 /* Reflections/Journal History Section */
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-2">
@@ -204,8 +225,6 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                 </div>
               )}
             </div>
-
-            {/* Footer */}
             <div className="p-4 border-t border-gray-100 dark:border-white/5">
               <div className="flex items-center gap-2 p-2 justify-between">
                 <div className="flex items-center gap-2 min-w-0">

@@ -25,6 +25,8 @@ export function isImportantMessage(message: { content: string | null; type: stri
   if (message.type !== 'text') return true;
 
   // 2. Length check: Must be at least 20 characters to be considered "meaningful"
+  // 3. Auto-flag long entries (likely journal/venting)
+  if (content.length > 100) return true;
   if (content.length < 20) return false;
 
   // 3. Filter out common casual fillers/greetings
