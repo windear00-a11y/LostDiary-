@@ -2,6 +2,7 @@
 
 import { ChatInterface } from '@/features/home/ChatInterface';
 import { BookView } from '@/features/story/BookView';
+import { JournalEditor } from '@/features/journal/JournalEditor';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -9,6 +10,7 @@ import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { motion, AnimatePresence } from 'motion/react';
 import { Header } from '@/components/ui/Header';
+import { Suspense } from 'react';
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -22,9 +24,24 @@ export default function HomePage() {
         <Header />
       </div>
       <main className="flex-1 w-full relative">
-        <ChatInterface />
+        <Suspense fallback={<LoadingSpace />}>
+          <ChatInterface />
+        </Suspense>
         
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
+          {activeView === 'journal' && (
+            <motion.div
+              key="journal-view"
+              initial={{ y: '100dvh' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100dvh' }}
+              transition={{ type: 'spring', damping: 35, stiffness: 350 }}
+              className="absolute inset-0 z-40 bg-neutral-950 overflow-y-auto"
+            >
+              <JournalEditor />
+            </motion.div>
+          )}
+
           {activeView === 'story' && (
             <motion.div
               key="story-view"

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, Book, MessageSquare } from 'lucide-react';
+import { Menu, Book, MessageSquare, PenLine } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { SideDrawer } from './SideDrawer';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -25,18 +25,30 @@ export const Header = () => {
           <Menu className="w-5 h-5 text-slate-500" />
         </motion.button>
 
-        {/* Navigation Toggle */}
-        <div className="flex items-center gap-3 pointer-events-auto">
+        {/* Navigation Toggles */}
+        <div className="flex items-center gap-2 bg-neutral-900/80 backdrop-blur-md border border-white/10 rounded-full p-1 shadow-2xl pointer-events-auto">
           <motion.button
-            whileTap={{ scale: 0.98 }}
-            onClick={() => setActiveView(activeView === 'chat' ? 'story' : 'chat')}
-            className="w-10 h-10 rounded-full bg-neutral-900/80 backdrop-blur-md border border-white/10 flex items-center justify-center transition-all"
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setActiveView('chat')}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${activeView === 'chat' ? 'bg-white text-neutral-950 shadow-lg' : 'text-neutral-500 hover:text-white'}`}
           >
-            {activeView === 'story' ? (
-              <MessageSquare className="w-5 h-5 text-white" />
-            ) : (
-              <Book className="w-5 h-5 text-white" />
-            )}
+            <MessageSquare className="w-4 h-4" />
+          </motion.button>
+
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setActiveView('journal')}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${activeView === 'journal' ? 'bg-white text-neutral-950 shadow-lg' : 'text-neutral-500 hover:text-white'}`}
+          >
+            <PenLine className="w-4 h-4" />
+          </motion.button>
+
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setActiveView('story')}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${activeView === 'story' ? 'bg-white text-neutral-950 shadow-lg' : 'text-neutral-500 hover:text-white'}`}
+          >
+            <Book className="w-4 h-4" />
           </motion.button>
         </div>
       </div>

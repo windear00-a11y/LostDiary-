@@ -8,6 +8,7 @@ import { useUIStore } from '@/lib/store/use-ui-store';
 import { User, Sparkles } from 'lucide-react';
 import { coreService } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
+import { useSearchParams } from 'next/navigation';
 
 export interface ChatMessage {
   id: string;
@@ -20,15 +21,17 @@ export const ChatInterface = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const { setInputFocused, isInputFocused } = useUIStore();
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get('session');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch messages on mount
+  // Fetch messages on mount or session change
   useEffect(() => {
     const loadMessages = async () => {
       const user = await authService.getUser();
       if (user) {
         try {
-          const history = await coreService.fetchMessages(user.id);
+          const history = await coreService.fetchMessages(user.id, sessionId);
           // Map backend roles to frontend roles
           const mappedMessages = history.map(m => ({
             id: m.id,
@@ -43,7 +46,7 @@ export const ChatInterface = () => {
       }
     };
     loadMessages();
-  }, []);
+  }, [sessionId]);
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -87,6 +90,7 @@ export const ChatInterface = () => {
       // 2. Persistent Backend Call
       const result = await coreService.sendMessage({
         user_id: user.id,
+        session_id: sessionId || undefined,
         type: 'text',
         content: trimmedContent,
         metadata: { language: 'en' }

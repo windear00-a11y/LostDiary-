@@ -39,26 +39,27 @@ export const AIPersonality = {
   },
 
   selectTone(context: ToneContext): ToneMode {
-    const { input, lastTone } = context;
+    const { input } = context;
+    const lowerInput = input.toLowerCase();
 
-    let selectedTone: ToneMode = "friendly_casual";
-
-    if (input.length > 250) {
-      selectedTone = "deep_reflective";
+    // Domain awareness using keywords
+    if (lowerInput.includes("work") || lowerInput.includes("goal") || lowerInput.includes("office") || lowerInput.includes("kaam")) {
+      return "deep_reflective";
     }
-    else if (input.length < 100) {
-      selectedTone = Math.random() < 0.2 ? "light_witty" : "friendly_casual";
-    }
-
-    if (selectedTone === lastTone) {
-      if (selectedTone === "friendly_casual" && input.length > 150) {
-        selectedTone = "deep_reflective";
-      } else if (selectedTone === "deep_reflective") {
-        selectedTone = "friendly_casual";
-      }
+    
+    if (lowerInput.includes("sad") || lowerInput.includes("upset") || lowerInput.includes("stress") || lowerInput.includes("dard") || lowerInput.includes("shant")) {
+      return "soft_support";
     }
 
-    return selectedTone;
+    if (input.length > 200) {
+      return "deep_reflective";
+    }
+    
+    if (input.length < 40) {
+      return Math.random() < 0.2 ? "light_witty" : "friendly_casual";
+    }
+
+    return "friendly_casual";
   },
 
   getToneInstructions(mode: ToneMode): string {

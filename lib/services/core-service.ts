@@ -33,6 +33,14 @@ export interface Chapter {
   created_at: string;
 }
 
+export interface DiaryEntry {
+  id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // --- Profile Service ---
 export interface UserProfile {
   id: string;
@@ -236,6 +244,42 @@ export const coreService = {
       console.error("Error generating title:", error);
       return 'New Chapter';
     }
+  },
+
+  // Diary Entries (Raw Writing)
+  async saveDiaryEntry(userId: string, content: string): Promise<DiaryEntry> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
+    
+    const { data, error } = await supabase
+      .from('diary_entries')
+      .insert({
+        user_id: userId,
+        content: content,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async fetchDiaryEntries(userId: string): Promise<DiaryEntry[]> {
+    const supabase = getSupabase();
+    if (!supabase) return [];
+    const { data, error } = await supabase
+      .from('diary_entries')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching diary entries:", error);
+      return [];
+    }
+    return data || [];
   },
 
   // Profile

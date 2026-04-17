@@ -61,24 +61,20 @@ export class PipelineController {
       narrativeUpdate = await this.generateNarrative(eventsForNarrative);
     }
 
-    // Step 7: Generate AI response
-    console.log("[Pipeline] Step 7: Generate AI response");
+    // Step 7: Generate AI response (Bypassed in favor of primary ai-engine.ts)
+    console.log("[Pipeline] Step 7: Generate AI response (Delegated to ai-engine)");
     let aiResponse = null;
     let isHighValue = false;
     
-    if (decisions.shouldRespond) {
-      aiResponse = await this.generateResponse(input.message.content, input.language);
-      if (aiResponse) {
-        const responseText = `${aiResponse.emotion_reflection}\n\n${aiResponse.validation}\n\n${aiResponse.insight}\n\n${aiResponse.gentle_suggestion}\n\n${aiResponse.short_reply}`;
-        isHighValue = isHighValueResponse(responseText);
-      }
-    }
-
+    // We already set decisions.shouldRespond = true in orchestrator
+    // The actual text generation is now handled in the main route using generateStoryResponse
+    // to ensure modern SDK patterns and resilient error handling.
+    
     return {
       extractedEvent: filteredEvent,
       shouldRespond: decisions.shouldRespond,
-      aiResponse,
-      isHighValue,
+      aiResponse: null,
+      isHighValue: false,
       narrativeUpdate
     };
   }

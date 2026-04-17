@@ -17,12 +17,45 @@ export async function POST(req: Request) {
     const pipelineForAsync = new PipelineController(apiKey);
 
     const body = await req.json();
-    const { role, type, content, media_url, metadata, user_id, session_id } = body;
+    const { role, type, content, media_url, metadata, user_id } = body;
+    let { session_id } = body;
     const language = metadata?.language || 'en';
 
     if (!user_id) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
+
+    // --- SMART SESSION MANAGEMENT ---
+    if (!session_id) {
+      // Find the most recent active session for this user
+      const { data: recentSession } = await supabase
+        .from('chat_sessions')
+        .select('*')
+        .eq('user_id', user_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      const twelveHoursAgo = new Date();
+      twelveHoursAgo.setHours(twelveHoursAgo.getHours() - 12);
+      
+      if (recentSession && new Date(recentSession.updated_at) > twelveHoursAgo) {
+        // Continue the recent session
+        session_id = recentSession.id;
+      } else {
+        // Create a new session for a new 'moment' of the day
+        const { data: newSession } = await supabase
+          .from('chat_sessions')
+          .insert({ 
+            user_id, 
+            title: `Chapter: ${new Date().toLocaleDateString()}` 
+          })
+          .select()
+          .single();
+        session_id = newSession?.id;
+      }
+    }
+    // --------------------------------
 
     // STEP 1: Fetch context for AI
     let query = supabase
@@ -40,7 +73,17 @@ export async function POST(req: Request) {
 
     const contextMessages = recentMessages?.map(m => ({ content: m.content || "", role: m.role })) || [];
     
-    // STEP 2: Save user message
+    // STEP 2: Save user message with rich metadata
+    const pipelineForAsync = new PipelineController(apiKey);
+    const analyzedEvent = await pipelineForAsync.extractLifeEvent(content);
+    
+    const enrichedMetadata = {
+      ...(metadata || {}),
+      emotion: analyzedEvent?.emotion || 'neutral',
+      importance: analyzedEvent?.score || 0,
+      category: analyzedEvent?.category || 'General'
+    };
+
     const { data: message, error } = await supabase
       .from('chat_messages')
       .insert({
@@ -50,7 +93,8 @@ export async function POST(req: Request) {
         type,
         content,
         media_url,
-        metadata: metadata || {}
+        metadata: enrichedMetadata,
+        event_score: analyzedEvent?.score || 0
       })
       .select()
       .single();
@@ -74,7 +118,11 @@ export async function POST(req: Request) {
     // Save AI Response if generated
     let aiResponseText: string | null = null;
     if (pipelineOutput.shouldRespond) {
-      aiResponseText = await generateStoryResponse(content, contextMessages);
+      // Fetch long-term memory for context
+      const profile = await coreService.getProfile(user_id, supabase);
+      
+      // Use the modern resilient engine with long-term memory
+      aiResponseText = await generateStoryResponse(content, contextMessages, profile.personality_summary) || null;
       
       if (aiResponseText) {
         await supabase.from('chat_messages').insert({
@@ -90,8 +138,17 @@ export async function POST(req: Request) {
       }
     }
     
-    // STEP 4: Update session title if generic (Async-ish)
+    // STEP 4: Update session title and user narrative (Async-ish)
     if (session_id) {
+      // 4.1 Update User Narrative/Memory
+      if (pipelineOutput.narrativeUpdate) {
+        await supabase
+          .from('users')
+          .update({ personality_summary: pipelineOutput.narrativeUpdate.summary })
+          .eq('id', user_id);
+      }
+
+      // 4.2 Update session title if generic
       const { data: session } = await supabase
         .from('chat_sessions')
         .select('title')
