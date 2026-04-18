@@ -73,7 +73,7 @@ export const StoryReader = ({ chapters, onBack, initialChapterId }: StoryReaderP
                 </button>
               </div>
 
-              <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-200px)] custom-scrollbar pr-2">
+              <div className="space-y-6 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-whatsapp pr-2">
                 {chapters.map((chapter, idx) => (
                   <button
                     key={chapter.id}

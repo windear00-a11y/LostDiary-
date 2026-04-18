@@ -54,22 +54,41 @@
     animation: float 6s ease-in-out infinite;
   }
 
-  /* Custom Scrollbar */
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 3px;
-    height: 3px;
+  /* WhatsApp-style Scrollbar (Stealth mode) */
+  .scrollbar-whatsapp {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
   }
 
-  .custom-scrollbar::-webkit-scrollbar-track {
+  .scrollbar-whatsapp::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  .scrollbar-whatsapp::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+    transition: background 0.3s;
+  }
+
+  /* Show thumb only when the 'is-scrolling' class is present or on interaction */
+  .scrollbar-whatsapp.is-scrolling::-webkit-scrollbar-thumb,
+  .scrollbar-whatsapp:active::-webkit-scrollbar-thumb,
+  .scrollbar-whatsapp:focus-within::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .scrollbar-whatsapp::-webkit-scrollbar-track {
     background: transparent;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-800 rounded-full;
+  /* Hide scrollbar utility */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
-
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-700;
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
   }
 }
 

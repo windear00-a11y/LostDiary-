@@ -105,7 +105,7 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 space-y-4 py-4 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto px-4 space-y-4 py-4 scrollbar-whatsapp">
               {/* Identity & Insights Section (Bento Card Large) */}
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}

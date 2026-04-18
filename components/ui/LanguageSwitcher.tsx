@@ -116,7 +116,7 @@ export const LanguageSwitcher = () => {
                   />
                 </div>
 
-                <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar space-y-1">
+                <div className="max-h-[300px] overflow-y-auto pr-2 scrollbar-whatsapp space-y-1">
                   {filteredLanguages.map((lang) => (
                     <button
                       key={lang.code}

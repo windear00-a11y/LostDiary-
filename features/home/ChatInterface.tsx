@@ -22,11 +22,19 @@ export const ChatInterface = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [activeSession, setActiveSession] = useState<ChatSession | null>(null);
   const [showNudge, setShowNudge] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { setInputFocused, isInputFocused, language } = useUIStore();
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get('session');
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const handleScroll = () => {
+    setIsScrolling(true);
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => setIsScrolling(false), 1500);
+  };
 
   // Fetch or find session on mount
   useEffect(() => {
@@ -180,7 +188,8 @@ export const ChatInterface = () => {
       {/* Messages Container */}
       <div 
         ref={scrollRef}
-        className={`flex-1 overflow-y-auto px-4 pt-24 pb-20 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'}`}
+        onScroll={handleScroll}
+        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-24 pb-20 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'}`}
       >
         <div className="max-w-2xl mx-auto space-y-8">
           {/* Nudge / Motivation UI */}

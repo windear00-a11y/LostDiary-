@@ -11,7 +11,15 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
 }) => {
   const [text, setText] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleScroll = () => {
+    setIsScrolling(true);
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => setIsScrolling(false), 1500);
+  };
 
   const handleFocus = () => {
     setIsFocused(true);
@@ -49,8 +57,8 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
     <div className="w-full relative group">
       <div className={`relative w-full rounded-2xl backdrop-blur-md transition-all duration-700 shadow-sm border
         ${isFocused 
-          ? 'bg-neutral-900/90 border-white/20 shadow-[0_4px_20px_rgba(0,0,0,0.3)]' 
-          : 'bg-neutral-900/80 border-white/10' }`}>
+          ? 'bg-neutral-900/90 border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]' 
+          : 'bg-neutral-900/80 border-white/5' }`}>
         
         <textarea
           ref={textareaRef}
@@ -66,9 +74,10 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
             e.target.style.height = `${Math.min(nextHeight, 160)}px`;
           }}
           onKeyDown={handleKeyDown}
+          onScroll={handleScroll}
           placeholder={disabled ? "Processing..." : "Write your moment..."}
           style={{ height: '48px' }}
-          className="w-full px-4 py-3 min-h-[48px] max-h-[160px] bg-transparent border-none focus:ring-0 resize-none text-base md:text-lg leading-relaxed outline-none overflow-y-auto text-white placeholder:text-white/40 transition-[height,opacity] duration-200 disabled:opacity-50 pr-12"
+          className={`w-full px-4 py-3 min-h-[48px] max-h-[160px] bg-transparent border-none focus:ring-0 resize-none text-base md:text-lg leading-relaxed outline-none overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} text-white placeholder:text-white/40 transition-[height,opacity] duration-200 disabled:opacity-50 pr-12`}
         />
 
         <div className={`absolute right-2 bottom-2`}>
