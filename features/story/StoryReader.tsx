@@ -9,11 +9,22 @@ import { Chapter } from '@/lib/services/core-service';
 interface StoryReaderProps {
   chapters: Chapter[];
   onBack: () => void;
+  initialChapterId?: string | null;
 }
 
-export const StoryReader = ({ chapters, onBack }: StoryReaderProps) => {
+export const StoryReader = ({ chapters, onBack, initialChapterId }: StoryReaderProps) => {
   const router = useRouter();
   const [isTOCOpen, setIsTOCOpen] = useState(false);
+
+  // Scroll to initial chapter if provided
+  React.useEffect(() => {
+    if (initialChapterId) {
+      const timer = setTimeout(() => {
+        scrollToChapter(initialChapterId);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [initialChapterId]);
 
   const scrollToChapter = (id: string) => {
     const el = document.getElementById(`chapter-${id}`);

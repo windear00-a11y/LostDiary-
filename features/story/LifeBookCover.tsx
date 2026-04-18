@@ -75,11 +75,15 @@ export const LifeBookCover = ({ data, userName, onOpen }: LifeBookCoverProps) =>
           
           <div className="space-y-2">
             <span className="text-[10px] uppercase tracking-[0.8em] text-white/40 font-bold block">
-              A Life Recorded
+              A Personal Archive
             </span>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-white tracking-tight leading-tight">
               {data.title}
             </h1>
+            <div className="flex justify-center gap-4 mt-4">
+              <span className="text-[8px] uppercase tracking-widest text-white/20 border border-white/10 px-2 py-0.5 rounded">First Edition</span>
+              <span className="text-[8px] uppercase tracking-widest text-white/20 border border-white/10 px-2 py-0.5 rounded">Volume I</span>
+            </div>
           </div>
           
           <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mx-auto mt-8" />

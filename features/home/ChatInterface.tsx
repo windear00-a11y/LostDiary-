@@ -6,9 +6,9 @@ import { ChatInput } from './ChatInput';
 import { generateStoryResponse } from '@/ai-core/ai-engine';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { User, Sparkles } from 'lucide-react';
-import { coreService } from '@/lib/services/core-service';
+import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export interface ChatMessage {
   id: string;
@@ -20,19 +20,41 @@ export interface ChatMessage {
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [activeSession, setActiveSession] = useState<ChatSession | null>(null);
+  const [showNudge, setShowNudge] = useState(false);
   const { setInputFocused, isInputFocused, language } = useUIStore();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const sessionId = searchParams.get('session');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch messages on mount or session change
+  // Fetch or find session on mount
   useEffect(() => {
-    const loadMessages = async () => {
+    const initializeSession = async () => {
       const user = await authService.getUser();
-      if (user) {
-        try {
-          const history = await coreService.fetchMessages(user.id, sessionId);
-          // Map backend roles to frontend roles
+      if (!user) return;
+
+      try {
+        let targetSessionId = sessionId;
+
+        // 1. If no session in URL, find the latest one
+        if (!targetSessionId) {
+          const sessions = await coreService.fetchSessions(user.id);
+          if (sessions.length > 0) {
+            targetSessionId = sessions[0].id;
+            // Update URL silently or just set state
+            router.replace(`/home?session=${targetSessionId}`);
+          } else {
+            // No sessions at all? Create a default one
+            const newSession = await coreService.createSession(user.id, "First entry");
+            targetSessionId = newSession.id;
+            router.replace(`/home?session=${targetSessionId}`);
+          }
+        }
+
+        // 2. Load messages for the determined session
+        if (targetSessionId) {
+          const history = await coreService.fetchMessages(user.id, targetSessionId);
           const mappedMessages = history.map(m => ({
             id: m.id,
             role: m.role as 'user' | 'diary',
@@ -40,13 +62,43 @@ export const ChatInterface = () => {
             created_at: m.created_at
           }));
           setMessages(mappedMessages);
-        } catch (error) {
-          console.error("Failed to fetch messages:", error);
+
+          // 3. Check for inactivity nudge (2 hours)
+          if (mappedMessages.length > 0) {
+            const lastMsg = mappedMessages[mappedMessages.length - 1];
+            const lastTime = new Date(lastMsg.created_at).getTime();
+            const now = new Date().getTime();
+            const hoursPassed = (now - lastTime) / (1000 * 60 * 60);
+
+            if (hoursPassed > 2) {
+              setShowNudge(true);
+            }
+          } else {
+            // Empty session, show greeting
+            setShowNudge(true);
+          }
         }
+      } catch (error) {
+        console.error("Session initialization failed:", error);
       }
     };
-    loadMessages();
-  }, [sessionId]);
+
+    initializeSession();
+  }, [sessionId, router]);
+
+  const handleStartNewSession = async () => {
+    const user = await authService.getUser();
+    if (!user) return;
+    
+    try {
+      const newSession = await coreService.createSession(user.id, `Moment ${new Date().toLocaleDateString()}`);
+      router.push(`/home?session=${newSession.id}`);
+      setShowNudge(false);
+      setMessages([]);
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -131,6 +183,49 @@ export const ChatInterface = () => {
         className={`flex-1 overflow-y-auto px-4 pt-24 pb-32 space-y-6 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'}`}
       >
         <div className="max-w-2xl mx-auto space-y-8">
+          {/* Nudge / Motivation UI */}
+          <AnimatePresence>
+            {showNudge && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                className="bg-indigo-500/5 border border-indigo-500/20 rounded-3xl p-6 text-center space-y-4 mb-12 shadow-2xl backdrop-blur-sm"
+              >
+                <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Sparkles className="w-6 h-6 text-indigo-400" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-serif italic text-white">Welcome back, Storyteller.</h3>
+                  <p className="text-sm text-slate-400 font-serif">Aapki purani yaadein yahan mehfooz hain. Agla panna likhein ya purani baat hi continue karni hai?</p>
+                </div>
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <button 
+                    onClick={() => setShowNudge(false)}
+                    className="px-6 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full text-xs font-medium transition-all"
+                  >
+                    Continue Writing
+                  </button>
+                  <button 
+                    onClick={handleStartNewSession}
+                    className="px-6 py-2.5 bg-white text-black hover:bg-neutral-200 rounded-full text-xs font-medium transition-all shadow-lg"
+                  >
+                    Start New Chapter
+                  </button>
+                </div>
+                <button 
+                  onClick={() => setShowNudge(false)}
+                  className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
+                >
+                  <span className="sr-only">Dismiss</span>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {messages.map((msg) => {
             const isUser = msg.role === 'user';
             const isThinkingMsg = msg.content === 'Thinking...';
