@@ -5,6 +5,7 @@ import { motion } from 'motion/react';
 import { BookOpen } from 'lucide-react';
 import { coreService, Chapter } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
+import { useAuth } from '@/components/auth/auth-provider';
 import { BookRenderer } from './BookRenderer';
 import { StoryReader } from './StoryReader';
 // import { InsightsView } from './InsightsView';
@@ -45,6 +46,7 @@ const GhostBook = () => (
 );
 
 export const BookView = () => {
+  const { user } = useAuth();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [openingText, setOpeningText] = useState<string | null>(null);
   const [coverData, setCoverData] = useState<{ title: string; summary: string; aura: string } | null>(null);
