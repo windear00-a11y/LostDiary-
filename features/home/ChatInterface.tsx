@@ -180,7 +180,7 @@ export const ChatInterface = () => {
       {/* Messages Container */}
       <div 
         ref={scrollRef}
-        className={`flex-1 overflow-y-auto px-4 pt-24 pb-32 space-y-6 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'}`}
+        className={`flex-1 overflow-y-auto px-4 pt-24 pb-20 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'}`}
       >
         <div className="max-w-2xl mx-auto space-y-8">
           {/* Nudge / Motivation UI */}
