@@ -20,7 +20,7 @@ export interface ChatMessage {
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
-  const { setInputFocused, isInputFocused } = useUIStore();
+  const { setInputFocused, isInputFocused, language } = useUIStore();
   const searchParams = useSearchParams();
   const sessionId = searchParams.get('session');
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -93,7 +93,7 @@ export const ChatInterface = () => {
         session_id: sessionId || undefined,
         type: 'text',
         content: trimmedContent,
-        metadata: { language: 'en' }
+        metadata: { language }
       });
 
       // 3. Update messages using the direct response from API
@@ -124,11 +124,11 @@ export const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-neutral-950 text-white relative overflow-hidden font-sans">
+    <div className="flex flex-col h-full bg-neutral-950 text-white relative overflow-hidden font-sans">
       {/* Messages Container */}
       <div 
         ref={scrollRef}
-        className={`flex-1 overflow-y-auto px-4 pt-6 pb-32 space-y-6 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'}`}
+        className={`flex-1 overflow-y-auto px-4 pt-24 pb-32 space-y-6 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'}`}
       >
         <div className="max-w-2xl mx-auto space-y-8">
           {messages.map((msg) => {

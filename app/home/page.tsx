@@ -20,10 +20,8 @@ export default function HomePage() {
 
   return (
     <div className="h-[100dvh] bg-neutral-950 overflow-hidden flex flex-col relative">
-      <div className={`transition-all duration-700 ${isInputFocused ? 'opacity-0 -translate-y-4 pointer-events-none' : 'opacity-100 translate-y-0'}`}>
-        <Header />
-      </div>
-      <main className="flex-1 w-full relative">
+      <Header />
+      <main className="flex-1 w-full relative overflow-hidden">
         <Suspense fallback={<LoadingSpace />}>
           <ChatInterface />
         </Suspense>

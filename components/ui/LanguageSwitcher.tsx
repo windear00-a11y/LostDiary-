@@ -1,9 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Languages, Check, Globe, Search, X } from 'lucide-react';
 import { useUIStore } from '@/lib/store/use-ui-store';
+import { useAuth } from '@/components/auth/auth-provider';
+import { coreService } from '@/lib/services/core-service';
 
 const LANGUAGES = [
   { code: 'en', name: 'English', native: 'English' },
@@ -27,7 +29,32 @@ const LANGUAGES = [
 export const LanguageSwitcher = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const { user } = useAuth();
   const { language, setLanguage } = useUIStore();
+
+  // Sync with remote profile on mount if logged in
+  useEffect(() => {
+    if (user) {
+      coreService.getProfile(user.id).then(profile => {
+        if (profile?.preferred_language && profile.preferred_language !== language) {
+          setLanguage(profile.preferred_language);
+        }
+      });
+    }
+  }, [user, language, setLanguage]);
+
+  const handleLanguageSelect = async (code: string) => {
+    setLanguage(code);
+    setIsOpen(false);
+    
+    if (user) {
+      try {
+        await coreService.updateProfile(user.id, { preferred_language: code });
+      } catch (error) {
+        console.error("Failed to sync language preference to profile:", error);
+      }
+    }
+  };
 
   const filteredLanguages = LANGUAGES.filter(lang => 
     lang.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -42,10 +69,10 @@ export const LanguageSwitcher = () => {
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="w-10 h-10 rounded-full bg-white/85 dark:bg-black/80 backdrop-blur-md shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] border border-white/40 dark:border-white/10 flex flex-col items-center justify-center transition-all group"
+        className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors flex flex-col items-center justify-center group relative"
       >
-        <Languages className="w-5 h-5 text-slate-700 dark:text-slate-200 group-hover:text-indigo-500 transition-colors" />
-        <span className="text-[7px] font-bold uppercase text-slate-500 mt-0.5">{language}</span>
+        <Languages className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
+        <span className="absolute -bottom-1 right-0 text-[6px] font-bold uppercase text-indigo-500/80 bg-neutral-900 px-0.5 rounded leading-none">{language}</span>
       </motion.button>
 
       <AnimatePresence>
@@ -93,10 +120,7 @@ export const LanguageSwitcher = () => {
                   {filteredLanguages.map((lang) => (
                     <button
                       key={lang.code}
-                      onClick={() => {
-                        setLanguage(lang.code);
-                        setIsOpen(false);
-                      }}
+                      onClick={() => handleLanguageSelect(lang.code)}
                       className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${
                         language === lang.code 
                           ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' 

@@ -8,7 +8,7 @@ import { authService } from '@/lib/services/auth-service';
 import { useUIStore } from '@/lib/store/use-ui-store';
 
 export const JournalEditor = () => {
-  const { setActiveView, selectedJournalContent, setSelectedJournalContent } = useUIStore();
+  const { setActiveView, selectedJournalContent, setSelectedJournalContent, language } = useUIStore();
   const [content, setContent] = useState(selectedJournalContent || '');
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -28,7 +28,7 @@ export const JournalEditor = () => {
       const user = await authService.getUser();
       if (!user) throw new Error('User not found');
 
-      await coreService.saveDiaryEntry(user.id, content);
+      await coreService.saveDiaryEntry(user.id, content, { language });
       setSaveStatus('success');
       setTimeout(() => setSaveStatus('idle'), 3000);
       // Optional: Clear or keep content? Usually diary entries are "new" every time in this simplified logic.

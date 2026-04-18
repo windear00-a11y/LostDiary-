@@ -48,6 +48,7 @@ export interface UserProfile {
   avatar_url: string | null;
   bio: string | null;
   personality_summary: string | null;
+  preferred_language: string;
   responsiveness_level: number; // 0-1
   emotional_sensitivity: number; // 0-1
   engagement_level: number; // 0-1
@@ -247,11 +248,11 @@ export const coreService = {
   },
 
   // Diary Entries (Raw Writing)
-  async saveDiaryEntry(userId: string, content: string): Promise<DiaryEntry> {
+  async saveDiaryEntry(userId: string, content: string, metadata?: any): Promise<DiaryEntry> {
     const response = await fetch('/api/journal/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, user_id: userId, content })
+      body: JSON.stringify({ userId, user_id: userId, content, metadata: metadata || {} })
     });
 
     if (!response.ok) {
@@ -296,6 +297,7 @@ export const coreService = {
         avatar_url: null,
         bio: null,
         personality_summary: null,
+        preferred_language: 'en',
         responsiveness_level: 0.5,
         emotional_sensitivity: 0.5,
         engagement_level: 0.5,
