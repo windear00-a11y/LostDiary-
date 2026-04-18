@@ -1,7 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
-
-const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-const ai = new GoogleGenAI({ apiKey: apiKey || "" });
+import { getGenAI } from "@/lib/genai";
 
 /**
  * Modern AI Engine for story generation.
@@ -13,6 +10,9 @@ export async function generateStoryResponse(
   summary?: string | null,
   persona?: string | null
 ): Promise<string | undefined> {
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+  const ai = getGenAI();
+
   if (!apiKey) {
     console.warn("NEXT_PUBLIC_GEMINI_API_KEY is missing. AI features will not work.");
     return "The diary is quiet right now. (API Key missing)";

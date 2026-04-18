@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Chapter } from '@/lib/services/chapter-service';
+import { Chapter } from '@/lib/services/core-service';
 
 interface BookRendererProps {
   chapters: Chapter[];

@@ -1,5 +1,5 @@
 import { getSupabase } from "@/lib/supabase";
-import { GoogleGenAI } from "@google/genai";
+import { getGenAI } from "@/lib/genai";
 
 // --- Chat Service ---
 export interface ChatSession {
@@ -57,7 +57,6 @@ export interface UserProfile {
   updated_at: string;
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || '' });
 
 export const coreService = {
   // Chat
@@ -235,6 +234,7 @@ export const coreService = {
 
   async generateTitle(content: string): Promise<string | null> {
     try {
+      const ai = getGenAI();
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: [{ role: "user", parts: [{ text: `Generate a short title (max 5 words) for this chapter content: ${content.substring(0, 200)}` }] }],

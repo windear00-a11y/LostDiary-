@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { coreService, UserProfile } from '@/lib/services/core-service';
-import { GoogleGenAI } from "@google/genai";
+import { getGenAI } from '@/lib/genai';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Camera, Sparkles, LogOut, Save, Edit2 } from 'lucide-react';
@@ -11,9 +11,8 @@ import { Header } from '@/components/ui/Header';
 
 import Image from 'next/image';
 
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
-
 export default function ProfilePage() {
+  const ai = getGenAI();
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);

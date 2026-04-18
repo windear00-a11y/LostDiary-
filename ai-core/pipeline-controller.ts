@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { getGenAI } from "@/lib/genai";
 import { isHighValueResponse } from "@/lib/utils/quality";
 import { mapToChapter } from "@/lib/utils/chapters";
 import { AIPersonality } from "./personality";
@@ -28,12 +28,16 @@ export interface PipelineOutput {
 }
 
 export class PipelineController {
-  private ai: GoogleGenAI;
   private currentPersona: string = "";
+  private apiKey: string = "";
 
   constructor(apiKey: string, persona?: string) {
-    this.ai = new GoogleGenAI({ apiKey });
+    this.apiKey = apiKey;
     this.currentPersona = persona || "";
+  }
+
+  private get ai() {
+    return getGenAI();
   }
 
   async runPipeline(input: PipelineInput, decisions: OrchestrationDecisions): Promise<PipelineOutput> {

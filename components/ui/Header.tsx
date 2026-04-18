@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, Book, MessageSquare, PenLine, X, Sparkles } from 'lucide-react';
+import { Menu, Book, MessageSquare, PenLine, X, Sparkles, Plus } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { SideDrawer } from './SideDrawer';
 import { motion, AnimatePresence } from 'motion/react';
@@ -29,6 +29,21 @@ export const Header = () => {
           className="w-12 h-12 rounded-full bg-neutral-900/50 backdrop-blur-xl border border-white/10 flex items-center justify-center transition-all shadow-xl hover:bg-white/10"
         >
           <Menu className="w-5 h-5 text-white/60" />
+        </motion.button>
+      </div>
+
+      <div className="fixed top-6 right-6 z-50 pointer-events-auto flex items-center gap-3">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            setActiveView('chat');
+            window.location.href = '/home'; // Navigate to root chat
+          }}
+          className="w-12 h-12 rounded-full bg-neutral-900/50 backdrop-blur-xl border border-white/10 flex items-center justify-center transition-all shadow-xl hover:bg-white/10 group"
+          title="New Conversation"
+        >
+          <Plus className="w-5 h-5 text-white/50 group-hover:text-white transition-colors" />
         </motion.button>
       </div>
 

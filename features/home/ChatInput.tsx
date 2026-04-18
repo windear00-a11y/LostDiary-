@@ -71,19 +71,20 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
           className="w-full px-4 py-3 min-h-[48px] max-h-[160px] bg-transparent border-none focus:ring-0 resize-none text-base md:text-lg leading-relaxed outline-none overflow-y-auto text-white placeholder:text-white/40 transition-[height,opacity] duration-200 disabled:opacity-50 pr-12"
         />
 
-        <div className="absolute right-3 bottom-3">
+        <div className={`absolute right-2 bottom-2`}>
           <AnimatePresence>
             {text.trim() && !disabled && (
               <motion.button
                 key="send-button"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.5, y: -10 }}
+                initial={{ opacity: 0, scale: 0.5, x: 10 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.5, x: 10 }}
+                whileHover={{ scale: 1.1, color: '#fff' }}
                 whileTap={{ scale: 0.9 }}
                 onClick={handleSend}
-                className="p-1.5 text-white/70 hover:text-white transition-colors shrink-0"
+                className="p-2 bg-indigo-500 rounded-xl text-white shadow-lg shadow-indigo-500/20 shrink-0 flex items-center justify-center"
               >
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4" />
               </motion.button>
             )}
           </AnimatePresence>

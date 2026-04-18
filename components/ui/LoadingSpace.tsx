@@ -19,44 +19,29 @@ export const LoadingSpace = ({
       exit={{ opacity: 0 }}
       className={`flex flex-col items-center justify-center gap-6 ${className}`}
     >
-      <div className="relative flex items-center justify-center">
+      <div className="relative flex items-center justify-center w-20 h-20">
         <motion.div 
-          className="w-1.5 h-1.5 rounded-full bg-indigo-500/40"
+          className="absolute inset-0 rounded-full bg-indigo-500/10 border border-indigo-500/20"
           animate={{
-            scale: [1, 1.5, 1],
-            opacity: [0.4, 1, 0.4],
+            scale: [1, 1.2, 1],
+            opacity: [0.1, 0.3, 0.1],
           }}
           transition={{
-            duration: 1.5,
+            duration: 3,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: 0
           }}
         />
         <motion.div 
-          className="w-1.5 h-1.5 rounded-full bg-indigo-500/40 ml-2"
+          className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_15px_rgba(99,102,241,0.5)]"
           animate={{
             scale: [1, 1.5, 1],
-            opacity: [0.4, 1, 0.4],
+            opacity: [0.6, 1, 0.6],
           }}
           transition={{
-            duration: 1.5,
+            duration: 2,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: 0.2
-          }}
-        />
-        <motion.div 
-          className="w-1.5 h-1.5 rounded-full bg-indigo-500/40 ml-2"
-          animate={{
-            scale: [1, 1.5, 1],
-            opacity: [0.4, 1, 0.4],
-          }}
-          transition={{
-            duration: 1.5,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 0.4
           }}
         />
       </div>

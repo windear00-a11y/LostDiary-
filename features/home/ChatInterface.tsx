@@ -144,15 +144,19 @@ export const ChatInterface = () => {
                 className={`flex items-start gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
               >
                 {/* Avatar */}
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-white/5 ${isUser ? 'bg-white/5' : 'bg-white/10'}`}>
-                  {isUser ? <User className="w-4 h-4 text-white/50" /> : <Sparkles className="w-4 h-4 text-white/70" />}
+                <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border shadow-sm ${
+                  isUser 
+                    ? 'bg-neutral-800 border-white/10' 
+                    : 'bg-indigo-500/10 border-indigo-500/20 shadow-indigo-500/5'
+                }`}>
+                  {isUser ? <User className="w-4 h-4 text-white/50" /> : <Sparkles className="w-4 h-4 text-indigo-400" />}
                 </div>
 
                 {/* Bubble */}
                 <div className={`max-w-[85%] px-5 py-3.5 rounded-2xl ${
                   isUser 
-                    ? 'bg-white text-black rounded-tr-none' 
-                    : 'bg-neutral-900 border border-white/10 text-neutral-100 rounded-tl-none shadow-xl'
+                    ? 'bg-white text-black rounded-tr-none shadow-xl' 
+                    : 'bg-neutral-900 border border-white/10 text-neutral-100 rounded-tl-none shadow-[0_10px_30px_rgba(0,0,0,0.5)]'
                 }`}>
                   {isThinkingMsg ? (
                     <div className="flex gap-1 py-1.5">

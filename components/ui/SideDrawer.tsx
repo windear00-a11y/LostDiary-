@@ -105,145 +105,165 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 space-y-6 py-2">
-              {/* Primary Navigation */}
-              <div className="grid grid-cols-3 gap-2">
+            <div className="flex-1 overflow-y-auto px-4 space-y-4 py-4 custom-scrollbar">
+              {/* Identity & Insights Section (Bento Card Large) */}
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-5 rounded-[2rem] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-white/10 relative overflow-hidden group shadow-2xl"
+              >
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                  <Sparkles className="w-12 h-12 text-indigo-400" />
+                </div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                    <Heart className="w-3.5 h-3.5 text-indigo-400" />
+                  </div>
+                  <h4 className="text-[10px] uppercase tracking-[0.2em] text-indigo-400/80 font-bold">Personality Insights</h4>
+                </div>
+                <p className="text-sm text-white/90 leading-relaxed font-serif italic mb-1">
+                  {profile?.personality_summary || "WinDear is still listening and learning the patterns of your soul..."}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-1.5 opacity-60">
+                  {profile?.life_themes?.slice(0, 3).map((theme: string, i: number) => (
+                    <span key={i} className="text-[9px] px-2 py-0.5 rounded-full border border-white/10 bg-white/5 uppercase tracking-wider">{theme}</span>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* Primary Navigation Grid (Bento Small Cards) */}
+              <div className="grid grid-cols-3 gap-3">
                 {[
-                  { id: 'chat', label: 'Chat', icon: MessageSquare },
-                  { id: 'journal', label: 'Journal', icon: PenLine },
-                  { id: 'story', label: 'LifeBook', icon: BookOpen },
+                  { id: 'chat', label: 'Chat', icon: MessageSquare, color: 'text-blue-400', bg: 'bg-blue-400/5' },
+                  { id: 'journal', label: 'Journal', icon: PenLine, color: 'text-amber-400', bg: 'bg-amber-400/5' },
+                  { id: 'story', label: 'LifeBook', icon: BookOpen, color: 'text-emerald-400', bg: 'bg-emerald-400/5' },
                 ].map((nav) => (
-                  <button
+                  <motion.button
                     key={nav.id}
+                    whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.08)' }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => {
                       setActiveView(nav.id as any);
                       onClose();
                     }}
-                    className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group"
+                    className={`flex flex-col items-center gap-2.5 p-4 rounded-3xl ${nav.bg} border border-white/5 transition-all group`}
                   >
-                    <nav.icon className="w-5 h-5 text-slate-400 group-hover:text-white" />
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 group-hover:text-white/60">{nav.label}</span>
-                  </button>
+                    <nav.icon className={`w-5 h-5 ${nav.color} group-hover:scale-110 transition-transform`} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 group-hover:text-white/80 transition-colors">{nav.label}</span>
+                  </motion.button>
                 ))}
               </div>
 
-              {/* Tab Switcher */}
-              <div className="flex p-1 bg-white/5 rounded-xl gap-1">
-                <button 
-                  onClick={() => setActiveTab('chats')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold transition-all ${activeTab === 'chats' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-500 hover:text-white/50'}`}
-                >
-                  <MessageSquare className="w-3 h-3" /> CONVERSATIONS
-                </button>
-                <button 
-                  onClick={() => setActiveTab('reflections')}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-[10px] font-bold transition-all ${activeTab === 'reflections' ? 'bg-white/10 text-white shadow-sm' : 'text-slate-500 hover:text-white/50'}`}
-                >
-                  <History className="w-3 h-3" /> REFLECTIONS
-                </button>
-              </div>
-
-              {activeTab === 'chats' ? (
-                /* Chat History Section */
-                <div className="space-y-6">
-                  {/* Persona Insights Card */}
-                  <motion.div 
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="mx-2 p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-white/10 relative overflow-hidden group"
+              {/* History / Activity Bento Section */}
+              <div className="space-y-3 pt-2">
+                <div className="flex p-1 bg-white/5 rounded-2xl gap-1">
+                  <button 
+                    onClick={() => setActiveTab('chats')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'chats' ? 'bg-white/10 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
                   >
-                    <div className="absolute top-0 right-0 p-2 opacity-20 group-hover:opacity-40 transition-opacity">
-                      <Sparkles className="w-8 h-8 text-indigo-400" />
-                    </div>
-                    <h4 className="text-[9px] uppercase tracking-widest text-indigo-400 font-bold mb-2 flex items-center gap-1.5">
-                      <Heart className="w-2.5 h-2.5" /> Who You Are (Insights)
-                    </h4>
-                    <p className="text-xs text-slate-300 italic leading-relaxed font-serif">
-                      {profile?.personality_summary || "WinDear is still listening and learning the patterns of your soul..."}
-                    </p>
-                  </motion.div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between px-2">
-                    <h3 className="text-[10px] uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400 font-bold">Recent</h3>
-                    <button 
-                      onClick={() => {
-                        setActiveView('chat');
-                        router.push('/home');
-                        onClose();
-                      }}
-                      className="text-[10px] font-bold text-white/50 hover:text-white/90 transition-colors flex items-center gap-1"
-                    >
-                      <Plus className="w-3 h-3" /> New Chat
-                    </button>
-                  </div>
-                  <div className="space-y-1">
-                    {sessions.map((session) => (
-                      <button
-                        key={session.id}
-                        onClick={() => {
-                          setActiveView('chat');
-                          router.push(`/home?session=${session.id}`);
-                          onClose();
-                        }}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 transition-all text-left group"
-                      >
-                        <MessageSquare className="w-4 h-4 text-slate-500 group-hover:text-white/70 shrink-0" />
-                        <span className="text-sm text-slate-400 group-hover:text-slate-200 line-clamp-1">
-                          {session.title || 'Untitled Session'}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
+                    <MessageSquare className="w-3.5 h-3.5" /> CHATS
+                  </button>
+                  <button 
+                    onClick={() => setActiveTab('reflections')}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'reflections' ? 'bg-white/10 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
+                  >
+                    <History className="w-3.5 h-3.5" /> MOMENTS
+                  </button>
                 </div>
-              </div>
-            ) : (
-                /* Reflections/Journal History Section */
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between px-2">
-                    <h3 className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-bold">Memories</h3>
-                    <button 
-                      onClick={() => {
-                        setSelectedJournalContent(null);
-                        setActiveView('journal');
-                        onClose();
-                      }}
-                      className="text-[10px] font-bold text-white/50 hover:text-white/90 transition-colors flex items-center gap-1"
-                    >
-                      <Plus className="w-3 h-3" /> New Entry
-                    </button>
-                  </div>
-                  <div className="space-y-1">
-                    {diaryEntries.length > 0 ? (
-                      diaryEntries.map((entry) => (
-                        <button
-                          key={entry.id}
+
+                <div className="space-y-2 bg-white/[0.02] border border-white/5 rounded-[2rem] p-3 min-h-[200px]">
+                  {activeTab === 'chats' ? (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between px-2 mb-2">
+                        <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-white/20">Recent Sessions</span>
+                        <motion.button 
+                          whileHover={{ scale: 1.1 }}
                           onClick={() => {
-                            setSelectedJournalContent(entry.content);
+                            setActiveView('chat');
+                            router.push('/home');
+                            onClose();
+                          }}
+                          className="p-1 hover:bg-white/5 rounded-full transition-colors"
+                        >
+                          <Plus className="w-3 h-3 text-white/40" />
+                        </motion.button>
+                      </div>
+                      <div className="space-y-1">
+                        {sessions.slice(0, 5).map((session) => (
+                          <motion.button
+                            key={session.id}
+                            whileHover={{ x: 4 }}
+                            onClick={() => {
+                              setActiveView('chat');
+                              router.push(`/home?session=${session.id}`);
+                              onClose();
+                            }}
+                            className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-all text-left group"
+                          >
+                            <div className="w-2 h-2 rounded-full bg-white/10 group-hover:bg-indigo-500/50 transition-colors" />
+                            <span className="text-sm text-white/40 group-hover:text-white/90 line-clamp-1 flex-1 transition-colors">
+                              {session.title || 'Untitled Session'}
+                            </span>
+                            <ChevronRight className="w-3 h-3 text-white/10 opacity-0 group-hover:opacity-100 transition-all" />
+                          </motion.button>
+                        ))}
+                        {sessions.length === 0 && (
+                          <div className="py-10 text-center opacity-20">
+                            <span className="text-xs italic">No chats yet</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between px-2 mb-2">
+                        <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-white/20">Memory Bank</span>
+                        <motion.button 
+                          whileHover={{ scale: 1.1 }}
+                          onClick={() => {
+                            setSelectedJournalContent(null);
                             setActiveView('journal');
                             onClose();
                           }}
-                          className="w-full flex flex-col p-3 rounded-xl hover:bg-white/5 transition-all text-left group gap-1"
+                          className="p-1 hover:bg-white/5 rounded-full transition-colors"
                         >
-                          <div className="flex items-center gap-2">
-                            <PenLine className="w-3 h-3 text-slate-500" />
-                            <span className="text-[10px] text-slate-500 font-medium tracking-tight">
-                              {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-400 group-hover:text-slate-200 line-clamp-2 leading-relaxed">
-                            {entry.content || 'Empty reflection...'}
-                          </p>
-                        </button>
-                      ))
-                    ) : (
-                      <div className="p-4 text-center">
-                        <p className="text-[10px] text-slate-600 font-medium">No moments saved yet.</p>
+                          <Plus className="w-3 h-3 text-white/40" />
+                        </motion.button>
                       </div>
-                    )}
-                  </div>
+                      <div className="space-y-2">
+                        {diaryEntries.length > 0 ? (
+                          diaryEntries.slice(0, 5).map((entry) => (
+                            <motion.button
+                              key={entry.id}
+                              whileHover={{ x: 4 }}
+                              onClick={() => {
+                                setSelectedJournalContent(entry.content);
+                                setActiveView('journal');
+                                onClose();
+                              }}
+                              className="w-full flex flex-col p-3.5 rounded-2xl hover:bg-white/5 transition-all text-left group gap-1.5 border border-transparent hover:border-white/5"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] text-white/30 font-bold uppercase tracking-wider">
+                                  {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                </span>
+                                <PenLine className="w-3 h-3 text-white/10 group-hover:text-white/40 transition-colors" />
+                              </div>
+                              <p className="text-xs text-white/50 group-hover:text-white/80 line-clamp-2 leading-relaxed italic">
+                                &ldquo;{entry.content || 'Empty reflection...'}&rdquo;
+                              </p>
+                            </motion.button>
+                          ))
+                        ) : (
+                          <div className="py-10 text-center opacity-20">
+                            <span className="text-xs italic">No memories yet</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
             <div className="p-4 border-t border-gray-100 dark:border-white/5">
               <div className="flex items-center gap-2 p-2 justify-between">
