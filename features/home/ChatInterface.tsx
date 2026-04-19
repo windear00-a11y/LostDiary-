@@ -94,6 +94,14 @@ export const ChatInterface = () => {
     initializeSession();
   }, [sessionId, router]);
 
+  const starters = [
+    { text: "Aaj mera dimag thoda uljha hai, clarity chahiye.", icon: "🧠" },
+    { text: "Mujhe ek decision lena hai, kya tum sunoge?", icon: "⚖️" },
+    { text: "Main aaj thoda low hoon, let's talk.", icon: "🤝" },
+    { text: "Mujhe meri hi kisi purani growth ki yaad dilao.", icon: "🌱" },
+    { text: "Aaj ka din 3 anokhe shabdon mein batao?", icon: "🎭" },
+  ];
+
   const handleStartNewSession = async () => {
     const user = await authService.getUser();
     if (!user) return;
@@ -103,6 +111,7 @@ export const ChatInterface = () => {
       router.push(`/home?session=${newSession.id}`);
       setShowNudge(false);
       setMessages([]);
+      // This will trigger the empty state view with starters
     } catch (e) {
       console.error(e);
     }
@@ -126,6 +135,9 @@ export const ChatInterface = () => {
     const trimmedContent = input.content.trim();
     const user = await authService.getUser();
     if (!trimmedContent || isThinking || !user) return;
+
+    // Auto-hide nudge and starters when active conversation begins
+    setShowNudge(false);
 
     // 1. Optimistic Update (Show user message instantly)
     const userMsg: ChatMessage = {
@@ -157,7 +169,6 @@ export const ChatInterface = () => {
       });
 
       // 3. Update messages using the direct response from API
-      // result.aiResponse contains the companion's reply
       if (result.aiResponse) {
         setMessages(prev => prev.map(m => 
           m.id === aiTempId ? { 
@@ -168,15 +179,18 @@ export const ChatInterface = () => {
           } : m
         ));
       } else {
-        // Fallback if AI didn't respond (should be rare now)
         setMessages(prev => prev.map(m => 
-          m.id === aiTempId ? { ...m, content: "I've saved that for you.", role: 'diary' } : m
+          m.id === aiTempId ? { ...m, content: "I've saved that for you. Tell me more when you're ready.", role: 'diary' } : m
         ));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to sync message with backend:", error);
+      const errorMsg = error.message?.includes('API Key') 
+        ? "AI configuration missing. Please check your API keys."
+        : "Connection pause. Your memory is safe, but I couldn't reflect right now.";
+        
       setMessages(prev => prev.map(m => 
-        m.id === aiTempId ? { ...m, content: "The diary is quiet, but your memory is safe." } : m
+        m.id === aiTempId ? { ...m, content: errorMsg, role: 'diary' } : m
       ));
     } finally {
       setIsThinking(false);
@@ -185,53 +199,106 @@ export const ChatInterface = () => {
 
   return (
     <div className="flex flex-col h-full bg-neutral-950 text-white relative overflow-hidden font-sans">
+      {/* Top Gradient Mask for smooth scrolling transition */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-neutral-950 via-neutral-950/80 to-transparent z-30 pointer-events-none" />
+
       {/* Messages Container */}
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-24 pb-20 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'}`}
+        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-32 pb-20 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'} ${showNudge ? 'blur-2xl scale-[0.98] opacity-20 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
       >
-        <div className="max-w-2xl mx-auto space-y-8">
-          {/* Nudge / Motivation UI */}
+        <div className="max-w-2xl mx-auto space-y-8 min-h-full flex flex-col">
+          <AnimatePresence mode="wait">
+            {messages.length === 0 && !showNudge && (
+              <motion.div 
+                key="empty-suggestions"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 0.6, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.4, ease: "circOut" }}
+                className="flex-1 flex flex-col items-center justify-center space-y-8"
+              >
+                <motion.div 
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center"
+                >
+                   <Sparkles className="w-8 h-8 text-white/20" />
+                </motion.div>
+                <h2 className="text-xl font-serif italic text-white/40">Silence is a blank page...</h2>
+                <div className="flex flex-wrap items-center justify-center gap-3 max-w-sm">
+                  {starters.map((starter, i) => (
+                    <motion.button
+                      key={i}
+                      whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.08)" }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleSendMessage({ type: 'text', content: starter.text })}
+                      className="px-4 py-2 bg-neutral-900/50 border border-white/5 rounded-full text-xs text-white/50 transition-all hover:text-white"
+                    >
+                      {starter.icon} {starter.text}
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Nudge / Motivation UI - Emotional Decision Point */}
           <AnimatePresence>
             {showNudge && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                className="bg-indigo-500/5 border border-indigo-500/20 rounded-3xl p-6 text-center space-y-4 mb-12 shadow-2xl backdrop-blur-sm"
-              >
-                <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Sparkles className="w-6 h-6 text-indigo-400" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-lg font-serif italic text-white">Welcome back, Storyteller.</h3>
-                  <p className="text-sm text-slate-400 font-serif">Aapki purani yaadein yahan mehfooz hain. Agla panna likhein ya purani baat hi continue karni hai?</p>
-                </div>
-                <div className="flex items-center justify-center gap-3 pt-2">
+              <div className="fixed inset-0 z-40 flex items-center justify-center p-6 bg-neutral-950/20 backdrop-blur-sm">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                  transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                  className="bg-neutral-900/80 border border-white/10 rounded-[32px] p-8 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl relative overflow-hidden"
+                >
+                  {/* Decorative Glow */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none" />
+                  
+                  <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Sparkles className="w-8 h-8 text-purple-400" />
+                  </div>
+
+                  <div className="space-y-3 mb-10">
+                    <h3 className="text-2xl font-serif italic text-white leading-tight">
+                      {messages.length === 0 ? "Welcome to your sanctuary." : "Main kabse aapka intezar kar rha tha."}
+                    </h3>
+                    <p className="text-sm text-slate-400 font-serif leading-relaxed px-4">
+                      {messages.length === 0 
+                        ? "Aapki diary khali hai. Kya aaj ki pehli yaad likhna chahenge?" 
+                        : "Aapki purani baatein yahan mehfooz hain... Maine unhe bhulaya nahi. Wahin se shuru karein?"}
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowNudge(false)}
+                      className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-medium shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all"
+                    >
+                      Haan, Wahin se continue karte hain
+                    </motion.button>
+                    
+                    <button 
+                      onClick={handleStartNewSession}
+                      className="w-full py-3 text-white/40 hover:text-white/60 text-xs font-medium transition-all"
+                    >
+                      Naya panna (new chat) shuru karein
+                    </button>
+                  </div>
+
                   <button 
                     onClick={() => setShowNudge(false)}
-                    className="px-6 py-2.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-full text-xs font-medium transition-all"
+                    className="absolute top-6 right-6 text-white/20 hover:text-white transition-colors"
                   >
-                    Continue Writing
+                    <X className="w-5 h-5" />
                   </button>
-                  <button 
-                    onClick={handleStartNewSession}
-                    className="px-6 py-2.5 bg-white text-black hover:bg-neutral-200 rounded-full text-xs font-medium transition-all shadow-lg"
-                  >
-                    Start New Chapter
-                  </button>
-                </div>
-                <button 
-                  onClick={() => setShowNudge(false)}
-                  className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors"
-                >
-                  <span className="sr-only">Dismiss</span>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </motion.div>
+                </motion.div>
+              </div>
             )}
           </AnimatePresence>
 

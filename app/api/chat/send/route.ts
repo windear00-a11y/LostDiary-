@@ -74,9 +74,22 @@ export async function POST(req: Request) {
 
     const contextMessages = recentMessages?.map(m => ({ content: m.content || "", role: m.role })) || [];
     
-    // STEP 2: Save user message with rich metadata
-    const analyzedEvent = await pipelineForAsync.extractLifeEvent(content);
+    // STEP 2: parallelize tasks that don't depend on each other
+    // We start the reply generation and the behavioral analysis at the same time
+    const [pipelineOutput, aiResponseText] = await Promise.all([
+      orchestrator.processInteraction({
+        userId: user_id,
+        message: { role, type, content },
+        contextMessages: contextMessages.map(m => m.content),
+        apiKey: apiKey,
+        language
+      }),
+      generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary)
+    ]);
+
+    const analyzedEvent = pipelineOutput.extractedEvent;
     
+    // STEP 3: Save user message with rich metadata from pipeline
     const enrichedMetadata = {
       ...(metadata || {}),
       emotion: analyzedEvent?.emotion || 'neutral',
@@ -101,44 +114,26 @@ export async function POST(req: Request) {
 
     if (error) throw error;
 
-    // Run Orchestrator
-    const pipelineOutput = await orchestrator.processInteraction({
-      userId: user_id,
-      message: { role, type, content },
-      contextMessages: contextMessages.map(m => m.content),
-      apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY!,
-      language
-    });
-
-    // Track interaction
+    // Track interaction info for long-term depth
     if (role === 'user' && type === 'text' && content) {
-      await coreService.updateInteraction(user_id, pipelineOutput.shouldRespond, supabase);
-    }
-
-    // Save AI Response if generated
-    let aiResponseText: string | null = null;
-    if (pipelineOutput.shouldRespond) {
-      // Fetch long-term memory for context
-      const profile = await coreService.getProfile(user_id, supabase);
-      
-      // Use the modern resilient engine with long-term memory
-      aiResponseText = await generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary) || null;
-      
-      if (aiResponseText) {
-        await supabase.from('chat_messages').insert({
-          user_id,
-          session_id,
-          role: 'diary',
-          type: 'text',
-          content: aiResponseText
-        });
-        
-        // Automatically save chapter
-        coreService.autoSaveChapter(user_id, aiResponseText);
-      }
+      await coreService.updateInteraction(user_id, !!aiResponseText, supabase);
     }
     
-    // STEP 4: Update session title, user identity and narrative
+    // STEP 4: Save AI Response and trigger side effects
+    if (aiResponseText) {
+      await supabase.from('chat_messages').insert({
+        user_id,
+        session_id,
+        role: 'diary',
+        type: 'text',
+        content: aiResponseText
+      });
+      
+      // Automatically save chapter (Async fire-and-forget)
+      coreService.autoSaveChapter(user_id, aiResponseText);
+    }
+
+    // STEP 5: Update session title, user identity and narrative
     if (session_id) {
       // 4.1 Update User Personality (The Persona/Atman)
       if (pipelineOutput.personaUpdate) {

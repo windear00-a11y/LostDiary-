@@ -26,7 +26,7 @@ export const Header = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsDrawerOpen(true)}
-          className="w-12 h-12 rounded-full bg-neutral-900/50 backdrop-blur-xl border border-white/10 flex items-center justify-center transition-all shadow-xl hover:bg-white/10"
+          className="w-12 h-12 rounded-full bg-neutral-900/30 backdrop-blur-3xl border border-white/10 flex items-center justify-center transition-all shadow-xl hover:bg-neutral-800/40"
         >
           <Menu className="w-5 h-5 text-white/60" />
         </motion.button>
@@ -58,7 +58,7 @@ export const Header = () => {
         transition={{ type: 'spring', damping: 25, stiffness: 200 }}
         className={`fixed top-6 left-1/2 -translate-x-1/2 z-50 pointer-events-auto transition-all duration-500 ${isInputFocused ? 'opacity-40 blur-sm' : 'opacity-100'}`}
       >
-        <nav className="flex items-center gap-1 p-1 bg-neutral-900/40 backdrop-blur-2xl border border-white/5 rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+        <nav className="flex items-center gap-1 p-1 bg-neutral-900/30 backdrop-blur-3xl border border-white/5 rounded-full shadow-[0_15px_40px_rgba(0,0,0,0.5)]">
           {navItems.map((item) => {
             const isActive = activeView === item.id;
             const Icon = item.icon;
