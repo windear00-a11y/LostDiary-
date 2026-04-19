@@ -6,10 +6,12 @@ interface UIState {
   isInputFocused: boolean;
   selectedJournalContent: string | null;
   language: string;
+  hasSetLanguage: boolean;
   setActiveView: (view: 'chat' | 'story' | 'journal') => void;
   setInputFocused: (focused: boolean) => void;
   setSelectedJournalContent: (content: string | null) => void;
   setLanguage: (lang: string) => void;
+  setHasSetLanguage: (hasSet: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -19,10 +21,12 @@ export const useUIStore = create<UIState>()(
       isInputFocused: false,
       selectedJournalContent: null,
       language: 'en',
+      hasSetLanguage: false,
       setActiveView: (view) => set({ activeView: view }),
       setInputFocused: (focused) => set({ isInputFocused: focused }),
       setSelectedJournalContent: (content) => set({ selectedJournalContent: content }),
       setLanguage: (lang) => set({ language: lang }),
+      setHasSetLanguage: (hasSet) => set({ hasSetLanguage: hasSet }),
     }),
     {
       name: 'windear-ui-storage',

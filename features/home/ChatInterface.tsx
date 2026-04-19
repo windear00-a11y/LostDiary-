@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChatInput } from './ChatInput';
 import { generateStoryResponse } from '@/ai-core/ai-engine';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { User, Sparkles } from 'lucide-react';
+import { User, Sparkles, X } from 'lucide-react';
 import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -264,12 +264,12 @@ export const ChatInterface = () => {
 
                   <div className="space-y-3 mb-10">
                     <h3 className="text-2xl font-serif italic text-white leading-tight">
-                      {messages.length === 0 ? "Welcome to your sanctuary." : "Main kabse aapka intezar kar rha tha."}
+                      {messages.length === 0 ? "Aapki baaton ka intezar hai." : "Main kab se sunne ke liye rukka tha."}
                     </h3>
                     <p className="text-sm text-slate-400 font-serif leading-relaxed px-4">
                       {messages.length === 0 
-                        ? "Aapki diary khali hai. Kya aaj ki pehli yaad likhna chahenge?" 
-                        : "Aapki purani baatein yahan mehfooz hain... Maine unhe bhulaya nahi. Wahin se shuru karein?"}
+                        ? "Koi aisi baat jo aap kehna chahte hon? Main yahan hoon." 
+                        : "Humari pichli baat mujhe yaad hai. Kya wahin se aage badhein ya koi nayi baatchit shuru karein?"}
                     </p>
                   </div>
 
@@ -280,14 +280,14 @@ export const ChatInterface = () => {
                       onClick={() => setShowNudge(false)}
                       className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-medium shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all"
                     >
-                      Haan, Wahin se continue karte hain
+                      Haan, wahin se aage badhte hain
                     </motion.button>
                     
                     <button 
                       onClick={handleStartNewSession}
-                      className="w-full py-3 text-white/40 hover:text-white/60 text-xs font-medium transition-all"
+                      className="w-full py-3 text-white/60 hover:text-white text-xs font-medium transition-all"
                     >
-                      Naya panna (new chat) shuru karein
+                      Nayi baatchit shuru karein
                     </button>
                   </div>
 

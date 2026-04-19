@@ -262,10 +262,10 @@ export const JournalEditor = () => {
 
               <div className="space-y-3 mb-10">
                 <h3 className="text-2xl font-serif italic text-white leading-tight">
-                  Continue your thought?
+                  Dil ka ek panna khali hai...
                 </h3>
                 <p className="text-sm text-slate-400 font-serif leading-relaxed px-4">
-                  Aapne kuch der pehle hi likha tha. Kya wahin se aage badhna chahenge?
+                  Aapke pichle page se hi likhna jaari (continue) rakhein? Ya naye page (panne) se shuru karein?
                 </p>
               </div>
 
@@ -277,25 +277,18 @@ export const JournalEditor = () => {
                     setSelectedJournalContent(recentEntry.content);
                     setShowNudge(false);
                   }}
-                  className="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-2xl font-medium shadow-[0_10px_20px_rgba(245,158,11,0.3)] transition-all"
+                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-medium shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all"
                 >
-                  Haan, Wahin se continue karte hain
+                  Pichla panna jaari rakhein
                 </motion.button>
                 
                 <button 
                   onClick={handleStartNewEntry}
-                  className="w-full py-3 text-white/40 hover:text-white/60 text-xs font-medium transition-all"
+                  className="w-full py-3 text-white/60 hover:text-white text-xs font-medium transition-all"
                 >
-                  Naya panna (new entry) shuru karein
+                  Nayi entry shuru karein
                 </button>
               </div>
-
-              <button 
-                onClick={() => setShowNudge(false)}
-                className="absolute top-6 right-6 text-white/20 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </motion.div>
           </div>
         )}
