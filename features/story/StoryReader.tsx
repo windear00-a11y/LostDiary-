@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Sparkles, ScrollText, Heart, List, X } from 'lucide-react';
+import { ArrowLeft, Sparkles, ScrollText, Heart, List, X, Globe, Check } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Chapter } from '@/lib/services/core-service';
 
@@ -15,6 +15,9 @@ interface StoryReaderProps {
 export const StoryReader = ({ chapters, onBack, initialChapterId }: StoryReaderProps) => {
   const router = useRouter();
   const [isTOCOpen, setIsTOCOpen] = useState(false);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set());
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Scroll to initial chapter if provided
   React.useEffect(() => {
@@ -34,8 +37,61 @@ export const StoryReader = ({ chapters, onBack, initialChapterId }: StoryReaderP
     }
   };
 
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 5000);
+  };
+
+  const handlePublish = async (chapterId: string) => {
+    try {
+      setPublishingId(chapterId);
+      const res = await fetch('/api/library/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chapterId })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        if (data.error?.includes('Pen Name')) {
+           showToast("⚠️ Mirror Error: You must set a Pen Name in your Profile before sharing.");
+           // Optional: redirect to profile after 2 secs
+           setTimeout(() => router.push('/profile'), 2000);
+        } else {
+           showToast(`Error: ${data.error}`);
+        }
+        return;
+      }
+
+      setPublishedIds(curr => {
+        const next = new Set(curr);
+        next.add(chapterId);
+        return next;
+      });
+      showToast("✨ Beautiful. Your chapter has been anonymously gifted to the Global Library.");
+
+    } catch (error) {
+      showToast("An unexpected error occurred. Could not publish.");
+    } finally {
+      setPublishingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-transparent relative">
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div 
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className="fixed top-24 left-1/2 -translate-x-1/2 z-[100] bg-gray-900 border border-gray-700 text-white px-6 py-4 rounded-full shadow-2xl flex items-center gap-3 font-serif backdrop-blur-xl"
+          >
+             {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* TOC Toggle Button */}
       <div className="fixed top-20 right-8 z-50">
         <motion.button
@@ -156,6 +212,35 @@ export const StoryReader = ({ chapters, onBack, initialChapterId }: StoryReaderP
             <p className="text-sm md:text-md italic text-slate-600 dark:text-slate-400 leading-relaxed font-serif">
                &ldquo;{chapter.title?.includes('Conflict') ? "Even in the darkest moments, your resilience is the ink that writes your survival." : "This chapter of your life radiates a unique kind of growth—one that is felt more than it is seen."}&rdquo;
             </p>
+          </div>
+
+          {/* Publish Action */}
+          <div className="mt-8 flex justify-center">
+             <button 
+                onClick={() => handlePublish(chapter.id)}
+                disabled={publishingId === chapter.id || publishedIds.has(chapter.id)}
+                className="group relative px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-black rounded-full overflow-hidden transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-2xl"
+             >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                <div className="flex items-center gap-2 font-serif relative z-10 transition-transform">
+                   {publishedIds.has(chapter.id) ? (
+                     <>
+                       <Check className="w-4 h-4 text-emerald-500" />
+                       <span className="italic">Gifted to Library</span>
+                     </>
+                   ) : publishingId === chapter.id ? (
+                     <>
+                       <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                       <span>Publishing...</span>
+                     </>
+                   ) : (
+                     <>
+                       <Globe className="w-4 h-4" />
+                       <span>Publish to Global Library</span>
+                     </>
+                   )}
+                </div>
+             </button>
           </div>
 
               {/* Subtle Divider */}

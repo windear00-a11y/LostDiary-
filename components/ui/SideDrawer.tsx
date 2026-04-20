@@ -132,18 +132,24 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
               </motion.div>
 
               {/* Primary Navigation Grid (Bento Small Cards) */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {[
                   { id: 'chat', label: 'Chat', icon: MessageSquare, color: 'text-blue-400', bg: 'bg-blue-400/5' },
                   { id: 'journal', label: 'Journal', icon: PenLine, color: 'text-amber-400', bg: 'bg-amber-400/5' },
                   { id: 'story', label: 'LifeBook', icon: BookOpen, color: 'text-emerald-400', bg: 'bg-emerald-400/5' },
+                  { id: 'library', label: 'Library', icon: Search, color: 'text-purple-400', bg: 'bg-purple-400/5', route: '/library' },
                 ].map((nav) => (
                   <motion.button
                     key={nav.id}
                     whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.08)' }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
-                      setActiveView(nav.id as any);
+                      if (nav.route) {
+                        router.push(nav.route);
+                      } else {
+                        setActiveView(nav.id as any);
+                        router.push('/home'); // Ensure we go home for views
+                      }
                       onClose();
                     }}
                     className={`flex flex-col items-center gap-2.5 p-4 rounded-3xl ${nav.bg} border border-white/5 transition-all group`}

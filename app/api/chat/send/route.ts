@@ -4,6 +4,7 @@ import { AIOrchestrator } from "@/ai-core/ai-orchestrator";
 import { coreService } from "@/lib/services/core-service";
 import { PipelineController } from "@/ai-core/pipeline-controller";
 import { generateStoryResponse } from "@/ai-core/ai-engine";
+import { extractIntelligenceProfile } from "@/ai-core/intelligence-engine";
 
 export async function POST(req: Request) {
   try {
@@ -22,14 +23,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // STEP 1: Fetch user profile for context
+    // STEP 1: Fetch user profile for context, including intelligence_profile
     const profile = await coreService.getProfile(user_id, supabase);
     const orchestrator = new AIOrchestrator(apiKey, profile.personality_summary);
     const pipelineForAsync = new PipelineController(apiKey, profile.personality_summary);
 
     // --- SMART SESSION MANAGEMENT ---
+    // ...(omitted for brevity during fetch, handled implicitly via database)
     if (!session_id) {
-      // Find the most recent active session for this user
       const { data: recentSession } = await supabase
         .from('chat_sessions')
         .select('*')
@@ -42,22 +43,16 @@ export async function POST(req: Request) {
       twelveHoursAgo.setHours(twelveHoursAgo.getHours() - 12);
       
       if (recentSession && new Date(recentSession.updated_at) > twelveHoursAgo) {
-        // Continue the recent session
         session_id = recentSession.id;
       } else {
-        // Create a new session for a new 'moment' of the day
         const { data: newSession } = await supabase
           .from('chat_sessions')
-          .insert({ 
-            user_id, 
-            title: `Chapter: ${new Date().toLocaleDateString()}` 
-          })
+          .insert({ user_id, title: `Chapter: ${new Date().toLocaleDateString()}` })
           .select()
           .single();
         session_id = newSession?.id;
       }
     }
-    // --------------------------------
 
     let query = supabase
       .from('chat_messages')
@@ -65,18 +60,19 @@ export async function POST(req: Request) {
       .eq('user_id', user_id)
       .order('created_at', { ascending: false })
       .limit(10);
-
-    if (session_id) {
-      query = query.eq('session_id', session_id);
-    }
-
+    if (session_id) query = query.eq('session_id', session_id);
     const { data: recentMessages } = await query;
-
     const contextMessages = recentMessages?.map(m => ({ content: m.content || "", role: m.role })) || [];
     
-    // STEP 2: parallelize tasks that don't depend on each other
-    // We start the reply generation and the behavioral analysis at the same time
-    const [pipelineOutput, aiResponseText] = await Promise.all([
+    // Safety fallback for empty intelligence profile
+    const currentIntelProfile = profile.intelligence_profile || {
+      basic_profile: {}, thinking_style: {}, emotional_state: {},
+      interests_goals: {}, behavior_patterns: {}, communication_style: {},
+      sensitive_insights: {}, source_weights: { chat: 0.3, diary: 0.7 }
+    };
+
+    // STEP 2: parallelize tasks (Reply, Pipeline, and Deep Intelligence Extraction)
+    const [pipelineOutput, aiResponseText, updatedIntelProfile] = await Promise.all([
       orchestrator.processInteraction({
         userId: user_id,
         message: { role, type, content },
@@ -84,7 +80,8 @@ export async function POST(req: Request) {
         apiKey: apiKey,
         language
       }),
-      generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary)
+      generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary, currentIntelProfile as any),
+      extractIntelligenceProfile('chat', content, currentIntelProfile as any)
     ]);
 
     const analyzedEvent = pipelineOutput.extractedEvent;
@@ -100,98 +97,47 @@ export async function POST(req: Request) {
     const { data: message, error } = await supabase
       .from('chat_messages')
       .insert({
-        user_id,
-        session_id,
-        role,
-        type,
-        content,
-        media_url,
-        metadata: enrichedMetadata,
-        event_score: analyzedEvent?.score || 0
-      })
-      .select()
-      .single();
-
+        user_id, session_id, role, type, content, media_url,
+        metadata: enrichedMetadata, event_score: analyzedEvent?.score || 0
+      }).select().single();
     if (error) throw error;
 
-    // Track interaction info for long-term depth
     if (role === 'user' && type === 'text' && content) {
       await coreService.updateInteraction(user_id, !!aiResponseText, supabase);
     }
     
-    // STEP 4: Save AI Response and trigger side effects
+    // STEP 4: Save AI Response
     if (aiResponseText) {
       await supabase.from('chat_messages').insert({
-        user_id,
-        session_id,
-        role: 'diary',
-        type: 'text',
-        content: aiResponseText
+        user_id, session_id, role: 'diary', type: 'text', content: aiResponseText
       });
-      
-      // Automatically save chapter (Async fire-and-forget)
       coreService.autoSaveChapter(user_id, aiResponseText);
     }
 
     // STEP 5: Update session title, user identity and narrative
+    await supabase.from('users').update({ 
+      personality_summary: pipelineOutput.personaUpdate || profile.personality_summary,
+      bio: pipelineOutput.narrativeUpdate ? pipelineOutput.narrativeUpdate.summary : profile.bio,
+      intelligence_profile: updatedIntelProfile
+    }).eq('id', user_id);
+
     if (session_id) {
-      // 4.1 Update User Personality (The Persona/Atman)
-      if (pipelineOutput.personaUpdate) {
-        await supabase
-          .from('users')
-          .update({ personality_summary: pipelineOutput.personaUpdate })
-          .eq('id', user_id);
-      }
-
-      // 4.1 Update Story Memory/Bio (The Plot/Prarabdh)
-      if (pipelineOutput.narrativeUpdate) {
-        await supabase
-          .from('users')
-          .update({ bio: pipelineOutput.narrativeUpdate.summary })
-          .eq('id', user_id);
-      }
-
-      // 4.2 Update session title if generic
-      const { data: session } = await supabase
-        .from('chat_sessions')
-        .select('title')
-        .eq('id', session_id)
-        .single();
-      
-      const isGeneric = !session?.title || 
-                        session.title === 'New Chat' || 
-                        session.title.startsWith('Chat ') || 
-                        session.title.includes(new Date().toLocaleDateString());
+      const { data: session } = await supabase.from('chat_sessions').select('title').eq('id', session_id).single();
+      const isGeneric = !session?.title || session.title === 'New Chat' || session.title.startsWith('Chat ') || session.title.includes(new Date().toLocaleDateString());
 
       if (isGeneric) {
-        // Fetch last few messages to generate a good title
-        const { data: sessionMessages } = await supabase
-          .from('chat_messages')
-          .select('content')
-          .eq('session_id', session_id)
-          .order('created_at', { ascending: true })
-          .limit(5);
-        
+        const { data: sessionMessages } = await supabase.from('chat_messages').select('content').eq('session_id', session_id).order('created_at', { ascending: true }).limit(5);
         if (sessionMessages && sessionMessages.length >= 2) {
           const contents = sessionMessages.map(m => m.content || "");
           const title = await pipelineForAsync.generateSessionTitle(contents);
-          if (title) {
-            await supabase
-              .from('chat_sessions')
-              .update({ title })
-              .eq('id', session_id);
-          }
+          if (title) await supabase.from('chat_sessions').update({ title }).eq('id', session_id);
         }
       }
     }
 
     return NextResponse.json({
       message,
-      aiResponse: aiResponseText ? {
-        role: 'diary',
-        content: aiResponseText,
-        created_at: new Date().toISOString()
-      } : null,
+      aiResponse: aiResponseText ? { role: 'diary', content: aiResponseText, created_at: new Date().toISOString() } : null,
       event_score: pipelineOutput.extractedEvent?.score || 0
     });
   } catch (error: any) {

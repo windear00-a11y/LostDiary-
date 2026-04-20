@@ -11,20 +11,30 @@ import {
 import { coreService } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useUIStore } from '@/lib/store/use-ui-store';
+import { useSearchParams } from 'next/navigation';
 
 export const JournalEditor = () => {
   const { setActiveView, selectedJournalContent, setSelectedJournalContent, language } = useUIStore();
+  const searchParams = useSearchParams();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState(selectedJournalContent || '');
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showNudge, setShowNudge] = useState(false);
   const [recentEntry, setRecentEntry] = useState<any>(null);
+  const [inspiredBy, setInspiredBy] = useState<string | null>(null);
   
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
   // Check for recent entries on mount
   useEffect(() => {
+    const inspireId = searchParams?.get('inspire');
+    if (inspireId) {
+       setInspiredBy(inspireId);
+       setTitle(language === 'hi' ? 'Ek Kahani Se Prerit...' : 'Inspired by a whisper...');
+       setContent(language === 'hi' ? 'Maine library mein ek kahani padhi aur mujhe yaad aaya...\n\n' : '"I read a whisper in the library, and it reminded me of..."\n\n');
+       return; // skip nudge check if inspired
+    }
     const checkRecent = async () => {
       const user = await authService.getUser();
       if (!user) return;
@@ -89,7 +99,7 @@ export const JournalEditor = () => {
       // Combine title and content
       const fullContent = title ? `# ${title}\n\n${content}` : content;
 
-      await coreService.saveDiaryEntry(user.id, fullContent, { language });
+      await coreService.saveDiaryEntry(user.id, fullContent, { language, inspired_by: inspiredBy });
       setSaveStatus('success');
       // No more auto-redirect to chat. Stay on page for "Suqoon".
       setTimeout(() => setSaveStatus('idle'), 3000);

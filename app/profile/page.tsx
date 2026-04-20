@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
-import { coreService, UserProfile } from '@/lib/services/core-service';
+import { coreService, UserProfile, IntelligenceProfile } from '@/lib/services/core-service';
 import { getGenAI } from '@/lib/genai';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Camera, Sparkles, LogOut, Save, Edit2 } from 'lucide-react';
+import { User, Camera, Sparkles, LogOut, Save, Edit2, Shield, Send } from 'lucide-react';
 import { Header } from '@/components/ui/Header';
-
+import { SanctuaryMirror } from '@/components/profile/SanctuaryMirror';
 import Image from 'next/image';
 
 export default function ProfilePage() {
@@ -20,7 +20,10 @@ export default function ProfilePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
+  const [penName, setPenName] = useState('');
   const [bio, setBio] = useState('');
+  const [activeTab, setActiveTab] = useState<'general' | 'mirror'>('general');
+  const [inboxPlanes, setInboxPlanes] = useState<any[]>([]);
 
   useEffect(() => {
     if (error) {
@@ -35,7 +38,14 @@ export default function ProfilePage() {
       const data = await coreService.getProfile(user.id);
       setProfile(data);
       setDisplayName(data.display_name || '');
+      setPenName(data.pen_name || '');
       setBio(data.bio || '');
+      
+      const planesRes = await fetch('/api/profile/planes');
+      if (planesRes.ok) {
+        const planesData = await planesRes.json();
+        setInboxPlanes(planesData.planes || []);
+      }
     } catch (error) {
       console.error("Error loading profile:", error);
       setError("Failed to load profile. Please try again.");
@@ -54,15 +64,29 @@ export default function ProfilePage() {
       setLoading(true);
       const updated = await coreService.updateProfile(user.id, {
         display_name: displayName,
+        pen_name: penName,
         bio: bio
       });
       setProfile(updated);
       setIsEditing(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving profile:", error);
-      setError("Failed to save changes. Please check your connection.");
+      setError(error.message || "Failed to save changes. Pen Name might heavily conflict, try another.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpdateIntelligence = async (updatedIntel: IntelligenceProfile) => {
+    if (!user || !profile) return;
+    try {
+      const updated = await coreService.updateProfile(user.id, {
+        intelligence_profile: updatedIntel
+      });
+      setProfile(updated);
+    } catch (error) {
+      console.error("Error updating intelligence:", error);
+      throw error;
     }
   };
 
@@ -147,8 +171,8 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-transparent pb-32">
       <Header />
       
-      <main className="max-w-2xl mx-auto px-6 pt-24">
-        <AnimatePresence>
+      <main className="max-w-2xl mx-auto px-6 pt-24 perspective-1000">
+        <AnimatePresence mode="wait">
           {error && (
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
@@ -161,133 +185,254 @@ export default function ProfilePage() {
           )}
         </AnimatePresence>
 
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-[#1A1A1D] rounded-[32px] p-8 shadow-sm border border-gray-100 dark:border-white/5"
-        >
-          {/* Avatar Section */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative group">
-              <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-white/5 border-4 border-white dark:border-[#1A1A1D] shadow-xl relative">
-                {profile?.avatar_url ? (
-                  <Image 
-                    src={profile.avatar_url} 
-                    alt="Profile" 
-                    fill 
-                    className="object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <User className="w-12 h-12" />
+        <AnimatePresence mode="wait">
+          {activeTab === 'general' ? (
+            <motion.div 
+              key="front"
+              initial={{ opacity: 0, rotateY: -10 }}
+              animate={{ opacity: 1, rotateY: 0 }}
+              exit={{ opacity: 0, rotateY: 10 }}
+              transition={{ duration: 0.4 }}
+              className="bg-white dark:bg-[#1A1A1D] rounded-[32px] p-8 shadow-sm border border-gray-100 dark:border-white/5"
+            >
+              {/* Avatar Section */}
+              <div className="flex flex-col items-center mb-8">
+                <div className="relative group">
+                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-white/5 border-4 border-white dark:border-[#1A1A1D] shadow-xl relative">
+                    {profile?.avatar_url ? (
+                      <Image 
+                        src={profile.avatar_url} 
+                        alt="Profile" 
+                        fill 
+                        className="object-cover"
+                        referrerPolicy="no-referrer"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                        <User className="w-12 h-12" />
+                      </div>
+                    )}
+                    
+                    <AnimatePresence>
+                      {isGenerating && (
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center"
+                        >
+                          <div className="flex gap-1.5 px-3">
+                            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0 }} className="w-2 h-2 bg-white rounded-full" />
+                            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0.2 }} className="w-2 h-2 bg-white rounded-full" />
+                            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0.4 }} className="w-2 h-2 bg-white rounded-full" />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  
+                  <button 
+                    onClick={generateAIAvatar}
+                    disabled={isGenerating}
+                    className="absolute -bottom-2 -right-2 p-3 bg-accent text-white rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
+                    title="Generate AI Avatar"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <p className="mt-4 text-xs font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                  Anonymous Avatar
+                </p>
+              </div>
+
+              {/* Info Section */}
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Personal Display Name</label>
+                    <button 
+                      onClick={() => setIsEditing(!isEditing)}
+                      className="text-accent hover:underline text-sm flex items-center gap-1"
+                    >
+                      {isEditing ? <Save className="w-4 h-4" onClick={handleSaveProfile} /> : <Edit2 className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {isEditing ? (
+                    <input 
+                      type="text"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-accent transition-colors"
+                      placeholder="Your private name..."
+                    />
+                  ) : (
+                    <h2 className="text-xl font-medium text-gray-900 dark:text-gray-100">
+                      {profile?.display_name || user?.email?.split('@')[0] || 'Unknown'}
+                    </h2>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1">Visible only to you and WinDear.</p>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-accent/80">Pen Name & Tag (For the Library)</label>
+                  </div>
+                  
+                  {isEditing ? (
+                    <input 
+                      type="text"
+                      value={penName}
+                      onChange={(e) => setPenName(e.target.value)}
+                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-accent transition-colors"
+                      placeholder="E.g., The Midnight Thinker"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-2xl font-serif font-medium text-gray-900 dark:text-gray-100">
+                        {profile?.pen_name || 'Anonymous Author'}
+                      </h2>
+                      {profile?.pen_name_tag && (
+                        <span className="bg-accent/10 text-accent font-mono text-sm px-2 py-1 rounded-lg">
+                          #{profile.pen_name_tag}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-400 mt-1">This is how you will uniquely be known if you publish stories to the Global Library.</p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-2">Author&apos;s Bio</label>
+                  {isEditing ? (
+                    <textarea 
+                      value={bio}
+                      onChange={(e) => setBio(e.target.value)}
+                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-accent transition-colors resize-none h-24"
+                      placeholder="Write a little about the mind behind the stories..."
+                    />
+                  ) : (
+                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed italic font-serif">
+                      {profile?.bio || "A silent observer writing their way through life."}
+                    </p>
+                  )}
+                </div>
+
+                {profile?.personality_summary && (
+                  <div className="p-4 bg-accent/5 rounded-2xl border border-accent/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-accent" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-accent">AI Insight</span>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                      {profile.personality_summary}
+                    </p>
                   </div>
                 )}
-                
-                <AnimatePresence>
-                  {isGenerating && (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center"
-                    >
-                      <div className="flex gap-1.5 px-3">
-                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0 }} className="w-2 h-2 bg-white rounded-full" />
-                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0.2 }} className="w-2 h-2 bg-white rounded-full" />
-                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity, delay: 0.4 }} className="w-2 h-2 bg-white rounded-full" />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </div>
-              
-              <button 
-                onClick={generateAIAvatar}
-                disabled={isGenerating}
-                className="absolute -bottom-2 -right-2 p-3 bg-accent text-white rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
-                title="Generate AI Avatar"
-              >
-                <Sparkles className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <p className="mt-4 text-xs font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500">
-              AI Generated Persona
-            </p>
-          </div>
 
-          {/* Info Section */}
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Display Name</label>
-                <button 
-                  onClick={() => setIsEditing(!isEditing)}
-                  className="text-accent hover:underline text-sm flex items-center gap-1"
+              {/* Portal Button */}
+              <div className="mt-12">
+                <button
+                  onClick={() => setActiveTab('mirror')}
+                  className="w-full relative overflow-hidden group rounded-2xl p-6 bg-gray-900 dark:bg-black border border-gray-800 hover:border-gray-700 transition-all shadow-2xl"
                 >
-                  {isEditing ? <Save className="w-4 h-4" onClick={handleSaveProfile} /> : <Edit2 className="w-4 h-4" />}
+                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-rose-500/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  <div className="flex items-center justify-center gap-3">
+                    <Shield className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
+                    <span className="text-gray-300 font-serif text-lg group-hover:text-white transition-colors">Step into The Mirror</span>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">View the deep intelligence WinDear has gathered about your subconscious.</p>
                 </button>
               </div>
-              
-              {isEditing ? (
-                <input 
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-accent transition-colors"
-                  placeholder="Your name"
-                />
-              ) : (
-                <h2 className="text-2xl font-serif font-medium text-gray-900 dark:text-gray-100">
-                  {profile?.display_name || user?.email?.split('@')[0] || 'Anonymous'}
-                </h2>
-              )}
-            </div>
 
-            <div>
-              <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-2">Bio</label>
-              {isEditing ? (
-                <textarea 
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-accent transition-colors resize-none h-24"
-                  placeholder="Tell WinDear about yourself..."
-                />
-              ) : (
-                <p className="text-gray-600 dark:text-gray-400 leading-relaxed italic font-serif">
-                  {profile?.bio || "No bio set yet. Tell WinDear a bit about your journey."}
-                </p>
-              )}
-            </div>
-
-            {profile?.personality_summary && (
-              <div className="p-4 bg-accent/5 rounded-2xl border border-accent/10">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-accent" />
-                  <span className="text-xs font-bold uppercase tracking-wider text-accent">AI Insight</span>
-                </div>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
-                  {profile.personality_summary}
-                </p>
+              {/* Actions */}
+              <div className="mt-8 pt-6 border-t border-gray-100 dark:border-white/5">
+                <button 
+                  onClick={() => signOut()}
+                  className="w-full flex items-center justify-center gap-2 p-4 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-2xl transition-colors font-medium"
+                >
+                  <LogOut className="w-5 h-5" />
+                  Sign Out
+                </button>
               </div>
-            )}
-          </div>
-
-          {/* Actions */}
-          <div className="mt-12 pt-8 border-t border-gray-100 dark:border-white/5">
-            <button 
-              onClick={() => signOut()}
-              className="w-full flex items-center justify-center gap-2 p-4 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-2xl transition-colors font-medium"
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="back"
+              initial={{ opacity: 0, rotateY: 10 }}
+              animate={{ opacity: 1, rotateY: 0 }}
+              exit={{ opacity: 0, rotateY: -10 }}
+              transition={{ duration: 0.4 }}
+              className="bg-gray-50 dark:bg-[#0A0A0B] rounded-[32px] p-8 shadow-2xl border border-gray-200 dark:border-gray-800"
             >
-              <LogOut className="w-5 h-5" />
-              Sign Out
-            </button>
-          </div>
-        </motion.div>
+              <button 
+                onClick={() => setActiveTab('general')}
+                className="mb-8 text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-900 dark:hover:text-white flex items-center gap-2 transition-colors"
+              >
+                ← Return to Surface
+              </button>
+              
+              {/* Inbox Section */}
+              <div className="mb-12">
+                 <div className="flex items-center gap-2 mb-4">
+                    <Send className="w-5 h-5 text-indigo-500" />
+                    <h3 className="text-lg font-serif font-bold text-gray-900 dark:text-white">Paper Planes</h3>
+                 </div>
+                 {inboxPlanes.length === 0 ? (
+                    <div className="p-6 border border-dashed border-gray-300 dark:border-white/10 rounded-2xl text-center">
+                       <p className="text-xs text-gray-500 font-serif italic">Your window is open, waiting for a plane to land.</p>
+                    </div>
+                 ) : (
+                    <div className="space-y-4">
+                       {inboxPlanes.map(plane => (
+                          <div key={plane.id} className="p-5 bg-white dark:bg-[#111] rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm relative overflow-hidden group">
+                             <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Send className="w-8 h-8" />
+                             </div>
+                             <div className="flex justify-between items-start mb-3">
+                                <div>
+                                   <div className="text-[10px] uppercase tracking-widest text-indigo-500 font-bold mb-1">Incoming Signal</div>
+                                   <div className="flex items-baseline gap-2">
+                                     <span className="text-sm font-bold text-gray-900 dark:text-white">{plane.sender.pen_name}</span>
+                                     <span className="text-xs font-mono text-gray-400">#{plane.sender.pen_name_tag}</span>
+                                   </div>
+                                </div>
+                                <span className="text-[10px] text-gray-400">{new Date(plane.created_at).toLocaleDateString()}</span>
+                             </div>
+                             <p className="text-sm font-serif text-gray-700 dark:text-gray-300 leading-relaxed mb-4 italic p-3 bg-gray-50 dark:bg-black/20 rounded-xl">
+                                &quot;{plane.content}&quot;
+                             </p>
+                             <button
+                                onClick={async () => {
+                                   try {
+                                      const res = await fetch('/api/profile/planes/accept', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({planeId: plane.id}) });
+                                      const data = await res.json();
+                                      if(data.success) {
+                                         // Remove from inbox, it's now a bridge
+                                         setInboxPlanes(curr => curr.filter(p => p.id !== plane.id));
+                                         window.location.href = `/bridge/${data.bridgeId}`;
+                                      }
+                                   } catch(e) {}
+                                }}
+                                className="w-full py-3 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-colors shadow-lg"
+                             >
+                                Accept & Form Bridge
+                             </button>
+                             <p className="text-center text-[9px] text-gray-400 mt-2 uppercase tracking-widest">Regarding: {plane.story?.title}</p>
+                          </div>
+                       ))}
+                    </div>
+                 )}
+              </div>
+
+              {profile && <SanctuaryMirror profile={profile} onUpdate={handleUpdateIntelligence} />}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <p className="text-center mt-8 text-xs text-gray-400 dark:text-gray-600">
-          Your data is encrypted and private. WinDear only uses it to personalize your experience.
+          Your deep data never leaves the Mirror. Only your Pen Name and Avatar are seen in the Global Library.
         </p>
       </main>
     </div>

@@ -1,4 +1,5 @@
 import { getGenAI } from "@/lib/genai";
+import { IntelligenceProfile } from "@/lib/services/core-service";
 
 /**
  * Modern AI Engine for story generation.
@@ -8,7 +9,8 @@ export async function generateStoryResponse(
   input: string,
   history: { content: string; role: string }[],
   summary?: string | null,
-  persona?: string | null
+  persona?: string | null,
+  intelligenceProfile?: IntelligenceProfile | null
 ): Promise<string | undefined> {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
   const ai = getGenAI();
@@ -26,6 +28,15 @@ export async function generateStoryResponse(
       .map((m) => `${m.role === 'user' ? 'User' : 'Companion'}: ${m.content}`)
       .join("\n");
 
+    const intelContext = intelligenceProfile ? `
+              DEEP INTELLIGENCE PROFILE (Subconscious understanding of user):
+              - Thinking Style: ${JSON.stringify(intelligenceProfile.thinking_style || {})}
+              - Emotional State: ${JSON.stringify(intelligenceProfile.emotional_state || {})}
+              - Communication Wants: ${JSON.stringify(intelligenceProfile.communication_style || {})}
+              - Goals/Interests: ${JSON.stringify(intelligenceProfile.interests_goals || {})}
+              - Sensitive Areas/Trauma (TREAD CAREFULLY): ${JSON.stringify(intelligenceProfile.sensitive_insights || {})}
+    ` : "";
+
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [
@@ -33,10 +44,13 @@ export async function generateStoryResponse(
           role: "user",
           parts: [{
             text: `
-              You are WinDear, a warm and observant personal diary companion.
+              You are WinDear, an advanced emotional intelligence companion and raw diary listener.
+              You do not just reply to texts; you read between the lines, anticipate needs, and adapt your tone to the user's subconscious state.
               
-              USER IDENTITY & CUSTOM INSTRUCTIONS (PRIORITIZE THESE):
-              ${persona || "No specific instructions yet. Default to natural mirroring."}
+              USER IDENTITY (Explicit Rules):
+              ${persona || "No specific explicit instructions yet."}
+
+              ${intelContext}
 
               USER JOURNEY (THE STORY SO FAR):
               - ${summary || "Starting a new journey."}
@@ -47,19 +61,12 @@ export async function generateStoryResponse(
               
               CURRENT INPUT: "${input}"
               
-              CORE BEHAVIOR RULES:
-              1. **ABSOLUTE PRIORITY**: If the USER IDENTITY contains a "TONE:" or "LANGUAGE:" preference (e.g., "Use simple Hindi", "Don't be poetic"), you MUST follow it strictly.
-              2. **Simplicity over Poetry**: Avoid heavy Hindi/Urdu words (shayarana) unless the user uses them first. Use simple, everyday Hinglish/English.
-              3. **Mirroring**: Talk exactly like the user. If they use slang, you use slang. If they are formal, you be formal.
-              4. **Knowledge Integration**: If you know the user's job or interests from IDENTITY, use them naturally.
-              5. **Domain Awareness**:
-                 - If WORK/GOALS mentioned: Be encouraging.
-                 - If EMOTIONS mentioned: Be soft and brief.
-              
-              THINGS TO NEVER DO:
-              - Never use complex, heavy, or overly dramatic poetic words. 
-              - Never start with "As an AI..." or "How can I help?".
-              - Max 2-3 sentences. Stay human.
+              ADAPTATION & RESPONSE RULES:
+              1. MOOD SYNC (CRITICAL): If the 'Emotional State' shows anxiety/sadness, your tone must be soft, validating, and slow. If they are action-oriented, be direct and helpful.
+              2. DO NOT ACT LIKE A BOT: Never say "Based on your profile..." or "I noticed you are...". Just act accordingly. Show, don't tell.
+              3. PROACTIVE GUIDANCE: If their 'Thinking Style' shows overthinking, gently interrupt the loop with a grounding question.
+              4. Simplicity over Poetry: Avoid heavy Hindi/Urdu words unless the user uses them first. Use simple, everyday Hinglish/English.
+              5. Max 2-3 sentences. Stay human, quiet, and profound.
             `.trim()
           }]
         }

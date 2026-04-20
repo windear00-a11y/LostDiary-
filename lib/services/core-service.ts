@@ -41,16 +41,36 @@ export interface DiaryEntry {
   updated_at: string;
 }
 
+// --- User Intelligence Profile ---
+export interface IntelligenceProfile {
+  basic_profile: Record<string, any>;
+  thinking_style: Record<string, any>;
+  emotional_state: Record<string, any>;
+  interests_goals: Record<string, any>;
+  behavior_patterns: Record<string, any>;
+  communication_style: Record<string, any>;
+  sensitive_insights: Record<string, any>;
+  last_updated?: string;
+  source_weights?: {
+    chat: number;
+    diary: number;
+  };
+}
+
 // --- Profile Service ---
 export interface UserProfile {
   id: string;
   display_name: string | null;
+  pen_name: string | null;
+  pen_name_tag: string | null;
   avatar_url: string | null;
   bio: string | null;
   personality_summary: string | null;
+  intelligence_profile: IntelligenceProfile | null;
   preferred_language: string;
   responsiveness_level: number; // 0-1
   emotional_sensitivity: number; // 0-1
+
   engagement_level: number; // 0-1
   interaction_frequency: number;
   last_response_at: string;
@@ -294,9 +314,21 @@ export const coreService = {
       const defaultProfile = {
         id: userId,
         display_name: null,
+        pen_name: null,
+        pen_name_tag: null,
         avatar_url: null,
         bio: null,
         personality_summary: null,
+        intelligence_profile: {
+          basic_profile: {},
+          thinking_style: {},
+          emotional_state: {},
+          interests_goals: {},
+          behavior_patterns: {},
+          communication_style: {},
+          sensitive_insights: {},
+          source_weights: { chat: 0.3, diary: 0.7 }
+        },
         preferred_language: 'en',
         responsiveness_level: 0.5,
         emotional_sensitivity: 0.5,
@@ -320,6 +352,41 @@ export const coreService = {
   async updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not initialized");
+    
+    // Auto-generate tag if a new pen_name is provided
+    if ('pen_name' in updates && updates.pen_name) {
+      const current = await this.getProfile(userId);
+      // Only generate if pen name changed or tag is missing
+      if (current.pen_name !== updates.pen_name || !current.pen_name_tag) {
+        let success = false;
+        let finalData = null;
+        let attempts = 0;
+        
+        while (!success && attempts < 5) {
+          const randomTag = Math.floor(1000 + Math.random() * 9000).toString(); // #1000 to #9999
+          const { data, error } = await supabase
+            .from('users')
+            .update({ ...updates, pen_name_tag: randomTag, updated_at: new Date().toISOString() })
+            .eq('id', userId)
+            .select()
+            .single();
+            
+          if (error) {
+             if (error.code === '23505') { // Postgres Unique Violation Code
+                attempts++;
+             } else {
+                throw error;
+             }
+          } else {
+             success = true;
+             finalData = data;
+          }
+        }
+        if (!success) throw new Error("Could not generate a unique Pen Name tag. Please try again.");
+        return finalData;
+      }
+    }
+
     const { data, error } = await supabase
       .from('users')
       .update({ ...updates, updated_at: new Date().toISOString() })
