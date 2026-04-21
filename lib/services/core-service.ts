@@ -6,6 +6,8 @@ export interface ChatSession {
   id: string;
   user_id: string;
   title: string;
+  processing_status?: 'woven' | 'saved' | 'observed' | 'pending';
+  impact_percentage?: number;
   created_at: string;
   updated_at: string;
 }
@@ -22,6 +24,7 @@ export interface ChatMessage {
   created_at: string;
   event_score?: number;
   status?: 'sending' | 'saved' | 'error';
+  processing_status?: 'woven' | 'saved' | 'observed' | 'pending';
 }
 
 // --- Chapter Service ---
@@ -53,6 +56,8 @@ export interface DiaryEntry {
   id: string;
   user_id: string;
   content: string;
+  processing_status?: 'woven' | 'saved' | 'observed' | 'pending';
+  impact_percentage?: number;
   created_at: string;
   updated_at: string;
 }

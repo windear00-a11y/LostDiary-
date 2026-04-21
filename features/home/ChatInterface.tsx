@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChatInput } from './ChatInput';
 import { generateStoryResponse } from '@/ai-core/ai-engine';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { User, Sparkles, X } from 'lucide-react';
+import { User, Sparkles, X, Heart } from 'lucide-react';
 import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -15,6 +15,7 @@ export interface ChatMessage {
   role: 'user' | 'ai' | 'diary';
   content: string;
   created_at: string;
+  processing_status?: 'woven' | 'saved' | 'observed' | 'pending';
 }
 
 export const ChatInterface = () => {
@@ -63,11 +64,12 @@ export const ChatInterface = () => {
         // 2. Load messages for the determined session
         if (targetSessionId) {
           const history = await coreService.fetchMessages(user.id, targetSessionId);
-          const mappedMessages = history.map(m => ({
+          const mappedMessages: ChatMessage[] = history.map(m => ({
             id: m.id,
             role: m.role as 'user' | 'diary',
             content: m.content || "",
-            created_at: m.created_at
+            created_at: m.created_at,
+            processing_status: m.processing_status
           }));
           setMessages(mappedMessages);
 

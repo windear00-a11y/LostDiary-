@@ -206,11 +206,28 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                             }}
                             className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-all text-left group"
                           >
-                            <div className="w-2 h-2 rounded-full bg-white/10 group-hover:bg-indigo-500/50 transition-colors" />
+                            <div className="w-2 h-2 rounded-full bg-white/10 group-hover:bg-indigo-500/50 transition-colors shrink-0" />
                             <span className="text-sm text-white/40 group-hover:text-white/90 line-clamp-1 flex-1 transition-colors">
                               {session.title || 'Untitled Session'}
                             </span>
-                            <ChevronRight className="w-3 h-3 text-white/10 opacity-0 group-hover:opacity-100 transition-all" />
+                            <div className="flex items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
+                              {session.processing_status === 'woven' && (
+                                <span className="text-[8px] font-sans uppercase tracking-[0.1em] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                                  Deep Resonance
+                                </span>
+                              )}
+                              {session.processing_status === 'saved' && (
+                                <span className="text-[8px] font-sans uppercase tracking-[0.1em] text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
+                                  Vital Echo
+                                </span>
+                              )}
+                              {session.processing_status === 'observed' && (
+                                <span className="text-[8px] font-sans uppercase tracking-[0.1em] text-white/30 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
+                                  Passing Reflection
+                                </span>
+                              )}
+                              <ChevronRight className="w-3 h-3 text-white/10 group-hover:text-white/30" />
+                            </div>
                           </motion.button>
                         ))}
                         {sessions.length === 0 && (
@@ -250,9 +267,26 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                               className="w-full flex flex-col p-3.5 rounded-2xl hover:bg-white/5 transition-all text-left group gap-1.5 border border-transparent hover:border-white/5"
                             >
                               <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-white/30 font-bold uppercase tracking-wider">
-                                  {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] text-white/30 font-bold uppercase tracking-wider">
+                                    {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                  </span>
+                                  {entry.processing_status === 'woven' && (
+                                    <span className="text-[7px] uppercase tracking-tighter text-emerald-400/60 font-serif italic">
+                                      Deep Resonance
+                                    </span>
+                                  )}
+                                  {entry.processing_status === 'saved' && (
+                                    <span className="text-[7px] uppercase tracking-tighter text-indigo-400/60 font-serif italic">
+                                      Vital Echo
+                                    </span>
+                                  )}
+                                  {entry.processing_status === 'observed' && (
+                                    <span className="text-[7px] uppercase tracking-tighter text-white/20 font-serif italic">
+                                      Reflection
+                                    </span>
+                                  )}
+                                </div>
                                 <PenLine className="w-3 h-3 text-white/10 group-hover:text-white/40 transition-colors" />
                               </div>
                               <p className="text-xs text-white/50 group-hover:text-white/80 line-clamp-2 leading-relaxed italic">

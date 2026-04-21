@@ -97,6 +97,22 @@ export async function POST(req: Request) {
       .eq('id', user_id);
 
     // 5. Check if we should trigger a new LifeBook chapter
+    let processingStatus: 'woven' | 'saved' | 'observed' = 'observed';
+    let impactPercentage = 5 + Math.floor(Math.random() * 10);
+
+    if (pipelineOutput.narrativeUpdate?.narrative) {
+      processingStatus = 'woven';
+      impactPercentage = 90 + Math.floor(Math.random() * 10);
+    } else if (pipelineOutput.extractedEvent) {
+      processingStatus = 'saved';
+      impactPercentage = 50 + Math.floor(Math.random() * 30);
+    }
+
+    await supabase.from('diary_entries').update({ 
+      processing_status: processingStatus,
+      impact_percentage: impactPercentage
+    }).eq('id', entry.id);
+
     if (pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative) {
       const { data: newChapter } = await supabase.from('chapters').insert({
         user_id,

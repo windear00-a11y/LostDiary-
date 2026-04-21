@@ -111,11 +111,26 @@ export async function POST(req: Request) {
       category: analyzedEvent?.category || 'General'
     };
 
+    // Determine status and impact
+    let processingStatus: 'woven' | 'saved' | 'observed' = 'observed';
+    let impactPercentage = 10; // Default for observed
+
+    if (pipelineOutput.narrativeUpdate?.narrative) {
+      processingStatus = 'woven';
+      impactPercentage = 85 + Math.floor(Math.random() * 15); // 85-100%
+    } else if (pipelineOutput.extractedEvent) {
+      processingStatus = 'saved';
+      impactPercentage = 40 + Math.floor(Math.random() * 30); // 40-70%
+    } else if (analyzedEvent?.score && analyzedEvent.score > 0.3) {
+      impactPercentage = Math.floor(analyzedEvent.score * 100);
+    }
+
     const { data: message, error } = await supabase
       .from('chat_messages')
       .insert({
         user_id, session_id, role, type, content, media_url,
-        metadata: enrichedMetadata, event_score: analyzedEvent?.score || 0
+        metadata: enrichedMetadata, event_score: analyzedEvent?.score || 0,
+        processing_status: processingStatus
       }).select().single();
     if (error) throw error;
 
@@ -137,6 +152,14 @@ export async function POST(req: Request) {
       bio: pipelineOutput.narrativeUpdate ? pipelineOutput.narrativeUpdate.summary : profile.bio,
       intelligence_profile: updatedIntelProfile
     }).eq('id', user_id);
+
+    // Update Session status
+    if (session_id) {
+       await supabase.from('chat_sessions').update({ 
+         processing_status: processingStatus,
+         impact_percentage: impactPercentage
+       }).eq('id', session_id);
+    }
 
     // Save narrative chapter if triggered
     if (pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative) {
