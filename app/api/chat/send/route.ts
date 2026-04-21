@@ -72,13 +72,30 @@ export async function POST(req: Request) {
     };
 
     // STEP 2: parallelize tasks (Reply, Pipeline, and Deep Intelligence Extraction)
+    const [{ data: contextChaptersData }, { data: currentVolume }] = await Promise.all([
+      supabase.from('chapters').select('content').eq('user_id', user_id).order('created_at', { ascending: false }).limit(3),
+      supabase.from('volumes').select('*').eq('user_id', user_id).eq('status', 'ongoing').maybeSingle()
+    ]);
+    const contextChapters = contextChaptersData?.map(c => c.content) || [];
+    let activeVolume = currentVolume;
+
+    if (!activeVolume) {
+       const { data: lastVol } = await supabase.from('volumes').select('volume_number').eq('user_id', user_id).order('volume_number', { ascending: false }).limit(1).maybeSingle();
+       const nextNum = (lastVol?.volume_number || 0) + 1;
+       const { data: newVol } = await supabase.from('volumes').insert({
+         user_id, volume_number: nextNum, title: 'Chapters of the Heart', status: 'ongoing'
+       }).select().single();
+       activeVolume = newVol;
+    }
+
     const [pipelineOutput, aiResponseText, updatedIntelProfile] = await Promise.all([
       orchestrator.processInteraction({
         userId: user_id,
         message: { role, type, content },
         contextMessages: contextMessages.map(m => m.content),
         apiKey: apiKey,
-        language
+        language,
+        contextChapters
       }),
       generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary, currentIntelProfile as any),
       extractIntelligenceProfile('chat', content, currentIntelProfile as any)
@@ -120,6 +137,38 @@ export async function POST(req: Request) {
       bio: pipelineOutput.narrativeUpdate ? pipelineOutput.narrativeUpdate.summary : profile.bio,
       intelligence_profile: updatedIntelProfile
     }).eq('id', user_id);
+
+    // Save narrative chapter if triggered
+    if (pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative) {
+      const { data: newChapter } = await supabase.from('chapters').insert({
+        user_id,
+        volume_id: activeVolume?.id,
+        title: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
+        content: pipelineOutput.narrativeUpdate.narrative,
+        created_at: new Date().toISOString()
+      }).select().single();
+
+      // Handle Volume Sealing
+      if (pipelineOutput.narrativeUpdate.shouldSealVolume && activeVolume) {
+        await supabase.from('volumes').update({ 
+          status: 'completed',
+          epilogue: pipelineOutput.narrativeUpdate.currentVolumeEpilogue || null
+        }).eq('id', activeVolume.id);
+        
+        if (pipelineOutput.narrativeUpdate.newVolumeMetadata) {
+          const meta = pipelineOutput.narrativeUpdate.newVolumeMetadata;
+          await supabase.from('volumes').insert({
+            user_id,
+            volume_number: activeVolume.volume_number + 1,
+            title: meta.title || 'Next Phase',
+            prologue: meta.prologue,
+            epigraph: meta.epigraph,
+            aura: meta.aura,
+            status: 'ongoing'
+          });
+        }
+      }
+    }
 
     if (session_id) {
       const { data: session } = await supabase.from('chat_sessions').select('title').eq('id', session_id).single();

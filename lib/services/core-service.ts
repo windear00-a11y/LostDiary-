@@ -25,11 +25,27 @@ export interface ChatMessage {
 }
 
 // --- Chapter Service ---
+export interface Volume {
+  id: string;
+  user_id: string;
+  volume_number: number;
+  title: string;
+  prologue: string | null;
+  epigraph: string | null;
+  aura: string | null;
+  epilogue: string | null;
+  status: 'ongoing' | 'completed';
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Chapter {
   id: string;
   user_id: string;
+  volume_id?: string;
   title: string;
   content: string;
+  is_sealed: boolean;
   created_at: string;
 }
 
@@ -218,14 +234,37 @@ export const coreService = {
   },
 
   // Chapter
-  async fetchChapters(userId: string): Promise<Chapter[]> {
+  async fetchVolumes(userId: string): Promise<Volume[]> {
     const supabase = getSupabase();
     if (!supabase) return [];
     const { data, error } = await supabase
+      .from('volumes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('volume_number', { ascending: true });
+    
+    if (error) {
+      console.error("Error fetching volumes:", error);
+      return [];
+    }
+    return data || [];
+  },
+
+  async fetchChapters(userId: string, volumeId?: string): Promise<Chapter[]> {
+    const supabase = getSupabase();
+    if (!supabase) return [];
+    
+    let query = supabase
       .from('chapters')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: true });
+
+    if (volumeId) {
+      query = query.eq('volume_id', volumeId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching chapters:", error);
@@ -238,18 +277,32 @@ export const coreService = {
     const supabase = getSupabase();
     if (!supabase) return;
 
-    this.generateTitle(content).then(async (title) => {
-      try {
-        await supabase.from('chapters').insert({
-          user_id: userId,
-          title: title || 'New Chapter',
-          content: content,
-          created_at: new Date().toISOString(),
-        });
-      } catch (error) {
-        console.error("Error auto-saving chapter:", error);
+    try {
+      // Find ongoing volume
+      const { data: vol } = await supabase.from('volumes').select('id').eq('user_id', userId).eq('status', 'ongoing').maybeSingle();
+      let volumeId = vol?.id;
+
+      if (!volumeId) {
+        const { data: lastVol } = await supabase.from('volumes').select('volume_number').eq('user_id', userId).order('volume_number', { ascending: false }).limit(1).maybeSingle();
+        const nextNum = (lastVol?.volume_number || 0) + 1;
+        const { data: newVol } = await supabase.from('volumes').insert({
+          user_id: userId, volume_number: nextNum, title: 'Chapters of the Heart', status: 'ongoing'
+        }).select().single();
+        volumeId = newVol?.id;
       }
-    });
+
+      const title = await this.generateTitle(content);
+      
+      await supabase.from('chapters').insert({
+        user_id: userId,
+        volume_id: volumeId,
+        title: title || 'New Chapter',
+        content: content,
+        created_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error auto-saving chapter:", error);
+    }
   },
 
   async generateTitle(content: string): Promise<string | null> {

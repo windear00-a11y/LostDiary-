@@ -2,20 +2,24 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Sparkles, ScrollText, Heart, List, X, Globe, Check } from 'lucide-react';
+import { ArrowLeft, Sparkles, ScrollText, Heart, List, X, Globe, Check, ShieldCheck, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Chapter } from '@/lib/services/core-service';
+import { Chapter, Volume } from '@/lib/services/core-service';
+import { libraryService, SealingResult } from '@/lib/services/library-service';
 
 interface StoryReaderProps {
   chapters: Chapter[];
+  volumes?: Volume[];
   onBack: () => void;
   initialChapterId?: string | null;
 }
 
-export const StoryReader = ({ chapters, onBack, initialChapterId }: StoryReaderProps) => {
+export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId }: StoryReaderProps) => {
   const router = useRouter();
   const [isTOCOpen, setIsTOCOpen] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [sealingId, setSealingId] = useState<string | null>(null);
+  const [sealPreview, setSealPreview] = useState<{ chapter: Chapter; result: SealingResult } | null>(null);
   const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -42,38 +46,41 @@ export const StoryReader = ({ chapters, onBack, initialChapterId }: StoryReaderP
     setTimeout(() => setToastMessage(null), 5000);
   };
 
-  const handlePublish = async (chapterId: string) => {
+  const handlePublish = async (chapterId: string, sealedData?: { sealedTitle: string; sealedContent: string }) => {
     try {
-      setPublishingId(chapterId);
-      const res = await fetch('/api/library/publish', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chapterId })
-      });
-      const data = await res.json();
-      
-      if (!res.ok) {
-        if (data.error?.includes('Pen Name')) {
-           showToast("⚠️ Mirror Error: You must set a Pen Name in your Profile before sharing.");
-           // Optional: redirect to profile after 2 secs
-           setTimeout(() => router.push('/profile'), 2000);
-        } else {
-           showToast(`Error: ${data.error}`);
+      if (!sealedData) {
+        // Trigger Sealing Preview first
+        setSealingId(chapterId);
+        const result = await libraryService.getSealedPreview(chapterId);
+        const chapter = chapters.find(c => c.id === chapterId);
+        if (chapter) {
+          setSealPreview({ chapter, result });
         }
+        setSealingId(null);
         return;
       }
 
+      setPublishingId(chapterId);
+      const data = await libraryService.publishStory(chapterId, sealedData);
+      
       setPublishedIds(curr => {
         const next = new Set(curr);
         next.add(chapterId);
         return next;
       });
+      setSealPreview(null);
       showToast("✨ Beautiful. Your chapter has been anonymously gifted to the Global Library.");
 
-    } catch (error) {
-      showToast("An unexpected error occurred. Could not publish.");
+    } catch (error: any) {
+      if (error.message?.includes('Pen Name')) {
+         showToast("⚠️ Mirror Error: You must set a Pen Name in your Profile before sharing.");
+         setTimeout(() => router.push('/profile'), 2000);
+      } else {
+         showToast(`Error: ${error.message}`);
+      }
     } finally {
       setPublishingId(null);
+      setSealingId(null);
     }
   };
 
@@ -163,96 +170,278 @@ export const StoryReader = ({ chapters, onBack, initialChapterId }: StoryReaderP
           initial={{ opacity: 0, y: 5 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25 }}
-          className="space-y-24"
+          className="space-y-32"
         >
-          {chapters.map((chapter, index) => (
-            <article 
-              key={chapter.id || index} 
-              id={`chapter-${chapter.id}`}
-              className="space-y-8 scroll-mt-32"
-            >
-          {/* Chapter Title */}
-          <header className="space-y-4 pt-12 border-t border-slate-100 dark:border-white/5">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase tracking-[0.4em] text-slate-400 font-bold">
-                Volume {index + 1}
-              </span>
-              <span className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 dark:bg-white/5 px-3 py-1 rounded-full">
-                {new Date(chapter.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
-              </span>
-            </div>
-            
-            <h2 className="text-4xl md:text-5xl font-serif font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
-              {chapter.title || `Chapter ${index + 1}`}
-            </h2>
-            
-            <div className="flex items-center gap-4">
-              <div className="h-px flex-1 bg-gradient-to-r from-slate-200 dark:from-slate-800 to-transparent" />
-              <span className="text-[10px] italic font-serif text-slate-400">Recorded for Eternity</span>
-            </div>
-          </header>
+          {volumes.length > 0 ? (
+            volumes.sort((a, b) => a.volume_number - b.volume_number).map((volume, volIdx) => {
+              const volumeChapters = chapters.filter(c => c.volume_id === volume.id);
+              if (volumeChapters.length === 0 && volume.status !== 'ongoing') return null;
 
-          {/* Chapter Content */}
-          <div className="prose prose-slate dark:prose-invert prose-lg md:prose-xl font-serif leading-[1.8] text-slate-800 dark:text-slate-300 drop-shadow-sm">
-            {chapter.content.split('\n').map((paragraph, pIndex) => (
-              <p key={pIndex} className="mb-8 indent-8 first:indent-0 first:text-slate-900 first:dark:text-white first:font-medium">
-                {paragraph}
-              </p>
-            ))}
-          </div>
+              return (
+                <div key={volume.id} className="space-y-24">
+                  {/* Volume Heading */}
+                  <div className="text-center space-y-8 pt-20 border-t-2 border-slate-100 dark:border-white/5">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-px h-16 bg-gradient-to-b from-transparent via-indigo-500/30 to-transparent" />
+                      <span className="text-[10px] uppercase tracking-[0.8em] text-indigo-500 font-bold">Volume {volume.volume_number}</span>
+                    </div>
+                    <h2 className="text-5xl md:text-6xl font-serif font-bold text-slate-900 dark:text-white tracking-tight">
+                      {volume.title}
+                    </h2>
+                    {volume.prologue && (
+                      <p className="text-sm md:text-md italic text-slate-400 dark:text-slate-500 max-w-xl mx-auto font-serif leading-relaxed">
+                        &ldquo;{volume.prologue}&rdquo;
+                      </p>
+                    )}
+                    <div className="w-12 h-px bg-slate-200 dark:bg-white/10 mx-auto" />
+                  </div>
 
-          {/* Narrator's Reflection */}
-          <div className="mt-12 p-6 md:p-8 bg-slate-50 dark:bg-white/[0.02] rounded-3xl border border-slate-100 dark:border-white/5 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Sparkles className="w-12 h-12" />
-            </div>
-            <h4 className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-4 flex items-center gap-2">
-              <Sparkles className="w-3 h-3" /> WinDear&apos;s Observation
-            </h4>
-            <p className="text-sm md:text-md italic text-slate-600 dark:text-slate-400 leading-relaxed font-serif">
-               &ldquo;{chapter.title?.includes('Conflict') ? "Even in the darkest moments, your resilience is the ink that writes your survival." : "This chapter of your life radiates a unique kind of growth—one that is felt more than it is seen."}&rdquo;
-            </p>
-          </div>
+                  {/* Volume Epigraph */}
+                  {volume.epigraph && (
+                    <div className="text-center py-12">
+                      <p className="text-[10px] uppercase tracking-[0.4em] text-gray-400 mb-6">- Epigraph -</p>
+                      <p className="text-lg md:text-xl font-serif italic text-slate-600 dark:text-slate-400 max-w-lg mx-auto leading-relaxed">
+                         {volume.epigraph}
+                      </p>
+                    </div>
+                  )}
 
-          {/* Publish Action */}
-          <div className="mt-8 flex justify-center">
-             <button 
-                onClick={() => handlePublish(chapter.id)}
-                disabled={publishingId === chapter.id || publishedIds.has(chapter.id)}
-                className="group relative px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-black rounded-full overflow-hidden transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-2xl"
-             >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                <div className="flex items-center gap-2 font-serif relative z-10 transition-transform">
-                   {publishedIds.has(chapter.id) ? (
-                     <>
-                       <Check className="w-4 h-4 text-emerald-500" />
-                       <span className="italic">Gifted to Library</span>
-                     </>
-                   ) : publishingId === chapter.id ? (
-                     <>
-                       <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
-                       <span>Publishing...</span>
-                     </>
-                   ) : (
-                     <>
-                       <Globe className="w-4 h-4" />
-                       <span>Publish to Global Library</span>
-                     </>
-                   )}
+                  {/* Chapters in this Volume */}
+                  {volumeChapters.map((chapter, index) => (
+                    <article 
+                      key={chapter.id || index} 
+                      id={`chapter-${chapter.id}`}
+                      className="space-y-8 scroll-mt-32"
+                    >
+                      {/* Chapter Title */}
+                      <header className="space-y-4 pt-12 border-t border-slate-100 dark:border-white/5 opacity-80">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase tracking-[0.4em] text-slate-400 font-bold">
+                            Chapter {index + 1}
+                          </span>
+                          <span className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 dark:bg-white/5 px-3 py-1 rounded-full">
+                            {new Date(chapter.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}
+                          </span>
+                        </div>
+                        <h3 className="text-3xl md:text-4xl font-serif font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+                          {chapter.title}
+                        </h3>
+                      </header>
+
+                      {/* Chapter Content */}
+                      <div className="prose prose-slate dark:prose-invert prose-lg md:prose-xl font-serif leading-[1.8] text-slate-800 dark:text-slate-300 drop-shadow-sm">
+                        {chapter.content.split('\n').map((paragraph, pIndex) => (
+                          <p key={pIndex} className="mb-8 indent-8 first:indent-0">
+                            {paragraph}
+                          </p>
+                        ))}
+                      </div>
+
+                      {/* Publish Action */}
+                      <div className="mt-8 flex justify-center">
+                         <button 
+                            onClick={() => handlePublish(chapter.id)}
+                            disabled={publishingId === chapter.id || sealingId === chapter.id || publishedIds.has(chapter.id)}
+                            className="group relative px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-black rounded-full overflow-hidden transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-2xl"
+                         >
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-pink-500/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                            <div className="flex items-center gap-2 font-serif relative z-10 transition-transform">
+                               {publishedIds.has(chapter.id) ? (
+                                 <>
+                                   <Check className="w-4 h-4 text-emerald-500" />
+                                   <span className="italic">Gifted to Library</span>
+                                 </>
+                               ) : (publishingId === chapter.id || sealingId === chapter.id) ? (
+                                 <>
+                                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                                   <span>{sealingId === chapter.id ? 'Sealing...' : 'Publishing...'}</span>
+                                 </>
+                               ) : (
+                                 <>
+                                   <Globe className="w-4 h-4" />
+                                   <span>Publish to Global Library</span>
+                                 </>
+                               )}
+                            </div>
+                         </button>
+                      </div>
+                    </article>
+                  ))}
+
+                  {volume.status === 'completed' && volume.epilogue && (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      className="mt-32 p-10 md:p-16 bg-indigo-50/50 dark:bg-indigo-500/[0.03] rounded-[3rem] border border-indigo-100/50 dark:border-indigo-500/10 relative overflow-hidden text-center space-y-8"
+                    >
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
+                      
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="p-3 bg-white dark:bg-indigo-500/10 rounded-2xl shadow-sm">
+                          <Sparkles className="w-6 h-6 text-indigo-500" />
+                        </div>
+                        <span className="text-[10px] uppercase tracking-[0.5em] text-indigo-500 font-bold">The Mirror&apos;s Epilogue</span>
+                      </div>
+
+                      <p className="text-xl md:text-2xl font-serif italic text-slate-800 dark:text-slate-200 leading-relaxed max-w-2xl mx-auto">
+                        &ldquo;{volume.epilogue}&rdquo;
+                      </p>
+
+                      <div className="pt-8 flex flex-col items-center gap-4">
+                        <div className="w-12 h-px bg-indigo-200 dark:bg-indigo-500/20" />
+                        <span className="text-[9px] uppercase tracking-widest text-slate-400 font-medium">A chapter closed. A soul expanded.</span>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {volume.status === 'ongoing' && (
+                    <div className="text-center py-20 space-y-6">
+                      <div className="w-2 h-2 bg-indigo-500 rounded-full mx-auto animate-pulse" />
+                      <p className="text-sm font-serif italic text-gray-400 capitalize tracking-widest">
+                        The ink is still wet. Your life is writing the next page...
+                      </p>
+                    </div>
+                  )}
                 </div>
-             </button>
-          </div>
-
-              {/* Subtle Divider */}
-              {index < chapters.length - 1 && (
-                <div className="flex justify-center py-12">
-                  <div className="text-2xl tracking-[0.5em] text-slate-300 dark:text-slate-700">***</div>
+              );
+            })
+          ) : (
+            chapters.map((chapter, index) => (
+              <article 
+                key={chapter.id || index} 
+                id={`chapter-${chapter.id}`}
+                className="space-y-8 scroll-mt-32"
+              >
+                <header className="space-y-4 pt-12 border-t border-slate-100 dark:border-white/5 opacity-80">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase tracking-[0.4em] text-slate-400 font-bold">
+                      Chapter {index + 1}
+                    </span>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 bg-slate-100 dark:bg-white/5 px-3 py-1 rounded-full">
+                      {new Date(chapter.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric' })}
+                    </span>
+                  </div>
+                  <h3 className="text-3xl md:text-4xl font-serif font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+                    {chapter.title}
+                  </h3>
+                </header>
+                <div className="prose prose-slate dark:prose-invert prose-lg md:prose-xl font-serif leading-[1.8] text-slate-800 dark:text-slate-300 drop-shadow-sm">
+                  {chapter.content.split('\n').map((paragraph, pIndex) => (
+                    <p key={pIndex} className="mb-8 indent-8 first:indent-0">
+                      {paragraph}
+                    </p>
+                  ))}
                 </div>
-              )}
-            </article>
-          ))}
+                <div className="mt-8 flex justify-center">
+                   <button 
+                      onClick={() => handlePublish(chapter.id)}
+                      disabled={publishingId === chapter.id || sealingId === chapter.id || publishedIds.has(chapter.id)}
+                      className="group relative px-6 py-3 bg-gray-900 dark:bg-white text-white dark:text-black rounded-full overflow-hidden transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-2xl"
+                   >
+                      <div className="flex items-center gap-2 font-serif relative z-10 transition-transform">
+                         {publishedIds.has(chapter.id) ? (
+                           <>
+                             <Check className="w-4 h-4 text-emerald-500" />
+                             <span className="italic">Gifted to Library</span>
+                           </>
+                         ) : (publishingId === chapter.id || sealingId === chapter.id) ? (
+                           <>
+                             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                             <span>{sealingId === chapter.id ? 'Sealing...' : 'Publishing...'}</span>
+                           </>
+                         ) : (
+                           <>
+                             <Globe className="w-4 h-4" />
+                             <span>Publish to Global Library</span>
+                           </>
+                         )}
+                      </div>
+                   </button>
+                </div>
+              </article>
+            ))
+          )}
         </motion.div>
       </main>
+
+      {/* Privacy Sealing Modal */}
+      <AnimatePresence>
+        {sealPreview && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSealPreview(null)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-2xl bg-white dark:bg-[#111] rounded-[32px] overflow-hidden shadow-2xl border border-white/10"
+            >
+              <div className="p-8 md:p-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 bg-indigo-500/10 rounded-lg">
+                    <ShieldCheck className="w-5 h-5 text-indigo-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-serif font-bold dark:text-white">Privacy Sealing Complete</h3>
+                    <p className="text-xs text-gray-500">I have generalized your real-world details to protect your anonymity.</p>
+                  </div>
+                </div>
+
+                <div className="space-y-6 max-h-[50vh] overflow-y-auto pr-4 scrollbar-whatsapp">
+                  <div className="p-6 bg-gray-50 dark:bg-black/40 rounded-2xl border border-gray-100 dark:border-white/5">
+                    <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Original Context</div>
+                    <h4 className="font-serif font-bold text-gray-900 dark:text-white mb-2">{sealPreview.chapter.title}</h4>
+                    <p className="text-sm text-gray-400 line-clamp-3 italic opacity-50">{sealPreview.chapter.content}</p>
+                  </div>
+
+                  <div className="p-6 bg-indigo-500/5 dark:bg-indigo-500/[0.03] rounded-2xl border border-indigo-500/20">
+                    <div className="text-[10px] uppercase tracking-widest text-indigo-500 font-bold mb-2">Sealed for the Public</div>
+                    <h4 className="font-serif font-bold text-gray-900 dark:text-white mb-2">{sealPreview.result.title}</h4>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-serif">
+                      {sealPreview.result.content}
+                    </p>
+                  </div>
+
+                  {sealPreview.result.alterations.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-2">
+                       {sealPreview.result.alterations.map((alt, i) => (
+                         <span key={i} className="px-2 py-1 bg-gray-100 dark:bg-white/5 rounded-md text-[10px] text-gray-500 flex items-center gap-1">
+                           <Info className="w-3 h-3" /> {alt}
+                         </span>
+                       ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mt-10">
+                  <button
+                    onClick={() => setSealPreview(null)}
+                    className="py-4 rounded-2xl text-xs font-bold uppercase tracking-widest text-gray-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => handlePublish(sealPreview.chapter.id, { 
+                      sealedTitle: sealPreview.result.title, 
+                      sealedContent: sealPreview.result.content 
+                    })}
+                    disabled={publishingId === sealPreview.chapter.id}
+                    className="py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-xl active:scale-95 disabled:opacity-50"
+                  >
+                    {publishingId ? 'Publishing...' : 'Confirm & Gift'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

@@ -66,10 +66,10 @@ export function SanctuaryMirror({ profile, onUpdate }: SanctuaryMirrorProps) {
     <div className="space-y-6">
       <div className="mb-6">
         <h3 className="text-xl font-serif text-gray-900 dark:text-gray-100 flex items-center gap-2">
-          The Sanctuary Mirror
+           The Sanctuary Mirror
         </h3>
-        <p className="text-sm text-gray-500 mt-1">
-          This is exactly how WinDear understands your subconscious. You have full control—edit or erase any memory that no longer serves you.
+        <p className="text-sm text-gray-500 mt-1 italic font-serif">
+          Minimalist observations of your current resonance. No drama, just patterns.
         </p>
       </div>
 

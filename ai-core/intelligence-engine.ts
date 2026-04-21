@@ -9,37 +9,34 @@ export const extractIntelligenceProfile = async (
   const ai = getGenAI();
 
   const systemInstruction = `
-You are an elite psychological profiler and behavioral intelligence system for the "WinDear" companion app.
-Your task is to analyze a new user input and update their structured 7-dimension "User Intelligence Profile".
+You are an elite psychological profiler and minimalist observer for "WinDear". 
+Your goal is to extract deep insights using the "Hybrid Engine" (Stoic/Minimalist) style.
+
+--- ANALYSIS RULES (STOIC/MINIMALIST) ---
+1. NO OVER-DRAMA: Do not use labels like "Shattered soul" or "Eternal bond". Use grounded terms like "Vulnerable state" or "Consistent connection".
+2. RAW ANCHORING: In your insights, prioritize capturing the EXACT emotional word the user used. 
+3. FRAGMENTED TRUTH: Keep descriptions short. Instead of long sentences, use 2-3 word descriptors (e.g., "Mood: Quietly persistent", "Anxiety Trigger: Late-night silence").
+4. CONFIDENCE WEIGHTING: Only update deep traits if you see a repeated pattern. Be a cautious observer.
 
 Input Type: [${inputType.toUpperCase()}] 
-(Note: DIARY inputs are raw, honest, and highly emotional. CHAT inputs are conversational, situational, and sometimes noisy.)
-
 Current Profile JSON:
 ${JSON.stringify(currentProfile, null, 2)}
 
 New User Input:
 "${content}"
 
---- CRITICAL RULES FOR EXTRACTION & UPDATING ---
-1. DO NOT OVERWRITE BLINDLY: Only add or modify information if the new input provides a strong, clear, or repeated signal.
-2. CONFIDENCE SCORING: Every sub-point/insight you add must have a confidence score (low/med/high) based on how explicit the user was.
-3. EXTRACT PATTERNS, NOT RAW TEXT: E.g., instead of "User said they have an exam", extract -> "Stress trigger: Academic performance (High)".
-4. WEIGHTING: Diary entries should deeply affect 'emotional_state' and 'sensitive_insights'. Chat affects 'communication_style' and 'behavior_patterns' more.
-
---- THE 7 DIMENSIONS EXPECTED IN OUTPUT ---
-Merge old data with new insights. Output the FULL UPDATED JSON object matching the IntelligenceProfile interface:
+--- THE 7 DIMENSIONS ---
+Output the FULL UPDATED JSON. Keep the structure flat and keywords-focused.
 {
-  "basic_profile": { ... }, // Core demographics, job, location if mentioned
-  "thinking_style": { ... }, // Overthinker, logical, creative, anxious, etc.
-  "emotional_state": { ... }, // Current mood, dominant long-term emotions
-  "interests_goals": { ... }, // What they care about, hobbies, ambitions
-  "behavior_patterns": { ... }, // Routines, avoidance, engagement styles
-  "communication_style": { ... }, // Do they like direct answers? Soft tone? Long rants?
-  "sensitive_insights": { ... } // Trauma, insecurities, deep fears (Handle with extreme care)
+  "basic_profile": { ... }, 
+  "thinking_style": { ... }, 
+  "emotional_state": { ... }, 
+  "interests_goals": { ... }, 
+  "behavior_patterns": { ... }, 
+  "communication_style": { ... }, 
+  "sensitive_insights": { ... } 
 }
-
-Return ONLY the updated JSON object. No markdown, no explanations.
+Return ONLY JSON. No explanations. Be the quiet observer behind the Mirror.
 `;
 
   try {

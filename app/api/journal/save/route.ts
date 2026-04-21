@@ -40,12 +40,23 @@ export async function POST(req: Request) {
     // 2. Trigger the AI Pipeline for LifeBook integration
     const orchestrator = new AIOrchestrator(process.env.NEXT_PUBLIC_GEMINI_API_KEY!, profile?.personality_summary);
     
-    const { data: recentEvents } = await supabase
-      .from('life_events')
-      .select('*')
-      .eq('user_id', user_id)
-      .order('created_at', { ascending: false })
-      .limit(10);
+    const [{ data: recentEvents }, { data: contextChaptersData }, { data: currentVolume }] = await Promise.all([
+      supabase.from('life_events').select('*').eq('user_id', user_id).order('created_at', { ascending: false }).limit(10),
+      supabase.from('chapters').select('content').eq('user_id', user_id).order('created_at', { ascending: false }).limit(3),
+      supabase.from('volumes').select('*').eq('user_id', user_id).eq('status', 'ongoing').maybeSingle()
+    ]);
+
+    const contextChapters = contextChaptersData?.map(c => c.content) || [];
+    let activeVolume = currentVolume;
+
+    if (!activeVolume) {
+       const { data: lastVol } = await supabase.from('volumes').select('volume_number').eq('user_id', user_id).order('volume_number', { ascending: false }).limit(1).maybeSingle();
+       const nextNum = (lastVol?.volume_number || 0) + 1;
+       const { data: newVol } = await supabase.from('volumes').insert({
+         user_id, volume_number: nextNum, title: 'The Silent Beginning', status: 'ongoing'
+       }).select().single();
+       activeVolume = newVol;
+    }
 
     // 2.2 Parallelize legacy extraction and deep structured intelligence profile extraction
     const currentIntelProfile = profile?.intelligence_profile || {
@@ -60,7 +71,8 @@ export async function POST(req: Request) {
         message: { role: 'user', type: 'text', content },
         contextMessages: [], 
         apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY!,
-        recentEvents: recentEvents || []
+        recentEvents: recentEvents || [],
+        contextChapters: contextChapters
       }, { isJournal: true }),
       extractIntelligenceProfile('diary', content, currentIntelProfile as any)
     ]);
@@ -86,13 +98,35 @@ export async function POST(req: Request) {
 
     // 5. Check if we should trigger a new LifeBook chapter
     if (pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative) {
-      await supabase.from('chapters').insert({
+      const { data: newChapter } = await supabase.from('chapters').insert({
         user_id,
+        volume_id: activeVolume?.id,
         title: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
         content: pipelineOutput.narrativeUpdate.narrative,
         inspired_by_story_id: metadata?.inspired_by || null,
         created_at: new Date().toISOString()
-      });
+      }).select().single();
+
+      // Handle Volume Sealing
+      if (pipelineOutput.narrativeUpdate.shouldSealVolume && activeVolume) {
+        await supabase.from('volumes').update({ 
+          status: 'completed',
+          epilogue: pipelineOutput.narrativeUpdate.currentVolumeEpilogue || null
+        }).eq('id', activeVolume.id);
+        
+        if (pipelineOutput.narrativeUpdate.newVolumeMetadata) {
+          const meta = pipelineOutput.narrativeUpdate.newVolumeMetadata;
+          await supabase.from('volumes').insert({
+            user_id,
+            volume_number: activeVolume.volume_number + 1,
+            title: meta.title || 'Next Phase',
+            prologue: meta.prologue,
+            epigraph: meta.epigraph,
+            aura: meta.aura,
+            status: 'ongoing'
+          });
+        }
+      }
     }
 
     return NextResponse.json({ success: true, entry });

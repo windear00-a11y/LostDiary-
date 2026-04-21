@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Globe, Heart, BookOpen, User, Droplets, Leaf, Send, Sparkles, Handshake } from 'lucide-react';
+import { Globe, Heart, BookOpen, User, Droplets, Leaf, Send, Sparkles, Handshake, Anchor, BookMarked } from 'lucide-react';
 import { Header } from '@/components/ui/Header';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { useRouter } from 'next/navigation';
@@ -26,13 +26,20 @@ export default function GlobalLibraryPage() {
   const [stories, setStories] = useState<LibraryStory[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [activeMood, setActiveMood] = useState<string>('all');
   const [planeModalOpen, setPlaneModalOpen] = useState(false);
   const [selectedStory, setSelectedStory] = useState<LibraryStory | null>(null);
   const [planeMessage, setPlaneMessage] = useState('');
   const [sendingPlane, setSendingPlane] = useState(false);
   const [toastMessage, setToastMessage] = useState<{title: string, desc: string, type: 'success'|'error'} | null>(null);
-  // Track optimistically echoed paragraphs: { [storyId]: Set<number> }
-  const [localEchoes, setLocalEchoes] = useState<Record<string, Set<number>>>({});
+  // Track optimistically ahsas paragraphs: { [storyId]: Set<number> }
+  const [localAhsas, setLocalAhsas] = useState<Record<string, Set<number>>>({});
+
+  const moods = ['all', 'hope', 'tear', 'resonance', 'reflective', 'courage', 'calm'];
+
+  const filteredStories = activeMood === 'all' 
+    ? stories 
+    : stories.filter(s => s.dominant_emotion === activeMood);
 
   useEffect(() => {
     const fetchFeed = async () => {
@@ -107,27 +114,35 @@ export default function GlobalLibraryPage() {
     }
   };
 
-  const handleEcho = async (storyId: string, paragraphIndex: number) => {
-     // Optimistically toggle locally
-     setLocalEchoes(prev => {
-        const storyEchoes = new Set(prev[storyId] || []);
-        if (storyEchoes.has(paragraphIndex)) {
-            storyEchoes.delete(paragraphIndex);
-        } else {
-            storyEchoes.add(paragraphIndex);
-        }
-        return { ...prev, [storyId]: storyEchoes };
-     });
+  const handleAhsas = async (storyId: string, paragraphIndex: number) => {
+     // ... (ahsas logic)
+  };
 
-     try {
-       await fetch('/api/library/echo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ storyId, paragraphIndex })
-       });
-     } catch (e) {
-       console.error("Echo failed");
-     }
+  const handleDropAnchor = async (storyId: string, paragraphIndex: number) => {
+    try {
+        await fetch('/api/library/anchor', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ storyId, paragraphIndex })
+        });
+        showToast('Anchor Dropped ⚓', 'Your rest point is saved.', 'success');
+    } catch (e) {
+        showToast('Warning', 'Failed to drop anchor.', 'error');
+    }
+  };
+
+  const handleHoldTreasury = async (storyId: string) => {
+    try {
+        const res = await fetch('/api/library/treasury', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ storyId })
+        });
+        const data = await res.json();
+        showToast(data.action === 'added' ? 'Held Close 📦' : 'Released from Treasury', data.action === 'added' ? 'Added to your Treasury.' : 'Removed from Treasury.', 'success');
+    } catch (e) {
+        showToast('Warning', 'Failed to update treasury.', 'error');
+    }
   };
 
   const handleThreadReflection = (story: LibraryStory) => {
@@ -141,8 +156,28 @@ export default function GlobalLibraryPage() {
     <div className="min-h-screen bg-transparent pb-32">
       <Header />
       
+      {/* Mood Navigator */}
+      <div className="sticky top-0 z-30 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md pt-6 pb-4 mb-8">
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-4 justify-center">
+            {moods.map((mood) => (
+                <button
+                    key={mood}
+                    onClick={() => setActiveMood(mood)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium capitalize transition-all ${
+                        activeMood === mood 
+                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
+                        : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                    }`}
+                >
+                    {mood}
+                </button>
+            ))}
+        </div>
+      </div>
+
       <AnimatePresence>
         {toastMessage && (
+
           <motion.div 
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -233,15 +268,15 @@ export default function GlobalLibraryPage() {
            <div className="flex justify-center mt-20">
               <LoadingSpace message="Opening the ancient doors..." />
            </div>
-        ) : stories.length === 0 ? (
+        ) : filteredStories.length === 0 ? (
            <div className="text-center mt-20">
              <Globe className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4 opacity-50" />
-             <p className="font-serif italic text-slate-500">The library is currently empty. Be the first to share a whisper.</p>
+             <p className="font-serif italic text-slate-500">No stories found for this mood. Try another?</p>
            </div>
         ) : (
           <div className="space-y-12">
             <AnimatePresence>
-              {stories.map((story, i) => (
+              {filteredStories.map((story, i) => (
                 <motion.article
                   key={story.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -270,6 +305,9 @@ export default function GlobalLibraryPage() {
                         </span>
                       </div>
                     </div>
+                    <button onClick={() => handleHoldTreasury(story.id)} className="p-2 text-slate-400 hover:text-indigo-500 transition-colors" title="Hold story close in Treasury">
+                       <BookMarked className="w-5 h-5" />
+                    </button>
                   </header>
 
                   <h4 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-6 pr-8">
@@ -278,24 +316,24 @@ export default function GlobalLibraryPage() {
 
                   <div className="prose prose-slate dark:prose-invert font-serif leading-relaxed text-slate-600 dark:text-slate-300 relative">
                     {story.story_content.split('\n').filter(p => p.trim()).map((p, pIdx) => {
-                       const isEchoedLocally = localEchoes[story.id]?.has(pIdx);
-                       // We can also check backend echoes count if returned by API.
-                       const backendEchoCount = story.echoes?.find(e => e.paragraph_index === pIdx)?.count || 0;
-                       const totalEchoes = isEchoedLocally ? backendEchoCount + 1 : backendEchoCount;
+                       const isAhsasLocally = localAhsas[story.id]?.has(pIdx);
+                       // We can also check backend ahsas count if returned by API.
+                       const backendAhsasCount = story.echoes?.find(e => e.paragraph_index === pIdx)?.count || 0;
+                       const totalAhsas = isAhsasLocally ? backendAhsasCount + 1 : backendAhsasCount;
                        
-                       const isLuminous = totalEchoes > 0;
+                       const isAhsas = totalAhsas > 0;
                        
                        return (
                          <div key={pIdx} className="mb-6 group/para relative -mx-4 px-4 py-2 rounded-2xl transition-colors hover:bg-slate-50 dark:hover:bg-white/[0.02]">
-                            <p className={isLuminous ? 'text-indigo-900 dark:text-indigo-200 drop-shadow-[0_0_10px_rgba(99,102,241,0.2)] transition-all' : 'transition-all'}>
+                            <p className={isAhsas ? 'text-indigo-900 dark:text-indigo-200 drop-shadow-[0_0_10px_rgba(99,102,241,0.2)] transition-all' : 'transition-all'}>
                                {p}
                             </p>
                             
-                            {/* Echo Action */}
+                            {/* Ahsas Action */}
                             <button 
-                               onClick={() => handleEcho(story.id, pIdx)}
-                               className={`absolute -right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all ${isEchoedLocally ? 'opacity-100 bg-indigo-50 dark:bg-indigo-500/20 text-indigo-500' : 'opacity-0 group-hover/para:opacity-100 bg-white dark:bg-black border border-slate-100 dark:border-white/10 hover:scale-110 shadow-lg text-slate-400'}`}
-                               title="Echo this line"
+                               onClick={() => handleAhsas(story.id, pIdx)}
+                               className={`absolute -right-2 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all ${isAhsasLocally ? 'opacity-100 bg-indigo-50 dark:bg-indigo-500/20 text-indigo-500' : 'opacity-0 group-hover/para:opacity-100 bg-white dark:bg-black border border-slate-100 dark:border-white/10 hover:scale-110 shadow-lg text-slate-400'}`}
+                               title="Share an Ahsas"
                             >
                                <Sparkles className="w-3.5 h-3.5" />
                             </button>

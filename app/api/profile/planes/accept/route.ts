@@ -40,13 +40,15 @@ export async function POST(req: Request) {
     await adminSupabase.from('paper_planes').update({ status: 'accepted' }).eq('id', planeId);
 
     // 3. Create Bridge
+    const { mode = 'protected' } = await req.json();
     const { data: bridge, error: bridgeError } = await adminSupabase
       .from('bridges')
       .insert({
          user_a_id: plane.sender_id,
          user_b_id: plane.receiver_id,
          origin_story_id: plane.story_id,
-         status: 'active'
+         status: 'active',
+         mode: mode
       })
       .select()
       .single();

@@ -3,7 +3,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Header } from '@/components/ui/Header';
-import { Send, Handshake, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { BridgeHeader } from '@/components/bridge/BridgeHeader';
+import { Send, Handshake, AlertTriangle, ArrowLeft, Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function BridgePage({ params }: { params: { id: string } }) {
@@ -15,6 +16,7 @@ export default function BridgePage({ params }: { params: { id: string } }) {
   const [inputMessage, setInputMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string|null>(null);
+  const [resonanceMsg, setResonanceMsg] = useState<string|null>(null);
   
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
@@ -45,6 +47,21 @@ export default function BridgePage({ params }: { params: { id: string } }) {
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const checkResonance = async () => {
+    try {
+        const res = await fetch('/api/bridge/check-resonance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ bridgeId })
+        });
+        const data = await res.json();
+        setResonanceMsg(data.message);
+        setTimeout(() => setResonanceMsg(null), 10000);
+    } catch (e) {
+        alert("Couldn't feel the resonance.");
+    }
+  };
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,43 +104,13 @@ export default function BridgePage({ params }: { params: { id: string } }) {
       
       <main className="flex-1 max-w-3xl w-full mx-auto flex flex-col pt-24 px-4 h-full relative z-10">
         {/* Header Section */}
-        <header className="flex-shrink-0 flex items-center justify-between mb-8 pb-4 border-b border-white/5">
-           <div className="flex items-center gap-4">
-              <button onClick={() => router.back()} className="w-10 h-10 bg-white/5 hover:bg-white/10 rounded-full flex items-center justify-center transition-colors">
-                 <ArrowLeft className="w-4 h-4 text-white/50" />
-              </button>
-              <div>
-                <h1 className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold flex items-center gap-2 mb-1">
-                  <Handshake className="w-3 h-3" />
-                  The Midnight Bridge
-                </h1>
-                <div className="flex items-baseline gap-2">
-                   <h2 className="text-xl font-serif">{bridgeData.other.pen_name}</h2>
-                   <span className="text-xs font-mono text-white/30">#{bridgeData.other.pen_name_tag}</span>
-                </div>
-              </div>
-           </div>
-           
-           <div className="text-right">
-             {bridgeData.status === 'active' ? (
-                 <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-emerald-500/80">
-                   <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                   Guardian Connected
-                 </div>
-             ) : (
-                 <div className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-rose-500">
-                   <AlertTriangle className="w-3 h-3" />
-                   Bridge Broken
-                 </div>
-             )}
-           </div>
-        </header>
+        <BridgeHeader bridgeData={bridgeData} resonanceMsg={resonanceMsg} checkResonance={checkResonance} />
 
         {/* Message Area */}
         <div className="flex-1 overflow-y-auto min-h-0 space-y-6 scrollbar-whatsapp pr-2">
            <div className="p-6 border border-white/5 rounded-3xl bg-white/[0.01] text-center mb-8">
               <p className="font-serif italic text-white/40 text-sm leading-relaxed max-w-lg mx-auto">
-                 &quot;You are standing on a bridge built from silent resonance. Speak truly. WinDear watches over this connection.&quot;
+                 &quot;You are standing on a bridge built from silent resonance. Your soul is private, but your safety is our priority. No logs are kept—this bridge dissolves with the dawn.&quot;
               </p>
            </div>
 

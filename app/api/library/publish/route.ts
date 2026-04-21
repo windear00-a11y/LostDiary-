@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { GoogleGenAI } from '@google/genai';
 
 export async function POST(req: Request) {
   try {
@@ -49,6 +50,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Chapter not found or you do not own it' }, { status: 404 });
     }
 
+    // 1.5. NEW: Apply Sealing/Generalization Logic
+    const { sealedTitle, sealedContent } = await req.json(); // Optionally pass from preview
+    let finalTitle = sealedTitle || chapter.title;
+    let finalContent = sealedContent || chapter.content;
+
+    // If not passed from preview, we auto-seal it to be safe
+    if (!sealedContent) {
+      const { sealAndGeneralizeStory } = await import('@/ai-core/library-engine');
+      const sealingResult = await sealAndGeneralizeStory(finalTitle, finalContent);
+      if (sealingResult) {
+        finalTitle = sealingResult.title;
+        finalContent = sealingResult.content;
+      }
+    }
+
+    // AI classify emotion
+    const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
+    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent(`Analyze this story content and classify it into one of these emotions: hope, tear, resonance, reflective, courage, calm. Return only the emotion word. Content: ${chapter.content.substring(0, 500)}`);
+    const emotion = result.text().trim().toLowerCase() || 'reflective';
+
     // 2. Fetch User Profile for Pen Name
     const { data: profile, error: profileError } = await supabase
       .from('users')
@@ -66,12 +88,20 @@ export async function POST(req: Request) {
       .insert({
         author_id: user.id,
         chapter_id: chapter.id,
-        title: chapter.title,
-        story_content: chapter.content,
+        title: finalTitle,
+        story_content: finalContent,
         pen_name: profile.pen_name,
         pen_name_tag: profile.pen_name_tag,
         inspired_by_story_id: chapter.inspired_by_story_id || null,
-        dominant_emotion: chapter.dominant_emotion || 'thoughtful'
+        dominant_emotion: emotion,
+        emotion_scores: {
+          hope: emotion === 'hope' ? 1 : 0,
+          tear: emotion === 'tear' ? 1 : 0,
+          resonance: emotion === 'resonance' ? 1 : 0,
+          reflective: emotion === 'reflective' ? 1 : 0,
+          courage: emotion === 'courage' ? 1 : 0,
+          calm: emotion === 'calm' ? 1 : 0
+        }
       })
       .select()
       .single();

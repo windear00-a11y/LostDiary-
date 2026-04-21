@@ -7,6 +7,7 @@ import { Chapter } from '@/lib/services/core-service';
 
 interface TableOfContentsProps {
   chapters: Chapter[];
+  volumes?: Volume[];
   onSelectChapter: (id: string | null) => void;
   onBack: () => void;
   title: string;
@@ -15,7 +16,14 @@ interface TableOfContentsProps {
 /**
  * TableOfContents - A dedicated "Vishay Suchi" page that looks like a classic book.
  */
-export const TableOfContents = ({ chapters, onSelectChapter, onBack, title }: TableOfContentsProps) => {
+export const TableOfContents = ({ chapters, volumes = [], onSelectChapter, onBack, title }: TableOfContentsProps) => {
+  const volumesWithChapters = volumes.length > 0 
+    ? volumes.sort((a, b) => a.volume_number - b.volume_number).map(v => ({
+        ...v,
+        chapters: chapters.filter(c => c.volume_id === v.id)
+      })).filter(v => v.chapters.length > 0 || v.status === 'ongoing')
+    : [{ title: 'Chapter List', chapters }];
+
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -39,36 +47,48 @@ export const TableOfContents = ({ chapters, onSelectChapter, onBack, title }: Ta
         </div>
       </div>
 
-      {/* List */}
-      <div className="space-y-12">
-        {chapters.map((chapter, index) => (
-          <motion.button
-            key={chapter.id}
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            onClick={() => onSelectChapter(chapter.id)}
-            className="w-full group flex items-baseline justify-between text-left border-b border-dotted border-slate-200 dark:border-white/10 pb-4 hover:border-slate-400 dark:hover:border-white/30 transition-colors"
-          >
-            <div className="flex items-baseline gap-6">
-              <span className="text-[10px] tabular-nums font-bold text-slate-400 uppercase tracking-widest min-w-[30px]">
-                {String(index + 1).padStart(2, '0')}
-              </span>
-              <div className="space-y-1">
-                <span className="text-lg md:text-xl text-slate-800 dark:text-slate-200 group-hover:text-black dark:group-hover:text-white transition-colors">
-                  {chapter.title}
-                </span>
-                <div className="text-[9px] uppercase tracking-widest text-slate-400">
-                  {new Date(chapter.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
-                </div>
+      {/* List grouped by Volumes */}
+      <div className="space-y-16">
+        {volumesWithChapters.map((vol, volIdx) => (
+          <div key={volIdx} className="space-y-8">
+            {volumes.length > 0 && (
+              <div className="flex items-center gap-4">
+                <span className="text-[10px] uppercase tracking-[0.4em] text-indigo-500 font-bold whitespace-nowrap">Volume {volIdx + 1}</span>
+                <div className="h-px w-full bg-slate-100 dark:bg-white/5" />
               </div>
-            </div>
+            )}
             
-            <div className="flex items-center gap-2 text-slate-300 dark:text-slate-700 group-hover:text-indigo-500 transition-colors">
-              <span className="text-xs italic font-serif opacity-0 group-hover:opacity-100 transition-opacity">Read</span>
-              <ChevronRight className="w-4 h-4" />
+            <div className="space-y-8 pl-4 border-l border-slate-100 dark:border-white/5">
+              {vol.chapters.map((chapter, index) => (
+                <motion.button
+                  key={chapter.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  onClick={() => onSelectChapter(chapter.id)}
+                  className="w-full group flex items-baseline justify-between text-left border-b border-dotted border-slate-200 dark:border-white/10 pb-4 hover:border-slate-400 dark:hover:border-white/30 transition-colors"
+                >
+                  <div className="flex items-baseline gap-6">
+                    <span className="text-[10px] tabular-nums font-bold text-slate-400 uppercase tracking-widest min-w-[30px]">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <div className="space-y-1">
+                      <span className="text-lg md:text-xl text-slate-800 dark:text-slate-200 group-hover:text-black dark:group-hover:text-white transition-colors">
+                        {chapter.title}
+                      </span>
+                      <div className="text-[9px] uppercase tracking-widest text-slate-400">
+                        {new Date(chapter.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-slate-300 dark:text-slate-700 group-hover:text-indigo-500 transition-colors">
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </motion.button>
+              ))}
             </div>
-          </motion.button>
+          </div>
         ))}
 
         {/* Start Reading All */}

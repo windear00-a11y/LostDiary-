@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { updateStoryEmotion } from '@/lib/services/emotion-service';
 
 export async function POST(req: Request) {
   try {
@@ -40,15 +41,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Failed to add your energy' }, { status: 500 });
     }
 
-    // Optimistically update the count (In production, a DB trigger is better)
+    // Dynamic Emotion Update
     const adminSupabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        {
-           cookies: { get(name: string) { return cookieStore.get(name)?.value; } }
-        }
+        { cookies: { get(name: string) { return cookieStore.get(name)?.value; } } }
     );
     
+    await updateStoryEmotion(adminSupabase, storyId, reactionType, 1);
     await adminSupabase.rpc('increment_story_likes', { story_id: storyId });
 
     return NextResponse.json({ success: true });
@@ -57,4 +57,4 @@ export async function POST(req: Request) {
     console.error('Energy Jar error:', error);
     return NextResponse.json({ error: 'An unexpected current caught your energy.' }, { status: 500 });
   }
-}
+}    

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, ArrowLeft } from 'lucide-react';
-import { coreService, Chapter } from '@/lib/services/core-service';
+import { coreService, Chapter, Volume } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useAuth } from '@/components/auth/auth-provider';
 import { BookRenderer } from './BookRenderer';
@@ -49,6 +49,7 @@ const GhostBook = () => (
 export const BookView = () => {
   const { user } = useAuth();
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [volumes, setVolumes] = useState<Volume[]>([]);
   const [openingText, setOpeningText] = useState<string | null>(null);
   const [coverData, setCoverData] = useState<{ title: string; summary: string; aura: string } | null>(null);
   const [viewState, setViewState] = useState<'cover' | 'toc' | 'reader'>('cover');
@@ -64,12 +65,14 @@ export const BookView = () => {
       try {
         const user = await authService.getUser();
         if (user) {
-          const [chaptersData, messagesData] = await Promise.all([
+          const [chaptersData, volumesData, messagesData] = await Promise.all([
             coreService.fetchChapters(user.id),
+            coreService.fetchVolumes(user.id),
             coreService.fetchMessages(user.id)
           ]);
           
           setChapters(chaptersData);
+          setVolumes(volumesData);
 
           // Generate dynamic opening
           if (chaptersData.length > 0) {
@@ -130,6 +133,7 @@ export const BookView = () => {
     return (
       <TableOfContents 
         chapters={chapters} 
+        volumes={volumes}
         title={coverData.title}
         onSelectChapter={(id) => {
           setSelectedChapterId(id);
@@ -222,6 +226,7 @@ export const BookView = () => {
             
             <StoryReader 
               chapters={chapters} 
+              volumes={volumes}
               onBack={() => setActiveView('chat')} 
               initialChapterId={selectedChapterId}
             />
