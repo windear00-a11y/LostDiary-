@@ -20,7 +20,7 @@ export default function BridgePage({ params }: { params: { id: string } }) {
   
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
-  const fetchBridge = async () => {
+  const fetchBridge = React.useCallback(async () => {
     try {
       const res = await fetch(`/api/bridge/${bridgeId}`);
       const data = await res.json();
@@ -35,14 +35,14 @@ export default function BridgePage({ params }: { params: { id: string } }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [bridgeId]);
 
   useEffect(() => {
     fetchBridge();
     // Simple polling every 5 seconds for simulation (realtime would be better for prod)
     const interval = setInterval(fetchBridge, 5000);
     return () => clearInterval(interval);
-  }, [bridgeId]);
+  }, [fetchBridge]);
 
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: 'smooth' });

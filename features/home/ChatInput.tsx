@@ -91,6 +91,7 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
                 whileHover={{ scale: 1.1, color: '#fff' }}
                 whileTap={{ scale: 0.9 }}
                 onClick={handleSend}
+                aria-label="Send message"
                 className="p-2 bg-indigo-500 rounded-xl text-white shadow-lg shadow-indigo-500/20 shrink-0 flex items-center justify-center"
               >
                 <Send className="w-4 h-4" />

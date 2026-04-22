@@ -7,9 +7,11 @@ import { getGenAI } from '@/lib/genai';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Camera, Sparkles, LogOut, Save, Edit2, Shield, Send, Book, Handshake, ChevronRight, MessageSquare, Heart } from 'lucide-react';
+import { DeleteAccountModal } from '@/components/profile/DeleteAccountModal';
 import { Header } from '@/components/ui/Header';
 import { SanctuaryMirror } from '@/components/profile/SanctuaryMirror';
 import { AuthorHeartbeat } from '@/components/profile/AuthorHeartbeat';
+import { PrivacyTrustCenter } from '@/components/profile/PrivacyTrustCenter';
 import Image from 'next/image';
 
 export default function ProfilePage() {
@@ -20,14 +22,28 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [penName, setPenName] = useState('');
   const [bio, setBio] = useState('');
-  const [activeTab, setActiveTab] = useState<'general' | 'mirror' | 'bridges' | 'treasury'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'mirror' | 'bridges' | 'treasury' | 'privacy'>('general');
   const [inboxPlanes, setInboxPlanes] = useState<any[]>([]);
   const [bridges, setBridges] = useState<any[]>([]);
   const [chapters, setChapters] = useState<any[]>([]);
   const [volumes, setVolumes] = useState<any[]>([]);
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    try {
+      await coreService.requestAccountDeletion(user.id);
+      setShowDeleteModal(false);
+      await signOut();
+      window.location.href = '/';
+    } catch (e) {
+      console.error(e);
+      setError("Failed to schedule deletion.");
+    }
+  };
 
   useEffect(() => {
     if (error) {
@@ -403,11 +419,17 @@ export default function ProfilePage() {
                     <Handshake className="w-4 h-4" />
                     Bridges
                  </button>
+                 <button onClick={() => setActiveTab('privacy')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-serif transition-colors whitespace-nowrap ${activeTab === 'privacy' ? 'bg-indigo-500 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                    <Shield className="w-4 h-4" />
+                    Privacy
+                 </button>
               </div>
                            {activeTab === 'mirror' ? (
                 <>
                   {profile && <SanctuaryMirror profile={profile} onUpdate={handleUpdateIntelligence} />}
                 </>
+              ) : activeTab === 'privacy' ? (
+                <PrivacyTrustCenter />
               ) : activeTab === 'treasury' ? (
                 <div className="space-y-12">
                    {/* Paper Planes Section */}
@@ -546,6 +568,27 @@ export default function ProfilePage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-white/10 text-center flex flex-col items-center gap-6">
+            <button 
+              onClick={() => window.open('/api/profile/export', '_blank')}
+              className="text-xs text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-widest transition-all px-4 py-2 border border-indigo-500/20 rounded-full hover:bg-indigo-500/10"
+            >
+              Export My Vault Data
+            </button>
+            <button 
+              onClick={() => setShowDeleteModal(true)}
+              className="text-xs text-red-500 hover:text-red-400 font-bold uppercase tracking-widest transition-all"
+            >
+              Delete Sanctuary Forever
+            </button>
+        </div>
+
+        <DeleteAccountModal 
+          isOpen={showDeleteModal} 
+          onClose={() => setShowDeleteModal(false)}
+          onDelete={handleDeleteAccount}
+        />
 
         <p className="text-center mt-8 text-xs text-gray-400 dark:text-gray-600">
           Your deep data never leaves the Mirror. Only your Pen Name and Avatar are seen in the Global Library.

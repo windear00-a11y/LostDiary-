@@ -16,6 +16,12 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { role, type, content, media_url, metadata, user_id } = body;
+
+    // DoW / Rate Limit Payload protection
+    if (type === 'text' && content && content.length > 5000) {
+      return NextResponse.json({ error: 'Message payload too large. Please shorten your reflection.' }, { status: 413 });
+    }
+
     let { session_id } = body;
     const language = metadata?.language || 'en';
 

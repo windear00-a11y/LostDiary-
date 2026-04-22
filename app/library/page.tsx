@@ -157,7 +157,7 @@ export default function GlobalLibraryPage() {
       <Header />
       
       {/* Mood Navigator */}
-      <div className="sticky top-0 z-30 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md pt-6 pb-4 mb-8">
+      <div className="sticky top-20 z-30 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md pt-10 pb-4 mb-8">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-4 justify-center">
             {moods.map((mood) => (
                 <button

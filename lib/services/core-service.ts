@@ -91,6 +91,8 @@ export interface UserProfile {
   preferred_language: string;
   responsiveness_level: number; // 0-1
   emotional_sensitivity: number; // 0-1
+  is_pending_deletion?: boolean;
+  deletion_scheduled_at?: string | null;
 
   engagement_level: number; // 0-1
   interaction_frequency: number;
@@ -495,6 +497,24 @@ export const coreService = {
         engagement_level: newEngagementLevel,
         last_response_at: new Date().toISOString(),
       })
+      .eq('id', userId);
+  },
+
+  async requestAccountDeletion(userId: string): Promise<void> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
+    await supabase
+      .from('users')
+      .update({ is_pending_deletion: true, deletion_scheduled_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() })
+      .eq('id', userId);
+  },
+
+  async restoreAccount(userId: string): Promise<void> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
+    await supabase
+      .from('users')
+      .update({ is_pending_deletion: false, deletion_scheduled_at: null })
       .eq('id', userId);
   }
 };

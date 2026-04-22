@@ -6,12 +6,13 @@ import {
   ChevronLeft, Undo, Redo, Type, Bold, Italic, 
   Underline, List, AlignLeft, AlignCenter, AlignRight, 
   Image as ImageIcon, CheckSquare, Save, Check, X,
-  Clock, Hash, Sparkles, Plus
+  Clock, Hash, Sparkles, Plus, Shield
 } from 'lucide-react';
 import { coreService } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { useSearchParams } from 'next/navigation';
+import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
 
 export const JournalEditor = () => {
   const { setActiveView, selectedJournalContent, setSelectedJournalContent, language } = useUIStore();
@@ -21,6 +22,7 @@ export const JournalEditor = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showNudge, setShowNudge] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [recentEntry, setRecentEntry] = useState<any>(null);
   const [inspiredBy, setInspiredBy] = useState<string | null>(null);
   
@@ -54,7 +56,7 @@ export const JournalEditor = () => {
       }
     };
     checkRecent();
-  }, [selectedJournalContent]);
+  }, [selectedJournalContent, language, searchParams]);
 
   // Update content when selected content changes (from drawer)
   useEffect(() => {
@@ -94,7 +96,11 @@ export const JournalEditor = () => {
 
     try {
       const user = await authService.getUser();
-      if (!user) throw new Error('User not found');
+      if (!user) {
+        setShowAuthModal(true);
+        setIsSaving(false);
+        return;
+      }
 
       // Combine title and content
       const fullContent = title ? `# ${title}\n\n${content}` : content;
@@ -170,6 +176,10 @@ export const JournalEditor = () => {
         </button>
         
         <div className="flex items-center gap-1">
+          <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5 mr-4 select-none">
+            <Shield className="w-3 h-3 text-emerald-500" />
+            <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-500/80">Private Vault Active</span>
+          </div>
           <button 
             onClick={handleStartNewEntry}
             className="p-2 text-neutral-500 hover:text-white transition-colors"
@@ -222,7 +232,7 @@ export const JournalEditor = () => {
       </div>
 
       {/* Editor Area */}
-      <div className={`flex-1 px-6 max-w-2xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-32 transition-all duration-700 ${showNudge ? 'blur-2xl opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
+      <div className={`flex-1 px-6 max-w-2xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-32 relative transition-all duration-700 ${showNudge ? 'blur-2xl opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
         <textarea
           ref={contentRef}
           value={content}
@@ -258,6 +268,9 @@ export const JournalEditor = () => {
 
       {/* Continue vs New Nudge */}
       <AnimatePresence>
+        {showAuthModal && (
+          <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+        )}
         {showNudge && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-neutral-950/20 backdrop-blur-sm">
             <motion.div
@@ -305,7 +318,7 @@ export const JournalEditor = () => {
       </AnimatePresence>
 
       {/* Floating Toolbar (Helper Icons) */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-xl h-14 bg-neutral-900/80 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center justify-around px-2 z-50">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-xl h-14 bg-neutral-900/80 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center justify-around px-2 z-[70]">
         <div className="flex items-center justify-around w-full overflow-x-auto scrollbar-none py-2">
           <button onClick={() => handleFormat('checklist')} className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
             <CheckSquare className="w-5 h-5" />

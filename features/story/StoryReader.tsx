@@ -12,9 +12,11 @@ interface StoryReaderProps {
   volumes?: Volume[];
   onBack: () => void;
   initialChapterId?: string | null;
+  coverData?: { title: string; summary: string; aura: string } | null;
+  userName?: string;
 }
 
-export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId }: StoryReaderProps) => {
+export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, coverData, userName }: StoryReaderProps) => {
   const router = useRouter();
   const [readingStage, setReadingStage] = useState<'cover' | 'index' | 'reading'>('cover');
   const [isTOCOpen, setIsTOCOpen] = useState(false);
@@ -34,7 +36,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId }
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [initialChapterId]);
+  }, [initialChapterId, scrollToChapter]);
 
   // Progress tracking
   React.useEffect(() => {
@@ -56,15 +58,15 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId }
     showToast("⚓ Bookmark dropped at this memory.");
   };
 
-  const handleMarkAsRead = (id: string) => {
+  const handleMarkAsRead = React.useCallback((id: string) => {
     setReadChapters(prev => {
       const next = new Set(prev);
       next.add(id);
       return next;
     });
-  };
+  }, []);
 
-  const scrollToChapter = (id: string) => {
+  const scrollToChapter = React.useCallback((id: string) => {
     setReadingStage('reading');
     handleMarkAsRead(id);
     const el = document.getElementById(`chapter-${id}`);
@@ -74,7 +76,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId }
         setIsTOCOpen(false);
       }, 100);
     }
-  };
+  }, [handleMarkAsRead]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -148,14 +150,20 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId }
                 <span className="text-[10px] uppercase tracking-[1em] text-indigo-500 font-bold ml-[1em]">An Autobiography</span>
               </div>
 
-              <h1 className="text-5xl md:text-8xl font-serif font-medium text-slate-900 dark:text-white leading-tight tracking-tight">
-                {volumes?.[0]?.title || "The Unwritten Chronicles"}
+              <h1 className="text-5xl md:text-8xl font-serif font-medium text-slate-900 dark:text-white leading-tight tracking-tight px-4">
+                {coverData?.title || volumes?.[0]?.title || "The Unwritten Chronicles"}
               </h1>
 
               <div className="flex flex-col items-center gap-4">
                  <div className="w-12 h-px bg-slate-200 dark:bg-white/10" />
-                 <p className="font-serif italic text-xl text-slate-400">by a Soul in Transit</p>
+                 <p className="font-serif italic text-xl text-slate-400">by {userName || "a Soul in Transit"}</p>
               </div>
+
+              {coverData?.summary && (
+                <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 font-serif italic leading-relaxed max-w-xl mx-auto px-6">
+                  &ldquo;{coverData.summary}&rdquo;
+                </p>
+              )}
 
               <button
                 onClick={() => setReadingStage('index')}
@@ -384,21 +392,32 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId }
       </AnimatePresence>
 
       {/* Story Content */}
-      <main className="relative z-10 max-w-2xl mx-auto px-6 py-8 md:py-20">
-        <div className="mb-16 flex items-center justify-between">
-          <button 
-            onClick={onBack}
-            className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-indigo-500 transition-all"
-          >
-            <div className="w-8 h-px bg-slate-200 group-hover:bg-indigo-500 group-hover:w-12 transition-all" />
-            Reflection Room
-          </button>
-          
-          <div className="flex items-center gap-2 opacity-30 select-none">
-            <BookOpen className="w-4 h-4" />
-            <span className="text-[10px] font-serif italic tracking-wide">The Book of Your Soul</span>
+      <motion.main 
+        initial={false}
+        animate={{ 
+          opacity: readingStage === 'reading' ? 1 : 0,
+          pointerEvents: readingStage === 'reading' ? 'auto' : 'none',
+          y: readingStage === 'reading' ? 0 : 20
+        }}
+        className="fixed inset-0 z-[80] bg-[#FDFCF8] dark:bg-[#0A0A0A] overflow-y-auto px-6 py-8 md:py-20 scrollbar-hide"
+      >
+        <div className="max-w-2xl mx-auto relative">
+          <div className="mb-16 flex items-center justify-between">
+            <button 
+              onClick={() => setReadingStage('index')}
+              className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-indigo-500 transition-all"
+            >
+              <div className="w-8 h-px bg-slate-200 group-hover:bg-indigo-500 group-hover:w-12 transition-all" />
+              Return to Index
+            </button>
+            
+            <button 
+              onClick={onBack}
+              className="text-[10px] uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors"
+            >
+              Close Book
+            </button>
           </div>
-        </div>
 
         <motion.div 
           initial={{ opacity: 0 }}
@@ -510,13 +529,13 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId }
                                  </>
                                ) : (publishingId === chapter.id || sealingId === chapter.id) ? (
                                  <>
-                                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
-                                   <span>{sealingId === chapter.id ? 'Sealing...' : 'Publishing...'}</span>
+                                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full" />
+                                   <span className="text-indigo-500 font-mono tracking-tighter">{sealingId === chapter.id ? 'Neural Wash...' : 'Sealing Memory...'}</span>
                                  </>
                                ) : (
                                  <>
-                                   <Globe className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
-                                   <span>Publish this Chapter</span>
+                                   <Fingerprint className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+                                   <span>Apply Privacy Seal</span>
                                  </>
                                )}
                             </div>
@@ -615,7 +634,8 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId }
             </div>
           )}
         </motion.div>
-      </main>
+       </div>
+      </motion.main>
 
       {/* Privacy Sealing Modal */}
       <AnimatePresence>
@@ -640,8 +660,8 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId }
                     <ShieldCheck className="w-5 h-5 text-indigo-500" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-serif font-bold dark:text-white">Privacy Sealing Complete</h3>
-                    <p className="text-xs text-gray-500">I have generalized your real-world details to protect your anonymity.</p>
+                    <h3 className="text-xl font-serif font-bold dark:text-white">Neural Wash Complete</h3>
+                    <p className="text-xs text-gray-500">Our privacy engine has successfully generalized your identifiers while preserving the soul of the story.</p>
                   </div>
                 </div>
 

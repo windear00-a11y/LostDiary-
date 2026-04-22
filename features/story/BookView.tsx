@@ -105,45 +105,6 @@ export const BookView = () => {
 
   const userDisplayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Soul';
 
-  // View: Cover
-  if (chapters.length > 0 && viewState === 'cover' && coverData) {
-    return (
-      <div className="max-w-[1000px] mx-auto px-6 py-12">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key="cover"
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 0.6 }}
-          >
-            <LifeBookCover 
-              data={coverData} 
-              userName={userDisplayName} 
-              onOpen={() => setViewState('toc')} 
-            />
-          </motion.div>
-        </AnimatePresence>
-      </div>
-    );
-  }
-
-  // View: Table of Contents (Vishay Suchi)
-  if (chapters.length > 0 && viewState === 'toc' && coverData) {
-    return (
-      <TableOfContents 
-        chapters={chapters} 
-        volumes={volumes}
-        title={coverData.title}
-        onSelectChapter={(id) => {
-          setSelectedChapterId(id);
-          setViewState('reader');
-        }}
-        onBack={() => setViewState('cover')}
-      />
-    );
-  }
-
   if (error) {
     return (
       <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-10 text-center">
@@ -160,79 +121,48 @@ export const BookView = () => {
     );
   }
 
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="bg-transparent min-h-screen"
-    >
-      <div className="max-w-[800px] mx-auto pt-16 pb-48 px-10">
-        <div className="mb-12">
-          <button 
-            onClick={() => setViewState('toc')}
-            className="flex items-center gap-2 text-[10px] uppercase tracking-[0.4em] text-slate-400 hover:text-white transition-colors"
+  if (chapters.length === 0) {
+    return (
+      <div className="max-w-[800px] mx-auto pt-32 pb-48 px-10">
+        <div className="text-center space-y-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="w-20 h-20 bg-gray-50 dark:bg-[#1A1A1A] rounded-full flex items-center justify-center mx-auto mb-8 opacity-30"
           >
-            <BookOpen className="w-3 h-3" /> Vishay Suchi
-          </button>
+            <BookOpen className="w-8 h-8 text-gray-300" />
+          </motion.div>
+          <h2 className="text-4xl font-serif italic text-gray-400 dark:text-gray-600 tracking-tight">
+            Your story is waiting to be written...
+          </h2>
+          <p className="text-gray-300 dark:text-gray-600 max-w-sm mx-auto leading-relaxed font-serif italic">
+            जैसे-जैसे आप यादें साझा करेंगे, आपकी कहानी के पन्ने यहाँ खुद-ब-खुद जुड़ते जाएंगे।
+          </p>
         </div>
-
-        {chapters.length === 0 ? (
-          <div className="space-y-20">
-            <div className="text-center space-y-6">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="w-20 h-20 bg-gray-50 dark:bg-[#1A1A1A] rounded-full flex items-center justify-center mx-auto mb-8 opacity-30"
-              >
-                <BookOpen className="w-8 h-8 text-gray-300" />
-              </motion.div>
-              <h2 className="text-4xl font-serif italic text-gray-400 dark:text-gray-600 tracking-tight">
-                Your story is waiting to be written...
-              </h2>
-              <p className="text-gray-300 dark:text-gray-600 max-w-sm mx-auto leading-relaxed font-serif italic">
-                जैसे-जैसे आप यादें साझा करेंगे, आपकी कहानी के पन्ने यहाँ खुद-ब-खुद जुड़ते जाएंगे।
-              </p>
-            </div>
-            
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <GhostBook />
-            </motion.div>
-          </div>
-        ) : (
-          <div className="space-y-24">
-            {/* Dynamic Opening/Foreword */}
-            {openingText && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center space-y-8 mb-32"
-              >
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-px h-16 bg-gradient-to-b from-transparent via-slate-200 dark:via-white/10 to-transparent" />
-                  <span className="text-[10px] uppercase tracking-[0.6em] text-slate-400 font-bold">The Foreword</span>
-                </div>
-                <h1 className="text-4xl md:text-5xl font-serif italic text-slate-900 dark:text-white leading-tight max-w-2xl mx-auto">
-                  &ldquo;{openingText}&rdquo;
-                </h1>
-                <div className="w-16 h-px bg-slate-200 dark:bg-white/10 mx-auto" />
-              </motion.div>
-            )}
-            
-            <StoryReader 
-              chapters={chapters} 
-              volumes={volumes}
-              onBack={() => setActiveView('chat')} 
-              initialChapterId={selectedChapterId}
-            />
-          </div>
-        )}
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="mt-20"
+        >
+          <GhostBook />
+        </motion.div>
       </div>
-    </motion.div>
+    );
+  }
+
+  return (
+    <div className="bg-transparent min-h-screen">
+      <StoryReader 
+        chapters={chapters} 
+        volumes={volumes}
+        onBack={() => setActiveView('chat')} 
+        initialChapterId={selectedChapterId}
+        coverData={coverData}
+        userName={userDisplayName}
+      />
+    </div>
   );
 };

@@ -5,10 +5,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChatInput } from './ChatInput';
 import { generateStoryResponse } from '@/ai-core/ai-engine';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { User, Sparkles, X, Heart } from 'lucide-react';
+import { User, Sparkles, X, Heart, Shield } from 'lucide-react';
 import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
 
 export interface ChatMessage {
   id: string;
@@ -23,6 +24,7 @@ export const ChatInterface = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [activeSession, setActiveSession] = useState<ChatSession | null>(null);
   const [showNudge, setShowNudge] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { setInputFocused, isInputFocused, language } = useUIStore();
@@ -135,8 +137,19 @@ export const ChatInterface = () => {
 
   const handleSendMessage = async (input: { type: 'text'; content: string }) => {
     const trimmedContent = input.content.trim();
+    if (!trimmedContent || isThinking) return;
+
     const user = await authService.getUser();
-    if (!trimmedContent || isThinking || !user) return;
+    
+    // Guest Quota: Limit to 3 messages
+    if (!user) {
+       const guestCount = parseInt(localStorage.getItem('guest_msg_count') || '0');
+       if (guestCount >= 3) {
+         setShowAuthModal(true);
+         return;
+       }
+       localStorage.setItem('guest_msg_count', (guestCount + 1).toString());
+    }
 
     // Auto-hide nudge and starters when active conversation begins
     setShowNudge(false);
@@ -201,16 +214,28 @@ export const ChatInterface = () => {
 
   return (
     <div className="flex flex-col h-full bg-neutral-950 text-white relative overflow-hidden font-sans">
+      <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       {/* Top Gradient Mask for smooth scrolling transition */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-neutral-950 via-neutral-950/80 to-transparent z-30 pointer-events-none" />
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-neutral-950 via-neutral-950/90 to-transparent z-40 pointer-events-none" />
 
       {/* Messages Container */}
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-32 pb-20 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'} ${showNudge ? 'blur-2xl scale-[0.98] opacity-20 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
+        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-40 pb-20 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'} ${showNudge ? 'blur-2xl scale-[0.98] opacity-20 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
       >
-        <div className="max-w-2xl mx-auto space-y-8 min-h-full flex flex-col">
+        <div className="max-w-2xl mx-auto space-y-8 min-h-full flex flex-col pt-10">
+          {/* Privacy Trust Signal */}
+          <div className="flex flex-col items-center justify-center space-y-2 mb-4 opacity-40 select-none">
+             <div className="flex items-center gap-2">
+                <Shield className="w-3 h-3 text-emerald-500" />
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em]">End-to-End Soul Privacy</span>
+             </div>
+             <p className="text-[9px] font-serif italic text-center max-w-[200px]">
+                Your reflections are sealed within your unique neural resonance. WinDear never logs human-readable data.
+             </p>
+          </div>
+
           <AnimatePresence mode="wait">
             {messages.length === 0 && !showNudge && (
               <motion.div 
@@ -356,6 +381,9 @@ export const ChatInterface = () => {
 
       {/* Sticky Bottom Input Section */}
       <div className="sticky bottom-0 w-full z-20 px-4 pb-[env(safe-area-inset-bottom)] bg-neutral-950/80 backdrop-blur-sm">
+        <div className="text-center pb-2">
+            <p className="text-[10px] text-white/20 italic font-serif">AI processing is transient & ephemeral for your privacy.</p>
+        </div>
         <div className={`pt-2 pb-6 max-w-3xl mx-auto transition-all duration-500 ${isInputFocused ? 'pb-8 scale-[1.01]' : 'pb-4'}`}>
           <ChatInput 
             onSendMessage={handleSendMessage} 

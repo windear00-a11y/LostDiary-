@@ -47,7 +47,7 @@ export default function HomePage() {
               animate={{ y: 0 }}
               exit={{ y: '100dvh' }}
               transition={{ type: 'spring', damping: 35, stiffness: 350 }}
-              className="absolute inset-0 z-40 bg-neutral-950 overflow-y-auto"
+              className="absolute inset-0 z-[60] bg-neutral-950"
             >
               <JournalEditor />
             </motion.div>
@@ -60,9 +60,9 @@ export default function HomePage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="absolute inset-0 z-40 bg-neutral-950 overflow-y-auto"
+              className="absolute inset-0 z-[60] bg-neutral-950"
             >
-              <div className="pt-20">
+              <div className="pt-0">
                 <BookView />
               </div>
             </motion.div>
