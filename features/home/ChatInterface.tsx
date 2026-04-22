@@ -215,6 +215,64 @@ export const ChatInterface = () => {
   return (
     <div className="flex flex-col h-full bg-neutral-950 text-white relative overflow-hidden font-sans">
       <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      
+      {/* Nudge / Motivation UI - Emotional Decision Point (Moved outside blurred container) */}
+      <AnimatePresence>
+        {showNudge && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-neutral-950/80 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: -20 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+              className="bg-neutral-900/80 border border-white/10 rounded-[32px] p-8 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl relative overflow-hidden"
+            >
+              {/* Decorative Glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none" />
+              
+              <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="w-8 h-8 text-purple-400" />
+              </div>
+
+              <div className="space-y-3 mb-10">
+                <h3 className="text-2xl font-serif italic text-white leading-tight">
+                  {messages.length === 0 ? "Aapki baaton ka intezar hai." : "Main kab se sunne ke liye rukka tha."}
+                </h3>
+                <p className="text-sm text-slate-400 font-serif leading-relaxed px-4">
+                  {messages.length === 0 
+                    ? "Koi aisi baat jo aap kehna chahte hon? Main yahan hoon." 
+                    : "Humari pichli baat mujhe yaad hai. Kya wahin se aage badhein ya koi nayi baatchit shuru karein?"}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setShowNudge(false)}
+                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-medium shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all"
+                >
+                  Haan, wahin se aage badhte hain
+                </motion.button>
+                
+                <button 
+                  onClick={handleStartNewSession}
+                  className="w-full py-3 text-white/60 hover:text-white text-xs font-medium transition-all"
+                >
+                  Nayi baatchit shuru karein
+                </button>
+              </div>
+
+              <button 
+                onClick={() => setShowNudge(false)}
+                className="absolute top-6 right-6 text-white/20 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       {/* Header Overlay */}
       <div className="absolute top-0 inset-x-0 h-20 flex items-center justify-between px-6 z-50">
         <div className="w-10"></div> {/* Spacer for symmetry */}
@@ -284,64 +342,6 @@ export const ChatInterface = () => {
                   ))}
                 </div>
               </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Nudge / Motivation UI - Emotional Decision Point */}
-          <AnimatePresence>
-            {showNudge && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-neutral-950/80 backdrop-blur-sm">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -20 }}
-                  transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-                  className="bg-neutral-900/80 border border-white/10 rounded-[32px] p-8 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl relative overflow-hidden"
-                >
-                  {/* Decorative Glow */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none" />
-                  
-                  <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Sparkles className="w-8 h-8 text-purple-400" />
-                  </div>
-
-                  <div className="space-y-3 mb-10">
-                    <h3 className="text-2xl font-serif italic text-white leading-tight">
-                      {messages.length === 0 ? "Aapki baaton ka intezar hai." : "Main kab se sunne ke liye rukka tha."}
-                    </h3>
-                    <p className="text-sm text-slate-400 font-serif leading-relaxed px-4">
-                      {messages.length === 0 
-                        ? "Koi aisi baat jo aap kehna chahte hon? Main yahan hoon." 
-                        : "Humari pichli baat mujhe yaad hai. Kya wahin se aage badhein ya koi nayi baatchit shuru karein?"}
-                    </p>
-                  </div>
-
-                  <div className="space-y-4">
-                    <motion.button 
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => setShowNudge(false)}
-                      className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-medium shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all"
-                    >
-                      Haan, wahin se aage badhte hain
-                    </motion.button>
-                    
-                    <button 
-                      onClick={handleStartNewSession}
-                      className="w-full py-3 text-white/60 hover:text-white text-xs font-medium transition-all"
-                    >
-                      Nayi baatchit shuru karein
-                    </button>
-                  </div>
-
-                  <button 
-                    onClick={() => setShowNudge(false)}
-                    className="absolute top-6 right-6 text-white/20 hover:text-white transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                </motion.div>
-              </div>
             )}
           </AnimatePresence>
 
