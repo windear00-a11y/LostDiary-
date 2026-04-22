@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Menu, Book, MessageSquare, PenLine, X, Sparkles, Plus } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { Menu, Book, MessageSquare, PenLine, X, Sparkles, Plus, BookOpen, User } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
 import { SideDrawer } from './SideDrawer';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUIStore } from '@/lib/store/use-ui-store';
 
 export const Header = () => {
+  const router = useRouter();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const { activeView, setActiveView, isInputFocused } = useUIStore();
 
