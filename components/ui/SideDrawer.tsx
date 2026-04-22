@@ -134,10 +134,12 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
               {/* Primary Navigation Grid (Bento Small Cards) */}
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { id: 'chat', label: 'Chat', icon: MessageSquare, color: 'text-blue-400', bg: 'bg-blue-400/5' },
-                  { id: 'journal', label: 'Journal', icon: PenLine, color: 'text-amber-400', bg: 'bg-amber-400/5' },
-                  { id: 'story', label: 'LifeBook', icon: BookOpen, color: 'text-emerald-400', bg: 'bg-emerald-400/5' },
-                  { id: 'library', label: 'Library', icon: Search, color: 'text-purple-400', bg: 'bg-purple-400/5', route: '/library' },
+                  { id: 'chat', label: 'Input', icon: MessageSquare, color: 'text-blue-400', bg: 'bg-blue-400/5' },
+                  { id: 'journal', label: 'Output', icon: PenLine, color: 'text-amber-400', bg: 'bg-amber-400/5' },
+                  { id: 'story', label: 'Legacy', icon: BookOpen, color: 'text-emerald-400', bg: 'bg-emerald-400/5' },
+                  { id: 'library', label: 'Publish', icon: BookOpen, color: 'text-purple-400', bg: 'bg-purple-400/5', route: '/library' },
+                  { id: 'profile', label: 'Engage', icon: User, color: 'text-rose-400', bg: 'bg-rose-400/5', route: '/profile' },
+                  { id: 'bridge', label: 'Connect', icon: Heart, color: 'text-cyan-400', bg: 'bg-cyan-400/5', route: '/profile' },
                 ].map((nav) => (
                   <motion.button
                     key={nav.id}

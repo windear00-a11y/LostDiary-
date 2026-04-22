@@ -238,8 +238,8 @@ export const ChatInterface = () => {
         className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-40 pb-20 transition-all duration-700`}
       >
         <div className={`max-w-2xl mx-auto space-y-8 min-h-full flex flex-col pt-10 transition-all duration-700 
-          ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'} 
-          ${showNudge ? 'blur-2xl scale-[0.98] opacity-20 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
+          ${isInputFocused ? 'opacity-30 blur-[0.5px]' : 'opacity-100'} 
+          ${showNudge ? 'blur-sm scale-[0.99] opacity-40 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
         >
           {/* Privacy Trust Signal */}
           <div className="flex flex-col items-center justify-center space-y-2 mb-4 opacity-40 select-none">
@@ -290,7 +290,7 @@ export const ChatInterface = () => {
           {/* Nudge / Motivation UI - Emotional Decision Point */}
           <AnimatePresence>
             {showNudge && (
-              <div className="fixed inset-0 z-40 flex items-center justify-center p-6 bg-neutral-950/20 backdrop-blur-sm">
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-neutral-950/80 backdrop-blur-sm">
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}

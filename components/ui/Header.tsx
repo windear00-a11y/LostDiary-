@@ -13,9 +13,9 @@ export const Header = () => {
   const { activeView, setActiveView, isInputFocused } = useUIStore();
 
   const navItems = [
-    { id: 'chat', label: 'Chat', icon: MessageSquare },
-    { id: 'journal', label: 'Journal', icon: PenLine },
-    { id: 'story', label: 'Story', icon: Book },
+    { id: 'chat', label: 'Input', icon: MessageSquare },
+    { id: 'journal', label: 'Output', icon: PenLine },
+    { id: 'story', label: 'Legacy', icon: Book },
   ];
 
   return (
