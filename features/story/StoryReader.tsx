@@ -143,6 +143,15 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               transition={{ delay: 0.5, duration: 1 }}
               className="max-w-2xl space-y-12 relative z-10"
             >
+              {/* Back Button for Cover Stage */}
+              <button 
+                onClick={onBack}
+                className="absolute -top-32 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-slate-400 hover:text-indigo-500 transition-all opacity-60 hover:opacity-100"
+              >
+                <ArrowLeft className="w-3 h-3" />
+                Exit Sanctuary
+              </button>
+
               <div className="flex flex-col items-center gap-6">
                 <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center">
                    <BookOpen className="w-6 h-6 text-indigo-500" />
@@ -186,6 +195,15 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
             className="fixed inset-0 z-[110] bg-[#FDFCF8] dark:bg-[#0A0A0A] overflow-y-auto px-6 py-24 md:py-32"
           >
             <div className="max-w-3xl mx-auto">
+              {/* Back Button for Index Stage */}
+              <button 
+                onClick={onBack}
+                className="mb-8 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-slate-400 hover:text-indigo-500 transition-all group"
+              >
+                <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
+                Return to Sanctuary
+              </button>
+
               {/* Progress Header */}
               <div className="mb-16 flex flex-col items-center">
                  <div className="w-full max-w-xs h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden mb-4">

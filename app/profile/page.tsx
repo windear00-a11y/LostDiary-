@@ -14,11 +14,15 @@ import { SanctuaryMirror } from '@/components/profile/SanctuaryMirror';
 import { AuthorHeartbeat } from '@/components/profile/AuthorHeartbeat';
 import { PrivacyTrustCenter } from '@/components/profile/PrivacyTrustCenter';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
+import { useUIStore } from '@/lib/store/use-ui-store';
 import Image from 'next/image';
 
 export default function ProfilePage() {
   const ai = getGenAI();
   const { user, signOut } = useAuth();
+  const router = useRouter();
+  const { setActiveView } = useUIStore();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +44,7 @@ export default function ProfilePage() {
       await coreService.requestAccountDeletion(user.id);
       setShowDeleteModal(false);
       await signOut();
-      window.location.href = '/';
+      router.push('/');
     } catch (e) {
       console.error(e);
       setError("Failed to schedule deletion.");
@@ -496,7 +500,10 @@ export default function ProfilePage() {
                             <h3 className="text-xl font-serif font-bold text-gray-900 dark:text-white">Your Legacy</h3>
                          </div>
                          <button 
-                             onClick={() => window.location.href = '/features/story/reader'}
+                             onClick={() => {
+                               setActiveView('story');
+                               router.push('/home');
+                             }}
                              className="text-xs text-indigo-500 font-bold uppercase tracking-widest hover:underline"
                           >
                             Read Full Chronicle
@@ -506,7 +513,10 @@ export default function ProfilePage() {
                       {chapters.length === 0 ? (
                          <div className="p-10 bg-white/20 dark:bg-white/[0.02] border border-dashed border-gray-300 dark:border-white/10 rounded-[32px] text-center">
                             <p className="text-sm text-gray-500 font-serif italic">The book of your soul remains unauthored.</p>
-                            <button onClick={() => window.location.href = '/diary'} className="mt-4 text-xs text-indigo-500 font-bold uppercase tracking-widest hover:underline">Begin Writing</button>
+                            <button onClick={() => {
+                               setActiveView('journal');
+                               router.push('/home');
+                             }} className="mt-4 text-xs text-indigo-500 font-bold uppercase tracking-widest hover:underline">Begin Writing</button>
                          </div>
                       ) : (
                          <div className="grid grid-cols-1 gap-4">

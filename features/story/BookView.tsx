@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, ArrowLeft } from 'lucide-react';
+import { BookOpen, ArrowLeft, X } from 'lucide-react';
 import { coreService, Chapter, Volume } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useAuth } from '@/components/auth/auth-provider';
@@ -123,7 +123,13 @@ export const BookView = () => {
 
   if (chapters.length === 0) {
     return (
-      <div className="max-w-[800px] mx-auto pt-32 pb-48 px-10">
+      <div className="max-w-[800px] mx-auto pt-32 pb-48 px-10 relative">
+        <button 
+          onClick={() => setActiveView('chat')}
+          className="absolute top-8 left-10 p-2 hover:bg-white/5 rounded-full transition-colors text-neutral-400 hover:text-white"
+        >
+          <X className="w-6 h-6" />
+        </button>
         <div className="text-center space-y-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
