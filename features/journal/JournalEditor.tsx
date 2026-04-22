@@ -13,6 +13,7 @@ import { authService } from '@/lib/services/auth-service';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { useSearchParams } from 'next/navigation';
 import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
+import { toast } from 'sonner';
 
 export const JournalEditor = () => {
   const { setActiveView, selectedJournalContent, setSelectedJournalContent, language } = useUIStore();
@@ -107,6 +108,7 @@ export const JournalEditor = () => {
 
       await coreService.saveDiaryEntry(user.id, fullContent, { language, inspired_by: inspiredBy });
       setSaveStatus('success');
+      toast.success("Reflection woven into your legacy.");
       // No more auto-redirect to chat. Stay on page for "Suqoon".
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error) {

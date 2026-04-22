@@ -6,6 +6,7 @@ import { Globe, Heart, BookOpen, User, Droplets, Leaf, Send, Sparkles, Handshake
 import { Header } from '@/components/ui/Header';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface LibraryStory {
   id: string;
@@ -31,7 +32,6 @@ export default function GlobalLibraryPage() {
   const [selectedStory, setSelectedStory] = useState<LibraryStory | null>(null);
   const [planeMessage, setPlaneMessage] = useState('');
   const [sendingPlane, setSendingPlane] = useState(false);
-  const [toastMessage, setToastMessage] = useState<{title: string, desc: string, type: 'success'|'error'} | null>(null);
   // Track optimistically ahsas paragraphs: { [storyId]: Set<number> }
   const [localAhsas, setLocalAhsas] = useState<Record<string, Set<number>>>({});
 
@@ -59,11 +59,6 @@ export default function GlobalLibraryPage() {
     fetchFeed();
   }, []);
 
-  const showToast = (title: string, desc: string, type: 'success' | 'error') => {
-    setToastMessage({ title, desc, type });
-    setTimeout(() => setToastMessage(null), 5000);
-  };
-
   const handleSendPlane = async () => {
     if (!selectedStory || !planeMessage.trim() || sendingPlane) return;
     setSendingPlane(true);
@@ -77,17 +72,17 @@ export default function GlobalLibraryPage() {
       
       if (!res.ok) {
         if (data.status === 'burned') {
-          showToast('Plane Destroyed 🔥', data.message, 'error');
+          toast.error("Hand-woven paper plane ignited.", { description: data.message });
         } else {
-          showToast('Warning', data.error || 'Failed to send plane', 'error');
+          toast.error("Warning", { description: data.error || 'Failed to send plane' });
         }
       } else {
-        showToast('Plane Delivered ✈️', 'Your invisible thread has been cast to the author.', 'success');
+        toast.success("Plane Delivered", { description: 'Your invisible thread has been cast to the author.' });
         setPlaneModalOpen(false);
         setPlaneMessage('');
       }
     } catch (e) {
-      showToast('Warning', 'A storm destroyed your plane before it reached them.', 'error');
+      toast.error("Warning", { description: 'A storm destroyed your plane before it reached them.' });
     } finally {
       setSendingPlane(false);
     }
@@ -102,7 +97,7 @@ export default function GlobalLibraryPage() {
       });
       
       if (res.ok) {
-         showToast('Energy Sent 🌿', `The author will feel your resonance.`, 'success');
+         toast.success("Energy Sent", { description: "The author will feel your resonance." });
          // Optimistically update
          setStories(prev => prev.map(s => {
             if (s.id === storyId) return { ...s, likes_count: (s.likes_count || 0) + 1 };
@@ -125,9 +120,9 @@ export default function GlobalLibraryPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ storyId, paragraphIndex })
         });
-        showToast('Anchor Dropped ⚓', 'Your rest point is saved.', 'success');
+        toast.success("Anchor Dropped", { description: "Your rest point is saved." });
     } catch (e) {
-        showToast('Warning', 'Failed to drop anchor.', 'error');
+        toast.error("Warning", { description: "Failed to drop anchor." });
     }
   };
 
@@ -139,9 +134,13 @@ export default function GlobalLibraryPage() {
             body: JSON.stringify({ storyId })
         });
         const data = await res.json();
-        showToast(data.action === 'added' ? 'Held Close 📦' : 'Released from Treasury', data.action === 'added' ? 'Added to your Treasury.' : 'Removed from Treasury.', 'success');
+        if (data.action === 'added') {
+          toast.success("Held Close", { description: "Story added to your Treasury." });
+        } else {
+          toast.info("Released", { description: "Story removed from your Treasury." });
+        }
     } catch (e) {
-        showToast('Warning', 'Failed to update treasury.', 'error');
+        toast.error("Warning", { description: "Failed to update treasury." });
     }
   };
 
@@ -176,21 +175,6 @@ export default function GlobalLibraryPage() {
       </div>
 
       <AnimatePresence>
-        {toastMessage && (
-
-          <motion.div 
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
-            className={`fixed top-24 left-1/2 -translate-x-1/2 z-[100] px-6 py-4 rounded-full shadow-2xl flex items-center gap-3 font-serif backdrop-blur-xl border ${toastMessage.type === 'error' ? 'bg-rose-900 border-rose-700 text-white' : 'bg-emerald-900 border-emerald-700 text-white'}`}
-          >
-             <div>
-               <h4 className="font-bold text-sm">{toastMessage.title}</h4>
-               <p className="text-xs opacity-80">{toastMessage.desc}</p>
-             </div>
-          </motion.div>
-        )}
-
         {planeModalOpen && selectedStory && (
           <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
              <motion.div 

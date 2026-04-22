@@ -13,6 +13,7 @@ import { Header } from '@/components/ui/Header';
 import { SanctuaryMirror } from '@/components/profile/SanctuaryMirror';
 import { AuthorHeartbeat } from '@/components/profile/AuthorHeartbeat';
 import { PrivacyTrustCenter } from '@/components/profile/PrivacyTrustCenter';
+import { toast } from 'sonner';
 import Image from 'next/image';
 
 export default function ProfilePage() {
@@ -102,6 +103,7 @@ export default function ProfilePage() {
       });
       setProfile(updated);
       setIsEditing(false);
+      toast.success("Identity updated within the vault.");
     } catch (error: any) {
       console.error("Error saving profile:", error);
       setError(error.message || "Failed to save changes. Pen Name might heavily conflict, try another.");
@@ -117,6 +119,7 @@ export default function ProfilePage() {
         intelligence_profile: updatedIntel
       });
       setProfile(updated);
+      toast.info("Mirror reflection refined.");
     } catch (error) {
       console.error("Error updating intelligence:", error);
       throw error;
@@ -183,6 +186,7 @@ export default function ProfilePage() {
           personality_summary: visualPrompt
         });
         setProfile(updated);
+        toast.success("AI Avatar manifested from your thoughts.");
       }
     } catch (error) {
       console.error("Error generating avatar:", error);
