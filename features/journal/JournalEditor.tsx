@@ -213,7 +213,7 @@ export const JournalEditor = () => {
       </div>
 
       {/* Metadata Stats */}
-      <div className={`px-6 pt-8 pb-4 max-w-2xl mx-auto w-full transition-all duration-700 ${showNudge ? 'blur-2xl opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
+      <div className={`px-6 pt-8 pb-4 max-w-2xl mx-auto w-full transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
         <input 
           type="text"
           value={title}
@@ -234,7 +234,7 @@ export const JournalEditor = () => {
       </div>
 
       {/* Editor Area */}
-      <div className={`flex-1 px-6 max-w-2xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-32 relative transition-all duration-700 ${showNudge ? 'blur-2xl opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
+      <div className={`flex-1 px-6 max-w-2xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-32 relative transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
         <textarea
           ref={contentRef}
           value={content}
