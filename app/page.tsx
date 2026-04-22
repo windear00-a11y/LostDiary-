@@ -106,8 +106,13 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 text-center text-slate-600 text-sm">
-        <p>© 2026 WinDear. All rights reserved.</p>
+      <footer className="py-12 text-center space-y-4">
+        <div className="flex items-center justify-center gap-6 text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+          <a href="/legal/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+          <span>•</span>
+          <a href="/legal/terms" className="hover:text-white transition-colors">Terms of Use</a>
+        </div>
+        <p className="text-slate-600 text-[10px] uppercase tracking-widest">© 2026 WinDear. All rights reserved.</p>
       </footer>
     </main>
   );

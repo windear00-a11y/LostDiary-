@@ -6,6 +6,8 @@ export interface ChatSession {
   id: string;
   user_id: string;
   title: string;
+  processing_status?: 'woven' | 'saved' | 'observed' | 'pending';
+  impact_percentage?: number;
   created_at: string;
   updated_at: string;
 }
@@ -22,14 +24,31 @@ export interface ChatMessage {
   created_at: string;
   event_score?: number;
   status?: 'sending' | 'saved' | 'error';
+  processing_status?: 'woven' | 'saved' | 'observed' | 'pending';
 }
 
 // --- Chapter Service ---
+export interface Volume {
+  id: string;
+  user_id: string;
+  volume_number: number;
+  title: string;
+  prologue: string | null;
+  epigraph: string | null;
+  aura: string | null;
+  epilogue: string | null;
+  status: 'ongoing' | 'completed';
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Chapter {
   id: string;
   user_id: string;
+  volume_id?: string;
   title: string;
   content: string;
+  is_sealed: boolean;
   created_at: string;
 }
 
@@ -37,20 +56,44 @@ export interface DiaryEntry {
   id: string;
   user_id: string;
   content: string;
+  processing_status?: 'woven' | 'saved' | 'observed' | 'pending';
+  impact_percentage?: number;
   created_at: string;
   updated_at: string;
+}
+
+// --- User Intelligence Profile ---
+export interface IntelligenceProfile {
+  basic_profile: Record<string, any>;
+  thinking_style: Record<string, any>;
+  emotional_state: Record<string, any>;
+  interests_goals: Record<string, any>;
+  behavior_patterns: Record<string, any>;
+  communication_style: Record<string, any>;
+  sensitive_insights: Record<string, any>;
+  last_updated?: string;
+  source_weights?: {
+    chat: number;
+    diary: number;
+  };
 }
 
 // --- Profile Service ---
 export interface UserProfile {
   id: string;
   display_name: string | null;
+  pen_name: string | null;
+  pen_name_tag: string | null;
   avatar_url: string | null;
   bio: string | null;
   personality_summary: string | null;
+  intelligence_profile: IntelligenceProfile | null;
   preferred_language: string;
   responsiveness_level: number; // 0-1
   emotional_sensitivity: number; // 0-1
+  is_pending_deletion?: boolean;
+  deletion_scheduled_at?: string | null;
+
   engagement_level: number; // 0-1
   interaction_frequency: number;
   last_response_at: string;
@@ -198,14 +241,37 @@ export const coreService = {
   },
 
   // Chapter
-  async fetchChapters(userId: string): Promise<Chapter[]> {
+  async fetchVolumes(userId: string): Promise<Volume[]> {
     const supabase = getSupabase();
     if (!supabase) return [];
     const { data, error } = await supabase
+      .from('volumes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('volume_number', { ascending: true });
+    
+    if (error) {
+      console.error("Error fetching volumes:", error);
+      return [];
+    }
+    return data || [];
+  },
+
+  async fetchChapters(userId: string, volumeId?: string): Promise<Chapter[]> {
+    const supabase = getSupabase();
+    if (!supabase) return [];
+    
+    let query = supabase
       .from('chapters')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: true });
+
+    if (volumeId) {
+      query = query.eq('volume_id', volumeId);
+    }
+
+    const { data, error } = await query;
 
     if (error) {
       console.error("Error fetching chapters:", error);
@@ -218,18 +284,32 @@ export const coreService = {
     const supabase = getSupabase();
     if (!supabase) return;
 
-    this.generateTitle(content).then(async (title) => {
-      try {
-        await supabase.from('chapters').insert({
-          user_id: userId,
-          title: title || 'New Chapter',
-          content: content,
-          created_at: new Date().toISOString(),
-        });
-      } catch (error) {
-        console.error("Error auto-saving chapter:", error);
+    try {
+      // Find ongoing volume
+      const { data: vol } = await supabase.from('volumes').select('id').eq('user_id', userId).eq('status', 'ongoing').maybeSingle();
+      let volumeId = vol?.id;
+
+      if (!volumeId) {
+        const { data: lastVol } = await supabase.from('volumes').select('volume_number').eq('user_id', userId).order('volume_number', { ascending: false }).limit(1).maybeSingle();
+        const nextNum = (lastVol?.volume_number || 0) + 1;
+        const { data: newVol } = await supabase.from('volumes').insert({
+          user_id: userId, volume_number: nextNum, title: 'Chapters of the Heart', status: 'ongoing'
+        }).select().single();
+        volumeId = newVol?.id;
       }
-    });
+
+      const title = await this.generateTitle(content);
+      
+      await supabase.from('chapters').insert({
+        user_id: userId,
+        volume_id: volumeId,
+        title: title || 'New Chapter',
+        content: content,
+        created_at: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error auto-saving chapter:", error);
+    }
   },
 
   async generateTitle(content: string): Promise<string | null> {
@@ -294,9 +374,21 @@ export const coreService = {
       const defaultProfile = {
         id: userId,
         display_name: null,
+        pen_name: null,
+        pen_name_tag: null,
         avatar_url: null,
         bio: null,
         personality_summary: null,
+        intelligence_profile: {
+          basic_profile: {},
+          thinking_style: {},
+          emotional_state: {},
+          interests_goals: {},
+          behavior_patterns: {},
+          communication_style: {},
+          sensitive_insights: {},
+          source_weights: { chat: 0.3, diary: 0.7 }
+        },
         preferred_language: 'en',
         responsiveness_level: 0.5,
         emotional_sensitivity: 0.5,
@@ -320,6 +412,41 @@ export const coreService = {
   async updateProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not initialized");
+    
+    // Auto-generate tag if a new pen_name is provided
+    if ('pen_name' in updates && updates.pen_name) {
+      const current = await this.getProfile(userId);
+      // Only generate if pen name changed or tag is missing
+      if (current.pen_name !== updates.pen_name || !current.pen_name_tag) {
+        let success = false;
+        let finalData = null;
+        let attempts = 0;
+        
+        while (!success && attempts < 5) {
+          const randomTag = Math.floor(1000 + Math.random() * 9000).toString(); // #1000 to #9999
+          const { data, error } = await supabase
+            .from('users')
+            .update({ ...updates, pen_name_tag: randomTag, updated_at: new Date().toISOString() })
+            .eq('id', userId)
+            .select()
+            .single();
+            
+          if (error) {
+             if (error.code === '23505') { // Postgres Unique Violation Code
+                attempts++;
+             } else {
+                throw error;
+             }
+          } else {
+             success = true;
+             finalData = data;
+          }
+        }
+        if (!success) throw new Error("Could not generate a unique Pen Name tag. Please try again.");
+        return finalData;
+      }
+    }
+
     const { data, error } = await supabase
       .from('users')
       .update({ ...updates, updated_at: new Date().toISOString() })
@@ -370,6 +497,24 @@ export const coreService = {
         engagement_level: newEngagementLevel,
         last_response_at: new Date().toISOString(),
       })
+      .eq('id', userId);
+  },
+
+  async requestAccountDeletion(userId: string): Promise<void> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
+    await supabase
+      .from('users')
+      .update({ is_pending_deletion: true, deletion_scheduled_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() })
+      .eq('id', userId);
+  },
+
+  async restoreAccount(userId: string): Promise<void> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
+    await supabase
+      .from('users')
+      .update({ is_pending_deletion: false, deletion_scheduled_at: null })
       .eq('id', userId);
   }
 };

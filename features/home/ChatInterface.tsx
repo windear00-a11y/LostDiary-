@@ -5,48 +5,121 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChatInput } from './ChatInput';
 import { generateStoryResponse } from '@/ai-core/ai-engine';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { User, Sparkles } from 'lucide-react';
-import { coreService } from '@/lib/services/core-service';
+import { User, Sparkles, X, Heart, Shield, Book } from 'lucide-react';
+import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
 
 export interface ChatMessage {
   id: string;
   role: 'user' | 'ai' | 'diary';
   content: string;
   created_at: string;
+  processing_status?: 'woven' | 'saved' | 'observed' | 'pending';
 }
 
 export const ChatInterface = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [activeSession, setActiveSession] = useState<ChatSession | null>(null);
+  const [showNudge, setShowNudge] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { setInputFocused, isInputFocused, language } = useUIStore();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const sessionId = searchParams.get('session');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch messages on mount or session change
+  const handleScroll = () => {
+    setIsScrolling(true);
+    if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    scrollTimeoutRef.current = setTimeout(() => setIsScrolling(false), 1500);
+  };
+
+  // Fetch or find session on mount
   useEffect(() => {
-    const loadMessages = async () => {
+    const initializeSession = async () => {
       const user = await authService.getUser();
-      if (user) {
-        try {
-          const history = await coreService.fetchMessages(user.id, sessionId);
-          // Map backend roles to frontend roles
-          const mappedMessages = history.map(m => ({
+      if (!user) return;
+
+      try {
+        let targetSessionId = sessionId;
+
+        // 1. If no session in URL, find the latest one
+        if (!targetSessionId) {
+          const sessions = await coreService.fetchSessions(user.id);
+          if (sessions.length > 0) {
+            targetSessionId = sessions[0].id;
+            // Update URL silently or just set state
+            router.replace(`/home?session=${targetSessionId}`);
+          } else {
+            // No sessions at all? Create a default one
+            const newSession = await coreService.createSession(user.id, "First entry");
+            targetSessionId = newSession.id;
+            router.replace(`/home?session=${targetSessionId}`);
+          }
+        }
+
+        // 2. Load messages for the determined session
+        if (targetSessionId) {
+          const history = await coreService.fetchMessages(user.id, targetSessionId);
+          const mappedMessages: ChatMessage[] = history.map(m => ({
             id: m.id,
             role: m.role as 'user' | 'diary',
             content: m.content || "",
-            created_at: m.created_at
+            created_at: m.created_at,
+            processing_status: m.processing_status
           }));
           setMessages(mappedMessages);
-        } catch (error) {
-          console.error("Failed to fetch messages:", error);
+
+          // 3. Check for inactivity nudge (2 hours)
+          if (mappedMessages.length > 0) {
+            const lastMsg = mappedMessages[mappedMessages.length - 1];
+            const lastTime = new Date(lastMsg.created_at).getTime();
+            const now = new Date().getTime();
+            const hoursPassed = (now - lastTime) / (1000 * 60 * 60);
+
+            if (hoursPassed > 2) {
+              setShowNudge(true);
+            }
+          } else {
+            // Empty session, show greeting
+            setShowNudge(true);
+          }
         }
+      } catch (error) {
+        console.error("Session initialization failed:", error);
       }
     };
-    loadMessages();
-  }, [sessionId]);
+
+    initializeSession();
+  }, [sessionId, router]);
+
+  const starters = [
+    { text: "Aaj mera dimag thoda uljha hai, clarity chahiye.", icon: "🧠" },
+    { text: "Mujhe ek decision lena hai, kya tum sunoge?", icon: "⚖️" },
+    { text: "Main aaj thoda low hoon, let's talk.", icon: "🤝" },
+    { text: "Mujhe meri hi kisi purani growth ki yaad dilao.", icon: "🌱" },
+    { text: "Aaj ka din 3 anokhe shabdon mein batao?", icon: "🎭" },
+  ];
+
+  const handleStartNewSession = async () => {
+    const user = await authService.getUser();
+    if (!user) return;
+    
+    try {
+      const newSession = await coreService.createSession(user.id, `Moment ${new Date().toLocaleDateString()}`);
+      router.push(`/home?session=${newSession.id}`);
+      setShowNudge(false);
+      setMessages([]);
+      // This will trigger the empty state view with starters
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   // Auto-scroll to bottom
   const scrollToBottom = () => {
@@ -64,8 +137,22 @@ export const ChatInterface = () => {
 
   const handleSendMessage = async (input: { type: 'text'; content: string }) => {
     const trimmedContent = input.content.trim();
+    if (!trimmedContent || isThinking) return;
+
     const user = await authService.getUser();
-    if (!trimmedContent || isThinking || !user) return;
+    
+    // Guest Quota: Limit to 3 messages
+    if (!user) {
+       const guestCount = parseInt(localStorage.getItem('guest_msg_count') || '0');
+       if (guestCount >= 3) {
+         setShowAuthModal(true);
+         return;
+       }
+       localStorage.setItem('guest_msg_count', (guestCount + 1).toString());
+    }
+
+    // Auto-hide nudge and starters when active conversation begins
+    setShowNudge(false);
 
     // 1. Optimistic Update (Show user message instantly)
     const userMsg: ChatMessage = {
@@ -97,7 +184,6 @@ export const ChatInterface = () => {
       });
 
       // 3. Update messages using the direct response from API
-      // result.aiResponse contains the companion's reply
       if (result.aiResponse) {
         setMessages(prev => prev.map(m => 
           m.id === aiTempId ? { 
@@ -108,15 +194,18 @@ export const ChatInterface = () => {
           } : m
         ));
       } else {
-        // Fallback if AI didn't respond (should be rare now)
         setMessages(prev => prev.map(m => 
-          m.id === aiTempId ? { ...m, content: "I've saved that for you.", role: 'diary' } : m
+          m.id === aiTempId ? { ...m, content: "I've saved that for you. Tell me more when you're ready.", role: 'diary' } : m
         ));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to sync message with backend:", error);
+      const errorMsg = error.message?.includes('API Key') 
+        ? "AI configuration missing. Please check your API keys."
+        : "Connection pause. Your memory is safe, but I couldn't reflect right now.";
+        
       setMessages(prev => prev.map(m => 
-        m.id === aiTempId ? { ...m, content: "The diary is quiet, but your memory is safe." } : m
+        m.id === aiTempId ? { ...m, content: errorMsg, role: 'diary' } : m
       ));
     } finally {
       setIsThinking(false);
@@ -125,12 +214,137 @@ export const ChatInterface = () => {
 
   return (
     <div className="flex flex-col h-full bg-neutral-950 text-white relative overflow-hidden font-sans">
+      <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      {/* Header Overlay */}
+      <div className="absolute top-0 inset-x-0 h-20 flex items-center justify-between px-6 z-50">
+        <div className="w-10"></div> {/* Spacer for symmetry */}
+        <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">Sanctuary</span>
+        <button 
+           onClick={() => router.push('/diary')}
+           className="p-2 text-white/40 hover:text-white transition-colors"
+           title="Write a new entry"
+        >
+           <Book className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Top Gradient Mask for smooth scrolling transition */}
+      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-neutral-950 via-neutral-950/90 to-transparent z-40 pointer-events-none" />
+
       {/* Messages Container */}
       <div 
         ref={scrollRef}
-        className={`flex-1 overflow-y-auto px-4 pt-24 pb-32 space-y-6 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'}`}
+        onScroll={handleScroll}
+        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-40 pb-20 transition-all duration-700`}
       >
-        <div className="max-w-2xl mx-auto space-y-8">
+        <div className={`max-w-2xl mx-auto space-y-8 min-h-full flex flex-col pt-10 transition-all duration-700 
+          ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'} 
+          ${showNudge ? 'blur-2xl scale-[0.98] opacity-20 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
+        >
+          {/* Privacy Trust Signal */}
+          <div className="flex flex-col items-center justify-center space-y-2 mb-4 opacity-40 select-none">
+             <div className="flex items-center gap-2">
+                <Shield className="w-3 h-3 text-emerald-500" />
+                <span className="text-[10px] font-mono uppercase tracking-[0.2em]">End-to-End Soul Privacy</span>
+             </div>
+             <p className="text-[9px] font-serif italic text-center max-w-[200px]">
+                Your reflections are sealed within your unique neural resonance. WinDear never logs human-readable data.
+             </p>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {messages.length === 0 && !showNudge && (
+              <motion.div 
+                key="empty-suggestions"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 0.6, scale: 1 }}
+                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                transition={{ duration: 0.4, ease: "circOut" }}
+                className="flex-1 flex flex-col items-center justify-center space-y-8"
+              >
+                <motion.div 
+                  animate={{ y: [0, -5, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center"
+                >
+                   <Sparkles className="w-8 h-8 text-white/20" />
+                </motion.div>
+                <h2 className="text-xl font-serif italic text-white/40">Silence is a blank page...</h2>
+                <div className="flex flex-wrap items-center justify-center gap-3 max-w-sm">
+                  {starters.map((starter, i) => (
+                    <motion.button
+                      key={i}
+                      whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.08)" }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => handleSendMessage({ type: 'text', content: starter.text })}
+                      className="px-4 py-2 bg-neutral-900/50 border border-white/5 rounded-full text-xs text-white/50 transition-all hover:text-white"
+                    >
+                      {starter.icon} {starter.text}
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Nudge / Motivation UI - Emotional Decision Point */}
+          <AnimatePresence>
+            {showNudge && (
+              <div className="fixed inset-0 z-40 flex items-center justify-center p-6 bg-neutral-950/20 backdrop-blur-sm">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: -20 }}
+                  transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+                  className="bg-neutral-900/80 border border-white/10 rounded-[32px] p-8 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl relative overflow-hidden"
+                >
+                  {/* Decorative Glow */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none" />
+                  
+                  <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Sparkles className="w-8 h-8 text-purple-400" />
+                  </div>
+
+                  <div className="space-y-3 mb-10">
+                    <h3 className="text-2xl font-serif italic text-white leading-tight">
+                      {messages.length === 0 ? "Aapki baaton ka intezar hai." : "Main kab se sunne ke liye rukka tha."}
+                    </h3>
+                    <p className="text-sm text-slate-400 font-serif leading-relaxed px-4">
+                      {messages.length === 0 
+                        ? "Koi aisi baat jo aap kehna chahte hon? Main yahan hoon." 
+                        : "Humari pichli baat mujhe yaad hai. Kya wahin se aage badhein ya koi nayi baatchit shuru karein?"}
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowNudge(false)}
+                      className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-medium shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all"
+                    >
+                      Haan, wahin se aage badhte hain
+                    </motion.button>
+                    
+                    <button 
+                      onClick={handleStartNewSession}
+                      className="w-full py-3 text-white/60 hover:text-white text-xs font-medium transition-all"
+                    >
+                      Nayi baatchit shuru karein
+                    </button>
+                  </div>
+
+                  <button 
+                    onClick={() => setShowNudge(false)}
+                    className="absolute top-6 right-6 text-white/20 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
           {messages.map((msg) => {
             const isUser = msg.role === 'user';
             const isThinkingMsg = msg.content === 'Thinking...';
@@ -182,7 +396,10 @@ export const ChatInterface = () => {
       </div>
 
       {/* Sticky Bottom Input Section */}
-      <div className="sticky bottom-0 w-full z-20 px-4 pb-[env(safe-area-inset-bottom)] bg-neutral-950/80 backdrop-blur-sm">
+      <div className="fixed bottom-0 left-0 w-full z-50 px-4 pb-[env(safe-area-inset-bottom)] bg-neutral-950/90 backdrop-blur-md border-t border-white/5">
+        <div className="text-center pb-2">
+            <p className="text-[10px] text-white/20 italic font-serif">AI processing is transient & ephemeral for your privacy.</p>
+        </div>
         <div className={`pt-2 pb-6 max-w-3xl mx-auto transition-all duration-500 ${isInputFocused ? 'pb-8 scale-[1.01]' : 'pb-4'}`}>
           <ChatInput 
             onSendMessage={handleSendMessage} 

@@ -4,6 +4,7 @@ import { useAuth } from './auth-provider';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
+import { coreService } from '@/lib/services/core-service';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -11,9 +12,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   // Define paths that require authentication
-  const isAppPage = pathname === '/home' || 
-                    pathname.startsWith('/home/') || 
-                    pathname === '/profile' || 
+  const isAppPage = pathname === '/profile' ||
                     pathname === '/updates' ||
                     pathname === '/story';
   
@@ -22,15 +21,22 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const isLandingPage = pathname === '/';
 
   useEffect(() => {
-    if (!loading) {
-      if (!user && isAppPage) {
-        // Redirection once if not logged in and trying to access app
-        router.push('/');
-      } else if (user && (isAuthPage || isLandingPage)) {
-        // Redirection once if logged in and trying to access auth/landing
-        router.push('/home');
+    const checkState = async () => {
+      if (!loading) {
+        if (!user && isAppPage) {
+          router.push('/');
+        } else if (user) {
+          // Check for pending deletion
+          const profile = await coreService.getProfile(user.id);
+          if (profile.is_pending_deletion && pathname !== '/auth/restore') {
+            router.push('/auth/restore');
+          } else if (isAuthPage || isLandingPage) {
+            router.push('/home');
+          }
+        }
       }
-    }
+    };
+    checkState();
   }, [user, loading, pathname, router, isAppPage, isAuthPage, isLandingPage]);
 
   // Handle Loading States and Prevent Flicker

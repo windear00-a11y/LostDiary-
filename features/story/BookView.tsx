@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
-import { BookOpen } from 'lucide-react';
-import { coreService, Chapter } from '@/lib/services/core-service';
+import { motion, AnimatePresence } from 'motion/react';
+import { BookOpen, ArrowLeft } from 'lucide-react';
+import { coreService, Chapter, Volume } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useAuth } from '@/components/auth/auth-provider';
 import { BookRenderer } from './BookRenderer';
@@ -14,6 +14,7 @@ import { analyzeEntries } from '@/ai-core/pattern-detector';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { LifeBookCover } from './LifeBookCover';
+import { TableOfContents } from './TableOfContents';
 
 const SkeletonLoader = () => (
   <div className="max-w-[700px] mx-auto pt-40 px-6">
@@ -48,12 +49,13 @@ const GhostBook = () => (
 export const BookView = () => {
   const { user } = useAuth();
   const [chapters, setChapters] = useState<Chapter[]>([]);
+  const [volumes, setVolumes] = useState<Volume[]>([]);
   const [openingText, setOpeningText] = useState<string | null>(null);
   const [coverData, setCoverData] = useState<{ title: string; summary: string; aura: string } | null>(null);
-  const [showCover, setShowCover] = useState(true);
+  const [viewState, setViewState] = useState<'cover' | 'toc' | 'reader'>('cover');
+  const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [view, setView] = useState<'narrative' | 'insights'>('narrative');
   const { setActiveView } = useUIStore();
 
   useEffect(() => {
@@ -63,12 +65,14 @@ export const BookView = () => {
       try {
         const user = await authService.getUser();
         if (user) {
-          const [chaptersData, messagesData] = await Promise.all([
+          const [chaptersData, volumesData, messagesData] = await Promise.all([
             coreService.fetchChapters(user.id),
+            coreService.fetchVolumes(user.id),
             coreService.fetchMessages(user.id)
           ]);
           
           setChapters(chaptersData);
+          setVolumes(volumesData);
 
           // Generate dynamic opening
           if (chaptersData.length > 0) {
@@ -101,18 +105,6 @@ export const BookView = () => {
 
   const userDisplayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Soul';
 
-  if (chapters.length > 0 && showCover && coverData) {
-    return (
-      <div className="max-w-[1000px] mx-auto px-6 py-12">
-        <LifeBookCover 
-          data={coverData} 
-          userName={userDisplayName} 
-          onOpen={() => setShowCover(false)} 
-        />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-10 text-center">
@@ -129,94 +121,48 @@ export const BookView = () => {
     );
   }
 
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-      className="bg-transparent min-h-screen transition-colors duration-1000"
-    >
-      <div className="max-w-[800px] mx-auto pt-16 pb-48 px-10">
-        {/* Subtle View Toggle */}
-        <div className="flex justify-center mb-16">
-          <div className="inline-flex p-1 bg-gray-50 dark:bg-white/5 rounded-full border border-gray-100 dark:border-white/5">
-            <button
-              onClick={() => setView('narrative')}
-              className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
-                view === 'narrative' 
-                  ? 'bg-white dark:bg-[#2E2E2E] text-neutral-900 dark:text-neutral-100 shadow-sm' 
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              Narrative
-            </button>
-            {/* Reflections toggle disabled (Future feature) */}
-            {/*
-            <button
-              onClick={() => setView('insights')}
-              className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
-                view === 'insights' 
-                  ? 'bg-white dark:bg-[#2E2E2E] text-indigo-600 dark:text-indigo-400 shadow-sm' 
-                  : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              Reflections
-            </button>
-            */}
-          </div>
+  if (chapters.length === 0) {
+    return (
+      <div className="max-w-[800px] mx-auto pt-32 pb-48 px-10">
+        <div className="text-center space-y-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="w-20 h-20 bg-gray-50 dark:bg-[#1A1A1A] rounded-full flex items-center justify-center mx-auto mb-8 opacity-30"
+          >
+            <BookOpen className="w-8 h-8 text-gray-300" />
+          </motion.div>
+          <h2 className="text-4xl font-serif italic text-gray-400 dark:text-gray-600 tracking-tight">
+            Your story is waiting to be written...
+          </h2>
+          <p className="text-gray-300 dark:text-gray-600 max-w-sm mx-auto leading-relaxed font-serif italic">
+            जैसे-जैसे आप यादें साझा करेंगे, आपकी कहानी के पन्ने यहाँ खुद-ब-खुद जुड़ते जाएंगे।
+          </p>
         </div>
-
-        {chapters.length === 0 ? (
-          <div className="space-y-20">
-            <div className="text-center space-y-6">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-                className="w-20 h-20 bg-gray-50 dark:bg-[#1A1A1A] rounded-full flex items-center justify-center mx-auto mb-8 opacity-30"
-              >
-                <BookOpen className="w-8 h-8 text-gray-300" />
-              </motion.div>
-              <h2 className="text-4xl font-serif italic text-gray-400 dark:text-gray-600 tracking-tight">
-                Your story is waiting to be written...
-              </h2>
-              <p className="text-gray-300 dark:text-gray-600 max-w-sm mx-auto leading-relaxed font-serif italic">
-                जैसे-जैसे आप यादें साझा करेंगे, आपकी कहानी के पन्ने यहाँ खुद-ब-खुद जुड़ते जाएंगे।
-              </p>
-            </div>
-            
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <GhostBook />
-            </motion.div>
-          </div>
-        ) : (
-          <div className="space-y-24">
-            {/* Dynamic Opening/Foreword */}
-            {openingText && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center space-y-8 mb-32"
-              >
-                <div className="flex flex-col items-center gap-4">
-                  <div className="w-px h-16 bg-gradient-to-b from-transparent via-slate-200 dark:via-white/10 to-transparent" />
-                  <span className="text-[10px] uppercase tracking-[0.6em] text-slate-400 font-bold">The Foreword</span>
-                </div>
-                <h1 className="text-4xl md:text-5xl font-serif italic text-slate-900 dark:text-white leading-tight max-w-2xl mx-auto">
-                  &ldquo;{openingText}&rdquo;
-                </h1>
-                <div className="w-16 h-px bg-slate-200 dark:bg-white/10 mx-auto" />
-              </motion.div>
-            )}
-            
-            <StoryReader chapters={chapters} onBack={() => setActiveView('chat')} />
-          </div>
-        )}
+        
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="mt-20"
+        >
+          <GhostBook />
+        </motion.div>
       </div>
-    </motion.div>
+    );
+  }
+
+  return (
+    <div className="bg-transparent min-h-screen">
+      <StoryReader 
+        chapters={chapters} 
+        volumes={volumes}
+        onBack={() => setActiveView('chat')} 
+        initialChapterId={selectedChapterId}
+        coverData={coverData}
+        userName={userDisplayName}
+      />
+    </div>
   );
 };

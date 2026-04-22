@@ -4,6 +4,7 @@ import { AIOrchestrator } from "@/ai-core/ai-orchestrator";
 import { coreService } from "@/lib/services/core-service";
 import { PipelineController } from "@/ai-core/pipeline-controller";
 import { generateStoryResponse } from "@/ai-core/ai-engine";
+import { extractIntelligenceProfile } from "@/ai-core/intelligence-engine";
 
 export async function POST(req: Request) {
   try {
@@ -15,6 +16,12 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { role, type, content, media_url, metadata, user_id } = body;
+
+    // DoW / Rate Limit Payload protection
+    if (type === 'text' && content && content.length > 5000) {
+      return NextResponse.json({ error: 'Message payload too large. Please shorten your reflection.' }, { status: 413 });
+    }
+
     let { session_id } = body;
     const language = metadata?.language || 'en';
 
@@ -22,14 +29,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
     }
 
-    // STEP 1: Fetch user profile for context
+    // STEP 1: Fetch user profile for context, including intelligence_profile
     const profile = await coreService.getProfile(user_id, supabase);
     const orchestrator = new AIOrchestrator(apiKey, profile.personality_summary);
     const pipelineForAsync = new PipelineController(apiKey, profile.personality_summary);
 
     // --- SMART SESSION MANAGEMENT ---
+    // ...(omitted for brevity during fetch, handled implicitly via database)
     if (!session_id) {
-      // Find the most recent active session for this user
       const { data: recentSession } = await supabase
         .from('chat_sessions')
         .select('*')
@@ -42,22 +49,16 @@ export async function POST(req: Request) {
       twelveHoursAgo.setHours(twelveHoursAgo.getHours() - 12);
       
       if (recentSession && new Date(recentSession.updated_at) > twelveHoursAgo) {
-        // Continue the recent session
         session_id = recentSession.id;
       } else {
-        // Create a new session for a new 'moment' of the day
         const { data: newSession } = await supabase
           .from('chat_sessions')
-          .insert({ 
-            user_id, 
-            title: `Chapter: ${new Date().toLocaleDateString()}` 
-          })
+          .insert({ user_id, title: `Chapter: ${new Date().toLocaleDateString()}` })
           .select()
           .single();
         session_id = newSession?.id;
       }
     }
-    // --------------------------------
 
     let query = supabase
       .from('chat_messages')
@@ -65,18 +66,50 @@ export async function POST(req: Request) {
       .eq('user_id', user_id)
       .order('created_at', { ascending: false })
       .limit(10);
-
-    if (session_id) {
-      query = query.eq('session_id', session_id);
-    }
-
+    if (session_id) query = query.eq('session_id', session_id);
     const { data: recentMessages } = await query;
-
     const contextMessages = recentMessages?.map(m => ({ content: m.content || "", role: m.role })) || [];
     
-    // STEP 2: Save user message with rich metadata
-    const analyzedEvent = await pipelineForAsync.extractLifeEvent(content);
+    // Safety fallback for empty intelligence profile
+    const currentIntelProfile = profile.intelligence_profile || {
+      basic_profile: {}, thinking_style: {}, emotional_state: {},
+      interests_goals: {}, behavior_patterns: {}, communication_style: {},
+      sensitive_insights: {}, source_weights: { chat: 0.3, diary: 0.7 }
+    };
+
+    // STEP 2: parallelize tasks (Reply, Pipeline, and Deep Intelligence Extraction)
+    const [{ data: contextChaptersData }, { data: currentVolume }] = await Promise.all([
+      supabase.from('chapters').select('content').eq('user_id', user_id).order('created_at', { ascending: false }).limit(3),
+      supabase.from('volumes').select('*').eq('user_id', user_id).eq('status', 'ongoing').maybeSingle()
+    ]);
+    const contextChapters = contextChaptersData?.map(c => c.content) || [];
+    let activeVolume = currentVolume;
+
+    if (!activeVolume) {
+       const { data: lastVol } = await supabase.from('volumes').select('volume_number').eq('user_id', user_id).order('volume_number', { ascending: false }).limit(1).maybeSingle();
+       const nextNum = (lastVol?.volume_number || 0) + 1;
+       const { data: newVol } = await supabase.from('volumes').insert({
+         user_id, volume_number: nextNum, title: 'Chapters of the Heart', status: 'ongoing'
+       }).select().single();
+       activeVolume = newVol;
+    }
+
+    const [pipelineOutput, aiResponseText, updatedIntelProfile] = await Promise.all([
+      orchestrator.processInteraction({
+        userId: user_id,
+        message: { role, type, content },
+        contextMessages: contextMessages.map(m => m.content),
+        apiKey: apiKey,
+        language,
+        contextChapters
+      }),
+      generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary, currentIntelProfile as any),
+      extractIntelligenceProfile('chat', content, currentIntelProfile as any)
+    ]);
+
+    const analyzedEvent = pipelineOutput.extractedEvent;
     
+    // STEP 3: Save user message with rich metadata from pipeline
     const enrichedMetadata = {
       ...(metadata || {}),
       emotion: analyzedEvent?.emotion || 'neutral',
@@ -84,119 +117,105 @@ export async function POST(req: Request) {
       category: analyzedEvent?.category || 'General'
     };
 
+    // Determine status and impact
+    let processingStatus: 'woven' | 'saved' | 'observed' = 'observed';
+    let impactPercentage = 10; // Default for observed
+
+    if (pipelineOutput.narrativeUpdate?.narrative) {
+      processingStatus = 'woven';
+      impactPercentage = 85 + Math.floor(Math.random() * 15); // 85-100%
+    } else if (pipelineOutput.extractedEvent) {
+      processingStatus = 'saved';
+      impactPercentage = 40 + Math.floor(Math.random() * 30); // 40-70%
+    } else if (analyzedEvent?.score && analyzedEvent.score > 0.3) {
+      impactPercentage = Math.floor(analyzedEvent.score * 100);
+    }
+
     const { data: message, error } = await supabase
       .from('chat_messages')
       .insert({
-        user_id,
-        session_id,
-        role,
-        type,
-        content,
-        media_url,
-        metadata: enrichedMetadata,
-        event_score: analyzedEvent?.score || 0
-      })
-      .select()
-      .single();
-
+        user_id, session_id, role, type, content, media_url,
+        metadata: enrichedMetadata, event_score: analyzedEvent?.score || 0,
+        processing_status: processingStatus
+      }).select().single();
     if (error) throw error;
 
-    // Run Orchestrator
-    const pipelineOutput = await orchestrator.processInteraction({
-      userId: user_id,
-      message: { role, type, content },
-      contextMessages: contextMessages.map(m => m.content),
-      apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY!,
-      language
-    });
-
-    // Track interaction
     if (role === 'user' && type === 'text' && content) {
-      await coreService.updateInteraction(user_id, pipelineOutput.shouldRespond, supabase);
-    }
-
-    // Save AI Response if generated
-    let aiResponseText: string | null = null;
-    if (pipelineOutput.shouldRespond) {
-      // Fetch long-term memory for context
-      const profile = await coreService.getProfile(user_id, supabase);
-      
-      // Use the modern resilient engine with long-term memory
-      aiResponseText = await generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary) || null;
-      
-      if (aiResponseText) {
-        await supabase.from('chat_messages').insert({
-          user_id,
-          session_id,
-          role: 'diary',
-          type: 'text',
-          content: aiResponseText
-        });
-        
-        // Automatically save chapter
-        coreService.autoSaveChapter(user_id, aiResponseText);
-      }
+      await coreService.updateInteraction(user_id, !!aiResponseText, supabase);
     }
     
-    // STEP 4: Update session title, user identity and narrative
+    // STEP 4: Save AI Response
+    if (aiResponseText) {
+      await supabase.from('chat_messages').insert({
+        user_id, session_id, role: 'diary', type: 'text', content: aiResponseText
+      });
+      coreService.autoSaveChapter(user_id, aiResponseText);
+    }
+
+    // STEP 5: Update session title, user identity and narrative
+    await supabase.from('users').update({ 
+      personality_summary: pipelineOutput.personaUpdate || profile.personality_summary,
+      bio: pipelineOutput.narrativeUpdate ? pipelineOutput.narrativeUpdate.summary : profile.bio,
+      intelligence_profile: updatedIntelProfile
+    }).eq('id', user_id);
+
+    // Update Session status
     if (session_id) {
-      // 4.1 Update User Personality (The Persona/Atman)
-      if (pipelineOutput.personaUpdate) {
-        await supabase
-          .from('users')
-          .update({ personality_summary: pipelineOutput.personaUpdate })
-          .eq('id', user_id);
-      }
+       await supabase.from('chat_sessions').update({ 
+         processing_status: processingStatus,
+         impact_percentage: impactPercentage
+       }).eq('id', session_id);
+    }
 
-      // 4.1 Update Story Memory/Bio (The Plot/Prarabdh)
-      if (pipelineOutput.narrativeUpdate) {
-        await supabase
-          .from('users')
-          .update({ bio: pipelineOutput.narrativeUpdate.summary })
-          .eq('id', user_id);
-      }
+    // Save narrative chapter if triggered
+    if (pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative) {
+      const { data: newChapter } = await supabase.from('chapters').insert({
+        user_id,
+        volume_id: activeVolume?.id,
+        title: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
+        content: pipelineOutput.narrativeUpdate.narrative,
+        created_at: new Date().toISOString()
+      }).select().single();
 
-      // 4.2 Update session title if generic
-      const { data: session } = await supabase
-        .from('chat_sessions')
-        .select('title')
-        .eq('id', session_id)
-        .single();
-      
-      const isGeneric = !session?.title || 
-                        session.title === 'New Chat' || 
-                        session.title.startsWith('Chat ') || 
-                        session.title.includes(new Date().toLocaleDateString());
+      // Handle Volume Sealing
+      if (pipelineOutput.narrativeUpdate.shouldSealVolume && activeVolume) {
+        await supabase.from('volumes').update({ 
+          status: 'completed',
+          epilogue: pipelineOutput.narrativeUpdate.currentVolumeEpilogue || null
+        }).eq('id', activeVolume.id);
+        
+        if (pipelineOutput.narrativeUpdate.newVolumeMetadata) {
+          const meta = pipelineOutput.narrativeUpdate.newVolumeMetadata;
+          await supabase.from('volumes').insert({
+            user_id,
+            volume_number: activeVolume.volume_number + 1,
+            title: meta.title || 'Next Phase',
+            prologue: meta.prologue,
+            epigraph: meta.epigraph,
+            aura: meta.aura,
+            status: 'ongoing'
+          });
+        }
+      }
+    }
+
+    if (session_id) {
+      const { data: session } = await supabase.from('chat_sessions').select('title').eq('id', session_id).single();
+      const isGeneric = !session?.title || session.title === 'New Chat' || session.title.startsWith('Chat ') || session.title.includes(new Date().toLocaleDateString());
 
       if (isGeneric) {
-        // Fetch last few messages to generate a good title
-        const { data: sessionMessages } = await supabase
-          .from('chat_messages')
-          .select('content')
-          .eq('session_id', session_id)
-          .order('created_at', { ascending: true })
-          .limit(5);
-        
+        const { data: sessionMessages } = await supabase.from('chat_messages').select('content').eq('session_id', session_id).order('created_at', { ascending: true }).limit(5);
         if (sessionMessages && sessionMessages.length >= 2) {
           const contents = sessionMessages.map(m => m.content || "");
           const title = await pipelineForAsync.generateSessionTitle(contents);
-          if (title) {
-            await supabase
-              .from('chat_sessions')
-              .update({ title })
-              .eq('id', session_id);
-          }
+          if (title) await supabase.from('chat_sessions').update({ title }).eq('id', session_id);
         }
       }
     }
 
     return NextResponse.json({
       message,
-      aiResponse: aiResponseText ? {
-        role: 'diary',
-        content: aiResponseText,
-        created_at: new Date().toISOString()
-      } : null,
+      aiResponse: aiResponseText ? { role: 'diary', content: aiResponseText, created_at: new Date().toISOString() } : null,
       event_score: pipelineOutput.extractedEvent?.score || 0
     });
   } catch (error: any) {

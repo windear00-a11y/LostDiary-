@@ -30,21 +30,25 @@ export const LanguageSwitcher = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const { user } = useAuth();
-  const { language, setLanguage } = useUIStore();
+  const { language, setLanguage, setHasSetLanguage } = useUIStore();
 
   // Sync with remote profile on mount if logged in
   useEffect(() => {
     if (user) {
       coreService.getProfile(user.id).then(profile => {
-        if (profile?.preferred_language && profile.preferred_language !== language) {
-          setLanguage(profile.preferred_language);
+        if (profile?.preferred_language) {
+          if (profile.preferred_language !== language) {
+            setLanguage(profile.preferred_language);
+          }
+          setHasSetLanguage(true); // User already has a preference in DB
         }
       });
     }
-  }, [user, language, setLanguage]);
+  }, [user, language, setLanguage, setHasSetLanguage]);
 
   const handleLanguageSelect = async (code: string) => {
     setLanguage(code);
+    setHasSetLanguage(true);
     setIsOpen(false);
     
     if (user) {
@@ -116,7 +120,7 @@ export const LanguageSwitcher = () => {
                   />
                 </div>
 
-                <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar space-y-1">
+                <div className="max-h-[300px] overflow-y-auto pr-2 scrollbar-whatsapp space-y-1">
                   {filteredLanguages.map((lang) => (
                     <button
                       key={lang.code}

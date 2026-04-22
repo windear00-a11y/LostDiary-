@@ -3,7 +3,7 @@
 import React from 'react';
 import { ChatMessage } from '@/lib/services/core-service';
 import { motion } from 'motion/react';
-import { User, Sparkles } from 'lucide-react';
+import { User, Sparkles, Heart } from 'lucide-react';
 
 export const MessageList = ({ messages }: { messages: ChatMessage[] }) => {
   if (!messages) return null;

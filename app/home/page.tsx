@@ -3,9 +3,10 @@
 import { ChatInterface } from '@/features/home/ChatInterface';
 import { BookView } from '@/features/story/BookView';
 import { JournalEditor } from '@/features/journal/JournalEditor';
+import { LanguageOnboarding } from '@/features/onboarding/LanguageOnboarding';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { motion, AnimatePresence } from 'motion/react';
@@ -14,12 +15,24 @@ import { Suspense } from 'react';
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { activeView, isInputFocused } = useUIStore();
+  const { activeView, hasSetLanguage } = useUIStore();
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  if (!user) return null;
+  // Handle store hydration to avoid SSR mismatch
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  if (!user || !isHydrated) return null;
 
   return (
     <div className="h-[100dvh] bg-neutral-950 overflow-hidden flex flex-col relative">
+      <AnimatePresence>
+        {!hasSetLanguage && (
+          <LanguageOnboarding />
+        )}
+      </AnimatePresence>
+
       <Header />
       <main className="flex-1 w-full relative overflow-hidden">
         <Suspense fallback={<LoadingSpace />}>
@@ -34,7 +47,7 @@ export default function HomePage() {
               animate={{ y: 0 }}
               exit={{ y: '100dvh' }}
               transition={{ type: 'spring', damping: 35, stiffness: 350 }}
-              className="absolute inset-0 z-40 bg-neutral-950 overflow-y-auto"
+              className="absolute inset-0 z-[60] bg-neutral-950"
             >
               <JournalEditor />
             </motion.div>
@@ -47,9 +60,9 @@ export default function HomePage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="absolute inset-0 z-40 bg-neutral-950 overflow-y-auto"
+              className="absolute inset-0 z-[60] bg-neutral-950"
             >
-              <div className="pt-20">
+              <div className="pt-0">
                 <BookView />
               </div>
             </motion.div>

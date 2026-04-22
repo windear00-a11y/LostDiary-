@@ -1,0 +1,1 @@
+ALTER TABLE public.bridges ADD COLUMN IF NOT EXISTS nudge_count INTEGER DEFAULT 0;

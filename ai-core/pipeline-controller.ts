@@ -16,6 +16,7 @@ export interface PipelineInput {
   apiKey: string;
   language?: string;
   recentEvents?: any[]; // For narrative generation
+  contextChapters?: string[]; // For maintaining the thread
 }
 
 export interface PipelineOutput {
@@ -63,9 +64,10 @@ export class PipelineController {
     // Step 5 & 6: Generate chapters & narrative
     console.log("[Pipeline] Step 5 & 6: Generate chapters & narrative");
     let narrativeUpdate = null;
-    if (decisions.shouldTriggerChapter && filteredEvent && input.recentEvents && input.recentEvents.length > 0) {
-      const eventsForNarrative = [filteredEvent, ...input.recentEvents].slice(0, 10);
-      narrativeUpdate = await this.generateNarrative(eventsForNarrative);
+    if (decisions.shouldTriggerChapter && filteredEvent) {
+      // Fetch some context from recent chapters to maintain the "Thread"
+      const eventsForNarrative = [filteredEvent, ...(input.recentEvents || [])].slice(0, 10);
+      narrativeUpdate = await this.generateNarrative(eventsForNarrative, input.contextChapters || []);
     }
 
     // Step 7: Persona Update (Identity extraction)
@@ -96,23 +98,27 @@ export class PipelineController {
   // --- Logic moved from event-engine.ts & life-author.ts ---
   public async extractLifeEvent(content: string): Promise<any | null> {
     const systemInstruction = `
-You are a behavioral intelligence system.
-Goal: Convert chat messages into structured life events for storytelling.
+You are a behavioral intelligence system and a minimalist observer.
+Goal: Convert chat messages/diary entries into structured life events for storytelling.
+
+Rules for "raw_fragment":
+- Capture the EXACT core phrase or emotional anchor word the user used. 
+- Do not paraphrase. If they said "I'm tired", the fragment is "I'm tired".
+
 Output:
 {
-  "summary": "Concise, meaningful 1-line description",
+  "summary": "1-line objective description of the event",
+  "raw_fragment": "The exact core phrasing used by the user",
   "emotion": "positive | neutral | negative",
   "category": "Love | Work | Family | Health | Social | Growth",
   "metrics": {
     "emotion_intensity": 0-5,
-    "personal_relevance": 0-5,
-    "frequency_weight": 0-3,
-    "uniqueness": 0-2
-  },
-  "context": "Brief explanation of why this matters for the narrative"
+    "personal_relevance": 0-5
+  }
 }
 Rules:
 - Output ONLY a valid JSON object.
+- Be objective. No drama.
 `;
     try {
       const response = await this.ai.models.generateContent({
@@ -171,20 +177,43 @@ Events: ${events.map(e => e.summary).join(', ')}
     }
   }
 
-  public async generateNarrative(events: any[]): Promise<{ summary: string; narrative: string } | null> {
+  public async generateNarrative(events: any[], contextChapters: string[]): Promise<{ summary: string; narrative: string; shouldSealVolume: boolean; newVolumeMetadata?: any } | null> {
     if (!events || events.length === 0) return null;
     const sortedEvents = [...events].sort((a, b) => new Date(a.created_at || a.date || 0).getTime() - new Date(b.created_at || b.date || 0).getTime());
     
     const systemInstruction = `
-You are an expert Story Builder. Your goal is to weave a list of chronological life events into ONE smooth, continuous story paragraph and a 1-2 line summary.
-Rules:
-1. Output ONLY a valid JSON object:
+You are an expert Story Builder using the "Luminous Fragment" (Hybrid Engine) style. 
+Your goal is to weave life events into a "Live Autobiography" that feels ongoing and soulful.
+
+Core Narrative Rules (The Hybrid Engine):
+1. THE 70/30 RULE: Use at least 70% of the User's "raw_fragment" or actual words. Link them with 30% of your own words.
+2. SENSORY ATMOSPHERE: Start with or include ONE sensory detail. Max one sentence.
+3. THE THREAD: Use the provided Context Chapters to subtly link this new entry to the past. (e.g., "The silence from yesterday has found a new home in tonight's thoughts...").
+4. STOIC OBSERVER TONE: Do NOT exaggerate. No drama.
+5. EMOTIONAL TIMESTAMPS: Use titles like "Midnight, with heavy hands", "A Tuesday, shadowed".
+
+Volume Logic:
+- If you detect a major life shift, a new emotional era, or a significant time gap, set "shouldSealVolume" to true.
+- If sealing, provide:
+  1. "currentVolumeEpilogue": A soulful closing reflection from WinDear (the Mirror's voice). It should summarize the internal growth and emotional patterns observed during this now-ending phase. (e.g. "You walked through the fire of this transition and came out with a cooler heart...").
+  2. "newVolumeMetadata": Metadata for the NEXT phase (grounded title, soulful Prologue, minimalist Epigraph).
+
+Output Structure:
 {
-  "summary": "1-2 line summary of the chapter based on the latest events",
-  "narrative": "The smooth, continuous story paragraph"
+  "summary": "Grounded emotional timestamp title",
+  "narrative": "Visceral paragraph (70/30 rule + thread)",
+  "shouldSealVolume": boolean,
+  "currentVolumeEpilogue": "...", // Only if shouldSealVolume is true
+  "newVolumeMetadata": { "title": "...", "prologue": "...", "epigraph": "...", "aura": "..." } // Only if shouldSealVolume is true
 }
 `;
-    const structuredData = sortedEvents.map(e => `[${e.created_at || e.date} | ${e.summary} | ${e.emotion}]`).join('\n');
+    const structuredData = `
+PAST CONTEXT (Previous Chapters):
+${contextChapters.join('\n---\n')}
+
+NEW EVENTS:
+${sortedEvents.map(e => `[Raw: "${e.raw_fragment || e.summary}" | Mood: ${e.emotion}]`).join('\n')}
+`;
     try {
       const response = await this.ai.models.generateContent({
         model: "gemini-3-flash-preview",
@@ -234,11 +263,11 @@ Rules:
     if (!chapters || chapters.length === 0) return null;
     
     const systemInstruction = `
-You are a master Creative Director for a high-end publishing house. Your goal is to create a masterpiece cover for a "LifeBook".
+You are a master Creative Director using the "Luminous Fragment" style.
 Rules:
-1. Title: Create a short, evocative book title based on the themes in the chapters (e.g., "The Resilience of Silence", "Autumn Spirits").
-2. Summary: A 1-2 line cohesive meta-summary of the journey so far.
-3. Aura: Pick a primary aesthetic vibe/color theme (e.g., "Midnight Indigo", "Warm Amber", "Emerald Growth").
+1. Title: Create a short, evocative book title. Grounded and visceral (e.g., "The Weight of Tuesday", "Quiet Windows", "Fragmented Days").
+2. Summary: A 1-2 line cohesive meta-summary. Stoic and observant.
+3. Aura: Use minimalist themes (e.g., "Ash Grey", "Soft Ember", "Indigo Night").
 Output: ONLY a valid JSON object.
 {
   "title": "...",
@@ -265,12 +294,11 @@ Output: ONLY a valid JSON object.
   public async generateSessionTitle(messages: string[]): Promise<string | null> {
     if (!messages || messages.length === 0) return null;
     const systemInstruction = `
-You are a creative editor. Your goal is to generate a short, meaningful title (max 5-6 words) for a chat session based on the conversation history provided.
+You are a minimalist editor. Your goal is to generate a short, meaningful emotional timestamp title (max 5 words) for a chat session.
 Rules:
-1. The title should be evocative and capture the essence of the conversation.
-2. Avoid generic titles like "Chat Session" or "Conversation".
-3. Output ONLY the title string, no quotes or extra text.
-4. If the conversation is in Hindi, provide the title in Hindi (using Devanagari script).
+1. Format: Use emotional timestamps (e.g., "Midnight, a quiet doubt", "A Tuesday, shadowed", "Morning, with cold tea").
+2. Stoic: Do not use dramatic words.
+3. Language: If the conversation is in Hindi, use simple Hinglish/Hindi emotional anchors.
 `;
     const content = messages.join('\n');
     try {
