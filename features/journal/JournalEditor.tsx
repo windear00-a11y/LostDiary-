@@ -13,6 +13,7 @@ import { authService } from '@/lib/services/auth-service';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { useSearchParams } from 'next/navigation';
 import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
+import { SuccessMoment } from '@/components/ui/SuccessMoment';
 import { toast } from 'sonner';
 
 export const JournalEditor = () => {
@@ -24,6 +25,7 @@ export const JournalEditor = () => {
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showNudge, setShowNudge] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showSuccessMoment, setShowSuccessMoment] = useState(false);
   const [recentEntry, setRecentEntry] = useState<any>(null);
   const [inspiredBy, setInspiredBy] = useState<string | null>(null);
   
@@ -108,7 +110,7 @@ export const JournalEditor = () => {
 
       await coreService.saveDiaryEntry(user.id, fullContent, { language, inspired_by: inspiredBy });
       setSaveStatus('success');
-      toast.success("Reflection woven into your legacy.");
+      setShowSuccessMoment(true);
       // No more auto-redirect to chat. Stay on page for "Suqoon".
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error) {
@@ -356,6 +358,13 @@ export const JournalEditor = () => {
           </button>
         </div>
       </div>
+      <SuccessMoment 
+        isOpen={showSuccessMoment} 
+        onClose={() => setShowSuccessMoment(false)}
+        title={language === 'hi' ? 'Ehsaas Mehfooz Hua' : 'Reflection Woven'}
+        subtitle={language === 'hi' ? 'Aapki yaad sanctuary mein mehfooz hai.' : 'Your thought is safe in the sanctuary.'}
+        type="save"
+      />
     </div>
   );
 };

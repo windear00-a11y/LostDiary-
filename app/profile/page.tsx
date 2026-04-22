@@ -13,6 +13,7 @@ import { Header } from '@/components/ui/Header';
 import { SanctuaryMirror } from '@/components/profile/SanctuaryMirror';
 import { AuthorHeartbeat } from '@/components/profile/AuthorHeartbeat';
 import { PrivacyTrustCenter } from '@/components/profile/PrivacyTrustCenter';
+import { SuccessMoment } from '@/components/ui/SuccessMoment';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useUIStore } from '@/lib/store/use-ui-store';
@@ -28,6 +29,7 @@ export default function ProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showSuccessMoment, setShowSuccessMoment] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [penName, setPenName] = useState('');
@@ -107,7 +109,7 @@ export default function ProfilePage() {
       });
       setProfile(updated);
       setIsEditing(false);
-      toast.success("Identity updated within the vault.");
+      setShowSuccessMoment(true);
     } catch (error: any) {
       console.error("Error saving profile:", error);
       setError(error.message || "Failed to save changes. Pen Name might heavily conflict, try another.");
@@ -211,6 +213,14 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-transparent pb-32">
       <Header />
+      
+      <SuccessMoment 
+        isOpen={showSuccessMoment} 
+        onClose={() => setShowSuccessMoment(false)}
+        title="Identity Refined"
+        subtitle="Your presence in the sanctuary has been updated."
+        type="save"
+      />
       
       <main className="max-w-2xl mx-auto px-6 pt-24 perspective-1000">
         <AnimatePresence mode="wait">

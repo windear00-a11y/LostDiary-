@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Globe, Heart, BookOpen, User, Droplets, Leaf, Send, Sparkles, Handshake, Anchor, BookMarked } from 'lucide-react';
 import { Header } from '@/components/ui/Header';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
+import { SuccessMoment } from '@/components/ui/SuccessMoment';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
@@ -32,6 +33,8 @@ export default function GlobalLibraryPage() {
   const [selectedStory, setSelectedStory] = useState<LibraryStory | null>(null);
   const [planeMessage, setPlaneMessage] = useState('');
   const [sendingPlane, setSendingPlane] = useState(false);
+  const [showSuccessMoment, setShowSuccessMoment] = useState(false);
+  const [successData, setSuccessData] = useState({ title: '', subtitle: '', type: 'save' as 'save' | 'publish' | 'connect' });
   // Track optimistically ahsas paragraphs: { [storyId]: Set<number> }
   const [localAhsas, setLocalAhsas] = useState<Record<string, Set<number>>>({});
 
@@ -77,7 +80,12 @@ export default function GlobalLibraryPage() {
           toast.error("Warning", { description: data.error || 'Failed to send plane' });
         }
       } else {
-        toast.success("Plane Delivered", { description: 'Your invisible thread has been cast to the author.' });
+        setSuccessData({
+          title: "Paper Plane Delivered",
+          subtitle: "Your invisible thread has reached its destination.",
+          type: "connect"
+        });
+        setShowSuccessMoment(true);
         setPlaneModalOpen(false);
         setPlaneMessage('');
       }
@@ -154,6 +162,14 @@ export default function GlobalLibraryPage() {
   return (
     <div className="min-h-screen bg-transparent pb-32">
       <Header />
+      
+      <SuccessMoment 
+        isOpen={showSuccessMoment}
+        onClose={() => setShowSuccessMoment(false)}
+        title={successData.title}
+        subtitle={successData.subtitle}
+        type={successData.type}
+      />
       
       {/* Mood Navigator */}
       <div className="sticky top-20 z-30 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md pt-10 pb-4 mb-8">
