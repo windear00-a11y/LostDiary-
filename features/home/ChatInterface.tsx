@@ -222,9 +222,12 @@ export const ChatInterface = () => {
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-40 pb-20 transition-all duration-700 ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'} ${showNudge ? 'blur-2xl scale-[0.98] opacity-20 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
+        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-40 pb-20 transition-all duration-700`}
       >
-        <div className="max-w-2xl mx-auto space-y-8 min-h-full flex flex-col pt-10">
+        <div className={`max-w-2xl mx-auto space-y-8 min-h-full flex flex-col pt-10 transition-all duration-700 
+          ${isInputFocused ? 'opacity-30 blur-[1px]' : 'opacity-100'} 
+          ${showNudge ? 'blur-2xl scale-[0.98] opacity-20 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
+        >
           {/* Privacy Trust Signal */}
           <div className="flex flex-col items-center justify-center space-y-2 mb-4 opacity-40 select-none">
              <div className="flex items-center gap-2">
@@ -380,7 +383,7 @@ export const ChatInterface = () => {
       </div>
 
       {/* Sticky Bottom Input Section */}
-      <div className="sticky bottom-0 w-full z-20 px-4 pb-[env(safe-area-inset-bottom)] bg-neutral-950/80 backdrop-blur-sm">
+      <div className="fixed bottom-0 left-0 w-full z-50 px-4 pb-[env(safe-area-inset-bottom)] bg-neutral-950/90 backdrop-blur-md border-t border-white/5">
         <div className="text-center pb-2">
             <p className="text-[10px] text-white/20 italic font-serif">AI processing is transient & ephemeral for your privacy.</p>
         </div>
