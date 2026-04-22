@@ -8,6 +8,7 @@ import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Camera, Sparkles, LogOut, Save, Edit2, Shield, Send, Book, Handshake, ChevronRight, MessageSquare, Heart } from 'lucide-react';
 import { DeleteAccountModal } from '@/components/profile/DeleteAccountModal';
+import { FeedbackDrawer } from '@/components/ui/FeedbackDrawer';
 import { Header } from '@/components/ui/Header';
 import { SanctuaryMirror } from '@/components/profile/SanctuaryMirror';
 import { AuthorHeartbeat } from '@/components/profile/AuthorHeartbeat';
@@ -406,22 +407,21 @@ export default function ProfilePage() {
               </button>
               
               {/* Sub-Switcher */}
-              <div className="flex gap-4 mb-8 overflow-x-auto pb-4 no-scrollbar border-b border-gray-200 dark:border-white/5">
-                 <button onClick={() => setActiveTab('mirror')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-serif transition-colors whitespace-nowrap ${activeTab === 'mirror' ? 'bg-indigo-500 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
-                    <Shield className="w-4 h-4" />
-                    The Mirror
+              <div className="flex gap-2 mb-8 overflow-x-auto pb-4 no-scrollbar border-b border-gray-200 dark:border-white/5">
+                 <button onClick={() => setActiveTab('general')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'general' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                    <User className="w-3 h-3" /> Identity
                  </button>
-                 <button onClick={() => setActiveTab('treasury')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-serif transition-colors whitespace-nowrap ${activeTab === 'treasury' ? 'bg-indigo-500 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
-                    <Book className="w-4 h-4" />
-                    Treasury
+                 <button onClick={() => setActiveTab('mirror')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'mirror' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                    <Shield className="w-3 h-3" /> Mirror
                  </button>
-                 <button onClick={() => setActiveTab('bridges')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-serif transition-colors whitespace-nowrap ${activeTab === 'bridges' ? 'bg-indigo-500 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
-                    <Handshake className="w-4 h-4" />
-                    Bridges
+                 <button onClick={() => setActiveTab('treasury')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'treasury' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                    <Book className="w-3 h-3" /> Legacy
                  </button>
-                 <button onClick={() => setActiveTab('privacy')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-serif transition-colors whitespace-nowrap ${activeTab === 'privacy' ? 'bg-indigo-500 text-white shadow-lg' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
-                    <Shield className="w-4 h-4" />
-                    Privacy
+                 <button onClick={() => setActiveTab('bridges')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'bridges' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                    <Handshake className="w-3 h-3" /> Bridges
+                 </button>
+                 <button onClick={() => setActiveTab('privacy')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'privacy' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                    <Shield className="w-3 h-3" /> Rights
                  </button>
               </div>
                            {activeTab === 'mirror' ? (
@@ -491,7 +491,12 @@ export default function ProfilePage() {
                             <Book className="w-5 h-5 text-indigo-500" />
                             <h3 className="text-xl font-serif font-bold text-gray-900 dark:text-white">Your Legacy</h3>
                          </div>
-                         <span className="text-xs text-gray-400 font-mono italic">{chapters.length} Memories</span>
+                         <button 
+                             onClick={() => window.location.href = '/features/story/reader'}
+                             className="text-xs text-indigo-500 font-bold uppercase tracking-widest hover:underline"
+                          >
+                            Read Full Chronicle
+                          </button>
                       </div>
                       
                       {chapters.length === 0 ? (
@@ -589,6 +594,8 @@ export default function ProfilePage() {
           onClose={() => setShowDeleteModal(false)}
           onDelete={handleDeleteAccount}
         />
+        
+        <FeedbackDrawer />
 
         <p className="text-center mt-8 text-xs text-gray-400 dark:text-gray-600">
           Your deep data never leaves the Mirror. Only your Pen Name and Avatar are seen in the Global Library.

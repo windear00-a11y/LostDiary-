@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChatInput } from './ChatInput';
 import { generateStoryResponse } from '@/ai-core/ai-engine';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { User, Sparkles, X, Heart, Shield } from 'lucide-react';
+import { User, Sparkles, X, Heart, Shield, Book } from 'lucide-react';
 import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -215,6 +215,19 @@ export const ChatInterface = () => {
   return (
     <div className="flex flex-col h-full bg-neutral-950 text-white relative overflow-hidden font-sans">
       <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
+      {/* Header Overlay */}
+      <div className="absolute top-0 inset-x-0 h-20 flex items-center justify-between px-6 z-50">
+        <div className="w-10"></div> {/* Spacer for symmetry */}
+        <span className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">Sanctuary</span>
+        <button 
+           onClick={() => router.push('/diary')}
+           className="p-2 text-white/40 hover:text-white transition-colors"
+           title="Write a new entry"
+        >
+           <Book className="w-5 h-5" />
+        </button>
+      </div>
+
       {/* Top Gradient Mask for smooth scrolling transition */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-neutral-950 via-neutral-950/90 to-transparent z-40 pointer-events-none" />
 
