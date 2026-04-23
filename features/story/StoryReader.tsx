@@ -1,11 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Sparkles, ScrollText, Heart, List, X, Globe, Check, ShieldCheck, Info, BookOpen, Send, Fingerprint, Anchor, BookMarked, ChevronRight, PenTool } from 'lucide-react';
+import { ArrowLeft, Sparkles, ScrollText, Heart, List, X, Globe, Check, ShieldCheck, Info, BookOpen, Send, Fingerprint, Anchor, BookMarked, ChevronRight, PenTool, MoreHorizontal, ChevronDown, Headphones, Square } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Chapter, Volume } from '@/lib/services/core-service';
 import { libraryService, SealingResult } from '@/lib/services/library-service';
+import { GoogleGenAI } from "@google/genai";
+import { NarrativeMap } from '@/components/ui/NarrativeMap';
+import { useChapterEngagement } from './hooks/use-chapter-engagement';
+
+const moodBgColors: Record<string, string> = {
+  Joyful: '#FFFBEB', 
+  Tense: '#FFF1F2',  
+  Melancholic: '#EEF2FF', 
+  Serene: '#ECFDF5', 
+  Default: '#FDFCF8'
+};
+
+// Initialize Gemini
+const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
 
 interface StoryReaderProps {
   chapters: Chapter[];
@@ -17,9 +31,13 @@ interface StoryReaderProps {
   isLibraryView?: boolean;
 }
 
-export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, coverData, userName, isLibraryView = false }: StoryReaderProps) => {
+export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, coverData, userName = 'anonymous', isLibraryView = false }: StoryReaderProps) => {
   const router = useRouter();
-  const [readingStage, setReadingStage] = useState<'cover' | 'index' | 'reading'>('cover');
+  const [readingStage, setReadingStage] = useState<'cover' | 'index' | 'reading' | 'map'>('cover');
+  const [currentChapterId, setCurrentChapterId] = useState<string | null>(initialChapterId || null);
+  const { activeGhosts, lastResonance, sendResonance } = useChapterEngagement(currentChapterId, userName);
+  const [mood, setMood] = useState<string>('Default');
+  const [moodCache, setMoodCache] = useState<Record<string, string>>({});
   const [isTOCOpen, setIsTOCOpen] = useState(false);
   const [readChapters, setReadChapters] = useState<Set<string>>(new Set());
   const [lastBookmark, setLastBookmark] = useState<string | null>(null);
@@ -28,6 +46,120 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
   const [sealPreview, setSealPreview] = useState<{ chapter: Chapter; result: SealingResult } | null>(null);
   const [publishedIds, setPublishedIds] = useState<Set<string>>(new Set());
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [resonatingParagraphs, setResonatingParagraphs] = useState<Set<number>>(new Set());
+  const [coverImageUrl, setCoverImageUrl] = useState<string | null>(null);
+  const [isGeneratingCover, setIsGeneratingCover] = useState(false);
+  
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const synthesisRef = React.useRef<SpeechSynthesisUtterance | null>(null);
+
+  const handleToggleAudiobook = () => {
+     if (!window.speechSynthesis) {
+        showToast("Audiobook playback is not supported on this device.");
+        return;
+     }
+
+     if (isPlayingAudio) {
+        window.speechSynthesis.cancel();
+        setIsPlayingAudio(false);
+        showToast("Audiobook paused.");
+     } else {
+        const fullTextContext = chapters.map(c => `${c.title}. ${c.content}`).join('. ');
+        const utterance = new SpeechSynthesisUtterance(fullTextContext);
+        utterance.rate = 0.9;
+        utterance.pitch = 0.8;
+        // Find best voice
+        const voices = window.speechSynthesis.getVoices();
+        const whisperVoice = voices.find(v => v.name.includes("Google") || v.name.includes("Samantha") || v.lang === "en-US") || voices[0];
+        if (whisperVoice) utterance.voice = whisperVoice;
+        
+        utterance.onend = () => setIsPlayingAudio(false);
+        
+        window.speechSynthesis.cancel(); // kill active
+        window.speechSynthesis.speak(utterance);
+        setIsPlayingAudio(true);
+        showToast("Whispering the soul of this book...");
+     }
+  };
+
+  // Load saved cover image if exists
+  React.useEffect(() => {
+    const saved = localStorage.getItem(`cover_image_${initialChapterId || 'default'}`);
+    if (saved) setCoverImageUrl(saved);
+  }, [initialChapterId]);
+
+  const generateAuraCover = async () => {
+     if (!coverData?.summary) {
+        showToast("The manuscript needs more depth before an aura can be revealed.");
+        return;
+     }
+
+     setIsGeneratingCover(true);
+     try {
+       // Using gemini text to define prompt, then generating image
+       const summaryContext = coverData.summary.substring(0, 500);
+       const aura = coverData.aura || "mystical and serene";
+       const prompt = `Abstract, ethereal, minimalist book cover art representing: ${summaryContext}. The overall vibe and aura is: ${aura}. Use subtle gradients, sacred geometry, or expressive brush strokes. No text. Highly artistic, muted color palette, masterpiece.`;
+       
+       const response = await ai.models.generateContent({
+         model: 'gemini-3.1-flash-image-preview',
+         contents: {
+           parts: [
+             { text: prompt },
+           ],
+         },
+         config: {
+           imageConfig: {
+                 aspectRatio: "3:4",
+                 imageSize: "1K"
+             }
+         },
+       });
+
+       let newImageUrl = null;
+       for (const part of response.candidates?.[0]?.content?.parts || []) {
+         if (part.inlineData) {
+           newImageUrl = `data:image/png;base64,${part.inlineData.data}`;
+           break;
+         }
+       }
+
+       if (newImageUrl) {
+          setCoverImageUrl(newImageUrl);
+          localStorage.setItem(`cover_image_${initialChapterId || 'default'}`, newImageUrl);
+          showToast("✨ The Soul of the Book has revealed itself.");
+       } else {
+          showToast("Failed to manifest the Aura.");
+       }
+
+     } catch (e: any) {
+       console.error(e);
+       showToast(`Manifestation Error: ${e.message}`);
+     } finally {
+       setIsGeneratingCover(false);
+     }
+  };
+
+  // Listen to remote resonance events and animate them
+  React.useEffect(() => {
+     if (lastResonance?.type === 'sparkle' && currentChapterId) {
+        setResonatingParagraphs(prev => {
+           const next = new Set(prev);
+           next.add(lastResonance.data.paraIndex);
+           
+           // Clear it after a few seconds
+           setTimeout(() => {
+              setResonatingParagraphs(cur => {
+                 const c = new Set(cur);
+                 c.delete(lastResonance.data.paraIndex);
+                 return c;
+              });
+           }, 3000);
+           
+           return next;
+        });
+     }
+  }, [lastResonance, currentChapterId]);
 
   // Scroll to initial chapter if provided
   React.useEffect(() => {
@@ -84,6 +216,27 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
     setTimeout(() => setToastMessage(null), 5000);
   };
 
+  const analyzeMood = useCallback(async (content: string) => {
+    if (moodCache[content.substring(0, 50)]) {
+      setMood(moodCache[content.substring(0, 50)]);
+      return;
+    }
+    
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: `Analyze the mood of this story paragraph: "${content.substring(0, 200)}..." Return only one word: Joyful, Tense, Melancholic, or Serene.`,
+      });
+      const detectedMood = response.text?.trim() as string;
+      if (moodBgColors[detectedMood]) {
+        setMood(detectedMood);
+        setMoodCache(prev => ({ ...prev, [content.substring(0, 50)]: detectedMood }));
+      }
+    } catch (error) {
+      console.error("Mood analysis error", error);
+    }
+  }, [moodCache]);
+
   const handlePublish = async (chapterId: string, sealedData?: { sealedTitle: string; sealedContent: string }) => {
     try {
       if (!sealedData) {
@@ -122,8 +275,39 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
     }
   };
 
+  // Track reading intersection to record what they read to activate Ghosts/Resonance context
+  React.useEffect(() => {
+    if (readingStage !== 'reading') return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const chapId = entry.target.id.replace('chapter-', '');
+            setCurrentChapterId(chapId);
+            handleMarkAsRead(chapId);
+            
+            // Mood Analysis Trigger
+            const chapterContent = chapters.find(c => c.id === chapId)?.content;
+            if (chapterContent) {
+               analyzeMood(chapterContent);
+            }
+        }
+      });
+    }, { threshold: 0.2 });
+
+    chapters.forEach(chap => {
+      const el = document.getElementById(`chapter-${chap.id}`);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [readingStage, chapters, handleMarkAsRead, analyzeMood]);
+
   return (
-    <div className="min-h-screen bg-[#FDFCF8] dark:bg-[#0A0A0A] relative overflow-x-hidden selection:bg-indigo-500/20 selection:text-indigo-900 dark:selection:text-indigo-200">
+    <div 
+     className="min-h-screen relative overflow-x-hidden selection:bg-indigo-500/20 selection:text-indigo-900 transition-colors duration-1000"
+     style={{ backgroundColor: moodBgColors[mood] || moodBgColors.Default }}
+    >
       <AnimatePresence mode="wait">
         {readingStage === 'cover' ? (
           <motion.div
@@ -154,9 +338,30 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               </button>
 
               <div className="flex flex-col items-center gap-6">
-                <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center">
-                   <BookOpen className="w-6 h-6 text-indigo-500" />
-                </div>
+                {coverImageUrl ? (
+                   <div className="w-48 h-64 md:w-64 md:h-80 rounded-2xl overflow-hidden shadow-2xl relative mb-4 ring-1 ring-white/10 group">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={coverImageUrl} alt="Story Aura Cover" className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
+                   </div>
+                ) : (
+                  <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center relative group">
+                     {isGeneratingCover ? (
+                         <div className="w-6 h-6 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                     ) : (
+                         <>
+                           <BookOpen className="w-6 h-6 text-indigo-500 transition-transform group-hover:scale-110" />
+                           <button 
+                             onClick={generateAuraCover}
+                             className="absolute -right-32 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-500 text-white text-[10px] px-3 py-1.5 rounded-full font-bold uppercase tracking-widest whitespace-nowrap shadow-xl"
+                             title="Generate Aura Art via Gemini"
+                           >
+                              Reveal Aura
+                           </button>
+                         </>
+                     )}
+                  </div>
+                )}
                 <span className="text-[10px] uppercase tracking-[1em] text-indigo-500 font-bold ml-[1em]">An Autobiography</span>
               </div>
 
@@ -226,65 +431,48 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               </div>
 
               <div className="space-y-16">
-                {(volumes.length > 0 ? volumes : [{ id: 'default', title: 'Life Chapters', description: 'Your journey so far' }]).map((vol, vIdx) => {
-                  const volChapters = chapters.filter(c => c.volume_id === vol.id || (!c.volume_id && vol.id === 'default'));
-                  return (
+                {volumes.length > 0 ? (
+                  volumes.sort((a, b) => a.volume_number - b.volume_number).map((vol, vIdx) => (
                     <div key={vol.id} className="space-y-8">
-                       <div className="flex items-center gap-4">
-                          <span className="text-2xl font-serif italic text-indigo-500/50">V.{vIdx + 1}</span>
-                          <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white uppercase tracking-wider">{vol.title}</h3>
-                       </div>
-                       
-                       <div className="grid gap-4 ml-6 pl-6 relative">
-                          {/* Visual Thread Line */}
-                          <div className="absolute left-0 top-2 bottom-6 w-px bg-slate-100 dark:bg-white/5" />
-                          
-                          {volChapters.map((chap, cIdx) => {
-                            const isRead = readChapters.has(chap.id);
-                            const isBookmarked = lastBookmark === chap.id;
-                            return (
-                              <button
-                                key={chap.id}
-                                onClick={() => scrollToChapter(chap.id)}
-                                className="group flex items-start justify-between text-left py-3 hover:translate-x-2 transition-all relative"
-                              >
-                                 {/* Progress indicator on the line */}
-                                 <div className={`absolute -left-[25px] top-[26px] w-2 h-2 rounded-full border-2 border-[#FDFCF8] dark:border-[#0A0A0A] z-10 transition-colors ${isRead ? 'bg-slate-300 dark:bg-slate-600' : 'bg-indigo-500'}`} />
-                                 
-                                 <div className="space-y-1">
-                                   <div className="flex items-center gap-3">
-                                     <span className={`text-[10px] font-mono tracking-tighter ${isRead ? 'text-slate-300' : 'text-slate-400'}`}>0{cIdx + 1}</span>
-                                     <h4 className={`font-serif text-lg transition-colors ${isRead ? 'text-slate-400 dark:text-zinc-500 italic' : 'text-slate-800 dark:text-slate-200'} group-hover:text-indigo-500`}>
-                                       {chap.title}
-                                     </h4>
-                                     {isRead && <Sparkles className="w-3 h-3 text-indigo-400/50" />}
-                                     {isBookmarked && (
-                                       <motion.div 
-                                         animate={{ x: [0, 2, 0] }}
-                                         transition={{ repeat: Infinity, duration: 2 }}
-                                         className="flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-500 rounded-full text-[8px] font-bold uppercase tracking-wider"
-                                       >
-                                         <Anchor className="w-2.5 h-2.5" /> Present Reading
-                                       </motion.div>
-                                     )}
-                                   </div>
-                                   <p className={`text-[11px] font-serif italic line-clamp-1 max-w-md transition-colors ${isRead ? 'text-slate-300 dark:text-zinc-700' : 'text-slate-400 dark:text-zinc-500'}`}>
-                                     {chap.content.substring(0, 100)}...
-                                   </p>
-                                 </div>
-                                 <div className="flex items-center gap-2">
-                                    <ChevronRight className={`w-4 h-4 transition-colors ${isRead ? 'text-slate-200 dark:text-white/5' : 'text-slate-300 group-hover:text-indigo-500'}`} />
-                                 </div>
-                              </button>
-                            );
-                          })}
-                          {volChapters.length === 0 && (
-                            <p className="text-sm font-serif italic text-slate-400">The ink has not reached these pages yet...</p>
-                          )}
-                       </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-2xl font-serif italic text-indigo-500/50">V.{vIdx + 1}</span>
+                        <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white uppercase tracking-wider">{vol.title}</h3>
+                      </div>
+                      
+                      <div className="grid gap-4 ml-6 pl-6 relative">
+                        <div className="absolute left-0 top-2 bottom-6 w-px bg-slate-100 dark:bg-white/5" />
+                        
+                        {chapters.filter(c => c.volume_id === vol.id || (!c.volume_id && vol.id === 'default')).map((chap, cIdx) => (
+                          <button
+                            key={chap.id}
+                            onClick={() => scrollToChapter(chap.id)}
+                            className="group flex items-start justify-between text-left py-3 hover:translate-x-2 transition-all relative"
+                          >
+                             <div className={`absolute -left-[25px] top-[26px] w-2 h-2 rounded-full border-2 border-[#FDFCF8] dark:border-[#0A0A0A] z-10 transition-colors ${readChapters.has(chap.id) ? 'bg-slate-300 dark:bg-slate-600' : 'bg-indigo-500'}`} />
+                             <div className="space-y-1">
+                               <div className="flex items-center gap-3">
+                                 <span className={`text-[10px] font-mono tracking-tighter ${readChapters.has(chap.id) ? 'text-slate-300' : 'text-slate-400'}`}>0{cIdx + 1}</span>
+                                 <h4 className={`font-serif text-lg transition-colors ${readChapters.has(chap.id) ? 'text-slate-400 dark:text-zinc-500 italic' : 'text-slate-800 dark:text-slate-200'} group-hover:text-indigo-500`}>
+                                   {chap.title}
+                                 </h4>
+                                 {readChapters.has(chap.id) && <Sparkles className="w-3 h-3 text-indigo-400/50" />}
+                               </div>
+                             </div>
+                             <ChevronRight className={`w-4 h-4 transition-colors ${readChapters.has(chap.id) ? 'text-slate-200 dark:text-white/5' : 'text-slate-300 group-hover:text-indigo-500'}`} />
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  );
-                })}
+                  ))
+                ) : (
+                  <div className="text-center py-64">
+                     <div className="w-20 h-20 bg-slate-50 dark:bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto mb-8 border border-dashed border-slate-200 dark:border-white/10">
+                        <BookMarked className="w-10 h-10 text-slate-300" />
+                     </div>
+                     <h3 className="text-2xl font-serif text-slate-400 italic">This manuscript is still awaiting its first breath...</h3>
+                     <button onClick={onBack} className="mt-12 text-[10px] uppercase tracking-[0.4em] text-indigo-500 font-bold hover:underline">Return to Sanctuary</button>
+                  </div>
+                )}
               </div>
 
               <div className="mt-32 flex flex-col items-center gap-6">
@@ -410,329 +598,284 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
         )}
       </AnimatePresence>
 
-      {/* Story Content */}
+      {/* Interactive Story Content - The "Full Film" Experience */}
       <motion.main 
         initial={false}
         animate={{ 
           opacity: readingStage === 'reading' ? 1 : 0,
           pointerEvents: readingStage === 'reading' ? 'auto' : 'none',
-          y: readingStage === 'reading' ? 0 : 20
+          y: readingStage === 'reading' ? 0 : 40
         }}
-        className="fixed inset-0 z-[80] bg-[#FDFCF8] dark:bg-[#0A0A0A] overflow-y-auto px-6 py-8 md:py-20 scrollbar-hide"
+        className="fixed inset-0 z-[80] overflow-y-auto scrollbar-hide selection:bg-indigo-500/30 font-serif"
       >
-        <div className="max-w-2xl mx-auto relative">
-          <div className="mb-16 flex items-center justify-between">
-            <button 
-              onClick={() => setReadingStage('index')}
-              className="group flex items-center gap-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-indigo-500 transition-all"
-            >
-              <div className="w-8 h-px bg-slate-200 group-hover:bg-indigo-500 group-hover:w-12 transition-all" />
-              Return to Index
-            </button>
-            
-            <button 
-              onClick={onBack}
-              className="text-[10px] uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors"
-            >
-              Close Book
-            </button>
-          </div>
+        {readingStage === 'map' && (
+          <NarrativeMap chapters={chapters} onChapterSelect={(id) => scrollToChapter(id)} />
+        )}
+        
+        {/* The Concrete Foundation for the Book */}
+        <div className="min-h-full w-full book-page-container relative">
+          
+          {/* Paper Texture Overlay */}
+          <div className="fixed inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.02]" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/natural-paper.png")' }} />
 
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1 }}
-          className="space-y-40"
-        >
-          {volumes.length > 0 ? (
-            volumes.sort((a, b) => a.volume_number - b.volume_number).map((volume, volIdx) => {
-              const volumeChapters = chapters.filter(c => c.volume_id === volume.id);
-              const isOngoing = volume.status === 'ongoing';
+          {/* The Spine Shadow (Centerfold effect) */}
+          <div className="fixed left-1/2 top-0 bottom-0 w-24 -translate-x-1/2 pointer-events-none spine-shadow z-[90] hidden md:block" />
 
-              if (volumeChapters.length === 0 && !isOngoing) return null;
+          <div className="max-w-3xl mx-auto relative px-6 py-8 md:py-20">
+            {/* Top Navigation Bar */}
+            <div className="mb-20 flex items-center justify-between sticky top-0 z-[100] py-4 px-2">
+              <button 
+                onClick={() => setReadingStage('index')}
+                className="group flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 hover:text-indigo-500 transition-all font-sans"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
+                The Book Index
+              </button>
+              
+              <button
+                onClick={() => setReadingStage(readingStage === 'map' ? 'reading' : 'map')}
+                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-500 hover:text-indigo-600 transition-all font-sans"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                {readingStage === 'map' ? 'Read' : 'Explore'}
+              </button>
+              
+              <div className="flex items-center gap-4 font-sans">
+                {/* Audiobook Feature */}
+                <button
+                   onClick={handleToggleAudiobook}
+                   className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
+                       isPlayingAudio 
+                       ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/30' 
+                       : 'bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:text-indigo-500 hover:border-indigo-500/50'
+                   }`}
+                   title="Whispering Audiobook"
+                >
+                   {isPlayingAudio ? (
+                       <Square className="w-3.5 h-3.5" />
+                   ) : (
+                       <Headphones className="w-3.5 h-3.5" />
+                   )}
+                   <span className="text-[9px] font-bold uppercase tracking-widest hidden sm:inline-block">Listen</span>
+                </button>
 
-              return (
-                <div key={volume.id} className="space-y-32">
-                  {/* Volume Heading */}
-                  <motion.div 
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: "-100px" }}
-                    className="text-center space-y-10 py-24 relative"
-                  >
-                    <div className="absolute inset-0 flex items-center justify-center -z-10 opacity-5">
-                       <span className="text-[180px] font-serif font-bold select-none">{volume.volume_number}</span>
-                    </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/5 rounded-full border border-indigo-500/10">
+                   <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+                   <span className="text-[9px] font-bold text-indigo-500/80 uppercase tracking-widest">Atmosphere: {coverData?.aura || "Resonance"}</span>
+                </div>
+                <button 
+                  onClick={onBack}
+                  className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors"
+                >
+                  Close Tome
+                </button>
+              </div>
+            </div>
 
-                    <div className="flex flex-col items-center gap-6">
-                      <div className="w-px h-20 bg-gradient-to-b from-transparent via-indigo-500/40 to-transparent" />
-                      <span className="text-[11px] uppercase tracking-[1em] text-indigo-500 font-bold ml-[1em]">Volume {volume.volume_number}</span>
-                    </div>
-
-                    <h2 className="text-5xl md:text-7xl font-serif font-medium text-slate-900 dark:text-white tracking-tight leading-[1.1]">
-                      {volume.title}
-                    </h2>
-
-                    {volume.prologue && (
-                      <p className="text-lg md:text-xl italic text-slate-500 dark:text-slate-400 max-w-xl mx-auto font-serif leading-relaxed px-4">
-                        &ldquo;{volume.prologue}&rdquo;
-                      </p>
-                    )}
-                    
-                    <div className="flex items-center justify-center gap-4 text-slate-200 dark:text-white/10">
-                      <div className="w-8 h-px bg-current" />
-                      <div className="w-1.5 h-1.5 border border-current rounded-full" />
-                      <div className="w-8 h-px bg-current" />
-                    </div>
-                  </motion.div>
-
-                  {/* Chapters in this Volume */}
-                  {volumeChapters.map((chapter, index) => (
-                    <motion.article 
-                      key={chapter.id || index} 
-                      id={`chapter-${chapter.id}`}
-                      initial={{ opacity: 0, y: 40 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true, margin: "-50px" }}
-                      transition={{ duration: 0.8, ease: [0.21, 0.47, 0.32, 0.98] }}
-                      className="space-y-12 scroll-mt-32 relative group/chapter"
-                    >
-                      {/* Chapter Actions */}
-                      <div className="absolute top-0 right-4 flex flex-col gap-2 opacity-0 group-hover/chapter:opacity-100 transition-opacity">
-                         <button 
-                            onClick={() => handleSetBookmark(chapter.id)}
-                            className={`p-3 rounded-full transition-all ${lastBookmark === chapter.id ? 'bg-amber-500 text-white shadow-lg' : 'bg-slate-50 dark:bg-white/5 text-slate-400 hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10'}`}
-                            title="Drop Anchor here"
-                         >
-                            <Anchor className="w-5 h-5" />
-                         </button>
-                      </div>
-
-                      {/* Chapter Title */}
-                      <header className="space-y-6 pt-12 text-center">
-                        <div className="flex flex-col items-center gap-3">
-                          <span className="text-[10px] uppercase tracking-[0.5em] text-slate-400 font-bold ml-[0.5em]">
-                            Chapter {index + 1}
-                          </span>
-                          <div className="h-px w-6 bg-slate-200 dark:bg-white/10" />
-                          <span className="text-[10px] font-serif italic text-slate-400">
-                            {new Date(chapter.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
-                          </span>
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="space-y-64 pb-64"
+          >
+            {volumes.length > 0 ? (
+              volumes.sort((a,b) => a.volume_number - b.volume_number).map((volume) => (
+                <div key={volume.id} className="space-y-48">
+                  <h2 className="text-4xl text-center font-serif">{volume.title}</h2>
+                  {chapters.filter(c => c.volume_id === volume.id).map((chapter, index) => (
+                    <article id={`chapter-${chapter.id}`} key={chapter.id} className="space-y-12 relative group/chapter border-b border-indigo-500/5 pb-32">
+                      <h3 className="text-3xl font-serif text-center">{chapter.title}</h3>
+                      <div className="space-y-8 relative">
+                        
+                        {/* Ghost Layer Sidebar */}
+                        <div className="absolute -left-12 top-0 bottom-0 w-8 pointer-events-none hidden md:flex flex-col items-center gap-4 opacity-0 group-hover/chapter:opacity-100 transition-opacity">
+                          {activeGhosts > 0 && currentChapterId === chapter.id && (
+                             <div className="p-2 bg-indigo-50/50 rounded-full border border-indigo-100/50 flex flex-col items-center gap-1 shadow-sm backdrop-blur-sm" title={`${activeGhosts} souls resonance in this chapter`}>
+                                <Sparkles className="w-3 h-3 text-indigo-400 animate-pulse" />
+                                <span className="text-[9px] font-bold text-indigo-500">{activeGhosts}</span>
+                             </div>
+                          )}
                         </div>
-                        <h3 className="text-4xl md:text-5xl font-serif font-medium tracking-tight text-slate-900 dark:text-white leading-[1.2] px-4 max-w-xl mx-auto">
-                          {chapter.title}
-                        </h3>
-                      </header>
 
-                      {/* Chapter Content */}
-                      <div className="prose prose-slate dark:prose-invert prose-xl font-serif leading-[2] text-slate-800 dark:text-zinc-300 mx-auto px-4 selection:bg-indigo-500/20 selection:text-indigo-900">
-                        {chapter.content.split('\n').map((paragraph, pIndex) => (
-                          <p key={pIndex} className="mb-10 indent-8 first:indent-0 text-justify tracking-tight">
-                            {paragraph}
+                        {chapter.content.split('\n').filter(p=>p.trim()).map((para, pIdx) => (
+                          <p 
+                            key={pIdx} 
+                            className={`text-xl font-serif leading-relaxed cursor-pointer transition-colors duration-500 ${resonatingParagraphs.has(pIdx) ? 'bg-indigo-500/20 rounded-md ring-4 ring-indigo-500/10' : 'hover:text-indigo-600'}`}
+                            onClick={() => {
+                              sendResonance('sparkle', { paraIndex: pIdx });
+                              // Optimistically add to resonance set locally
+                              setResonatingParagraphs(prev => {
+                                const next = new Set(prev);
+                                next.add(pIdx);
+                                setTimeout(() => {
+                                  setResonatingParagraphs(cur => {
+                                     const c = new Set(cur);
+                                     c.delete(pIdx);
+                                     return c;
+                                  });
+                                }, 3000);
+                                return next;
+                              })
+                            }}
+                          >
+                            {para}
                           </p>
                         ))}
                       </div>
 
-                      {/* Publish Action - Integrated more into the flow */}
-                      {!isLibraryView && (
-                        <div className="pt-12 flex justify-center pb-20 border-b border-slate-100 dark:border-white/5 mx-12">
+                      {/* Chapter End Actions */}
+                      <div className="pt-24 pb-12 flex flex-col items-center gap-8 opacity-0 group-hover/chapter:opacity-100 transition-opacity">
+                         <div className="w-8 h-px bg-slate-200" />
+                         <div className="flex gap-4">
                            <button 
-                              onClick={() => handlePublish(chapter.id)}
-                              disabled={publishingId === chapter.id || sealingId === chapter.id || publishedIds.has(chapter.id)}
-                              className="group relative px-8 py-4 bg-transparent border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 rounded-2xl overflow-hidden transition-all hover:border-indigo-500/30 hover:text-indigo-500 disabled:opacity-30"
+                            onClick={() => handleSetBookmark(chapter.id)}
+                            className="px-6 py-2 rounded-full border border-slate-200 text-xs font-sans uppercase tracking-widest text-slate-500 hover:text-indigo-500 hover:border-indigo-200 transition-colors"
                            >
-                              <div className="flex items-center gap-3 font-serif text-xs font-bold uppercase tracking-widest relative z-10 transition-transform">
-                                 {publishedIds.has(chapter.id) ? (
-                                   <>
-                                     <Check className="w-4 h-4 text-emerald-500" />
-                                     <span className="italic">Gifted to Library</span>
-                                   </>
-                                 ) : (publishingId === chapter.id || sealingId === chapter.id) ? (
-                                   <>
-                                     <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full" />
-                                     <span className="text-indigo-500 font-mono tracking-tighter">{sealingId === chapter.id ? 'Neural Wash...' : 'Sealing Memory...'}</span>
-                                   </>
-                                 ) : (
-                                   <>
-                                     <Fingerprint className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
-                                     <span>Apply Privacy Seal</span>
-                                   </>
-                                 )}
-                              </div>
+                              Bookmark Memory
                            </button>
-                        </div>
-                      )}
-                    </motion.article>
-                  ))}
-
-                  {volume.status === 'completed' && volume.epilogue && (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.98 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true, margin: "-100px" }}
-                      className="mt-40 p-12 md:p-20 bg-white dark:bg-zinc-900/40 rounded-[3rem] border border-slate-200/60 dark:border-white/5 relative overflow-hidden text-center space-y-10 shadow-2xl shadow-indigo-500/5 mx-4"
-                    >
-                      {/* Golden Wax Seal */}
-                      <div className="absolute top-12 right-12 w-20 h-20 opacity-40 select-none">
-                         <div className="w-full h-full bg-amber-600/20 rounded-full flex items-center justify-center border-2 border-amber-600/40 rotate-12">
-                            <span className="text-[10px] font-bold text-amber-600/60 uppercase tracking-tighter">Volume {volume.volume_number} Sealed</span>
+                           
+                           {/* Only show publish option if viewing own private library */}
+                           {!isLibraryView && !publishedIds.has(chapter.id) && (
+                             <button 
+                              onClick={() => handlePublish(chapter.id)}
+                              disabled={sealingId === chapter.id}
+                              className="px-6 py-2 rounded-full bg-slate-900 text-white text-xs font-sans uppercase tracking-widest hover:bg-slate-800 transition-colors flex items-center gap-2"
+                             >
+                                {sealingId === chapter.id ? (
+                                   <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                   <ShieldCheck className="w-3.5 h-3.5" />
+                                )}
+                                Share to Real World
+                             </button>
+                           )}
+                           
+                           {publishedIds.has(chapter.id) && (
+                             <div className="px-6 py-2 rounded-full bg-emerald-50 text-emerald-600 text-xs font-sans uppercase tracking-widest border border-emerald-100 flex items-center gap-2 cursor-default">
+                               <Check className="w-3.5 h-3.5" />
+                               Gifted to Library
+                             </div>
+                           )}
                          </div>
                       </div>
 
-                      <div className="flex flex-col items-center gap-6">
-                        <div className="p-4 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-3xl">
-                          <Sparkles className="w-8 h-8 text-indigo-500" />
-                        </div>
-                        <span className="text-[11px] uppercase tracking-[0.5em] text-indigo-500 font-bold ml-[0.5em]">The Mirror&apos;s Epilogue</span>
-                      </div>
-
-                      <p className="text-2xl md:text-3xl font-serif italic text-slate-800 dark:text-zinc-200 leading-[1.6] max-w-2xl mx-auto tracking-tight">
-                        &ldquo;{volume.epilogue}&rdquo;
-                      </p>
-
-                      <div className="pt-12 flex flex-col items-center gap-6">
-                        <div className="w-20 h-px bg-indigo-200 dark:bg-indigo-500/20" />
-                        <span className="text-[10px] uppercase tracking-[0.3em] text-slate-400 font-bold">This chapter of your existence is complete.</span>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {volume.status === 'ongoing' && (
-                    <div className="text-center py-32 space-y-8">
-                      <motion.div 
-                        animate={{ 
-                          scale: [1, 1.2, 1],
-                          opacity: [0.3, 0.6, 0.3]
-                        }}
-                        transition={{ 
-                          duration: 3,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                        className="w-3 h-3 bg-indigo-500 rounded-full mx-auto" 
-                      />
-                      <p className="text-sm font-serif italic text-slate-400 dark:text-zinc-500 tracking-[0.2em] uppercase">
-                        Your life is writing the next page...
-                      </p>
-                    </div>
-                  )}
+                    </article>
+                  ))}
                 </div>
-              );
-            })
-          ) : (
-            <div className="space-y-32">
-              <div className="text-center py-20">
-                <span className="text-[10px] uppercase tracking-[0.5em] text-slate-400 font-bold">Unbound Chapters</span>
-                <div className="h-px w-12 bg-slate-100 dark:bg-white/5 mx-auto mt-4" />
+              ))
+            ) : (
+              <div className="text-center py-64">
+                 <h3 className="text-2xl font-serif text-slate-400 italic">This manuscript is still awaiting its first breath...</h3>
               </div>
-              {chapters.map((chapter, index) => (
-                <motion.article 
-                  key={chapter.id || index} 
-                  id={`chapter-${chapter.id}`}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  className="space-y-12 scroll-mt-32"
-                >
-                  <header className="space-y-6 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                       <span className="text-[10px] uppercase tracking-[0.4em] text-slate-400 font-bold">Entry {index + 1}</span>
-                       <div className="h-px w-4 bg-slate-100 dark:bg-white/5" />
-                    </div>
-                    <h3 className="text-4xl font-serif font-medium tracking-tight text-slate-900 dark:text-white leading-[1.2] max-w-xl mx-auto italic transition-all group-hover:text-indigo-500">
-                      {chapter.title}
-                    </h3>
-                  </header>
-                  <div className="prose prose-slate dark:prose-invert prose-xl font-serif leading-[2] text-slate-800 dark:text-zinc-300 mx-auto px-4">
-                    {chapter.content.split('\n').map((paragraph, pIndex) => (
-                      <p key={pIndex} className="mb-10 indent-8 first:indent-0 text-justify tracking-tight">
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
-                </motion.article>
-              ))}
-            </div>
-          )}
-        </motion.div>
-       </div>
+            )}
+          </motion.div>
+        </div>
+        </div>
       </motion.main>
-
-      {/* Privacy Sealing Modal */}
       <AnimatePresence>
         {sealPreview && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-white/80 dark:bg-black/80 backdrop-blur-md"
+          >
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSealPreview(null)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-2xl bg-white dark:bg-[#111] rounded-[32px] overflow-hidden shadow-2xl border border-white/10"
+              initial={{ y: 20, opacity: 0, scale: 0.95 }}
+              animate={{ y: 0, opacity: 1, scale: 1 }}
+              exit={{ y: 20, opacity: 0, scale: 0.95 }}
+              className="w-full max-w-2xl bg-white dark:bg-zinc-950 border border-indigo-500/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
             >
-              <div className="p-8 md:p-10">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-indigo-500/10 rounded-lg">
-                    <ShieldCheck className="w-5 h-5 text-indigo-500" />
+              {/* Header */}
+              <div className="p-6 border-b border-indigo-500/10 flex items-center justify-between bg-indigo-50/50 dark:bg-indigo-950/20">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                    <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-serif font-bold dark:text-white">Neural Wash Complete</h3>
-                    <p className="text-xs text-gray-500">Our privacy engine has successfully generalized your identifiers while preserving the soul of the story.</p>
+                    <h3 className="font-serif text-lg font-medium text-slate-900 dark:text-white">Privacy Seal Protocol</h3>
+                    <p className="text-xs font-sans text-slate-500 dark:text-zinc-400">Review the AI's redactions to protect your identity.</p>
                   </div>
                 </div>
+                <button 
+                  onClick={() => setSealPreview(null)}
+                  className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
 
-                <div className="space-y-6 max-h-[50vh] overflow-y-auto pr-4 scrollbar-whatsapp">
-                  <div className="p-6 bg-gray-50 dark:bg-black/40 rounded-2xl border border-gray-100 dark:border-white/5">
-                    <div className="text-[10px] uppercase tracking-widest text-gray-400 mb-2">Original Context</div>
-                    <h4 className="font-serif font-bold text-gray-900 dark:text-white mb-2">{sealPreview.chapter.title}</h4>
-                    <p className="text-sm text-gray-400 line-clamp-3 italic opacity-50">{sealPreview.chapter.content}</p>
+              {/* Scrollable Content */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-8 font-serif">
+                {/* Alterations Report */}
+                {sealPreview.result.alterations.length > 0 ? (
+                  <div className="bg-indigo-50/50 dark:bg-indigo-900/10 rounded-xl p-4 border border-indigo-500/10">
+                    <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-3 flex items-center gap-2">
+                      <Sparkles className="w-3 h-3" />
+                      Alterations Made
+                    </h4>
+                    <ul className="space-y-2">
+                      {sealPreview.result.alterations.map((alt, idx) => (
+                        <li key={idx} className="text-sm font-sans flex items-start gap-2 text-slate-700 dark:text-zinc-300">
+                          <span className="text-indigo-500 mt-0.5">•</span>
+                          {alt}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
-
-                  <div className="p-6 bg-indigo-500/5 dark:bg-indigo-500/[0.03] rounded-2xl border border-indigo-500/20">
-                    <div className="text-[10px] uppercase tracking-widest text-indigo-500 font-bold mb-2">Sealed for the Public</div>
-                    <h4 className="font-serif font-bold text-gray-900 dark:text-white mb-2">{sealPreview.result.title}</h4>
-                    <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed font-serif">
-                      {sealPreview.result.content}
-                    </p>
+                ) : (
+                  <div className="text-center p-4 bg-emerald-50 dark:bg-emerald-950/20 rounded-xl border border-emerald-500/20">
+                     <p className="text-sm font-sans text-emerald-700 dark:text-emerald-400">No sensitive information detected. The raw memory is safe.</p>
                   </div>
+                )}
 
-                  {sealPreview.result.alterations.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-2">
-                       {sealPreview.result.alterations.map((alt, i) => (
-                         <span key={i} className="px-2 py-1 bg-gray-100 dark:bg-white/5 rounded-md text-[10px] text-gray-500 flex items-center gap-1">
-                           <Info className="w-3 h-3" /> {alt}
-                         </span>
-                       ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mt-10">
-                  <button
-                    onClick={() => setSealPreview(null)}
-                    className="py-4 rounded-2xl text-xs font-bold uppercase tracking-widest text-gray-500 bg-gray-100 dark:bg-white/5 hover:bg-gray-200 dark:hover:bg-white/10 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={() => handlePublish(sealPreview.chapter.id, { 
-                      sealedTitle: sealPreview.result.title, 
-                      sealedContent: sealPreview.result.content 
-                    })}
-                    disabled={publishingId === sealPreview.chapter.id}
-                    className="py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-xl active:scale-95 disabled:opacity-50"
-                  >
-                    {publishingId ? 'Publishing...' : 'Confirm & Gift'}
-                  </button>
+                {/* Sealed Manuscript Preview */}
+                <div className="space-y-4">
+                  <h4 className="text-[10px] font-sans font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200 dark:border-zinc-800 pb-2">
+                    Sealed Output Preview
+                  </h4>
+                  <h2 className="text-2xl text-slate-900 dark:text-white">{sealPreview.result.title}</h2>
+                  <div className="space-y-4 text-slate-700 dark:text-zinc-300 leading-relaxed text-sm">
+                    {sealPreview.result.content.split('\n').filter(p=>p.trim()).map((para, i) => (
+                      <p key={i}>{para}</p>
+                    ))}
+                  </div>
                 </div>
               </div>
+
+              {/* Action Footer */}
+              <div className="p-6 border-t border-indigo-500/10 bg-slate-50 dark:bg-zinc-900 flex justify-end gap-3 font-sans">
+                <button 
+                  onClick={() => setSealPreview(null)}
+                  className="px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  disabled={publishingId === sealPreview.chapter.id}
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => handlePublish(sealPreview.chapter.id, {
+                     sealedTitle: sealPreview.result.title,
+                     sealedContent: sealPreview.result.content
+                  })}
+                  disabled={publishingId === sealPreview.chapter.id}
+                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {publishingId === sealPreview.chapter.id ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Publishing...
+                    </>
+                  ) : (
+                    <>
+                       <Send className="w-4 h-4" />
+                       Confirm & Publish
+                    </>
+                  )}
+                </button>
+              </div>
+
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

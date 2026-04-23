@@ -35,7 +35,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState('');
   const [penName, setPenName] = useState('');
   const [bio, setBio] = useState('');
-  const [activeTab, setActiveTab] = useState<'general' | 'mirror' | 'privacy'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'mirror' | 'sanctum' | 'privacy'>('general');
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -404,6 +404,9 @@ export default function ProfilePage() {
                  <button onClick={() => setActiveTab('general')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'general' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
                     <User className="w-3 h-3" /> Identity
                  </button>
+                 <button onClick={() => setActiveTab('sanctum')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'sanctum' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                    <BookOpen className="w-3 h-3" /> Sanctum
+                 </button>
                  <button onClick={() => setActiveTab('mirror')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'mirror' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
                     <Shield className="w-3 h-3" /> Mirror
                  </button>
@@ -416,6 +419,8 @@ export default function ProfilePage() {
                 <>
                   {profile && <SanctuaryMirror profile={profile} onUpdate={handleUpdateIntelligence} />}
                 </>
+              ) : activeTab === 'sanctum' ? (
+                <AuthorHeartbeat />
               ) : (
                 <PrivacyTrustCenter />
               )}

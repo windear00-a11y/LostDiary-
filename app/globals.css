@@ -90,6 +90,56 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;
   }
+
+  /* Physical Book Layout Enhancements */
+  .book-page-container {
+    background: linear-gradient(to right, #e8e4d9 0%, #fdfcf8 5%, #fdfcf8 95%, #e8e4d9 100%);
+    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .book-page-container {
+    background: linear-gradient(to right, #050505 0%, #0d0d0d 5%, #0d0d0d 95%, #050505 100%);
+    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.4);
+  }
+
+  .spine-shadow {
+    background: linear-gradient(to right, transparent, rgba(0,0,0,0.03) 45%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.03) 55%, transparent);
+  }
+
+  .dark .spine-shadow {
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.01) 45%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 55%, transparent);
+  }
+
+  .justified-para {
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: auto;
+  }
+
+  .drop-cap::first-letter {
+    float: left;
+    font-size: 4.5rem;
+    line-height: 1;
+    padding-top: 4px;
+    padding-right: 12px;
+    padding-left: 2px;
+    font-weight: 700;
+    color: #6366f1; /* Indigo-500 */
+    font-family: serif;
+    text-shadow: 2px 2px 0 rgba(99, 102, 241, 0.1);
+  }
+
+  .page-number-flourish::before,
+  .page-number-flourish::after {
+    content: "";
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    background: currentColor;
+    vertical-align: middle;
+    margin: 0 10px;
+    opacity: 0.3;
+  }
 }
 
 @keyframes shimmer {

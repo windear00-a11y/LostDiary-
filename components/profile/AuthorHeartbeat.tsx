@@ -1,13 +1,14 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { Sparkles, Leaf, Droplets, Handshake, Send, BookOpen, Eye, RefreshCcw, Info } from 'lucide-react';
+import { Sparkles, Leaf, Droplets, Handshake, Send, BookOpen, Eye, RefreshCcw, Info, Activity, Wind, Waves, Heart, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { toast } from 'sonner';
 
 export const AuthorHeartbeat = () => {
     const [stats, setStats] = useState<any[]>([]);
     const [isSyncing, setIsSyncing] = useState(false);
+    const [activeLayer, setActiveLayer] = useState<'wave' | 'radar'>('wave');
 
     const fetchHeartbeat = useCallback(async () => {
         setIsSyncing(true);
@@ -28,37 +29,88 @@ export const AuthorHeartbeat = () => {
         fetchHeartbeat();
     }, [fetchHeartbeat]);
 
+    const globalViews = stats.reduce((acc, curr) => acc + curr.views_count, 0);
+    const globalReactions = stats.reduce((acc, curr) => acc + (curr.library_reactions?.length || 0), 0);
+    const overallResonance = globalViews > 0 ? ((globalReactions / globalViews) * 100).toFixed(1) : 0;
+
     return (
-        <div className="space-y-10">
+        <div className="space-y-16 py-12">
             <div className="flex flex-col items-center text-center px-4">
                 <div className="relative mb-6">
                     <motion.div 
                         animate={isSyncing ? { rotate: 360 } : {}}
                         transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                        className="w-20 h-20 rounded-full bg-amber-500/10 border-2 border-amber-500/20 flex items-center justify-center shadow-2xl shadow-amber-500/10"
+                        className="w-24 h-24 rounded-full bg-gradient-to-tr from-indigo-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.2)] backdrop-blur-md"
                     >
-                        <Sparkles className="w-10 h-10 text-amber-500" />
+                        <Activity className="w-10 h-10 text-indigo-400" />
                     </motion.div>
                     
                     <button 
                         onClick={fetchHeartbeat}
                         disabled={isSyncing}
                         className="absolute -bottom-2 -right-2 w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center shadow-xl hover:scale-110 active:scale-95 transition-all"
-                        title="Sync Energy Jar"
+                        title="Sync Sanctum"
                     >
                         <RefreshCcw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                     </button>
                 </div>
 
-                <h2 className="text-3xl font-serif font-bold text-slate-900 dark:text-white mb-3 italic">
-                    The Energy Jar
+                <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-900 dark:text-white mb-4 italic tracking-tight">
+                    Sanctum
                 </h2>
-                <p className="text-sm text-slate-500 dark:text-gray-400 italic font-serif leading-relaxed max-w-sm">
-                    A collection of resonance gathered from souls who breathed your words in the library.
-                </p>
+                <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-[0.3em] text-slate-400">
+                    <div className="w-8 h-px bg-slate-300 dark:bg-white/10" />
+                    The Author's Soul Chart
+                    <div className="w-8 h-px bg-slate-300 dark:bg-white/10" />
+                </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-6">
+            {/* Global Metrics Dashboard */}
+            {stats.length > 0 && (
+                <div className="grid grid-cols-3 gap-4 md:gap-8">
+                    <div className="flex flex-col items-center text-center p-6 bg-slate-50 dark:bg-white/[0.02] rounded-3xl border border-slate-100 dark:border-white/5 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-t from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Eye className="w-5 h-5 text-indigo-400 mb-4" />
+                        <span className="text-4xl font-serif text-slate-900 dark:text-white">{globalViews}</span>
+                        <span className="text-[9px] uppercase tracking-widest text-slate-400 mt-2 font-bold">Total Glances</span>
+                    </div>
+                    
+                    <div className="flex flex-col items-center text-center p-6 bg-slate-50 dark:bg-white/[0.02] rounded-3xl border border-slate-100 dark:border-white/5 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <Heart className="w-5 h-5 text-rose-400 mb-4" />
+                        <span className="text-4xl font-serif text-slate-900 dark:text-white">{globalReactions}</span>
+                        <span className="text-[9px] uppercase tracking-widest text-slate-400 mt-2 font-bold">Soul Echoes</span>
+                    </div>
+
+                    <div className="flex flex-col items-center text-center p-6 bg-slate-50 dark:bg-white/[0.02] rounded-3xl border border-slate-100 dark:border-white/5 relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <TrendingUp className="w-5 h-5 text-emerald-400 mb-4" />
+                        <span className="text-4xl font-serif text-emerald-500">{overallResonance}%</span>
+                        <span className="text-[9px] uppercase tracking-widest text-slate-400 mt-2 font-bold">Avg Resonance</span>
+                    </div>
+                </div>
+            )}
+
+            {/* Individual Volume Data */}
+            <div className="space-y-8">
+                <div className="flex items-center justify-between px-2">
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">Pulse Signatures</h3>
+                    <div className="flex bg-slate-100 dark:bg-white/5 rounded-full p-1 border border-slate-200 dark:border-white/10">
+                        <button 
+                            onClick={() => setActiveLayer('wave')} 
+                            className={`p-2 rounded-full transition-colors ${activeLayer === 'wave' ? 'bg-white dark:bg-[#1A1A1A] text-indigo-500 shadow-sm' : 'text-slate-400'}`}
+                        >
+                            <Waves className="w-4 h-4" />
+                        </button>
+                        <button 
+                            onClick={() => setActiveLayer('radar')} 
+                            className={`p-2 rounded-full transition-colors ${activeLayer === 'radar' ? 'bg-white dark:bg-[#1A1A1A] text-indigo-500 shadow-sm' : 'text-slate-400'}`}
+                        >
+                            <Wind className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+
                 <AnimatePresence mode="popLayout">
                     {stats.map((story, idx) => {
                         const totalReactions = story.library_reactions?.length || 0;
@@ -71,59 +123,58 @@ export const AuthorHeartbeat = () => {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.1 }}
-                                className="group bg-white dark:bg-[#111] rounded-[36px] p-8 border border-slate-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all relative overflow-hidden"
+                                className="group bg-white dark:bg-[#0A0A0A] rounded-[36px] p-8 md:p-12 border border-slate-100 dark:border-white/5 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-2xl transition-all relative overflow-hidden"
                             >
-                                {/* The Jar Filling Animation Background */}
-                                <motion.div 
-                                    className="absolute bottom-0 left-0 right-0 bg-indigo-500/5 dark:bg-indigo-500/10"
-                                    initial={{ height: 0 }}
-                                    animate={{ height: `${resonancePercent}%` }}
-                                    transition={{ duration: 1.5, ease: "easeOut" }}
-                                />
-
-                                <div className="relative z-10">
-                                    <div className="flex justify-between items-start mb-8">
-                                        <div className="max-w-[70%]">
-                                            <h3 className="text-xl font-serif font-bold text-slate-800 dark:text-slate-100 mb-2 leading-tight">
-                                                {story.title}
-                                            </h3>
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Legacy Thread</span>
-                                                <div className="w-1 h-1 rounded-full bg-slate-300" />
-                                                <span className="text-[10px] text-indigo-500 font-bold uppercase">Resonating</span>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="text-4xl font-serif font-bold text-indigo-600 dark:text-indigo-400">
-                                               {resonancePercent}%
-                                            </div>
-                                            <div className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Resonance</div>
-                                        </div>
+                                {/* Abstract Data Vis Layer */}
+                                {activeLayer === 'wave' && (
+                                    <div className="absolute inset-0 pointer-events-none opacity-[0.03] dark:opacity-[0.1] overflow-hidden flex items-end">
+                                        <motion.div 
+                                            initial={{ y: "100%" }}
+                                            animate={{ y: `${100 - Number(resonancePercent)}%` }}
+                                            transition={{ duration: 2, ease: "easeOut" }}
+                                            className="w-full h-[200%] bg-indigo-500 rounded-t-[100%] scale-150 transform translate-y-1/2" 
+                                        />
                                     </div>
+                                )}
+                                
+                                {activeLayer === 'radar' && (
+                                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-64 h-64 pointer-events-none opacity-[0.03] dark:opacity-[0.1] mix-blend-screen">
+                                         <motion.div 
+                                            animate={{ rotate: 360 }} 
+                                            transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                                            className="absolute inset-0"
+                                            style={{
+                                                background: `conic-gradient(from 0deg, transparent 0deg, transparent 180deg, #6366F1 360deg)`
+                                            }}
+                                         />
+                                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] border-4 border-dashed border-[#6366F1] rounded-full" />
+                                    </div>
+                                )}
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="p-6 bg-slate-50 dark:bg-black/40 rounded-3xl border border-slate-100 dark:border-white/5 flex flex-col items-center justify-center text-center">
-                                            <Eye className="w-6 h-6 text-slate-400 mb-3" />
-                                            <div className="text-2xl font-bold text-slate-900 dark:text-white">{story.views_count}</div>
-                                            <div className="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Breathed by</div>
+                                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+                                    <div className="flex-1 max-w-xl">
+                                        <div className="flex items-center gap-3 mb-4">
+                                            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center border border-slate-200 dark:border-white/10">
+                                                <BookOpen className="w-4 h-4 text-slate-500" />
+                                            </div>
+                                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-500 bg-indigo-500/10 px-2 py-1 rounded">Volume {idx + 1}</span>
                                         </div>
-                                        <div className="p-6 bg-amber-500/5 dark:bg-amber-500/10 rounded-3xl border border-amber-500/10 flex flex-col items-center justify-center text-center">
-                                            <Sparkles className="w-6 h-6 text-amber-500 mb-3" />
-                                            <div className="text-2xl font-bold text-amber-500">{totalReactions}</div>
-                                            <div className="text-[10px] uppercase tracking-widest text-amber-500 mt-1">Energy Points</div>
-                                        </div>
+                                        <h3 className="text-3xl font-serif font-bold text-slate-800 dark:text-white mb-4 leading-tight tracking-tight">
+                                            {story.title}
+                                        </h3>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 font-serif italic line-clamp-2">
+                                            "A deeply personal reflection mapping the architecture of your experiences."
+                                        </p>
                                     </div>
                                     
-                                    <div className="mt-8 pt-6 border-t border-slate-100 dark:border-white/5 flex items-center justify-between">
-                                       <div className="flex items-center gap-2 text-xs text-slate-400 italic">
-                                          <Info className="w-3 h-3" />
-                                          Higher resonance builds stronger bridges.
-                                       </div>
-                                       <motion.div 
-                                          animate={{ scale: [1, 1.1, 1] }} 
-                                          transition={{ repeat: Infinity, duration: 3 }}
-                                          className="w-2 h-2 rounded-full bg-indigo-500" 
-                                       />
+                                    <div className="flex flex-row md:flex-col gap-6 md:gap-4 shrink-0">
+                                        <div className="text-left md:text-right">
+                                            <div className="flex items-end md:justify-end gap-2 mb-1">
+                                                <span className="text-4xl font-serif font-bold text-indigo-600 dark:text-indigo-400">{resonancePercent}%</span>
+                                                <Sparkles className="w-5 h-5 text-amber-400 pb-1" />
+                                            </div>
+                                            <div className="text-[9px] uppercase tracking-widest text-slate-400 font-bold">Aura Resonance</div>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
@@ -132,15 +183,17 @@ export const AuthorHeartbeat = () => {
                 </AnimatePresence>
 
                 {stats.length === 0 && !isSyncing && (
-                    <div className="p-20 text-center bg-slate-50 dark:bg-white/[0.02] rounded-[48px] border border-dashed border-slate-200 dark:border-white/5">
-                        <Droplets className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                        <p className="text-slate-400 font-serif italic italic">Publish your first legacy to start gathering resonance energy.</p>
+                    <div className="p-20 text-center bg-[#050505] rounded-[48px] border border-white/5 shadow-2xl relative overflow-hidden">
+                        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent pointer-events-none" />
+                        <Droplets className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-6 opacity-30" />
+                        <h4 className="text-xl font-serif text-white mb-2 italic">The canvas is blank</h4>
+                        <p className="text-slate-500 text-sm font-serif italic">Publish your first legacy to start mapping your author's soul.</p>
                     </div>
                 )}
             </div>
             
-            <p className="text-center text-[10px] text-slate-400 uppercase tracking-[0.2em] font-medium pt-8">
-               Your energy is infinite, your words are eternal.
+            <p className="text-center text-[10px] text-slate-400 uppercase tracking-[0.3em] font-bold pt-16 opacity-50">
+               // Tracking Emotional Footprints
             </p>
         </div>
     );
