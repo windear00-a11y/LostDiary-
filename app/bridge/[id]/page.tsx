@@ -4,8 +4,9 @@ import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Header } from '@/components/ui/Header';
 import { BridgeHeader } from '@/components/bridge/BridgeHeader';
-import { Send, Handshake, AlertTriangle, ArrowLeft, Sparkles } from 'lucide-react';
+import { Send, Handshake, AlertTriangle, ArrowLeft, Sparkles, MessageSquare, Heart, Shield, MoreHorizontal, Compass } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 export default function BridgePage({ params }: { params: { id: string } }) {
   const bridgeId = params.id;
@@ -17,6 +18,7 @@ export default function BridgePage({ params }: { params: { id: string } }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string|null>(null);
   const [resonanceMsg, setResonanceMsg] = useState<string|null>(null);
+  const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
   
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
@@ -114,19 +116,72 @@ export default function BridgePage({ params }: { params: { id: string } }) {
               </p>
            </div>
 
-           {messages.map((msg, i) => {
-              const isMine = msg.isMine;
-              return (
-                 <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`max-w-[75%] md:max-w-[60%] p-5 rounded-3xl ${isMine ? 'bg-indigo-600/20 text-indigo-100 border border-indigo-500/10 rounded-br-sm' : 'bg-white/5 text-white/90 border border-white/5 rounded-bl-sm'}`}>
-                       <p className="font-serif text-sm md:text-base leading-relaxed">{msg.content}</p>
-                       <div className={`text-[9px] mt-3 opacity-30 ${isMine ? 'text-right' : 'text-left'}`}>
-                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                       </div>
-                    </div>
-                 </div>
-              );
-           })}
+           <AnimatePresence>
+             {messages.map((msg, i) => {
+                const isMine = msg.isMine;
+                const isActive = activeMessageId === msg.id;
+                return (
+                   <motion.div 
+                      key={msg.id} 
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      className={`flex ${isMine ? 'justify-end' : 'justify-start'} group`}
+                   >
+                      <div className="relative max-w-[85%] md:max-w-[70%]">
+                         <div 
+                            onClick={() => setActiveMessageId(isActive ? null : msg.id)}
+                            className={`p-5 rounded-[28px] transition-all cursor-pointer relative ${
+                               isMine 
+                               ? 'bg-indigo-600/20 text-indigo-100 border border-indigo-500/20 rounded-br-sm' 
+                               : 'bg-white/5 text-white/90 border border-white/5 rounded-bl-sm'
+                            } ${isActive ? 'ring-2 ring-indigo-500/40 shadow-2xl scale-[1.02]' : 'hover:bg-white/10'}`}
+                         >
+                            <p className="font-serif text-sm md:text-base leading-relaxed">{msg.content}</p>
+                            <div className={`text-[9px] mt-3 opacity-30 flex items-center gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}>
+                               {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                               {!isMine && <Sparkles className="w-2 h-2 text-indigo-400" />}
+                            </div>
+                         </div>
+
+                         {/* Contextual Menu - Pattern 4 */}
+                         <AnimatePresence>
+                            {isActive && (
+                               <motion.div 
+                                  initial={{ opacity: 0, scale: 0.8, y: isMine ? -10 : 10 }}
+                                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                                  exit={{ opacity: 0, scale: 0.8 }}
+                                  className={`absolute z-20 top-full mt-2 flex gap-1 p-1.5 bg-[#1A1A1D] border border-white/10 rounded-2xl shadow-2xl ${isMine ? 'right-0' : 'left-0'}`}
+                               >
+                                  <button 
+                                     onClick={(e) => { e.stopPropagation(); toast.success("Soul Resonated"); setActiveMessageId(null); }}
+                                     className="p-2 hover:bg-white/5 rounded-xl transition-colors text-indigo-400" 
+                                     title="Resonate"
+                                  >
+                                     <Heart className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                     onClick={(e) => { e.stopPropagation(); toast.info("Mirrored in Diary"); setActiveMessageId(null); }}
+                                     className="p-2 hover:bg-white/5 rounded-xl transition-colors text-emerald-400" 
+                                     title="Mirror to Diary"
+                                  >
+                                     <Compass className="w-4 h-4" />
+                                  </button>
+                                  <button 
+                                     onClick={(e) => { e.stopPropagation(); setActiveMessageId(null); }}
+                                     className="p-2 hover:bg-white/5 rounded-xl transition-colors text-white/50" 
+                                     title="More"
+                                  >
+                                     <MoreHorizontal className="w-4 h-4" />
+                                  </button>
+                               </motion.div>
+                            )}
+                         </AnimatePresence>
+                      </div>
+                   </motion.div>
+                );
+             })}
+           </AnimatePresence>
            <div ref={endOfMessagesRef} className="h-4" />
         </div>
 

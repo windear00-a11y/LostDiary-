@@ -6,7 +6,7 @@ import { coreService, UserProfile, IntelligenceProfile } from '@/lib/services/co
 import { getGenAI } from '@/lib/genai';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { motion, AnimatePresence } from 'motion/react';
-import { User, Camera, Sparkles, LogOut, Save, Edit2, Shield, Send, Book, Handshake, ChevronRight, MessageSquare, Heart } from 'lucide-react';
+import { User, Camera, Sparkles, LogOut, Save, Edit2, Shield, Send, Book, Handshake, ChevronRight, MessageSquare, Heart, ChevronDown, ChevronUp, MoreVertical, Trash2, ExternalLink, BookOpen } from 'lucide-react';
 import { DeleteAccountModal } from '@/components/profile/DeleteAccountModal';
 import { FeedbackDrawer } from '@/components/ui/FeedbackDrawer';
 import { Header } from '@/components/ui/Header';
@@ -14,6 +14,7 @@ import { SanctuaryMirror } from '@/components/profile/SanctuaryMirror';
 import { AuthorHeartbeat } from '@/components/profile/AuthorHeartbeat';
 import { PrivacyTrustCenter } from '@/components/profile/PrivacyTrustCenter';
 import { SuccessMoment } from '@/components/ui/SuccessMoment';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useUIStore } from '@/lib/store/use-ui-store';
@@ -34,11 +35,16 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState('');
   const [penName, setPenName] = useState('');
   const [bio, setBio] = useState('');
-  const [activeTab, setActiveTab] = useState<'general' | 'mirror' | 'bridges' | 'treasury' | 'privacy'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'mirror' | 'energy' | 'bridges' | 'treasury' | 'privacy'>('general');
   const [inboxPlanes, setInboxPlanes] = useState<any[]>([]);
   const [bridges, setBridges] = useState<any[]>([]);
   const [chapters, setChapters] = useState<any[]>([]);
   const [volumes, setVolumes] = useState<any[]>([]);
+
+  // UX Patterns State
+  const [expandedPlanes, setExpandedPlanes] = useState<Set<string>>(new Set());
+  const [expandedLegacy, setExpandedLegacy] = useState<Set<string>>(new Set());
+  const [bridgeConfirmSheet, setBridgeConfirmSheet] = useState<{ open: boolean, plane: any | null }>({ open: false, plane: null });
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -138,7 +144,6 @@ export default function ProfilePage() {
       setIsGenerating(true);
       setError(null);
       
-      // 1. Get context from diary entries
       const messages = await coreService.fetchMessages(user.id);
       if (messages.length < 3) {
         setError("WinDear needs at least 3 entries to understand your persona.");
@@ -151,7 +156,6 @@ export default function ProfilePage() {
         .map(m => m.content)
         .join('\n');
 
-      // 2. Generate prompt using Gemini
       const promptResponse = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: `Based on these diary entries, describe a symbolic, artistic, and abstract avatar that represents this person's personality and current emotional state. Keep the description concise and visual.
@@ -164,7 +168,6 @@ export default function ProfilePage() {
 
       const visualPrompt = promptResponse.text || "A serene and abstract representation of a thoughtful soul, soft colors, ethereal light.";
 
-      // 3. Generate image using Gemini Image model
       const imageResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: {
@@ -185,7 +188,6 @@ export default function ProfilePage() {
       }
 
       if (base64Image) {
-        // 4. Upload and update profile
         const publicUrl = await coreService.uploadAvatar(user.id, base64Image);
         const updated = await coreService.updateProfile(user.id, {
           avatar_url: publicUrl,
@@ -199,6 +201,48 @@ export default function ProfilePage() {
       setError("AI generation failed. Please try again in a moment.");
     } finally {
       setIsGenerating(false);
+    }
+  };
+
+  const togglePlane = (id: string) => {
+    setExpandedPlanes(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleLegacy = (id: string) => {
+    setExpandedLegacy(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleAcceptPlane = async (plane: any) => {
+    setBridgeConfirmSheet({ open: true, plane });
+  };
+
+  const confirmBridge = async () => {
+    const plane = bridgeConfirmSheet.plane;
+    if (!plane) return;
+    try {
+      const res = await fetch('/api/profile/planes/accept', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ planeId: plane.id }) 
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInboxPlanes(curr => curr.filter(p => p.id !== plane.id));
+        setBridgeConfirmSheet({ open: false, plane: null });
+        router.push(`/bridge/${data.bridgeId}`);
+      }
+    } catch (e) {
+      toast.error("Failed to build bridge.");
     }
   };
 
@@ -221,6 +265,36 @@ export default function ProfilePage() {
         subtitle="Your presence in the sanctuary has been updated."
         type="save"
       />
+
+      <BottomSheet
+        isOpen={bridgeConfirmSheet.open}
+        onClose={() => setBridgeConfirmSheet({ open: false, plane: null })}
+        title="Build a Soul Bridge?"
+        subtitle={`Connecting with ${bridgeConfirmSheet.plane?.sender?.pen_name}. This will establish a persistent and private link between your sanctuaries.`}
+      >
+        <div className="space-y-6">
+          <div className="p-4 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-serif italic leading-relaxed">
+            &quot;A bridge is more than a path; it is a shared space of trust. Conversations here are protected by the sanctuary's silence.&quot;
+          </div>
+          
+          <div className="space-y-3">
+             <div className="flex items-center gap-3 p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5 opacity-60">
+                <Shield className="w-5 h-5 text-slate-400" />
+                <div>
+                   <p className="text-[10px] font-bold uppercase text-slate-500">Connection Mode</p>
+                   <p className="text-sm font-medium">Standard Protected (Fully Anonymous)</p>
+                </div>
+             </div>
+          </div>
+
+          <button 
+             onClick={confirmBridge}
+             className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+          >
+             Confirm and Open Bridge <Handshake className="w-4 h-4" />
+          </button>
+        </div>
+      </BottomSheet>
       
       <main className="max-w-2xl mx-auto px-6 pt-24 perspective-1000">
         <AnimatePresence mode="wait">
@@ -285,7 +359,7 @@ export default function ProfilePage() {
                   <button 
                     onClick={generateAIAvatar}
                     disabled={isGenerating}
-                    className="absolute -bottom-2 -right-2 p-3 bg-accent text-white rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
+                    className="absolute -bottom-2 -right-2 p-3 bg-indigo-500 text-white rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
                     title="Generate AI Avatar"
                   >
                     <Sparkles className="w-5 h-5" />
@@ -303,10 +377,10 @@ export default function ProfilePage() {
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Personal Display Name</label>
                     <button 
-                      onClick={() => setIsEditing(!isEditing)}
-                      className="text-accent hover:underline text-sm flex items-center gap-1"
+                      onClick={() => { if(isEditing) handleSaveProfile(); setIsEditing(!isEditing); }}
+                      className="text-indigo-500 hover:underline text-sm flex items-center gap-1"
                     >
-                      {isEditing ? <Save className="w-4 h-4" onClick={handleSaveProfile} /> : <Edit2 className="w-4 h-4" />}
+                      {isEditing ? <Save className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
                     </button>
                   </div>
                   {isEditing ? (
@@ -314,7 +388,7 @@ export default function ProfilePage() {
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-accent transition-colors"
+                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-indigo-500 transition-colors"
                       placeholder="Your private name..."
                     />
                   ) : (
@@ -327,7 +401,7 @@ export default function ProfilePage() {
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-accent/80">Pen Name & Tag (For the Library)</label>
+                    <label className="text-xs font-semibold uppercase tracking-wider text-indigo-500/80">Pen Name & Tag (For the Library)</label>
                   </div>
                   
                   {isEditing ? (
@@ -335,7 +409,7 @@ export default function ProfilePage() {
                       type="text"
                       value={penName}
                       onChange={(e) => setPenName(e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-accent transition-colors"
+                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-indigo-500 transition-colors"
                       placeholder="E.g., The Midnight Thinker"
                     />
                   ) : (
@@ -344,7 +418,7 @@ export default function ProfilePage() {
                         {profile?.pen_name || 'Anonymous Author'}
                       </h2>
                       {profile?.pen_name_tag && (
-                        <span className="bg-accent/10 text-accent font-mono text-sm px-2 py-1 rounded-lg">
+                        <span className="bg-indigo-500/10 text-indigo-500 font-mono text-sm px-2 py-1 rounded-lg">
                           #{profile.pen_name_tag}
                         </span>
                       )}
@@ -359,7 +433,7 @@ export default function ProfilePage() {
                     <textarea 
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-accent transition-colors resize-none h-24"
+                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-indigo-500 transition-colors resize-none h-24"
                       placeholder="Write a little about the mind behind the stories..."
                     />
                   ) : (
@@ -370,10 +444,10 @@ export default function ProfilePage() {
                 </div>
 
                 {profile?.personality_summary && (
-                  <div className="p-4 bg-accent/5 rounded-2xl border border-accent/10">
+                  <div className="p-4 bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
                     <div className="flex items-center gap-2 mb-2">
-                      <Sparkles className="w-4 h-4 text-accent" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-accent">AI Insight</span>
+                      <Sparkles className="w-4 h-4 text-indigo-500" />
+                      <span className="text-xs font-bold uppercase tracking-wider text-indigo-500">AI Insight</span>
                     </div>
                     <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
                       {profile.personality_summary}
@@ -432,6 +506,9 @@ export default function ProfilePage() {
                  <button onClick={() => setActiveTab('mirror')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'mirror' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
                     <Shield className="w-3 h-3" /> Mirror
                  </button>
+                 <button onClick={() => setActiveTab('energy')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'energy' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                    <Sparkles className="w-3 h-3" /> Energy Jar
+                 </button>
                  <button onClick={() => setActiveTab('treasury')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'treasury' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
                     <Book className="w-3 h-3" /> Legacy
                  </button>
@@ -442,15 +519,18 @@ export default function ProfilePage() {
                     <Shield className="w-3 h-3" /> Rights
                  </button>
               </div>
-                           {activeTab === 'mirror' ? (
+
+              {activeTab === 'mirror' ? (
                 <>
                   {profile && <SanctuaryMirror profile={profile} onUpdate={handleUpdateIntelligence} />}
                 </>
+              ) : activeTab === 'energy' ? (
+                <AuthorHeartbeat />
               ) : activeTab === 'privacy' ? (
                 <PrivacyTrustCenter />
               ) : activeTab === 'treasury' ? (
                 <div className="space-y-12">
-                   {/* Paper Planes Section */}
+                   {/* Paper Planes Section - Pattern 3: Accordion */}
                    <div>
                       <div className="flex items-center gap-2 mb-6">
                          <Send className="w-5 h-5 text-indigo-500" />
@@ -464,86 +544,124 @@ export default function ProfilePage() {
                          </div>
                       ) : (
                          <div className="grid grid-cols-1 gap-4">
-                            {inboxPlanes.map(plane => (
-                               <div key={plane.id} className="p-6 bg-white dark:bg-[#111] rounded-[24px] border border-gray-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                                  <div className="flex justify-between items-start mb-4">
-                                     <div className="flex items-center gap-2">
-                                        <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
-                                           <User className="w-4 h-4 text-indigo-500" />
-                                        </div>
-                                        <div>
-                                           <div className="text-[10px] uppercase tracking-widest text-gray-400">From</div>
-                                           <div className="text-sm font-bold">{plane.sender.pen_name} <span className="text-gray-400 font-mono text-[10px]">#{plane.sender.pen_name_tag}</span></div>
-                                        </div>
-                                     </div>
-                                     <span className="text-[10px] text-gray-400 uppercase tracking-widest">{new Date(plane.created_at).toLocaleDateString()}</span>
-                                  </div>
-                                  <p className="text-sm font-serif text-gray-700 dark:text-gray-300 leading-relaxed italic p-4 bg-gray-50 dark:bg-black/40 rounded-2xl border border-gray-100 dark:border-white/5 mb-4">
-                                     &quot;{plane.content}&quot;
-                                  </p>
-                                  <button
-                                     onClick={async () => {
-                                        try {
-                                           const res = await fetch('/api/profile/planes/accept', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({planeId: plane.id}) });
-                                           const data = await res.json();
-                                           if(data.success) {
-                                              setInboxPlanes(curr => curr.filter(p => p.id !== plane.id));
-                                              window.location.href = `/bridge/${data.bridgeId}`;
-                                           }
-                                        } catch(e) {}
-                                     }}
-                                     className="w-full py-4 bg-indigo-500 hover:bg-indigo-600 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-xl active:scale-95"
-                                  >
-                                     Build The Bridge
-                                  </button>
-                               </div>
-                            ))}
+                            {inboxPlanes.map(plane => {
+                               const isExpanded = expandedPlanes.has(plane.id);
+                               return (
+                                 <div 
+                                   key={plane.id} 
+                                   className={`bg-white dark:bg-[#111] rounded-[24px] border transition-all ${isExpanded ? 'border-indigo-500/30 ring-4 ring-indigo-500/5' : 'border-gray-200 dark:border-white/10 shadow-sm'} overflow-hidden`}
+                                 >
+                                    <div 
+                                      onClick={() => togglePlane(plane.id)}
+                                      className="p-6 cursor-pointer flex justify-between items-center"
+                                    >
+                                       <div className="flex items-center gap-3">
+                                          <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
+                                             <User className="w-4 h-4 text-indigo-500" />
+                                          </div>
+                                          <div>
+                                             <div className="text-[10px] uppercase tracking-widest text-gray-400">From</div>
+                                             <div className="text-sm font-bold">{plane.sender.pen_name} <span className="text-gray-400 font-mono text-[10px]">#{plane.sender.pen_name_tag}</span></div>
+                                          </div>
+                                       </div>
+                                       <div className="flex items-center gap-4">
+                                          <span className="text-[10px] text-gray-400 uppercase tracking-widest">{new Date(plane.created_at).toLocaleDateString()}</span>
+                                          {isExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+                                       </div>
+                                    </div>
+
+                                    <AnimatePresence>
+                                       {isExpanded && (
+                                          <motion.div 
+                                             initial={{ height: 0, opacity: 0 }}
+                                             animate={{ height: 'auto', opacity: 1 }}
+                                             exit={{ height: 0, opacity: 0 }}
+                                             className="px-6 pb-6"
+                                          >
+                                             <p className="text-sm font-serif text-gray-700 dark:text-gray-300 leading-relaxed italic p-4 bg-gray-50 dark:bg-black/40 rounded-2xl border border-gray-100 dark:border-white/5 mb-4">
+                                                &quot;{plane.content}&quot;
+                                             </p>
+                                             <button
+                                                onClick={() => handleAcceptPlane(plane)}
+                                                className="w-full py-4 bg-indigo-600 text-white rounded-2xl text-xs font-bold uppercase tracking-widest transition-all shadow-xl hover:scale-[1.01] active:scale-95"
+                                             >
+                                                Build The Bridge
+                                             </button>
+                                          </motion.div>
+                                       )}
+                                    </AnimatePresence>
+                                 </div>
+                               );
+                            })}
                          </div>
                       )}
                    </div>
 
-                   {/* Stories Section */}
+                   {/* Legacy Section - Pattern 3 & 4 */}
                    <div>
                       <div className="flex items-center justify-between mb-6">
                          <div className="flex items-center gap-2">
                             <Book className="w-5 h-5 text-indigo-500" />
                             <h3 className="text-xl font-serif font-bold text-gray-900 dark:text-white">Your Legacy</h3>
                          </div>
-                         <button 
-                             onClick={() => {
-                               setActiveView('story');
-                               router.push('/home');
-                             }}
-                             className="text-xs text-indigo-500 font-bold uppercase tracking-widest hover:underline"
-                          >
-                            Read Full Chronicle
-                          </button>
                       </div>
                       
                       {chapters.length === 0 ? (
                          <div className="p-10 bg-white/20 dark:bg-white/[0.02] border border-dashed border-gray-300 dark:border-white/10 rounded-[32px] text-center">
                             <p className="text-sm text-gray-500 font-serif italic">The book of your soul remains unauthored.</p>
-                            <button onClick={() => {
-                               setActiveView('journal');
-                               router.push('/home');
-                             }} className="mt-4 text-xs text-indigo-500 font-bold uppercase tracking-widest hover:underline">Begin Writing</button>
                          </div>
                       ) : (
                          <div className="grid grid-cols-1 gap-4">
-                            {chapters.map(chapter => (
-                               <div key={chapter.id} className="p-6 bg-white dark:bg-[#111] rounded-[24px] border border-gray-200 dark:border-white/10 shadow-sm hover:border-indigo-500/30 transition-all cursor-pointer flex justify-between items-center group">
-                                  <div>
-                                     <h4 className="font-serif font-bold text-gray-900 dark:text-white mb-1 group-hover:text-indigo-400 transition-colors">{chapter.title}</h4>
-                                     <p className="text-xs text-gray-400 line-clamp-1">{chapter.content.substring(0, 80)}...</p>
-                                  </div>
-                                  <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-indigo-400 transition-all translate-x-0 group-hover:translate-x-1" />
-                               </div>
-                            ))}
+                            {chapters.map(chapter => {
+                               const isExpanded = expandedLegacy.has(chapter.id);
+                               return (
+                                 <div key={chapter.id} className={`bg-white dark:bg-[#111] rounded-[24px] border transition-all ${isExpanded ? 'border-indigo-500/30' : 'border-gray-200 dark:border-white/10 shadow-sm'} overflow-hidden`}>
+                                    <div 
+                                      onClick={() => toggleLegacy(chapter.id)}
+                                      className="p-6 cursor-pointer flex justify-between items-center group"
+                                    >
+                                       <div>
+                                          <h4 className="font-serif font-bold text-gray-900 dark:text-white mb-1 group-hover:text-indigo-500 transition-colors">{chapter.title}</h4>
+                                          <p className="text-[10px] text-gray-400 uppercase tracking-widest">{new Date(chapter.created_at).toLocaleDateString()}</p>
+                                       </div>
+                                       <div className="flex items-center gap-3">
+                                          {isExpanded ? <ChevronUp className="w-4 h-4 text-gray-300" /> : <ChevronDown className="w-4 h-4 text-gray-300" />}
+                                       </div>
+                                    </div>
+
+                                    <AnimatePresence>
+                                       {isExpanded && (
+                                          <motion.div 
+                                             initial={{ height: 0, opacity: 0 }}
+                                             animate={{ height: 'auto', opacity: 1 }}
+                                             exit={{ height: 0, opacity: 0 }}
+                                             className="px-6 pb-6"
+                                          >
+                                             <div className="prose prose-slate dark:prose-invert text-xs font-serif leading-loose italic text-gray-600 dark:text-gray-400 bg-slate-50 dark:bg-black/20 p-4 rounded-xl border border-slate-100 dark:border-white/5 mb-4 max-h-48 overflow-y-auto">
+                                                {chapter.content}
+                                             </div>
+                                             <div className="flex gap-2">
+                                                <button 
+                                                  onClick={() => { setActiveView('story'); router.push('/home'); }}
+                                                  className="flex-1 py-3 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
+                                                >
+                                                   <BookOpen className="w-3 h-3" /> Read in Volume
+                                                </button>
+                                                <button className="p-3 bg-slate-100 dark:bg-white/5 text-slate-400 hover:text-rose-500 rounded-xl transition-colors">
+                                                   <Trash2 className="w-3 h-3" />
+                                                </button>
+                                             </div>
+                                          </motion.div>
+                                       )}
+                                    </AnimatePresence>
+                                 </div>
+                               );
+                            })}
                          </div>
                       )}
                    </div>
                 </div>
-              ) : (
+              ) : activeTab === 'bridges' ? (
                 <div className="space-y-6">
                    <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
@@ -563,15 +681,15 @@ export default function ProfilePage() {
                          <button onClick={() => setActiveTab('treasury')} className="px-6 py-3 bg-indigo-500/10 text-indigo-400 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all">Check Inbox</button>
                       </div>
                    ) : (
-                      <div className="space-y-3">
+                      <div className="space-y-4">
                          {bridges.map(bridge => (
                             <div 
                                key={bridge.id} 
-                               onClick={() => window.location.href = `/bridge/${bridge.id}`}
-                               className="p-5 bg-white dark:bg-[#111] rounded-[24px] border border-gray-200 dark:border-white/10 hover:border-indigo-500/40 transition-all cursor-pointer group flex items-center justify-between"
+                               onClick={() => router.push(`/bridge/${bridge.id}`)}
+                               className="p-5 bg-white dark:bg-[#111] rounded-[24px] border border-gray-200 dark:border-white/10 hover:border-indigo-500/40 transition-all cursor-pointer group flex items-center justify-between shadow-sm"
                             >
                                <div className="flex items-center gap-4">
-                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-white/5 shadow-inner">
+                                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-white/5">
                                      <User className="w-6 h-6 text-indigo-400" />
                                   </div>
                                   <div>
@@ -587,12 +705,14 @@ export default function ProfilePage() {
                                      </div>
                                   </div>
                                </div>
-                               <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-indigo-400 transition-all translate-x-0 group-hover:translate-x-1" />
+                               <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-indigo-400 transition-all" />
                             </div>
                          ))}
                       </div>
                    )}
                 </div>
+              ) : (
+                <PrivacyTrustCenter />
               )}
             </motion.div>
           )}
@@ -628,4 +748,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-

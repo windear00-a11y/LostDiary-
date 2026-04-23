@@ -25,7 +25,7 @@ export const DeleteAccountModal = ({ isOpen, onClose, onDelete }: { isOpen: bool
             </div>
             <h3 className="text-xl font-serif font-bold text-white mb-2 text-center">Delete Sanctuary?</h3>
             <p className="text-sm text-gray-400 mb-8 text-center leading-relaxed">
-              This will pause all your data and schedule it for permanent deletion in <strong>30 days</strong>. You can recover your sanctuary by logging back in anytime during this period.
+              This will pause all your data and schedule it for permanent deletion. Once confirmed, you will be signed out and your sanctuary will begin its closing ritual.
             </p>
             <button 
               onClick={onDelete}

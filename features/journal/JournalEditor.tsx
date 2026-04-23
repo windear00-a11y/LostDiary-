@@ -24,20 +24,24 @@ export const JournalEditor = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showNudge, setShowNudge] = useState(false);
+  const [hasShownNudge, setHasShownNudge] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSuccessMoment, setShowSuccessMoment] = useState(false);
   const [recentEntry, setRecentEntry] = useState<any>(null);
   const [inspiredBy, setInspiredBy] = useState<string | null>(null);
+  const [inspirationAuthor, setInspirationAuthor] = useState<string | null>(null);
   
   const contentRef = useRef<HTMLTextAreaElement>(null);
 
   // Check for recent entries on mount
   useEffect(() => {
     const inspireId = searchParams?.get('inspire');
+    const author = searchParams?.get('author');
     if (inspireId) {
        setInspiredBy(inspireId);
+       setInspirationAuthor(author);
        setTitle(language === 'hi' ? 'Ek Kahani Se Prerit...' : 'Inspired by a whisper...');
-       setContent(language === 'hi' ? 'Maine library mein ek kahani padhi aur mujhe yaad aaya...\n\n' : '"I read a whisper in the library, and it reminded me of..."\n\n');
+       setContent(language === 'hi' ? `Maine library mein ${author ? author + ' ki ' : ''}kahani padhi aur mujhe yaad aaya...\n\n` : `"I read a whisper ${author ? 'by ' + author + ' ' : ''}in the library, and it reminded me of..."\n\n`);
        return; // skip nudge check if inspired
     }
     const checkRecent = async () => {
@@ -51,10 +55,11 @@ export const JournalEditor = () => {
         const now = new Date().getTime();
         const diffHours = (now - lastTime) / (1000 * 60 * 60);
 
-        // If less than 12 hours, show nudge
-        if (diffHours < 12 && !selectedJournalContent) {
+        // If less than 12 hours, show nudge - only if not shown yet this session
+        if (diffHours < 12 && !selectedJournalContent && !hasShownNudge) {
           setRecentEntry(latest);
           setShowNudge(true);
+          setHasShownNudge(true);
         }
       }
     };
@@ -108,7 +113,11 @@ export const JournalEditor = () => {
       // Combine title and content
       const fullContent = title ? `# ${title}\n\n${content}` : content;
 
-      await coreService.saveDiaryEntry(user.id, fullContent, { language, inspired_by: inspiredBy });
+      await coreService.saveDiaryEntry(user.id, fullContent, { 
+        language, 
+        inspired_by: inspiredBy,
+        inspiration_author: inspirationAuthor 
+      });
       setSaveStatus('success');
       setShowSuccessMoment(true);
       // No more auto-redirect to chat. Stay on page for "Suqoon".
@@ -155,6 +164,29 @@ export const JournalEditor = () => {
     }, 0);
   };
 
+  const [showUI, setShowUI] = useState(true);
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
+
+  // Focus Mode logic - Pattern 6 (Smart Interactions)
+  useEffect(() => {
+    if (content.length > 0) {
+      if (typingTimeout) clearTimeout(typingTimeout);
+      const timer = setTimeout(() => {
+        setShowUI(false);
+      }, 2500); 
+      setTypingTimeout(timer);
+    } else {
+      setShowUI(true);
+    }
+  }, [content]);
+
+  // Visual cues for focus mode
+  const handleEditorFocus = () => setShowUI(true);
+  const handleEditorClick = () => setShowUI(true);
+  const handleMouseMove = () => {
+    if (!showUI) setShowUI(true);
+  };
+
   const stats = {
     chars: content.length + title.length,
     date: new Date().toLocaleDateString('en-GB', { 
@@ -166,9 +198,16 @@ export const JournalEditor = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-neutral-950 text-neutral-200">
-      {/* Top Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+    <div className="h-full flex flex-col bg-neutral-950 text-neutral-200 overflow-hidden" onMouseMove={handleMouseMove}>
+      {/* Top Header - Pattern 1 (Fades out for Focus) */}
+      <motion.div 
+        animate={{ 
+          opacity: showUI ? 1 : 0, 
+          y: showUI ? 0 : -20,
+          pointerEvents: showUI ? 'auto' : 'none'
+        }}
+        className="flex items-center justify-between px-4 py-3 border-b border-white/5 z-20 bg-neutral-950"
+      >
         <button 
           onClick={() => {
             setSelectedJournalContent(null);
@@ -212,7 +251,7 @@ export const JournalEditor = () => {
             )}
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Metadata Stats */}
       <div className={`px-6 pt-8 pb-4 max-w-2xl mx-auto w-full transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
@@ -241,6 +280,8 @@ export const JournalEditor = () => {
           ref={contentRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
+          onFocus={handleEditorFocus}
+          onClick={handleEditorClick}
           placeholder="Start writing your heart out..."
           className="w-full h-full bg-transparent border-none outline-none resize-none 
                      text-lg leading-relaxed font-sans placeholder:text-neutral-800
@@ -321,8 +362,17 @@ export const JournalEditor = () => {
         )}
       </AnimatePresence>
 
-      {/* Floating Toolbar (Helper Icons) */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-xl h-14 bg-neutral-900/80 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center justify-around px-2 z-[70]">
+      {/* Floating Toolbar (Helper Icons) - Pattern 1 & 6 */}
+      <motion.div 
+        animate={{ 
+          opacity: showUI ? 1 : 0.05, 
+          y: showUI ? 0 : 40,
+          scale: showUI ? 1 : 0.95,
+          pointerEvents: showUI ? 'auto' : 'none'
+        }}
+        whileHover={{ opacity: 1, y: 0, scale: 1 }}
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-xl h-14 bg-neutral-900/80 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center justify-around px-2 z-[70] transition-colors"
+      >
         <div className="flex items-center justify-around w-full overflow-x-auto scrollbar-none py-2">
           <button onClick={() => handleFormat('checklist')} className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
             <CheckSquare className="w-5 h-5" />
@@ -357,12 +407,12 @@ export const JournalEditor = () => {
             <AlignRight className="w-5 h-5" />
           </button>
         </div>
-      </div>
+      </motion.div>
       <SuccessMoment 
         isOpen={showSuccessMoment} 
         onClose={() => setShowSuccessMoment(false)}
-        title={language === 'hi' ? 'Ehsaas Mehfooz Hua' : 'Reflection Woven'}
-        subtitle={language === 'hi' ? 'Aapki yaad sanctuary mein mehfooz hai.' : 'Your thought is safe in the sanctuary.'}
+        title={inspiredBy ? (language === 'hi' ? 'Ehsaas ka Dhaga Buna Gaya' : 'Thread Spun') : (language === 'hi' ? 'Ehsaas Mehfooz Hua' : 'Reflection Safe')}
+        subtitle={inspiredBy ? (language === 'hi' ? 'Aapka ehsaas ab zameen-e-sanctuary ka hissa hai.' : 'Your reflection is now part of the sanctuary weave.') : (language === 'hi' ? 'Aapki yaad sanctuary mein mehfooz hai.' : 'Your thought is safe in the sanctuary.')}
         type="save"
       />
     </div>

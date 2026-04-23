@@ -24,6 +24,7 @@ export const ChatInterface = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [activeSession, setActiveSession] = useState<ChatSession | null>(null);
   const [showNudge, setShowNudge] = useState(false);
+  const [hasShownNudge, setHasShownNudge] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -55,11 +56,13 @@ export const ChatInterface = () => {
             targetSessionId = sessions[0].id;
             // Update URL silently or just set state
             router.replace(`/home?session=${targetSessionId}`);
+            return; // Effect will re-run with updated sessionId
           } else {
             // No sessions at all? Create a default one
             const newSession = await coreService.createSession(user.id, "First entry");
             targetSessionId = newSession.id;
             router.replace(`/home?session=${targetSessionId}`);
+            return; // Effect will re-run
           }
         }
 
@@ -75,19 +78,23 @@ export const ChatInterface = () => {
           }));
           setMessages(mappedMessages);
 
-          // 3. Check for inactivity nudge (2 hours)
-          if (mappedMessages.length > 0) {
-            const lastMsg = mappedMessages[mappedMessages.length - 1];
-            const lastTime = new Date(lastMsg.created_at).getTime();
-            const now = new Date().getTime();
-            const hoursPassed = (now - lastTime) / (1000 * 60 * 60);
+          // 3. Check for inactivity nudge (2 hours) - only if we haven't shown it this mount
+          if (!hasShownNudge) {
+            if (mappedMessages.length > 0) {
+              const lastMsg = mappedMessages[mappedMessages.length - 1];
+              const lastTime = new Date(lastMsg.created_at).getTime();
+              const now = new Date().getTime();
+              const hoursPassed = (now - lastTime) / (1000 * 60 * 60);
 
-            if (hoursPassed > 2) {
+              if (hoursPassed > 2) {
+                setShowNudge(true);
+                setHasShownNudge(true);
+              }
+            } else {
+              // Empty session, show greeting
               setShowNudge(true);
+              setHasShownNudge(true);
             }
-          } else {
-            // Empty session, show greeting
-            setShowNudge(true);
           }
         }
       } catch (error) {

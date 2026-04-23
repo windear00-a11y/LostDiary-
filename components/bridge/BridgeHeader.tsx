@@ -3,6 +3,7 @@ import { Sparkles, ArrowLeft, Handshake, AlertTriangle, Info, ShieldCheck, EyeOf
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 
 interface BridgeHeaderProps {
     bridgeData: any;
@@ -12,23 +13,23 @@ interface BridgeHeaderProps {
 
 export function BridgeHeader({ bridgeData, resonanceMsg, checkResonance }: BridgeHeaderProps) {
     const router = useRouter();
-    const [showPrivacyInfo, setShowPrivacyInfo] = useState(false);
+    const [showPrivacySheet, setShowPrivacySheet] = useState(false);
 
     const modeInfo = {
         protected: {
             title: "Guardian Protected",
-            desc: "AI Guardian prevents toxicity & identity reveal. Private & secure.",
-            icon: <ShieldCheck className="w-3 h-3" />
+            desc: "The AI Guardian acts as a silent witness, preventing toxic energy or identity leaks while keeping the bridge sacred.",
+            icon: <ShieldCheck className="w-5 h-5 text-indigo-400" />
         },
         trusted: {
             title: "Soul Trusted",
-            desc: "Identity filters lifted. AI only blocks extreme toxicity. Total trust.",
-            icon: <Sparkles className="w-3 h-3 text-amber-500" />
+            desc: "You have verified each other's intent. Monitoring is minimal, but the sanctuary still protects the bridge from extreme disturbances.",
+            icon: <Sparkles className="w-5 h-5 text-amber-500" />
         },
         raw: {
             title: "Raw Bridge",
-            desc: "Zero AI monitoring. End-to-end soul connection. You are responsible.",
-            icon: <EyeOff className="w-3 h-3 text-rose-500" />
+            desc: "Zero monitoring. A pure, direct soul-to-soul connection. Both souls are fully responsible for the light and shadows shared here.",
+            icon: <EyeOff className="w-5 h-5 text-rose-500" />
         }
     };
 
@@ -60,7 +61,7 @@ export function BridgeHeader({ bridgeData, resonanceMsg, checkResonance }: Bridg
                     <div className="relative">
                         {bridgeData.status === 'active' ? (
                             <button 
-                                onClick={() => setShowPrivacyInfo(!showPrivacyInfo)}
+                                onClick={() => setShowPrivacySheet(true)}
                                 className="flex items-center gap-2 text-[9px] uppercase tracking-widest text-emerald-500/80 hover:bg-emerald-500/10 px-2 py-1 rounded-full transition-colors"
                             >
                                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
@@ -73,35 +74,51 @@ export function BridgeHeader({ bridgeData, resonanceMsg, checkResonance }: Bridg
                                 Bridge Broken
                             </div>
                         )}
-
-                        <AnimatePresence>
-                            {showPrivacyInfo && (
-                                <motion.div 
-                                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                    className="absolute right-0 top-full mt-2 w-64 p-4 bg-[#111] border border-white/10 rounded-2xl shadow-2xl z-50 text-left"
-                                >
-                                    <div className="flex items-center gap-2 mb-2 text-indigo-400 uppercase tracking-tighter text-[10px] font-bold">
-                                        {modeInfo[currentMode].icon}
-                                        {modeInfo[currentMode].title}
-                                    </div>
-                                    <p className="text-xs text-white/60 font-serif leading-relaxed mb-3">
-                                        {modeInfo[currentMode].desc}
-                                    </p>
-                                    <div className="pt-3 border-t border-white/5">
-                                        <p className="text-[9px] text-white/30 uppercase tracking-widest">Privacy Promise</p>
-                                        <p className="text-[10px] text-white/40 italic">No logs stored. AI Guardian forgets everything once the bridge closes.</p>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
                     </div>
                 </div>
             </header>
 
+            <BottomSheet
+                isOpen={showPrivacySheet}
+                onClose={() => setShowPrivacySheet(false)}
+                title="Bridge Security & Anonymity"
+                subtitle={`Current Mode: ${modeInfo[currentMode].title}`}
+            >
+                <div className="space-y-6">
+                    <div className="flex items-start gap-4 p-5 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-100 dark:border-white/5">
+                        <div className="mt-1">{modeInfo[currentMode].icon}</div>
+                        <div>
+                            <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2">
+                                {modeInfo[currentMode].title}
+                            </h4>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-serif leading-relaxed">
+                                {modeInfo[currentMode].desc}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 text-center">
+                            <p className="text-[9px] text-indigo-400 uppercase tracking-widest mb-1 font-bold">Privacy Promise</p>
+                            <p className="text-[10px] text-slate-500 italic">No logs stored.</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 text-center">
+                            <p className="text-[9px] text-amber-500 uppercase tracking-widest mb-1 font-bold">Ephemeral</p>
+                            <p className="text-[10px] text-slate-500 italic">Bridge dissolves at dawn.</p>
+                        </div>
+                    </div>
+
+                    <div className="p-4 bg-emerald-500/10 rounded-2xl text-center">
+                        <p className="text-xs text-emerald-400 font-serif italic">
+                            &quot;Your soul is safe here. WinDear acts as a guardian, not an observer.&quot;
+                        </p>
+                    </div>
+                </div>
+            </BottomSheet>
+
             {resonanceMsg && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} layout className="p-4 mb-4 bg-indigo-900/20 border border-indigo-500/20 text-indigo-200 rounded-2xl text-xs font-serif italic text-center">
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} layout className="p-4 mb-8 bg-indigo-900/40 border border-indigo-500/20 text-indigo-100 rounded-2xl text-xs font-serif italic text-center shadow-xl">
+                    <Sparkles className="w-3 h-3 inline-block mr-2 text-indigo-400" />
                     {resonanceMsg}
                 </motion.div>
             )}

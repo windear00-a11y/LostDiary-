@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Check } from 'lucide-react';
+import { Sparkles, Check, Send, Link, Zap } from 'lucide-react';
 
 interface SuccessMomentProps {
   isOpen: boolean;
@@ -48,7 +48,9 @@ export const SuccessMoment = ({ isOpen, onClose, title, subtitle, type = 'save' 
                   'bg-emerald-500/20 text-emerald-500'
                 }`}
               >
-                {type === 'save' ? <Sparkles className="w-10 h-10" /> : <Check className="w-10 h-10" />}
+                {type === 'save' ? <Zap className="w-10 h-10" /> : 
+                 type === 'publish' ? <Link className="w-10 h-10" /> : 
+                 <Send className="w-10 h-10" />}
               </motion.div>
               
               <motion.div

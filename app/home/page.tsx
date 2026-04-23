@@ -46,6 +46,14 @@ export default function HomePage() {
               initial={{ y: '100dvh' }}
               animate={{ y: 0 }}
               exit={{ y: '100dvh' }}
+              drag="y"
+              dragConstraints={{ top: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 150) {
+                  setActiveView('chat');
+                }
+              }}
               transition={{ type: 'spring', damping: 35, stiffness: 350 }}
               className="absolute inset-0 z-[60] bg-neutral-950"
             >
@@ -59,6 +67,14 @@ export default function HomePage() {
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
+              drag="x"
+              dragConstraints={{ left: 0 }}
+              dragElastic={0.2}
+              onDragEnd={(_, info) => {
+                if (info.offset.x > 150) {
+                  setActiveView('chat');
+                }
+              }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
               className="absolute inset-0 z-[60] bg-neutral-950"
             >

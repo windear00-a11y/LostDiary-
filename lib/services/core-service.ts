@@ -507,14 +507,5 @@ export const coreService = {
       .from('users')
       .update({ is_pending_deletion: true, deletion_scheduled_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() })
       .eq('id', userId);
-  },
-
-  async restoreAccount(userId: string): Promise<void> {
-    const supabase = getSupabase();
-    if (!supabase) throw new Error("Supabase not initialized");
-    await supabase
-      .from('users')
-      .update({ is_pending_deletion: false, deletion_scheduled_at: null })
-      .eq('id', userId);
   }
 };

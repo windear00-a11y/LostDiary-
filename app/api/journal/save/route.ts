@@ -120,6 +120,7 @@ export async function POST(req: Request) {
         title: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
         content: pipelineOutput.narrativeUpdate.narrative,
         inspired_by_story_id: metadata?.inspired_by || null,
+        inspiration_author: metadata?.inspiration_author || null,
         created_at: new Date().toISOString()
       }).select().single();
 

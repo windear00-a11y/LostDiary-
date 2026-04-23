@@ -12,9 +12,10 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   // Define paths that require authentication
-  const isAppPage = pathname === '/profile' ||
-                    pathname === '/updates' ||
-                    pathname === '/story';
+  const isAppPage = pathname === '/home' ||
+                    pathname === '/library' ||
+                    pathname === '/profile' ||
+                    pathname.startsWith('/bridge');
   
   // Define paths that should be inaccessible to logged in users
   const isAuthPage = pathname === '/auth' || pathname.startsWith('/auth/');
@@ -25,14 +26,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       if (!loading) {
         if (!user && isAppPage) {
           router.push('/');
-        } else if (user) {
-          // Check for pending deletion
-          const profile = await coreService.getProfile(user.id);
-          if (profile.is_pending_deletion && pathname !== '/auth/restore') {
-            router.push('/auth/restore');
-          } else if (isAuthPage || isLandingPage) {
-            router.push('/home');
-          }
+        } else if (user && (isAuthPage || isLandingPage)) {
+          router.push('/home');
         }
       }
     };

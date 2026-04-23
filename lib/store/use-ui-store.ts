@@ -2,12 +2,12 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface UIState {
-  activeView: 'chat' | 'story' | 'journal';
+  activeView: 'chat' | 'story' | 'journal' | 'reflect';
   isInputFocused: boolean;
   selectedJournalContent: string | null;
   language: string;
   hasSetLanguage: boolean;
-  setActiveView: (view: 'chat' | 'story' | 'journal') => void;
+  setActiveView: (view: 'chat' | 'story' | 'journal' | 'reflect') => void;
   setInputFocused: (focused: boolean) => void;
   setSelectedJournalContent: (content: string | null) => void;
   setLanguage: (lang: string) => void;
