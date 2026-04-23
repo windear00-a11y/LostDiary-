@@ -65,8 +65,8 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
   };
 
   const quickActions = [
-    { icon: BookOpen, label: 'लाइफबुक', path: '/story', color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-500/10' },
-    { icon: Sparkles, label: 'झलक', path: '/story?view=insights', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
+    { icon: BookOpen, label: 'लाइफबुक', path: '/library', color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-500/10' },
+    { icon: Sparkles, label: 'झलक', path: '/library', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
   ];
 
   return (
@@ -131,51 +131,20 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                 </div>
               </motion.div>
 
-              {/* Primary Navigation Grid (Bento Small Cards) */}
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { id: 'chat', label: 'Input', icon: MessageSquare, color: 'text-blue-400', bg: 'bg-blue-400/5' },
-                  { id: 'journal', label: 'Output', icon: PenLine, color: 'text-amber-400', bg: 'bg-amber-400/5' },
-                  { id: 'story', label: 'Legacy', icon: BookOpen, color: 'text-emerald-400', bg: 'bg-emerald-400/5' },
-                  { id: 'library', label: 'Publish', icon: BookOpen, color: 'text-purple-400', bg: 'bg-purple-400/5', route: '/library' },
-                  { id: 'profile', label: 'Engage', icon: User, color: 'text-rose-400', bg: 'bg-rose-400/5', route: '/profile' },
-                  { id: 'bridge', label: 'Connect', icon: Heart, color: 'text-cyan-400', bg: 'bg-cyan-400/5', route: '/profile' },
-                ].map((nav) => (
-                  <motion.button
-                    key={nav.id}
-                    whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.08)' }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      if (nav.route) {
-                        router.push(nav.route);
-                      } else {
-                        setActiveView(nav.id as any);
-                        router.push('/home'); // Ensure we go home for views
-                      }
-                      onClose();
-                    }}
-                    className={`flex flex-col items-center gap-2.5 p-4 rounded-3xl ${nav.bg} border border-white/5 transition-all group`}
-                  >
-                    <nav.icon className={`w-5 h-5 ${nav.color} group-hover:scale-110 transition-transform`} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-white/40 group-hover:text-white/80 transition-colors">{nav.label}</span>
-                  </motion.button>
-                ))}
-              </div>
-
               {/* History / Activity Bento Section */}
-              <div className="space-y-3 pt-2">
+              <div className="space-y-4 pt-2">
                 <div className="flex p-1 bg-white/5 rounded-2xl gap-1">
                   <button 
                     onClick={() => setActiveTab('chats')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'chats' ? 'bg-white/10 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'chats' ? 'bg-white/10 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
                   >
-                    <MessageSquare className="w-3.5 h-3.5" /> CHATS
+                    <MessageSquare className="w-4 h-4" /> RECENT CHATS
                   </button>
                   <button 
                     onClick={() => setActiveTab('reflections')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'reflections' ? 'bg-white/10 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
+                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'reflections' ? 'bg-white/10 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
                   >
-                    <History className="w-3.5 h-3.5" /> MOMENTS
+                    <History className="w-4 h-4" /> MEMORIES
                   </button>
                 </div>
 

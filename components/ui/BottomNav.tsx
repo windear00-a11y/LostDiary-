@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, BookOpen, User, MessageSquare, Sparkles } from 'lucide-react';
+import { BookOpen, User, Sparkles } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUIStore } from '@/lib/store/use-ui-store';
 

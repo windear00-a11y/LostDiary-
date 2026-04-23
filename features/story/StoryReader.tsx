@@ -14,9 +14,10 @@ interface StoryReaderProps {
   initialChapterId?: string | null;
   coverData?: { title: string; summary: string; aura: string } | null;
   userName?: string;
+  isLibraryView?: boolean;
 }
 
-export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, coverData, userName }: StoryReaderProps) => {
+export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, coverData, userName, isLibraryView = false }: StoryReaderProps) => {
   const router = useRouter();
   const [readingStage, setReadingStage] = useState<'cover' | 'index' | 'reading'>('cover');
   const [isTOCOpen, setIsTOCOpen] = useState(false);
@@ -201,7 +202,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                 className="mb-8 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-slate-400 hover:text-indigo-500 transition-all group"
               >
                 <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
-                Return to Sanctuary
+                Return to Library
               </button>
 
               {/* Progress Header */}
@@ -533,32 +534,34 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                       </div>
 
                       {/* Publish Action - Integrated more into the flow */}
-                      <div className="pt-12 flex justify-center pb-20 border-b border-slate-100 dark:border-white/5 mx-12">
-                         <button 
-                            onClick={() => handlePublish(chapter.id)}
-                            disabled={publishingId === chapter.id || sealingId === chapter.id || publishedIds.has(chapter.id)}
-                            className="group relative px-8 py-4 bg-transparent border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 rounded-2xl overflow-hidden transition-all hover:border-indigo-500/30 hover:text-indigo-500 disabled:opacity-30"
-                         >
-                            <div className="flex items-center gap-3 font-serif text-xs font-bold uppercase tracking-widest relative z-10 transition-transform">
-                               {publishedIds.has(chapter.id) ? (
-                                 <>
-                                   <Check className="w-4 h-4 text-emerald-500" />
-                                   <span className="italic">Gifted to Library</span>
-                                 </>
-                               ) : (publishingId === chapter.id || sealingId === chapter.id) ? (
-                                 <>
-                                   <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full" />
-                                   <span className="text-indigo-500 font-mono tracking-tighter">{sealingId === chapter.id ? 'Neural Wash...' : 'Sealing Memory...'}</span>
-                                 </>
-                               ) : (
-                                 <>
-                                   <Fingerprint className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
-                                   <span>Apply Privacy Seal</span>
-                                 </>
-                               )}
-                            </div>
-                         </button>
-                      </div>
+                      {!isLibraryView && (
+                        <div className="pt-12 flex justify-center pb-20 border-b border-slate-100 dark:border-white/5 mx-12">
+                           <button 
+                              onClick={() => handlePublish(chapter.id)}
+                              disabled={publishingId === chapter.id || sealingId === chapter.id || publishedIds.has(chapter.id)}
+                              className="group relative px-8 py-4 bg-transparent border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 rounded-2xl overflow-hidden transition-all hover:border-indigo-500/30 hover:text-indigo-500 disabled:opacity-30"
+                           >
+                              <div className="flex items-center gap-3 font-serif text-xs font-bold uppercase tracking-widest relative z-10 transition-transform">
+                                 {publishedIds.has(chapter.id) ? (
+                                   <>
+                                     <Check className="w-4 h-4 text-emerald-500" />
+                                     <span className="italic">Gifted to Library</span>
+                                   </>
+                                 ) : (publishingId === chapter.id || sealingId === chapter.id) ? (
+                                   <>
+                                     <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full" />
+                                     <span className="text-indigo-500 font-mono tracking-tighter">{sealingId === chapter.id ? 'Neural Wash...' : 'Sealing Memory...'}</span>
+                                   </>
+                                 ) : (
+                                   <>
+                                     <Fingerprint className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+                                     <span>Apply Privacy Seal</span>
+                                   </>
+                                 )}
+                              </div>
+                           </button>
+                        </div>
+                      )}
                     </motion.article>
                   ))}
 

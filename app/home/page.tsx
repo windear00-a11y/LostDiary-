@@ -60,29 +60,6 @@ export default function HomePage() {
               <JournalEditor />
             </motion.div>
           )}
-
-          {activeView === 'story' && (
-            <motion.div
-              key="story-view"
-              initial={{ x: '100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '100%' }}
-              drag="x"
-              dragConstraints={{ left: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(_, info) => {
-                if (info.offset.x > 150) {
-                  setActiveView('chat');
-                }
-              }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="absolute inset-0 z-[60] bg-neutral-950"
-            >
-              <div className="pt-0">
-                <BookView />
-              </div>
-            </motion.div>
-          )}
         </AnimatePresence>
       </main>
     </div>
