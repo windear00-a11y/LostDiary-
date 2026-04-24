@@ -295,12 +295,12 @@ export const ChatInterface = () => {
           ${showNudge ? 'blur-sm scale-[0.99] opacity-40 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
         >
           {/* Privacy Trust Signal */}
-          <div className="flex flex-col items-center justify-center space-y-2 mb-4 opacity-80 select-none">
-             <div className="flex items-center gap-2">
-                <Shield className="w-4 h-4 text-emerald-400" />
-                <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-emerald-50">End-to-End Soul Privacy</span>
+          <div className="flex flex-col items-center justify-center space-y-2 mb-4 select-none">
+             <div className="flex items-center gap-2 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+                <Shield className="w-4 h-4 text-emerald-400 drop-shadow-md" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300 drop-shadow-sm">End-to-End Soul Privacy</span>
              </div>
-             <p className="text-[10px] font-serif italic text-center max-w-[250px] text-emerald-100/70">
+             <p className="text-[10px] sm:text-xs font-serif italic text-center max-w-[280px] text-emerald-100/90 drop-shadow-sm">
                 Your reflections are sealed within your unique neural resonance. WinDear never logs human-readable data.
              </p>
           </div>
@@ -310,7 +310,7 @@ export const ChatInterface = () => {
               <motion.div 
                 key="empty-suggestions"
                 initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 0.6, scale: 1 }}
+                animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
                 transition={{ duration: 0.4, ease: "circOut" }}
                 className="flex-1 flex flex-col items-center justify-center space-y-8"
@@ -318,21 +318,21 @@ export const ChatInterface = () => {
                 <motion.div 
                   animate={{ y: [0, -5, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center"
+                  className="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.2)]"
                 >
-                   <Sparkles className="w-8 h-8 text-white/20" />
+                   <Sparkles className="w-10 h-10 text-indigo-400 drop-shadow-lg" />
                 </motion.div>
-                <h2 className="text-xl font-serif italic text-white/80">Silence is a blank page...</h2>
-                <div className="flex flex-wrap items-center justify-center gap-3 max-w-sm">
+                <h2 className="text-2xl md:text-3xl font-serif italic text-white drop-shadow-lg pb-2 font-medium">Silence is a blank page...</h2>
+                <div className="flex flex-col w-full max-w-sm space-y-3">
                   {starters.map((starter, i) => (
                     <motion.button
                       key={i}
-                      whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.15)" }}
-                      whileTap={{ scale: 0.95 }}
+                      whileHover={{ scale: 1.02, backgroundColor: "rgba(99,102,241,0.15)" }}
+                      whileTap={{ scale: 0.98 }}
                       onClick={() => handleSendMessage({ type: 'text', content: starter.text })}
-                      className="px-4 py-2 bg-neutral-800/60 border border-white/20 rounded-full text-sm text-white/90 transition-all hover:text-white hover:bg-neutral-700/80 shadow-sm"
+                      className="w-full text-left px-5 py-4 bg-neutral-900 border border-indigo-500/30 rounded-2xl text-sm md:text-base text-indigo-50 font-medium transition-all hover:border-indigo-400/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] flex items-center justify-start gap-4 shadow-md"
                     >
-                      {starter.icon} {starter.text}
+                      <span className="text-2xl drop-shadow-sm">{starter.icon}</span> <span>{starter.text}</span>
                     </motion.button>
                   ))}
                 </div>
@@ -391,9 +391,9 @@ export const ChatInterface = () => {
       </div>
 
       {/* Sticky Bottom Input Section */}
-      <div className="fixed bottom-0 left-0 w-full z-50 px-4 pb-[env(safe-area-inset-bottom)] bg-neutral-950/90 backdrop-blur-md border-t border-white/5">
+      <div className="fixed bottom-0 left-0 w-full z-50 px-4 pb-[env(safe-area-inset-bottom)] bg-neutral-950/90 backdrop-blur-md border-t border-white/5 pb-[96px]">
         <div className="text-center pb-2">
-            <p className="text-xs text-white/60 italic font-serif group cursor-default hover:text-white/90 transition-colors">AI processing is transient & ephemeral for your privacy.</p>
+            <p className="text-xs text-neutral-400 italic font-serif group cursor-default hover:text-neutral-300 transition-colors">AI processing is transient & ephemeral for your privacy.</p>
         </div>
         <div className={`pt-2 pb-6 max-w-3xl mx-auto transition-all duration-500 ${isInputFocused ? 'pb-8 scale-[1.01]' : 'pb-4'}`}>
           <ChatInput 

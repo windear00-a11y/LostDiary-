@@ -33,46 +33,29 @@ export const BottomNav = () => {
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200, delay: 0.5 }}
-        className="pointer-events-auto relative flex items-center gap-1 p-2 bg-[#050505]/90 backdrop-blur-2xl border border-indigo-500/20 rounded-full shadow-[0_20px_60px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.1)] overflow-hidden"
+        className="pointer-events-auto relative flex items-center p-1 bg-[#1a1a1e]/80 backdrop-blur-2xl rounded-full shadow-lg"
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/40 via-transparent to-transparent pointer-events-none opacity-50" />
-        
         {tabs.map((tab) => {
           const isActive = tab.active;
           return (
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab)}
-              className="relative flex items-center justify-center gap-2 px-5 py-3 rounded-full transition-all group z-10 min-w-[70px]"
+              className={`relative flex items-center justify-center px-6 py-2.5 rounded-full transition-all duration-300 z-10 ${
+                isActive ? 'text-black' : 'text-neutral-400 hover:text-neutral-200'
+              }`}
             >
               {isActive && (
                 <motion.div
                   layoutId="active-tab-nav"
-                  className="absolute inset-0 bg-indigo-500/20 border border-indigo-500/30 rounded-full"
-                  transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                >
-                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/30 to-transparent opacity-50 rounded-full animate-pulse" />
-                </motion.div>
+                  className="absolute inset-0 bg-white rounded-full shadow-sm"
+                  transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                />
               )}
               
-              <tab.icon className={`w-5 h-5 relative z-10 transition-transform duration-500 group-hover:scale-110 ${
-                isActive 
-                  ? 'text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.8)]' 
-                  : 'text-indigo-200/40 group-hover:text-indigo-300'
-              }`} />
-              
-              <AnimatePresence>
-                {isActive && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0, filter: 'blur(4px)' }}
-                    animate={{ opacity: 1, width: 'auto', filter: 'blur(0px)' }}
-                    exit={{ opacity: 0, width: 0, filter: 'blur(4px)' }}
-                    className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-100 overflow-hidden whitespace-nowrap ml-2 relative z-10 pt-0.5"
-                  >
-                    <span>{tab.label}</span>
-                  </motion.span>
-                )}
-              </AnimatePresence>
+              <span className={`text-[13px] font-medium tracking-wide relative z-10 px-1`}>
+                {isActive ? tab.label : tab.label}
+              </span>
             </button>
           );
         })}

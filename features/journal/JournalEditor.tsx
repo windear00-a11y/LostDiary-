@@ -365,7 +365,7 @@ export const JournalEditor = () => {
           pointerEvents: showUI ? 'auto' : 'none'
         }}
         whileHover={{ opacity: 1, y: 0, scale: 1 }}
-        className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-xl h-14 bg-[#0a0a0c]/80 border border-indigo-500/20 rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl flex items-center justify-around px-4 z-[70] transition-colors"
+        className="fixed bottom-[96px] left-1/2 -translate-x-1/2 w-[90%] max-w-xl h-14 bg-[#0a0a0c]/80 border border-indigo-500/20 rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl flex items-center justify-around px-4 z-[70] transition-colors"
       >
         <div className="flex items-center justify-around w-full overflow-x-auto scrollbar-none py-2 gap-2">
           <button onClick={() => handleFormat('checklist')} className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
