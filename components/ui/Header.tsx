@@ -10,8 +10,7 @@ import { useUIStore } from '@/lib/store/use-ui-store';
 
 export const Header = () => {
   const router = useRouter();
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const { isInputFocused, activeView, setActiveView } = useUIStore();
+  const { isInputFocused, activeView, setActiveView, isDrawerOpen, setIsDrawerOpen } = useUIStore();
 
   const handleToggleView = () => {
     setActiveView(activeView === 'chat' ? 'journal' : 'chat');
@@ -25,16 +24,8 @@ export const Header = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-4 inset-x-0 z-[70] pointer-events-none flex justify-between items-center px-4"
+            className="fixed top-4 inset-x-0 z-[70] pointer-events-none flex justify-end items-center px-4"
           >
-            {/* Left Menu Button */}
-            <button
-              onClick={() => setIsDrawerOpen(true)}
-              className="w-10 h-10 rounded-full bg-[#0a0a0a]/80 backdrop-blur-3xl border border-indigo-500/20 flex items-center justify-center transition-all shadow-xl hover:bg-indigo-500/10 pointer-events-auto shrink-0"
-            >
-              <Menu className="w-4 h-4 text-indigo-400" />
-            </button>
-
             {/* Right Toggle Button */}
             {(activeView === 'chat' || activeView === 'journal') ? (
               <button
