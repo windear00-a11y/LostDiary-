@@ -12,8 +12,14 @@ export const Header = () => {
   const router = useRouter();
   const { isInputFocused, activeView, setActiveView, isDrawerOpen, setIsDrawerOpen } = useUIStore();
 
+  const [displayMode, setDisplayMode] = useState<'idle' | 'switching'>('idle');
+
   const handleToggleView = () => {
-    setActiveView(activeView === 'chat' ? 'journal' : 'chat');
+    setDisplayMode('switching');
+    setTimeout(() => {
+      setActiveView(activeView === 'chat' ? 'journal' : 'chat');
+      setDisplayMode('idle');
+    }, 1500);
   };
 
   return (
@@ -28,16 +34,32 @@ export const Header = () => {
           >
             {/* Right Toggle Button */}
             {(activeView === 'chat' || activeView === 'journal') ? (
-              <button
+              <motion.button
+                layout
+                whileTap={{ scale: 0.95 }}
                 onClick={handleToggleView}
-                className={`flex items-center gap-2 pl-3 pr-4 py-2 rounded-full border shadow-xl backdrop-blur-3xl pointer-events-auto transition-all duration-300 group ${
-                  activeView === 'chat'
-                    ? 'bg-emerald-900/30 border-emerald-500/30 text-emerald-300 hover:bg-emerald-800/40' // Hinting at the next state
-                    : 'bg-indigo-900/30 border-indigo-500/30 text-indigo-300 hover:bg-indigo-800/40' // Hinting at the next state
+                disabled={displayMode === 'switching'}
+                className={`flex items-center gap-3 px-6 py-2 rounded-full border shadow-xl backdrop-blur-3xl pointer-events-auto transition-all duration-300 group ${
+                  displayMode === 'switching'
+                    ? 'bg-amber-900/30 border-amber-500/30 text-amber-300'
+                    : (activeView === 'chat'
+                        ? 'bg-emerald-900/30 border-emerald-500/30 text-emerald-300 hover:bg-emerald-800/40'
+                        : 'bg-indigo-900/30 border-indigo-500/30 text-indigo-300 hover:bg-indigo-800/40')
                 }`}
                 title={activeView === 'chat' ? 'Switch to Deep Weave' : 'Switch to Whispers'}
               >
-                {activeView === 'chat' ? (
+                {displayMode === 'switching' ? (
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2"
+                  >
+                    {activeView === 'chat' ? <Feather className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />}
+                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                      Switching to {activeView === 'chat' ? 'Deep Weave' : 'Whispers'}
+                    </span>
+                  </motion.div>
+                ) : activeView === 'chat' ? (
                   <>
                     <Feather className="w-4 h-4 group-hover:scale-110 transition-transform" />
                     <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Deep Weave</span>
@@ -48,7 +70,7 @@ export const Header = () => {
                     <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Whispers</span>
                   </>
                 )}
-              </button>
+              </motion.button>
             ) : (
               <div className="w-10 h-10 shrink-0" />
             )}

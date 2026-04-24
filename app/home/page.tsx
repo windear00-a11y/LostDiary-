@@ -10,7 +10,6 @@ import { useEffect, useState } from 'react';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { motion, AnimatePresence } from 'motion/react';
-import { Header } from '@/components/ui/Header';
 import { Suspense } from 'react';
 
 export default function HomePage() {
@@ -33,7 +32,6 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      <Header />
       <main className="flex-1 w-full relative overflow-hidden">
         <Suspense fallback={<LoadingSpace />}>
           <ChatInterface />

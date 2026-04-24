@@ -5,6 +5,7 @@ import { AuthGuard } from '@/components/auth/auth-guard';
 import { ThemeProvider } from '@/components/theme-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from 'sonner';
+import { Header } from '@/components/ui/Header';
 import { BottomNav } from '@/components/ui/BottomNav';
 import './globals.css';
 
@@ -50,6 +51,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
           <AuthProvider>
             <AuthGuard>
               <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+                <Header />
                 <BottomNav />
                 <Toaster position="bottom-right" toastOptions={{
                   style: {

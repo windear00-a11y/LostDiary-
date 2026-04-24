@@ -3,11 +3,11 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Globe, Heart, BookOpen, User, Droplets, Leaf, Send, Sparkles, Handshake, Anchor, BookMarked, ChevronDown, ChevronUp, MoreHorizontal, Bookmark, ArrowRight, Clock, MessageSquare, Shield, PenTool } from 'lucide-react';
-import { Header } from '@/components/ui/Header';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { SuccessMoment } from '@/components/ui/SuccessMoment';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { EngagementSoulCard } from '@/components/library/EngagementSoulCard';
+import { AuthorHeartbeat } from '@/components/profile/AuthorHeartbeat';
 import { StoryReader } from '@/features/story/StoryReader';
 import { coreService, Chapter, Volume } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
@@ -55,6 +55,7 @@ export default function GlobalLibraryPage() {
   const [localAhsas, setLocalAhsas] = useState<Record<string, Set<number>>>({});
   const [readingStory, setReadingStory] = useState<LibraryStory | null>(null);
   const [activeLibraryTab, setActiveLibraryTab] = useState<'feed' | 'echoes'>('feed');
+  const [displayMode, setDisplayMode] = useState<'idle' | 'switching'>('idle');
 
   // Bridges State
   const [inboxPlanes, setInboxPlanes] = useState<any[]>([]);
@@ -333,7 +334,6 @@ export default function GlobalLibraryPage() {
 
   return (
     <div className="min-h-screen bg-transparent pb-32">
-      <Header />
       
       <SuccessMoment 
         isOpen={showSuccessMoment}
@@ -406,21 +406,64 @@ export default function GlobalLibraryPage() {
       {/* Mood Navigator & Tab Switcher */}
       <div className="sticky top-20 z-30 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md pt-10 pb-4 mb-4 border-b border-gray-100 dark:border-white/5">
         {/* Tab Switcher */}
-        <div className="flex items-center justify-center gap-6 mb-6">
-           <button 
-             onClick={() => setActiveLibraryTab('feed')}
-             className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all ${activeLibraryTab === 'feed' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-200'}`}
+        <div className="flex items-center justify-center mb-6">
+           <motion.button 
+             layout
+             whileTap={{ scale: 0.95 }}
+             onClick={() => {
+                setDisplayMode('switching');
+                setTimeout(() => {
+                  setActiveLibraryTab(prev => prev === 'feed' ? 'echoes' : 'feed');
+                  setDisplayMode('idle');
+                }, 1500);
+             }}
+             disabled={displayMode === 'switching'}
+             className={`flex items-center gap-3 px-6 py-3 rounded-full border shadow-2xl backdrop-blur-3xl transition-all duration-300 group ${
+               displayMode === 'switching'
+                 ? 'bg-amber-900/30 border-amber-500/30 text-amber-300'
+                 : (activeLibraryTab === 'feed'
+                     ? 'bg-indigo-900/30 border-indigo-500/30 text-indigo-300 hover:bg-indigo-800/40'
+                     : 'bg-emerald-900/30 border-emerald-500/30 text-emerald-300 hover:bg-emerald-800/40')
+             }`}
            >
-             <Globe className="w-3.5 h-3.5" /> Global Feed {activeLibraryTab === 'feed' && <motion.div layoutId="libTab" className="w-6 h-0.5 bg-indigo-600 absolute -bottom-2 round-full" />}
-           </button>
-           <button 
-             onClick={() => setActiveLibraryTab('echoes')}
-             className={`flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] transition-all relative ${activeLibraryTab === 'echoes' ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-200'}`}
-           >
-             <MessageSquare className="w-3.5 h-3.5" /> Soul Signals 
-             {inboxPlanes.length > 0 && <span className="absolute -top-1 -right-3 w-2 h-2 bg-rose-500 rounded-full animate-pulse" />}
-             {activeLibraryTab === 'echoes' && <motion.div layoutId="libTab" className="w-6 h-0.5 bg-indigo-600 absolute -bottom-2 round-full" />}
-           </button>
+             {displayMode === 'switching' ? (
+                <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-2"
+                >
+                    {activeLibraryTab === 'feed' ? <MessageSquare className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
+                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                        Switching to {activeLibraryTab === 'feed' ? 'Soul Signals' : 'Global Feed'}
+                    </span>
+                </motion.div>
+             ) : (
+                activeLibraryTab === 'feed' ? (
+                    <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-2"
+                    >
+                    <Globe className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Global Feed</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50" />
+                    <span className="text-[9px] font-medium opacity-60">Switch to Signals</span>
+                    </motion.div>
+                ) : (
+                    <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-2"
+                    >
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Soul Signals</span>
+                    {inboxPlanes.length > 0 && <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />}
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
+                    <span className="text-[9px] font-medium opacity-60">Switch to Feed</span>
+                    </motion.div>
+                )
+             )}
+           </motion.button>
         </div>
 
         {activeLibraryTab === 'feed' && (
@@ -728,6 +771,10 @@ export default function GlobalLibraryPage() {
                   <h2 className="text-3xl font-serif italic text-slate-900 dark:text-white">Soul Signals</h2>
                   <p className="text-sm text-slate-500 dark:text-slate-400 font-serif italic mt-2">Your connections and echoes from the library.</p>
                </header>
+
+               <div className="mb-16">
+                  <AuthorHeartbeat />
+               </div>
 
                {/* Bridges & Planes Sections */}
                <div className="space-y-16">

@@ -12,7 +12,6 @@ import { DeleteAccountModal } from '@/components/profile/DeleteAccountModal';
 import { FeedbackDrawer } from '@/components/ui/FeedbackDrawer';
 import { Header } from '@/components/ui/Header';
 import { SanctuaryMirror } from '@/components/profile/SanctuaryMirror';
-import { AuthorHeartbeat } from '@/components/profile/AuthorHeartbeat';
 import { PrivacyTrustCenter } from '@/components/profile/PrivacyTrustCenter';
 import { SuccessMoment } from '@/components/ui/SuccessMoment';
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -36,7 +35,7 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState('');
   const [penName, setPenName] = useState('');
   const [bio, setBio] = useState('');
-  const [activeTab, setActiveTab] = useState<'general' | 'mirror' | 'sanctum' | 'privacy'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'mirror' | 'sanctum' | 'privacy' | 'account'>('general');
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -188,8 +187,6 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-transparent pb-32">
-      <Header />
-      
       <SuccessMoment 
         isOpen={showSuccessMoment} 
         onClose={() => setShowSuccessMoment(false)}
@@ -414,6 +411,9 @@ export default function ProfilePage() {
                  <button onClick={() => setActiveTab('privacy')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'privacy' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
                     <Shield className="w-3 h-3" /> Rights
                  </button>
+                 <button onClick={() => setActiveTab('account')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'account' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                    <User className="w-3 h-3" /> Account
+                 </button>
               </div>
 
               {activeTab === 'mirror' ? (
@@ -421,27 +421,32 @@ export default function ProfilePage() {
                   {profile && <SanctuaryMirror profile={profile} onUpdate={handleUpdateIntelligence} />}
                 </>
               ) : activeTab === 'sanctum' ? (
-                <AuthorHeartbeat />
-              ) : (
+                <div className="text-center p-8 text-gray-500">Sanctum data moved to Library.</div>
+              ) : activeTab === 'privacy' ? (
                 <PrivacyTrustCenter />
+              ) : activeTab === 'account' ? (
+                <div className="flex flex-col gap-6 pt-10">
+                    <button 
+                      onClick={() => window.open('/api/profile/export', '_blank')}
+                      className="w-full text-sm text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-widest transition-all px-6 py-4 border border-indigo-500/20 rounded-2xl hover:bg-indigo-500/10"
+                    >
+                      Export My Vault Data
+                    </button>
+                    <button 
+                      onClick={() => setShowDeleteModal(true)}
+                      className="w-full text-sm text-red-500 hover:text-red-400 font-bold uppercase tracking-widest transition-all px-6 py-4 border border-red-500/20 rounded-2xl hover:bg-red-500/10"
+                    >
+                      Delete Sanctuary Forever
+                    </button>
+                </div>
+              ) : (
+                <div className="text-center p-8 text-gray-500">Select a tab.</div>
               )}
             </motion.div>
           )}
         </AnimatePresence>
 
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-white/10 text-center flex flex-col items-center gap-6">
-            <button 
-              onClick={() => window.open('/api/profile/export', '_blank')}
-              className="text-xs text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-widest transition-all px-4 py-2 border border-indigo-500/20 rounded-full hover:bg-indigo-500/10"
-            >
-              Export My Vault Data
-            </button>
-            <button 
-              onClick={() => setShowDeleteModal(true)}
-              className="text-xs text-red-500 hover:text-red-400 font-bold uppercase tracking-widest transition-all"
-            >
-              Delete Sanctuary Forever
-            </button>
         </div>
 
         <DeleteAccountModal 

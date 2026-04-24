@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Header } from '@/components/ui/Header';
 import { BridgeHeader } from '@/components/bridge/BridgeHeader';
 import { Send, Handshake, AlertTriangle, ArrowLeft, Sparkles, MessageSquare, Heart, Shield, MoreHorizontal, Compass } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -100,8 +99,6 @@ export default function BridgePage({ params }: { params: { id: string } }) {
 
   return (
     <div className="h-[100dvh] bg-[#0A0A0B] flex flex-col relative overflow-hidden text-slate-200">
-      <Header />
-      
       <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-indigo-900/10 to-transparent pointer-events-none" />
       
       <main className="flex-1 max-w-3xl w-full mx-auto flex flex-col pt-24 px-4 h-full relative z-10">
