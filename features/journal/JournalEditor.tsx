@@ -213,7 +213,7 @@ export const JournalEditor = () => {
           y: showUI ? 0 : -20,
           pointerEvents: showUI ? 'auto' : 'none'
         }}
-        className="flex items-center justify-end px-6 py-4 border-b border-white/5 z-20 bg-transparent backdrop-blur-md"
+        className="flex items-center justify-end px-6 pt-16 pb-4 border-b border-white/5 z-20 bg-transparent backdrop-blur-md"
       >
         <div className="flex items-center gap-2">
           <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-indigo-900/20 rounded-full border border-indigo-500/20 mr-4 select-none shadow-[0_0_15px_rgba(99,102,241,0.1)]">
@@ -276,8 +276,8 @@ export const JournalEditor = () => {
           onClick={handleEditorClick}
           placeholder="The canvas is listening to your whispers..."
           className="w-full h-full bg-transparent border-none outline-none resize-none 
-                     text-xl md:text-2xl leading-relaxed font-serif text-indigo-50/90 placeholder:text-indigo-100/10
-                     selection:bg-indigo-500/20"
+                     text-xl md:text-2xl leading-relaxed font-serif text-white font-medium placeholder:text-indigo-100/30
+                     drop-shadow-md selection:bg-indigo-500/30"
         />
         
         {content.length === 0 && title.length === 0 && !showNudge && (

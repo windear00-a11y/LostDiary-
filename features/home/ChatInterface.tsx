@@ -365,7 +365,7 @@ export const ChatInterface = () => {
                 <div className={`max-w-[85%] px-5 py-3.5 rounded-2xl ${
                   isUser 
                     ? 'bg-white text-black rounded-tr-none shadow-xl' 
-                    : 'bg-neutral-900 border border-white/10 text-neutral-100 rounded-tl-none shadow-[0_10px_30px_rgba(0,0,0,0.5)]'
+                    : 'bg-[#151515] border border-white/20 text-white drop-shadow-md rounded-tl-none shadow-[0_10px_30px_rgba(0,0,0,0.5)]'
                 }`}>
                   {isThinkingMsg ? (
                     <div className="flex gap-1 py-1.5">
@@ -379,7 +379,7 @@ export const ChatInterface = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm md:text-base leading-relaxed tracking-wide whitespace-pre-wrap">
+                    <p className="text-base md:text-lg leading-relaxed tracking-wide whitespace-pre-wrap font-medium">
                       {msg.content}
                     </p>
                   )}

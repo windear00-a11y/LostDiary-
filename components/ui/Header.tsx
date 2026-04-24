@@ -25,7 +25,7 @@ export const Header = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-4 inset-x-0 z-50 pointer-events-none flex justify-between items-center px-4"
+            className="fixed top-4 inset-x-0 z-[70] pointer-events-none flex justify-between items-center px-4"
           >
             {/* Left Menu Button */}
             <button
