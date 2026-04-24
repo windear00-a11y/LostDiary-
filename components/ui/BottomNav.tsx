@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Compass, Fingerprint, Sparkles, Menu } from 'lucide-react';
+import { Compass, Fingerprint, Sparkles, MoreHorizontal } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUIStore } from '@/lib/store/use-ui-store';
 
@@ -35,11 +35,11 @@ export const BottomNav = () => {
           onClick={() => setIsDrawerOpen(true)}
           className="flex items-center justify-center w-12 h-12 rounded-full text-neutral-400 hover:text-white transition-all hover:bg-white/5"
         >
-          <Menu className="w-5 h-5 drop-shadow-md" />
+          <MoreHorizontal className="w-5 h-5 drop-shadow-md" />
         </button>
 
         {/* Dynamic Tabs */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-1 justify-center items-center gap-2">
           <AnimatePresence mode="popLayout">
             {tabs.map((tab) => {
               const isActive = tab.active;

@@ -108,7 +108,7 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
                 </p>
                 
                 <div className="flex flex-wrap gap-2 relative z-10">
-                  {profile?.life_themes?.slice(0, 3).map((theme: string, i: number) => (
+                  {profile?.life_themes?.slice(0, 3)?.map((theme: string, i: number) => (
                     <span key={i} className="text-[8px] px-2.5 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-200 uppercase tracking-[0.1em] font-bold shadow-sm">{theme}</span>
                   ))}
                   {(!profile?.life_themes || profile.life_themes.length === 0) && (
