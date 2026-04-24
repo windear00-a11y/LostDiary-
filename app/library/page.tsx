@@ -54,7 +54,7 @@ export default function GlobalLibraryPage() {
   // Track optimistically ahsas paragraphs: { [storyId]: Set<number> }
   const [localAhsas, setLocalAhsas] = useState<Record<string, Set<number>>>({});
   const [readingStory, setReadingStory] = useState<LibraryStory | null>(null);
-  const [activeLibraryTab, setActiveLibraryTab] = useState<'feed' | 'echoes'>('feed');
+  const { activeLibraryTab, setActiveLibraryTab } = useUIStore();
   const [displayMode, setDisplayMode] = useState<'idle' | 'switching'>('idle');
 
   // Bridges State
@@ -405,67 +405,7 @@ export default function GlobalLibraryPage() {
       
       {/* Mood Navigator & Tab Switcher */}
       <div className="sticky top-20 z-30 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md pt-10 pb-4 mb-4 border-b border-gray-100 dark:border-white/5">
-        {/* Tab Switcher */}
-        <div className="flex items-center justify-center mb-6">
-           <motion.button 
-             layout
-             whileTap={{ scale: 0.95 }}
-             onClick={() => {
-                setDisplayMode('switching');
-                setTimeout(() => {
-                  setActiveLibraryTab(prev => prev === 'feed' ? 'echoes' : 'feed');
-                  setDisplayMode('idle');
-                }, 1500);
-             }}
-             disabled={displayMode === 'switching'}
-             className={`flex items-center gap-3 px-6 py-3 rounded-full border shadow-2xl backdrop-blur-3xl transition-all duration-300 group ${
-               displayMode === 'switching'
-                 ? 'bg-amber-900/30 border-amber-500/30 text-amber-300'
-                 : (activeLibraryTab === 'feed'
-                     ? 'bg-indigo-900/30 border-indigo-500/30 text-indigo-300 hover:bg-indigo-800/40'
-                     : 'bg-emerald-900/30 border-emerald-500/30 text-emerald-300 hover:bg-emerald-800/40')
-             }`}
-           >
-             {displayMode === 'switching' ? (
-                <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center gap-2"
-                >
-                    {activeLibraryTab === 'feed' ? <MessageSquare className="w-4 h-4" /> : <Globe className="w-4 h-4" />}
-                    <span className="text-[10px] font-bold uppercase tracking-widest">
-                        Switching to {activeLibraryTab === 'feed' ? 'Soul Signals' : 'Global Feed'}
-                    </span>
-                </motion.div>
-             ) : (
-                activeLibraryTab === 'feed' ? (
-                    <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-2"
-                    >
-                    <Globe className="w-4 h-4" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Global Feed</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500/50" />
-                    <span className="text-[9px] font-medium opacity-60">Switch to Signals</span>
-                    </motion.div>
-                ) : (
-                    <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-2"
-                    >
-                    <MessageSquare className="w-4 h-4" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Soul Signals</span>
-                    {inboxPlanes.length > 0 && <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />}
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
-                    <span className="text-[9px] font-medium opacity-60">Switch to Feed</span>
-                    </motion.div>
-                )
-             )}
-           </motion.button>
-        </div>
-
+        {/* Mood Filter */}
         {activeLibraryTab === 'feed' && (
           <div className="flex flex-col items-center gap-4">
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-4 justify-center w-full max-w-2xl">
