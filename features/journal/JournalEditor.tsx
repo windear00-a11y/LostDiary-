@@ -213,18 +213,8 @@ export const JournalEditor = () => {
           y: showUI ? 0 : -20,
           pointerEvents: showUI ? 'auto' : 'none'
         }}
-        className="flex items-center justify-between px-6 py-4 border-b border-white/5 z-20 bg-transparent backdrop-blur-md"
+        className="flex items-center justify-end px-6 py-4 border-b border-white/5 z-20 bg-transparent backdrop-blur-md"
       >
-        <button 
-          onClick={() => {
-            setSelectedJournalContent(null);
-            setActiveView('chat');
-          }}
-          className="p-2 hover:bg-white/5 rounded-full transition-colors group"
-        >
-          <ChevronLeft className="w-5 h-5 text-indigo-400 group-hover:-translate-x-1 transition-transform" />
-        </button>
-        
         <div className="flex items-center gap-2">
           <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-indigo-900/20 rounded-full border border-indigo-500/20 mr-4 select-none shadow-[0_0_15px_rgba(99,102,241,0.1)]">
             <Sparkles className="w-3 h-3 text-indigo-400 animate-pulse" />
