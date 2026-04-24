@@ -295,12 +295,12 @@ export const ChatInterface = () => {
           ${showNudge ? 'blur-sm scale-[0.99] opacity-40 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
         >
           {/* Privacy Trust Signal */}
-          <div className="flex flex-col items-center justify-center space-y-2 mb-4 opacity-40 select-none">
+          <div className="flex flex-col items-center justify-center space-y-2 mb-4 opacity-80 select-none">
              <div className="flex items-center gap-2">
-                <Shield className="w-3 h-3 text-emerald-500" />
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em]">End-to-End Soul Privacy</span>
+                <Shield className="w-4 h-4 text-emerald-400" />
+                <span className="text-[11px] font-mono uppercase tracking-[0.2em] text-emerald-50">End-to-End Soul Privacy</span>
              </div>
-             <p className="text-[9px] font-serif italic text-center max-w-[200px]">
+             <p className="text-[10px] font-serif italic text-center max-w-[250px] text-emerald-100/70">
                 Your reflections are sealed within your unique neural resonance. WinDear never logs human-readable data.
              </p>
           </div>
@@ -322,15 +322,15 @@ export const ChatInterface = () => {
                 >
                    <Sparkles className="w-8 h-8 text-white/20" />
                 </motion.div>
-                <h2 className="text-xl font-serif italic text-white/40">Silence is a blank page...</h2>
+                <h2 className="text-xl font-serif italic text-white/80">Silence is a blank page...</h2>
                 <div className="flex flex-wrap items-center justify-center gap-3 max-w-sm">
                   {starters.map((starter, i) => (
                     <motion.button
                       key={i}
-                      whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.08)" }}
+                      whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.15)" }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => handleSendMessage({ type: 'text', content: starter.text })}
-                      className="px-4 py-2 bg-neutral-900/50 border border-white/5 rounded-full text-xs text-white/50 transition-all hover:text-white"
+                      className="px-4 py-2 bg-neutral-800/60 border border-white/20 rounded-full text-sm text-white/90 transition-all hover:text-white hover:bg-neutral-700/80 shadow-sm"
                     >
                       {starter.icon} {starter.text}
                     </motion.button>
@@ -379,7 +379,7 @@ export const ChatInterface = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-base md:text-lg leading-relaxed tracking-wide whitespace-pre-wrap font-medium">
+                    <p className="text-sm md:text-base leading-relaxed tracking-wide whitespace-pre-wrap">
                       {msg.content}
                     </p>
                   )}
@@ -393,7 +393,7 @@ export const ChatInterface = () => {
       {/* Sticky Bottom Input Section */}
       <div className="fixed bottom-0 left-0 w-full z-50 px-4 pb-[env(safe-area-inset-bottom)] bg-neutral-950/90 backdrop-blur-md border-t border-white/5">
         <div className="text-center pb-2">
-            <p className="text-[10px] text-white/20 italic font-serif">AI processing is transient & ephemeral for your privacy.</p>
+            <p className="text-xs text-white/60 italic font-serif group cursor-default hover:text-white/90 transition-colors">AI processing is transient & ephemeral for your privacy.</p>
         </div>
         <div className={`pt-2 pb-6 max-w-3xl mx-auto transition-all duration-500 ${isInputFocused ? 'pb-8 scale-[1.01]' : 'pb-4'}`}>
           <ChatInput 

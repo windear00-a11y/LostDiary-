@@ -283,18 +283,18 @@ export const JournalEditor = () => {
         {content.length === 0 && title.length === 0 && !showNudge && (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-10 pointer-events-none">
              <div className="w-full max-w-lg space-y-6 pointer-events-auto">
-               <p className="text-center text-xs uppercase tracking-[0.4em] text-indigo-400/50 font-bold mb-10">Summon a Thought</p>
+               <p className="text-center text-sm uppercase tracking-[0.4em] text-indigo-300 font-bold mb-10 drop-shadow-md">Summon a Thought</p>
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  {journalStarters.map((starter, i) => (
                    <motion.button
                      key={i}
-                     whileHover={{ y: -2, backgroundColor: "rgba(99,102,241,0.05)", borderColor: "rgba(99,102,241,0.2)" }}
+                     whileHover={{ y: -2, backgroundColor: "rgba(99,102,241,0.15)", borderColor: "rgba(99,102,241,0.4)" }}
                      whileTap={{ scale: 0.98 }}
                      onClick={() => handleSelectStarter(starter.text)}
-                     className="w-full flex items-start gap-4 p-5 bg-[#0a0a0a]/50 border border-white/5 rounded-3xl text-sm text-indigo-100/40 hover:text-indigo-100/80 transition-all text-left backdrop-blur-sm group shadow-xl"
+                     className="w-full flex items-start gap-4 p-5 bg-[#121215]/80 border border-indigo-500/20 rounded-3xl text-sm text-indigo-50 hover:text-white transition-all text-left backdrop-blur-sm group shadow-[0_5px_15px_rgba(0,0,0,0.5)]"
                    >
-                     <span className="text-2xl bg-indigo-500/5 w-12 h-12 shrink-0 flex items-center justify-center rounded-2xl group-hover:scale-110 transition-transform">{starter.icon}</span>
-                     <span className="font-serif italic leading-relaxed pt-1">{starter.text}</span>
+                     <span className="text-2xl bg-indigo-500/20 w-12 h-12 shrink-0 flex items-center justify-center rounded-2xl group-hover:scale-110 group-hover:bg-indigo-500/30 transition-all text-indigo-200">{starter.icon}</span>
+                     <span className="font-serif italic leading-relaxed pt-1 font-medium">{starter.text}</span>
                    </motion.button>
                  ))}
                </div>
