@@ -198,7 +198,14 @@ export const JournalEditor = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-neutral-950 text-neutral-200 overflow-hidden" onMouseMove={handleMouseMove}>
+    <div className="h-full flex flex-col bg-[#050505] text-neutral-200 overflow-hidden relative" onMouseMove={handleMouseMove}>
+      {/* Background Ambience */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent opacity-60" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-purple-900/10 via-transparent to-transparent opacity-40 mix-blend-screen" />
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] mix-blend-screen" />
+      </div>
+
       {/* Top Header - Pattern 1 (Fades out for Focus) */}
       <motion.div 
         animate={{ 
@@ -206,103 +213,98 @@ export const JournalEditor = () => {
           y: showUI ? 0 : -20,
           pointerEvents: showUI ? 'auto' : 'none'
         }}
-        className="flex items-center justify-between px-4 py-3 border-b border-white/5 z-20 bg-neutral-950"
+        className="flex items-center justify-between px-6 py-4 border-b border-white/5 z-20 bg-transparent backdrop-blur-md"
       >
         <button 
           onClick={() => {
             setSelectedJournalContent(null);
             setActiveView('chat');
           }}
-          className="p-2 hover:bg-white/5 rounded-full transition-colors"
+          className="p-2 hover:bg-white/5 rounded-full transition-colors group"
         >
-          <ChevronLeft className="w-5 h-5 text-neutral-400" />
+          <ChevronLeft className="w-5 h-5 text-indigo-400 group-hover:-translate-x-1 transition-transform" />
         </button>
         
-        <div className="flex items-center gap-1">
-          <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-white/5 rounded-full border border-white/5 mr-4 select-none">
-            <Shield className="w-3 h-3 text-emerald-500" />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-500/80">Private Vault Active</span>
+        <div className="flex items-center gap-2">
+          <div className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-indigo-900/20 rounded-full border border-indigo-500/20 mr-4 select-none shadow-[0_0_15px_rgba(99,102,241,0.1)]">
+            <Sparkles className="w-3 h-3 text-indigo-400 animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-300">Sanctuary Weave Active</span>
           </div>
           <button 
             onClick={handleStartNewEntry}
-            className="p-2 text-neutral-500 hover:text-white transition-colors"
-            title="Start New Entry"
+            className="p-2 text-indigo-500/50 hover:text-indigo-400 transition-colors"
+            title="Weave New Thread"
           >
             <Plus className="w-5 h-5" />
           </button>
-          <div className="w-[1px] h-4 bg-white/5 mx-1" />
-          <button className="p-2 text-neutral-500 hover:text-white transition-colors">
-            <Undo className="w-5 h-5" />
-          </button>
-          <button className="p-2 text-neutral-500 hover:text-white transition-colors">
-            <Redo className="w-5 h-5" />
-          </button>
+          <div className="w-[1px] h-4 bg-white/5 mx-2" />
           <button 
             onClick={handleSave}
             disabled={isSaving || (!title.trim() && !content.trim())}
-            className={`ml-2 p-2 rounded-full transition-all ${saveStatus === 'success' ? 'text-green-400' : 'text-indigo-400 hover:bg-indigo-400/10'}`}
+            className={`ml-2 px-6 py-2 flex items-center gap-2 rounded-full font-bold text-xs uppercase tracking-widest transition-all ${saveStatus === 'success' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-indigo-600 text-white shadow-[0_10px_20px_rgba(79,70,229,0.2)] hover:bg-indigo-500 hover:shadow-indigo-500/40 disabled:opacity-50 disabled:bg-indigo-900/50'}`}
           >
             {isSaving ? (
-              <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : saveStatus === 'success' ? (
-              <Check className="w-5 h-5" />
+              <>Sealed <Check className="w-3 h-3" /></>
             ) : (
-              <Save className="w-5 h-5" />
+              <>Seal Thread <Save className="w-3 h-3" /></>
             )}
           </button>
         </div>
       </motion.div>
 
       {/* Metadata Stats */}
-      <div className={`px-6 pt-8 pb-4 max-w-2xl mx-auto w-full transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
+      <div className={`px-6 pt-12 pb-6 max-w-3xl mx-auto w-full transition-all duration-700 relative z-10 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
         <input 
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title"
-          className="w-full bg-transparent border-none outline-none text-3xl font-serif italic text-white placeholder:text-neutral-800"
+          placeholder="Give this soul-thread a name..."
+          className="w-full bg-transparent border-none outline-none text-4xl md:text-5xl font-serif italic text-white placeholder:text-indigo-100/20 drop-shadow-lg"
         />
-        <div className="flex items-center gap-4 mt-2 text-[10px] uppercase tracking-widest text-neutral-600 font-mono">
-          <span className="flex items-center gap-1.5">
-            <Clock className="w-3 h-3" />
+        <div className="flex items-center gap-6 mt-6 text-[10px] uppercase tracking-[0.3em] text-indigo-400/60 font-bold">
+          <span className="flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5" />
             {stats.date}
           </span>
-          <span className="flex items-center gap-1.5">
-            <Hash className="w-3 h-3" />
-            {stats.chars} characters
+          <div className="w-1 h-1 rounded-full bg-indigo-500/30" />
+          <span className="flex items-center gap-2">
+            <Hash className="w-3.5 h-3.5" />
+            {stats.chars} Essence
           </span>
         </div>
       </div>
 
       {/* Editor Area */}
-      <div className={`flex-1 px-6 max-w-2xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-32 relative transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
+      <div className={`flex-1 px-6 max-w-3xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-40 relative z-10 transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
         <textarea
           ref={contentRef}
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onFocus={handleEditorFocus}
           onClick={handleEditorClick}
-          placeholder="Start writing your heart out..."
+          placeholder="The canvas is listening to your whispers..."
           className="w-full h-full bg-transparent border-none outline-none resize-none 
-                     text-lg leading-relaxed font-sans placeholder:text-neutral-800
+                     text-xl md:text-2xl leading-relaxed font-serif text-indigo-50/90 placeholder:text-indigo-100/10
                      selection:bg-indigo-500/20"
         />
         
         {content.length === 0 && title.length === 0 && !showNudge && (
           <div className="absolute inset-0 flex flex-col items-center justify-center p-10 pointer-events-none">
-             <div className="w-full max-w-sm space-y-6 pointer-events-auto">
-               <p className="text-center text-xs uppercase tracking-[0.2em] text-neutral-600 font-medium mb-8">Choose a theme to begin</p>
-               <div className="grid grid-cols-1 gap-3">
+             <div className="w-full max-w-lg space-y-6 pointer-events-auto">
+               <p className="text-center text-xs uppercase tracking-[0.4em] text-indigo-400/50 font-bold mb-10">Summon a Thought</p>
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  {journalStarters.map((starter, i) => (
                    <motion.button
                      key={i}
-                     whileHover={{ x: 4, backgroundColor: "rgba(255,255,255,0.03)" }}
+                     whileHover={{ y: -2, backgroundColor: "rgba(99,102,241,0.05)", borderColor: "rgba(99,102,241,0.2)" }}
                      whileTap={{ scale: 0.98 }}
                      onClick={() => handleSelectStarter(starter.text)}
-                     className="w-full flex items-center gap-4 px-5 py-4 bg-neutral-900/40 border border-white/5 rounded-2xl text-sm text-white/50 hover:text-white transition-all text-left"
+                     className="w-full flex items-start gap-4 p-5 bg-[#0a0a0a]/50 border border-white/5 rounded-3xl text-sm text-indigo-100/40 hover:text-indigo-100/80 transition-all text-left backdrop-blur-sm group shadow-xl"
                    >
-                     <span className="text-lg bg-white/5 w-10 h-10 flex items-center justify-center rounded-xl">{starter.icon}</span>
-                     <span className="font-serif italic text-base">{starter.text}</span>
+                     <span className="text-2xl bg-indigo-500/5 w-12 h-12 shrink-0 flex items-center justify-center rounded-2xl group-hover:scale-110 transition-transform">{starter.icon}</span>
+                     <span className="font-serif italic leading-relaxed pt-1">{starter.text}</span>
                    </motion.button>
                  ))}
                </div>
@@ -317,27 +319,29 @@ export const JournalEditor = () => {
           <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
         )}
         {showNudge && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-neutral-950/20 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-neutral-950/40 backdrop-blur-md">
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: -20 }}
-              className="bg-neutral-900/80 border border-white/10 rounded-[32px] p-8 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl relative"
+              className="bg-[#0c0c0e]/90 border border-indigo-500/20 rounded-[32px] p-10 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.8)] backdrop-blur-2xl relative overflow-hidden"
             >
-              <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Clock className="w-8 h-8 text-amber-400" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/40 via-transparent to-transparent pointer-events-none" />
+              
+              <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                <Clock className="w-8 h-8 text-indigo-400" />
               </div>
 
-              <div className="space-y-3 mb-10">
+              <div className="space-y-3 mb-10 relative z-10">
                 <h3 className="text-2xl font-serif italic text-white leading-tight">
-                  Dil ka ek panna khali hai...
+                  An unfinished whisper...
                 </h3>
-                <p className="text-sm text-slate-400 font-serif leading-relaxed px-4">
-                  Aapke pichle page se hi likhna jaari (continue) rakhein? Ya naye page (panne) se shuru karein?
+                <p className="text-sm text-indigo-200/60 font-serif leading-relaxed px-4">
+                  A thread was left weaving. Would you like to pick up where you left off, or start a new weave?
                 </p>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-4 relative z-10">
                 <motion.button 
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -345,16 +349,16 @@ export const JournalEditor = () => {
                     setSelectedJournalContent(recentEntry.content);
                     setShowNudge(false);
                   }}
-                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-medium shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all"
+                  className="w-full py-4 bg-indigo-600/90 hover:bg-indigo-500 text-white rounded-2xl font-bold uppercase tracking-widest text-xs shadow-[0_10px_20px_rgba(79,70,229,0.2)] transition-all border border-indigo-500/50"
                 >
-                  Pichla panna jaari rakhein
+                  Continue Weaving
                 </motion.button>
                 
                 <button 
                   onClick={handleStartNewEntry}
-                  className="w-full py-3 text-white/60 hover:text-white text-xs font-medium transition-all"
+                  className="w-full py-3 text-indigo-400/50 hover:text-indigo-300 text-xs font-bold uppercase tracking-widest transition-all"
                 >
-                  Nayi entry shuru karein
+                  Start New Thread
                 </button>
               </div>
             </motion.div>
@@ -371,40 +375,40 @@ export const JournalEditor = () => {
           pointerEvents: showUI ? 'auto' : 'none'
         }}
         whileHover={{ opacity: 1, y: 0, scale: 1 }}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-xl h-14 bg-neutral-900/80 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center justify-around px-2 z-[70] transition-colors"
+        className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-xl h-14 bg-[#0a0a0c]/80 border border-indigo-500/20 rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl flex items-center justify-around px-4 z-[70] transition-colors"
       >
-        <div className="flex items-center justify-around w-full overflow-x-auto scrollbar-none py-2">
-          <button onClick={() => handleFormat('checklist')} className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
-            <CheckSquare className="w-5 h-5" />
+        <div className="flex items-center justify-around w-full overflow-x-auto scrollbar-none py-2 gap-2">
+          <button onClick={() => handleFormat('checklist')} className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
+            <CheckSquare className="w-4 h-4" />
           </button>
-          <button onClick={() => handleFormat('image')} className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
-            <ImageIcon className="w-5 h-5" />
+          <button onClick={() => handleFormat('image')} className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
+            <ImageIcon className="w-4 h-4" />
           </button>
-          <button className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
-            <Type className="w-5 h-5" />
+          <button className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
+            <Type className="w-4 h-4" />
           </button>
-          <div className="w-[1px] h-6 bg-white/10 mx-1 shrink-0" />
-          <button onClick={() => handleFormat('bold')} className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
-            <Bold className="w-5 h-5" />
+          <div className="w-[1px] h-6 bg-indigo-500/20 mx-2 shrink-0" />
+          <button onClick={() => handleFormat('bold')} className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
+            <Bold className="w-4 h-4" />
           </button>
-          <button onClick={() => handleFormat('italic')} className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0" >
-            <Italic className="w-5 h-5" />
+          <button onClick={() => handleFormat('italic')} className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0" >
+            <Italic className="w-4 h-4" />
           </button>
-          <button onClick={() => handleFormat('underline')} className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
-            <Underline className="w-5 h-5" />
+          <button onClick={() => handleFormat('underline')} className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
+            <Underline className="w-4 h-4" />
           </button>
-          <div className="w-[1px] h-6 bg-white/10 mx-1 shrink-0" />
-          <button onClick={() => handleFormat('bullet')} className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
-            <List className="w-5 h-5" />
+          <div className="w-[1px] h-6 bg-indigo-500/20 mx-2 shrink-0" />
+          <button onClick={() => handleFormat('bullet')} className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
+            <List className="w-4 h-4" />
           </button>
-          <button className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
-            <AlignLeft className="w-5 h-5" />
+          <button className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
+            <AlignLeft className="w-4 h-4" />
           </button>
-          <button className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
-            <AlignCenter className="w-5 h-5" />
+          <button className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
+            <AlignCenter className="w-4 h-4" />
           </button>
-          <button className="p-2 text-neutral-400 hover:text-white transition-colors shrink-0">
-            <AlignRight className="w-5 h-5" />
+          <button className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
+            <AlignRight className="w-4 h-4" />
           </button>
         </div>
       </motion.div>

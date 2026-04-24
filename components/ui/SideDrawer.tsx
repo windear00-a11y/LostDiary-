@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, User, Settings, Book, LogOut, Heart, Search, 
   Sparkles, BookOpen, PenLine, History, ChevronRight,
-  Plus, MessageSquare, Wand2, Languages
+  Plus, MessageSquare, Wand2, Languages, Compass, Feather
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/components/auth/auth-provider';
@@ -40,257 +40,229 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
     }
   }, [isOpen, user]);
 
-  const handleGenerateTitles = async () => {
-    if (!user || isGeneratingTitles) return;
-    setIsGeneratingTitles(true);
-    try {
-      const genericSessions = sessions.filter(s => 
-        !s.title || 
-        s.title === 'New Chat' || 
-        s.title.startsWith('Chat ') || 
-        s.title.includes(new Date().toLocaleDateString())
-      );
-
-      for (const session of genericSessions) {
-        try {
-          const newTitle = await coreService.generateSessionTitle(user.id, session.id);
-          setSessions(prev => prev.map(s => s.id === session.id ? { ...s, title: newTitle } : s));
-        } catch (err) {
-          console.error(`Failed to generate title for session ${session.id}:`, err);
-        }
-      }
-    } finally {
-      setIsGeneratingTitles(false);
-    }
-  };
-
-  const quickActions = [
-    { icon: BookOpen, label: 'लाइफबुक', path: '/library', color: 'text-indigo-500', bg: 'bg-indigo-50 dark:bg-indigo-500/10' },
-    { icon: Sparkles, label: 'झलक', path: '/library', color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
-  ];
-
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Deep Ethereal Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/40 dark:bg-black/60 backdrop-blur-sm z-[60]"
-          />
+            className="fixed inset-0 bg-[#020202]/80 backdrop-blur-md z-[60]"
+          >
+             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent pointer-events-none" />
+          </motion.div>
 
-            <motion.div
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 left-0 bottom-0 w-[85vw] max-w-[300px] bg-neutral-950 z-[70] shadow-2xl flex flex-col border-r border-white/5"
-            >
-              {/* Header */}
-              <div className="p-6 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
-                    <Book className="w-5 h-5 text-white/70" />
-                  </div>
-                  <span className="font-serif italic text-xl font-bold tracking-tight text-slate-50">WinDear</span>
+          {/* Drawer Panel */}
+          <motion.div
+            initial={{ x: '-100%', borderTopRightRadius: '100px', borderBottomRightRadius: '100px' }}
+            animate={{ x: 0, borderTopRightRadius: '32px', borderBottomRightRadius: '32px' }}
+            exit={{ x: '-100%', borderTopRightRadius: '100px', borderBottomRightRadius: '100px' }}
+            transition={{ type: 'spring', damping: 28, stiffness: 200 }}
+            className="fixed top-0 left-0 bottom-0 w-[85vw] max-w-[340px] bg-[#050505] z-[70] shadow-[30px_0_60px_rgba(0,0,0,0.8)] flex flex-col border-r border-indigo-500/20 overflow-hidden"
+          >
+            {/* Background Texture in Drawer */}
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] mix-blend-screen pointer-events-none" />
+            
+            {/* Header */}
+            <div className="pt-8 pb-6 px-6 flex items-start justify-between relative z-10">
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2 text-indigo-400">
+                  <Compass className="w-6 h-6" />
+                  <span className="font-serif italic text-2xl font-bold tracking-tight text-white drop-shadow-md">Windear</span>
                 </div>
+                <div className="text-[9px] uppercase tracking-[0.3em] font-bold text-indigo-500/50 ml-8">Archive & Soul</div>
+              </div>
               <div className="flex items-center gap-1">
                 <LanguageSwitcher />
-                <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors ml-1">
-                  <X className="w-5 h-5 text-slate-400" />
+                <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-full transition-colors ml-1 text-slate-500 hover:text-white">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-4 space-y-4 py-4 scrollbar-whatsapp">
-              {/* Identity & Insights Section (Bento Card Large) */}
+            <div className="flex-1 overflow-y-auto px-6 space-y-6 py-4 scrollbar-none relative z-10">
+              {/* Identity & Insights Card - Mystical Bento */}
               <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="p-5 rounded-[2rem] bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-transparent border border-white/10 relative overflow-hidden group shadow-2xl"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.1 }}
+                className="p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/10 relative overflow-hidden group shadow-[inset_0_0_20px_rgba(99,102,241,0.05)]"
               >
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
-                  <Sparkles className="w-12 h-12 text-indigo-400" />
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-indigo-500/20 blur-3xl rounded-full" />
+                <div className="absolute bottom-0 right-0 p-4 opacity-[0.05] group-hover:opacity-20 transition-opacity duration-700">
+                  <Fingerprint className="w-16 h-16 text-indigo-400" />
                 </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-6 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
-                    <Heart className="w-3.5 h-3.5 text-indigo-400" />
+                
+                <div className="flex items-center gap-3 mb-4 relative z-10">
+                  <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_10px_rgba(99,102,241,0.2)]">
+                    <Heart className="w-4 h-4 text-indigo-400 animate-pulse" />
                   </div>
-                  <h4 className="text-[10px] uppercase tracking-[0.2em] text-indigo-400/80 font-bold">Personality Insights</h4>
+                  <h4 className="text-[10px] uppercase tracking-[0.2em] text-indigo-300 font-bold">Soul Resonance</h4>
                 </div>
-                <p className="text-sm text-white/90 leading-relaxed font-serif italic mb-1">
-                  {profile?.personality_summary || "WinDear is still listening and learning the patterns of your soul..."}
+                
+                <p className="text-sm text-indigo-100/80 leading-relaxed font-serif italic mb-5 relative z-10">
+                  {profile?.personality_summary || "The pages are forming. Your unique essence is still being transcribed into the stars..."}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-1.5 opacity-60">
+                
+                <div className="flex flex-wrap gap-2 relative z-10">
                   {profile?.life_themes?.slice(0, 3).map((theme: string, i: number) => (
-                    <span key={i} className="text-[9px] px-2 py-0.5 rounded-full border border-white/10 bg-white/5 uppercase tracking-wider">{theme}</span>
+                    <span key={i} className="text-[8px] px-2.5 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-200 uppercase tracking-[0.1em] font-bold shadow-sm">{theme}</span>
                   ))}
+                  {(!profile?.life_themes || profile.life_themes.length === 0) && (
+                     <span className="text-[8px] px-2.5 py-1 rounded-full border border-slate-700 bg-white/5 text-slate-400 uppercase tracking-[0.1em] font-bold">Gathering Threads...</span>
+                  )}
                 </div>
               </motion.div>
 
-              {/* History / Activity Bento Section */}
-              <div className="space-y-4 pt-2">
-                <div className="flex p-1 bg-white/5 rounded-2xl gap-1">
-                  <button 
-                    onClick={() => setActiveTab('chats')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'chats' ? 'bg-white/10 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
-                  >
-                    <MessageSquare className="w-4 h-4" /> RECENT CHATS
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('reflections')}
-                    className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'reflections' ? 'bg-white/10 text-white shadow-lg' : 'text-white/30 hover:text-white/60'}`}
-                  >
-                    <History className="w-4 h-4" /> MEMORIES
-                  </button>
-                </div>
+              {/* Navigation Tabs */}
+              <div className="flex p-1 bg-[#0a0a0a] rounded-2xl gap-1 border border-white/5">
+                <button 
+                  onClick={() => setActiveTab('chats')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'chats' ? 'bg-indigo-600/20 text-indigo-300 shadow-sm border border-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  <MessageSquare className="w-3 h-3" /> WHISPERS
+                </button>
+                <button 
+                  onClick={() => setActiveTab('reflections')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'reflections' ? 'bg-indigo-600/20 text-indigo-300 shadow-sm border border-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+                >
+                  <History className="w-3 h-3" /> MEMORIES
+                </button>
+              </div>
 
-                <div className="space-y-2 bg-white/[0.02] border border-white/5 rounded-[2rem] p-3 min-h-[200px]">
-                  {activeTab === 'chats' ? (
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between px-2 mb-2">
-                        <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-white/20">Recent Sessions</span>
-                        <motion.button 
-                          whileHover={{ scale: 1.1 }}
+              {/* Lists */}
+              <div className="space-y-2">
+                {activeTab === 'chats' ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                    <div className="flex items-center justify-between px-2 pt-2">
+                      <span className="text-[9px] uppercase tracking-[0.3em] font-bold text-slate-500 text-indigo-500/40">Active Threads</span>
+                      <motion.button 
+                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => {
+                          setActiveView('chat');
+                          router.push('/home');
+                          onClose();
+                        }}
+                        className="p-1.5 hover:bg-indigo-500/10 rounded-full transition-colors text-indigo-400"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                    <div className="space-y-1.5">
+                      {sessions.slice(0, 5).map((session) => (
+                        <motion.button
+                          key={session.id}
+                          whileHover={{ x: 6, backgroundColor: "rgba(99,102,241,0.05)" }}
                           onClick={() => {
                             setActiveView('chat');
-                            router.push('/home');
+                            router.push(`/home?session=${session.id}`);
                             onClose();
                           }}
-                          className="p-1 hover:bg-white/5 rounded-full transition-colors"
+                          className="w-full flex flex-col gap-1 p-3.5 rounded-2xl transition-all text-left group border border-transparent hover:border-indigo-500/10"
                         >
-                          <Plus className="w-3 h-3 text-white/40" />
+                          <div className="flex items-center gap-3">
+                             <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/30 group-hover:bg-indigo-400 transition-colors shrink-0 shadow-[0_0_5px_rgba(99,102,241,0.5)]" />
+                             <span className="text-sm text-indigo-100/60 group-hover:text-indigo-100 font-serif italic line-clamp-1 flex-1 transition-colors">
+                               {session.title || 'An untitled whisper...'}
+                             </span>
+                          </div>
+                          <div className="pl-4 flex items-center gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
+                            {session.processing_status === 'woven' && (
+                              <span className="text-[8px] font-bold uppercase tracking-[0.1em] text-emerald-400">Deep Thread</span>
+                            )}
+                            {session.processing_status === 'saved' && (
+                              <span className="text-[8px] font-bold uppercase tracking-[0.1em] text-indigo-400">Vital Echo</span>
+                            )}
+                          </div>
                         </motion.button>
-                      </div>
-                      <div className="space-y-1">
-                        {sessions.slice(0, 5).map((session) => (
+                      ))}
+                      {sessions.length === 0 && (
+                        <div className="py-12 text-center">
+                          <Feather className="w-6 h-6 text-indigo-500/20 mx-auto mb-2" />
+                          <span className="text-xs font-serif italic text-slate-500">No whispers yet</span>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                    <div className="flex items-center justify-between px-2 pt-2">
+                      <span className="text-[9px] uppercase tracking-[0.3em] font-bold text-slate-500 text-indigo-500/40">Sealed Thoughts</span>
+                      <motion.button 
+                        whileHover={{ scale: 1.1, rotate: 90 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => {
+                          setSelectedJournalContent(null);
+                          setActiveView('journal');
+                          onClose();
+                        }}
+                        className="p-1.5 hover:bg-emerald-500/10 rounded-full transition-colors text-emerald-400"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </motion.button>
+                    </div>
+                    <div className="space-y-2">
+                      {diaryEntries.length > 0 ? (
+                        diaryEntries.slice(0, 5).map((entry) => (
                           <motion.button
-                            key={session.id}
-                            whileHover={{ x: 4 }}
+                            key={entry.id}
+                            whileHover={{ x: 6, backgroundColor: "rgba(16,185,129,0.05)" }}
                             onClick={() => {
-                              setActiveView('chat');
-                              router.push(`/home?session=${session.id}`);
+                              setSelectedJournalContent(entry.content);
+                              setActiveView('journal');
                               onClose();
                             }}
-                            className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-all text-left group"
+                            className="w-full flex flex-col p-4 rounded-2xl transition-all text-left group gap-2 border border-transparent hover:border-emerald-500/10 bg-white/[0.01]"
                           >
-                            <div className="w-2 h-2 rounded-full bg-white/10 group-hover:bg-indigo-500/50 transition-colors shrink-0" />
-                            <span className="text-sm text-white/40 group-hover:text-white/90 line-clamp-1 flex-1 transition-colors">
-                              {session.title || 'Untitled Session'}
-                            </span>
-                            <div className="flex items-center gap-1.5 opacity-60 group-hover:opacity-100 transition-opacity">
-                              {session.processing_status === 'woven' && (
-                                <span className="text-[8px] font-sans uppercase tracking-[0.1em] text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                                  Deep Resonance
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[9px] text-emerald-500/50 font-bold uppercase tracking-widest">
+                                  {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
                                 </span>
-                              )}
-                              {session.processing_status === 'saved' && (
-                                <span className="text-[8px] font-sans uppercase tracking-[0.1em] text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">
-                                  Vital Echo
-                                </span>
-                              )}
-                              {session.processing_status === 'observed' && (
-                                <span className="text-[8px] font-sans uppercase tracking-[0.1em] text-white/30 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">
-                                  Passing Reflection
-                                </span>
-                              )}
-                              <ChevronRight className="w-3 h-3 text-white/10 group-hover:text-white/30" />
-                            </div>
-                          </motion.button>
-                        ))}
-                        {sessions.length === 0 && (
-                          <div className="py-10 text-center opacity-20">
-                            <span className="text-xs italic">No chats yet</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-1">
-                      <div className="flex items-center justify-between px-2 mb-2">
-                        <span className="text-[9px] uppercase tracking-[0.2em] font-bold text-white/20">Memory Bank</span>
-                        <motion.button 
-                          whileHover={{ scale: 1.1 }}
-                          onClick={() => {
-                            setSelectedJournalContent(null);
-                            setActiveView('journal');
-                            onClose();
-                          }}
-                          className="p-1 hover:bg-white/5 rounded-full transition-colors"
-                        >
-                          <Plus className="w-3 h-3 text-white/40" />
-                        </motion.button>
-                      </div>
-                      <div className="space-y-2">
-                        {diaryEntries.length > 0 ? (
-                          diaryEntries.slice(0, 5).map((entry) => (
-                            <motion.button
-                              key={entry.id}
-                              whileHover={{ x: 4 }}
-                              onClick={() => {
-                                setSelectedJournalContent(entry.content);
-                                setActiveView('journal');
-                                onClose();
-                              }}
-                              className="w-full flex flex-col p-3.5 rounded-2xl hover:bg-white/5 transition-all text-left group gap-1.5 border border-transparent hover:border-white/5"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] text-white/30 font-bold uppercase tracking-wider">
-                                    {new Date(entry.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                                  </span>
-                                  {entry.processing_status === 'woven' && (
-                                    <span className="text-[7px] uppercase tracking-tighter text-emerald-400/60 font-serif italic">
-                                      Deep Resonance
-                                    </span>
-                                  )}
-                                  {entry.processing_status === 'saved' && (
-                                    <span className="text-[7px] uppercase tracking-tighter text-indigo-400/60 font-serif italic">
-                                      Vital Echo
-                                    </span>
-                                  )}
-                                  {entry.processing_status === 'observed' && (
-                                    <span className="text-[7px] uppercase tracking-tighter text-white/20 font-serif italic">
-                                      Reflection
-                                    </span>
-                                  )}
-                                </div>
-                                <PenLine className="w-3 h-3 text-white/10 group-hover:text-white/40 transition-colors" />
                               </div>
-                              <p className="text-xs text-white/50 group-hover:text-white/80 line-clamp-2 leading-relaxed italic">
-                                &ldquo;{entry.content || 'Empty reflection...'}&rdquo;
-                              </p>
-                            </motion.button>
-                          ))
-                        ) : (
-                          <div className="py-10 text-center opacity-20">
-                            <span className="text-xs italic">No memories yet</span>
-                          </div>
-                        )}
-                      </div>
+                              <PenLine className="w-3.5 h-3.5 text-emerald-500/20 group-hover:text-emerald-400 transition-colors" />
+                            </div>
+                            <p className="text-xs text-slate-400 group-hover:text-emerald-100/80 line-clamp-2 leading-relaxed font-serif italic transition-colors">
+                              &ldquo;{entry.content || 'Empty reflection...'}&rdquo;
+                            </p>
+                          </motion.button>
+                        ))
+                      ) : (
+                        <div className="py-12 text-center">
+                          <Book className="w-6 h-6 text-emerald-500/20 mx-auto mb-2" />
+                          <span className="text-xs font-serif italic text-slate-500">No memories sealed yet</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </motion.div>
+                )}
               </div>
             </div>
-            <div className="p-4 border-t border-gray-100 dark:border-white/5">
-              <div className="flex items-center gap-2 p-2 justify-between">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center overflow-hidden border border-gray-200 dark:border-white/10 shrink-0">
-                    <User className="w-4 h-4 text-gray-400" />
+
+            {/* Bottom Profile Area */}
+            <div className="p-6 border-t border-white/5 bg-[#030303] relative z-10 w-full mt-auto">
+              <div className="flex items-center gap-3 justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-full bg-indigo-900/30 flex items-center justify-center border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.15)] shrink-0 group hover:border-indigo-400 transition-colors cursor-pointer relative overflow-hidden">
+                     <div className="absolute inset-0 bg-indigo-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                     <User className="w-5 h-5 text-indigo-300 relative z-10 group-hover:scale-110 transition-transform" />
                   </div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">{user?.email?.split('@')[0] || 'User'}</p>
+                  <div className="flex flex-col truncate">
+                     <span className="text-xs font-bold text-white uppercase tracking-wider truncate drop-shadow-md">{user?.email?.split('@')[0] || 'Wanderer'}</span>
+                     <span className="text-[9px] font-bold text-indigo-500/80 uppercase tracking-widest">Soul Author</span>
+                  </div>
                 </div>
                 <button 
                   onClick={() => {
                     signOut();
                     onClose();
                   }}
-                  className="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors"
-                  title="Sign Out"
+                  className="p-2.5 text-rose-500/50 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-colors"
+                  title="Sever Connection"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>

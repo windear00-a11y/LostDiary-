@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, User, Sparkles } from 'lucide-react';
+import { Compass, Fingerprint, Sparkles } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUIStore } from '@/lib/store/use-ui-store';
 
@@ -16,8 +16,8 @@ export const BottomNav = () => {
 
   const tabs = [
     { id: 'sanctuary', label: 'Sanctuary', icon: Sparkles, path: '/home', active: pathname === '/home' },
-    { id: 'library', label: 'Library', icon: BookOpen, path: '/library', active: pathname === '/library' },
-    { id: 'profile', label: 'Soul', icon: User, path: '/profile', active: pathname === '/profile' },
+    { id: 'library', label: 'Constellation', icon: Compass, path: '/library', active: pathname === '/library' },
+    { id: 'profile', label: 'Mirror', icon: Fingerprint, path: '/profile', active: pathname === '/profile' },
   ];
 
   const handleTabClick = (tab: any) => {
@@ -28,49 +28,51 @@ export const BottomNav = () => {
   };
 
   return (
-    <div className="fixed bottom-6 inset-x-0 z-[100] flex justify-center pointer-events-none">
+    <div className="fixed bottom-6 inset-x-0 z-[100] flex justify-center pointer-events-none px-4">
       <motion.div 
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200, delay: 0.5 }}
-        className="pointer-events-auto flex items-center gap-1 p-1.5 bg-neutral-900/80 backdrop-blur-2xl border border-white/5 rounded-full shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+        className="pointer-events-auto relative flex items-center gap-1 p-2 bg-[#050505]/90 backdrop-blur-2xl border border-indigo-500/20 rounded-full shadow-[0_20px_60px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.1)] overflow-hidden"
       >
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/40 via-transparent to-transparent pointer-events-none opacity-50" />
+        
         {tabs.map((tab) => {
           const isActive = tab.active;
           return (
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab)}
-              className="relative flex items-center gap-2 px-6 py-3 rounded-full transition-all group"
+              className="relative flex items-center justify-center gap-2 px-5 py-3 rounded-full transition-all group z-10 min-w-[70px]"
             >
               {isActive && (
                 <motion.div
                   layoutId="active-tab-nav"
-                  className="absolute inset-0 bg-white/10 rounded-full"
+                  className="absolute inset-0 bg-indigo-500/20 border border-indigo-500/30 rounded-full"
                   transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
-                />
+                >
+                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-500/30 to-transparent opacity-50 rounded-full animate-pulse" />
+                </motion.div>
               )}
               
-              <tab.icon className={`w-5 h-5 transition-all duration-300 ${
-                isActive ? 'text-indigo-400 scale-110' : 'text-neutral-500 group-hover:text-neutral-300'
+              <tab.icon className={`w-5 h-5 relative z-10 transition-transform duration-500 group-hover:scale-110 ${
+                isActive 
+                  ? 'text-indigo-400 drop-shadow-[0_0_8px_rgba(99,102,241,0.8)]' 
+                  : 'text-indigo-200/40 group-hover:text-indigo-300'
               }`} />
               
               <AnimatePresence>
                 {isActive && (
                   <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="text-xs font-serif font-bold text-white tracking-wide overflow-hidden whitespace-nowrap"
+                    initial={{ opacity: 0, width: 0, filter: 'blur(4px)' }}
+                    animate={{ opacity: 1, width: 'auto', filter: 'blur(0px)' }}
+                    exit={{ opacity: 0, width: 0, filter: 'blur(4px)' }}
+                    className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-100 overflow-hidden whitespace-nowrap ml-2 relative z-10 pt-0.5"
                   >
-                    <span className="ml-2">{tab.label}</span>
+                    <span>{tab.label}</span>
                   </motion.span>
                 )}
               </AnimatePresence>
-
-              {isActive && (
-                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-500 rounded-full blur-[2px]" />
-              )}
             </button>
           );
         })}
