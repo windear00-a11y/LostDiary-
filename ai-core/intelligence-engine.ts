@@ -1,4 +1,5 @@
 import { getGenAI } from "@/lib/genai";
+import { generateContentWithFallback } from "@/lib/genai-utils";
 import { IntelligenceProfile } from "@/lib/services/core-service";
 
 export const extractIntelligenceProfile = async (
@@ -40,8 +41,8 @@ Return ONLY JSON. No explanations. Be the quiet observer behind the Mirror.
 `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview", // Flash is fast and good enough for structured extraction
+    const response = await generateContentWithFallback({
+      model: "gemini-2.5-flash", // Flash is fast and good enough for structured extraction
       contents: [{ role: "user", parts: [{ text: "Process input and output updated profile." }] }],
       config: { 
         systemInstruction, 

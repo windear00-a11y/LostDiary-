@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Chapter, Volume } from '@/lib/services/core-service';
 import { libraryService, SealingResult } from '@/lib/services/library-service';
 import { GoogleGenAI } from "@google/genai";
+import { generateContentWithFallback } from '@/lib/genai-utils';
 import { NarrativeMap } from '@/components/ui/NarrativeMap';
 import { useChapterEngagement } from './hooks/use-chapter-engagement';
 
@@ -223,8 +224,8 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
     }
     
     try {
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await generateContentWithFallback({
+        model: "gemini-3.1-pro-preview",
         contents: `Analyze the mood of this story paragraph: "${content.substring(0, 200)}..." Return only one word: Joyful, Tense, Melancholic, or Serene.`,
       });
       const detectedMood = response.text?.trim() as string;

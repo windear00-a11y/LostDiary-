@@ -9,10 +9,10 @@ import { useUIStore } from '@/lib/store/use-ui-store';
 export const BottomNav = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const { setActiveView } = useUIStore();
+  const { setActiveView, isInputFocused } = useUIStore();
 
   // Don't show on immersive rooms, onboarding, or landing page
-  if (pathname === '/' || pathname?.startsWith('/bridge') || pathname?.startsWith('/onboarding')) return null;
+  if (pathname === '/' || pathname?.startsWith('/bridge') || pathname?.startsWith('/onboarding') || isInputFocused) return null;
 
   const tabs = [
     { id: 'sanctuary', label: 'Sanctuary', icon: Sparkles, path: '/home', active: pathname === '/home' },
@@ -28,38 +28,26 @@ export const BottomNav = () => {
   };
 
   return (
-    <div className="fixed bottom-6 inset-x-0 z-[100] flex justify-center pointer-events-none px-4">
-      <motion.div 
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 200, delay: 0.5 }}
-        className="pointer-events-auto relative flex items-center p-1 bg-[#1a1a1e]/80 backdrop-blur-2xl rounded-full shadow-lg"
-      >
+    <div className="fixed bottom-0 inset-x-0 z-[100] border-t border-white/5 bg-[#050505] pointer-events-auto pb-[env(safe-area-inset-bottom)]">
+      <div className="flex justify-around items-center h-16 max-w-sm mx-auto px-2">
         {tabs.map((tab) => {
           const isActive = tab.active;
           return (
             <button
               key={tab.id}
               onClick={() => handleTabClick(tab)}
-              className={`relative flex items-center justify-center px-6 py-2.5 rounded-full transition-all duration-300 z-10 ${
-                isActive ? 'text-black' : 'text-neutral-400 hover:text-neutral-200'
+              className={`flex-1 flex flex-col items-center justify-center space-y-1 h-full transition-all ${
+                isActive ? 'text-indigo-400' : 'text-neutral-500 hover:text-neutral-300'
               }`}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="active-tab-nav"
-                  className="absolute inset-0 bg-white rounded-full shadow-sm"
-                  transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
-                />
-              )}
-              
-              <span className={`text-[13px] font-medium tracking-wide relative z-10 px-1`}>
-                {isActive ? tab.label : tab.label}
+              <tab.icon className={`w-5 h-5 ${isActive ? 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' : ''}`} />
+              <span className={`text-[10px] sm:text-[11px] font-medium tracking-wide ${isActive ? 'font-bold' : ''}`}>
+                {tab.label}
               </span>
             </button>
           );
         })}
-      </motion.div>
+      </div>
     </div>
   );
 };

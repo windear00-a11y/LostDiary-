@@ -1,4 +1,5 @@
 import { getGenAI } from "@/lib/genai";
+import { generateContentWithFallback } from "@/lib/genai-utils";
 import { isHighValueResponse } from "@/lib/utils/quality";
 import { mapToChapter } from "@/lib/utils/chapters";
 import { AIPersonality } from "./personality";
@@ -121,8 +122,8 @@ Rules:
 - Be objective. No drama.
 `;
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await generateContentWithFallback({
+        model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.1, responseMimeType: "application/json" }
       });
@@ -165,8 +166,8 @@ Rules:
 Events: ${events.map(e => e.summary).join(', ')}
 `;
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await generateContentWithFallback({
+        model: "gemini-3.1-pro-preview",
         contents: [{ role: "user", parts: [{ text: structuredData }] }],
         config: { systemInstruction, temperature: 0.7 }
       });
@@ -215,8 +216,8 @@ NEW EVENTS:
 ${sortedEvents.map(e => `[Raw: "${e.raw_fragment || e.summary}" | Mood: ${e.emotion}]`).join('\n')}
 `;
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await generateContentWithFallback({
+        model: "gemini-3.1-pro-preview",
         contents: [{ role: "user", parts: [{ text: structuredData }] }],
         config: { systemInstruction, temperature: 0.7, responseMimeType: "application/json" }
       });
@@ -247,8 +248,8 @@ Rules:
 - If the message says something like "simple baat karo," the updated profile MUST start with "TONE: User prefers simple, non-poetic language."
 `;
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await generateContentWithFallback({
+        model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.1 }
       });
@@ -277,8 +278,8 @@ Output: ONLY a valid JSON object.
 `;
     const data = chapters.map(c => c.title).join(', ');
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await generateContentWithFallback({
+        model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: `Chapters: ${data}` }] }],
         config: { systemInstruction, temperature: 0.8, responseMimeType: "application/json" }
       });
@@ -302,8 +303,8 @@ Rules:
 `;
     const content = messages.join('\n');
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await generateContentWithFallback({
+        model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.7 }
       });
@@ -343,8 +344,8 @@ Rules:
 - Output ONLY a valid JSON object.
 `;
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await generateContentWithFallback({
+        model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.5, responseMimeType: "application/json" }
       });

@@ -19,8 +19,7 @@ export async function POST(req: Request) {
     await supabase.from('bridges').update({ nudge_count: newCount }).eq('id', bridgeId);
 
     // AI Dynamic Nudge
-    const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
-    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const { generateContentWithFallback } = await import('@/lib/genai-utils');
     
     let instructions = "";
     if (newCount === 1) instructions = "Poetic, gentle, first encounter vibe.";
@@ -32,7 +31,10 @@ export async function POST(req: Request) {
     Instructions: ${instructions}. 
     Tone: Empathic, NOT repetitive, NEVER use rejection words.`;
 
-    const response = await model.generateContent(prompt);
+    const response = await generateContentWithFallback({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    });
     
-    return NextResponse.json({ message: response.text() });
+    return NextResponse.json({ message: response.text });
 }

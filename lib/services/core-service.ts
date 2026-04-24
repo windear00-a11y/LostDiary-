@@ -1,6 +1,8 @@
 import { getSupabase } from "@/lib/supabase";
 import { getGenAI } from "@/lib/genai";
 
+import { generateContentWithFallback } from "@/lib/genai-utils";
+
 // --- Chat Service ---
 export interface ChatSession {
   id: string;
@@ -314,9 +316,8 @@ export const coreService = {
 
   async generateTitle(content: string): Promise<string | null> {
     try {
-      const ai = getGenAI();
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await generateContentWithFallback({
+        model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: `Generate a short title (max 5 words) for this chapter content: ${content.substring(0, 200)}` }] }],
         config: { temperature: 0.7 }
       });

@@ -1,5 +1,6 @@
 import { getGenAI } from "@/lib/genai";
 import { IntelligenceProfile } from "@/lib/services/core-service";
+import { generateContentWithFallback } from "@/lib/genai-utils";
 
 /**
  * Modern AI Engine for story generation.
@@ -13,7 +14,6 @@ export async function generateStoryResponse(
   intelligenceProfile?: IntelligenceProfile | null
 ): Promise<string | undefined> {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-  const ai = getGenAI();
 
   if (!apiKey) {
     console.warn("NEXT_PUBLIC_GEMINI_API_KEY is missing. AI features will not work.");
@@ -37,8 +37,8 @@ export async function generateStoryResponse(
               - Sensitive Areas/Trauma (TREAD CAREFULLY): ${JSON.stringify(intelligenceProfile.sensitive_insights || {})}
     ` : "";
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+    const response = await generateContentWithFallback({
+      model: "gemini-3.1-pro-preview", // Primary model choice
       contents: [
         {
           role: "user",

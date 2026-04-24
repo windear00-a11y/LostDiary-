@@ -20,18 +20,22 @@ export async function POST(req: Request) {
     const { data: bridge } = await supabase.from('bridges').select('mode').eq('id', bridgeId).single();
     
     // AI Safety Guard: Check toxicity based on bridge mode
+    const { generateContentWithFallback } = await import('@/lib/genai-utils');
+    
     if (bridge?.mode === 'protected') {
         // Strict Check: Toxin + PII
-        const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
-        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const safetyCheck = await model.generateContent(`Analyze this message for toxicity AND PII (personal info, real identity). Return 'SAFE' or 'UNSAFE'. Message: "${content}"`);
-        if (safetyCheck.text().trim() !== 'SAFE') return NextResponse.json({ error: 'Message flagged for safety.' }, { status: 400 });
+        const safetyCheck = await generateContentWithFallback({
+            model: "gemini-2.5-flash",
+            contents: [{ role: "user", parts: [{ text: `Analyze this message for toxicity AND PII (personal info, real identity). Return 'SAFE' or 'UNSAFE'. Message: "${content}"` }] }]
+        });
+        if (safetyCheck.text?.trim() !== 'SAFE') return NextResponse.json({ error: 'Message flagged for safety.' }, { status: 400 });
     } else if (bridge?.mode === 'trusted') {
         // Light Check: Only Toxin (PII allowed as they are trusted)
-        const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
-        const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-        const safetyCheck = await model.generateContent(`Analyze this message ONLY for toxicity/harassment. Ignore PII. Return 'SAFE' or 'UNSAFE'. Message: "${content}"`);
-        if (safetyCheck.text().trim() !== 'SAFE') return NextResponse.json({ error: 'Message flagged for toxicity.' }, { status: 400 });
+        const safetyCheck = await generateContentWithFallback({
+            model: "gemini-2.5-flash",
+            contents: [{ role: "user", parts: [{ text: `Analyze this message ONLY for toxicity/harassment. Ignore PII. Return 'SAFE' or 'UNSAFE'. Message: "${content}"` }] }]
+        });
+        if (safetyCheck.text?.trim() !== 'SAFE') return NextResponse.json({ error: 'Message flagged for toxicity.' }, { status: 400 });
     }
     // If 'raw', no check
 

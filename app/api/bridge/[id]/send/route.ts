@@ -43,7 +43,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     if (bridge.user_a_id !== user.id && bridge.user_b_id !== user.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
     // 2. WinDear Quality / Safety Gate (AI Filter)
-    const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+    const { generateContentWithFallback } = await import('@/lib/genai-utils');
     const prompt = `
       You are WinDear, an empathetic silent guardian monitoring an anonymous emotional support chat ("The Bridge").
       Analyze the following message.
@@ -52,8 +52,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       Message: "${message}"
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
+    const response = await generateContentWithFallback({
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: { temperature: 0.1 }
     });

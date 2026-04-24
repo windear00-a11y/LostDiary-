@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     }
 
     // 2. WinDear Quality / Safety Gate (AI Filter)
-    const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+    const { generateContentWithFallback } = await import('@/lib/genai-utils');
     const prompt = `
       You are WinDear, an empathetic guardian AI. A user is attempting to send a "Paper Plane" message to an anonymous author of a journal entry.
       Analyze the following message. Is it empathetic, supportive, and completely free of toxicity, romance/flirting, harassment, or spam? We only allow messages that offer genuine resonance or a desire to hold space/help.
@@ -61,8 +61,8 @@ export async function POST(req: Request) {
       "${message}"
     `;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-pro",
+    const response = await generateContentWithFallback({
+      model: "gemini-2.5-flash",
       contents: prompt,
       config: { temperature: 0.1 }
     });

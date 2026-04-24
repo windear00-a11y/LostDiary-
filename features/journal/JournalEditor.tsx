@@ -17,7 +17,7 @@ import { SuccessMoment } from '@/components/ui/SuccessMoment';
 import { toast } from 'sonner';
 
 export const JournalEditor = () => {
-  const { setActiveView, selectedJournalContent, setSelectedJournalContent, language } = useUIStore();
+  const { setActiveView, selectedJournalContent, setSelectedJournalContent, language, isInputFocused, setInputFocused } = useUIStore();
   const searchParams = useSearchParams();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState(selectedJournalContent || '');
@@ -181,7 +181,16 @@ export const JournalEditor = () => {
   }, [content]);
 
   // Visual cues for focus mode
-  const handleEditorFocus = () => setShowUI(true);
+  const handleEditorFocus = () => {
+    setShowUI(true);
+    setInputFocused(true);
+  };
+  const handleEditorBlur = () => {
+    // Only remove focus state if we're not clicking on formatting icons
+    setTimeout(() => {
+      setInputFocused(false);
+    }, 200);
+  };
   const handleEditorClick = () => setShowUI(true);
   const handleMouseMove = () => {
     if (!showUI) setShowUI(true);
@@ -273,6 +282,7 @@ export const JournalEditor = () => {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           onFocus={handleEditorFocus}
+          onBlur={handleEditorBlur}
           onClick={handleEditorClick}
           placeholder="The canvas is listening to your whispers..."
           className="w-full h-full bg-transparent border-none outline-none resize-none 
@@ -363,11 +373,11 @@ export const JournalEditor = () => {
           y: showUI ? 0 : 40,
           scale: showUI ? 1 : 0.95,
           pointerEvents: showUI ? 'auto' : 'none'
-        }}
-        whileHover={{ opacity: 1, y: 0, scale: 1 }}
-        className="fixed bottom-[96px] left-1/2 -translate-x-1/2 w-[90%] max-w-xl h-14 bg-[#0a0a0c]/80 border border-indigo-500/20 rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl flex items-center justify-around px-4 z-[70] transition-colors"
-      >
-        <div className="flex items-center justify-around w-full overflow-x-auto scrollbar-none py-2 gap-2">
+      }}
+      whileHover={{ opacity: 1, y: 0, scale: 1 }}
+      className={`fixed left-1/2 -translate-x-1/2 w-[90%] max-w-xl h-14 bg-[#0a0a0c]/80 border border-indigo-500/20 rounded-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] backdrop-blur-xl flex items-center justify-around px-4 z-[70] transition-all duration-300 ${isInputFocused ? 'bottom-2' : 'bottom-[calc(80px+env(safe-area-inset-bottom))]'}`}
+    >
+      <div className="flex items-center justify-around w-full overflow-x-auto scrollbar-none py-2 gap-2">
           <button onClick={() => handleFormat('checklist')} className="p-2 text-indigo-200/40 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-full transition-colors shrink-0">
             <CheckSquare className="w-4 h-4" />
           </button>

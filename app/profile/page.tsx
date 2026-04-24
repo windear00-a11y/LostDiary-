@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { coreService, UserProfile, IntelligenceProfile } from '@/lib/services/core-service';
 import { getGenAI } from '@/lib/genai';
+import { generateContentWithFallback } from '@/lib/genai-utils';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Camera, Sparkles, LogOut, Save, Edit2, Shield, Send, Book, Handshake, ChevronRight, MessageSquare, Heart, ChevronDown, ChevronUp, MoreVertical, Trash2, ExternalLink, BookOpen } from 'lucide-react';
@@ -129,8 +130,8 @@ export default function ProfilePage() {
         .map(m => m.content)
         .join('\n');
 
-      const promptResponse = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const promptResponse = await generateContentWithFallback({
+        model: "gemini-3.1-pro-preview",
         contents: `Based on these diary entries, describe a symbolic, artistic, and abstract avatar that represents this person's personality and current emotional state. Keep the description concise and visual.
         
         Entries:

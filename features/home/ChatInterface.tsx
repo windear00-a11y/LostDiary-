@@ -288,7 +288,7 @@ export const ChatInterface = () => {
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-40 pb-20 transition-all duration-700`}
+        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-40 pb-6 transition-all duration-700`}
       >
         <div className={`max-w-2xl mx-auto space-y-8 min-h-full flex flex-col pt-10 transition-all duration-700 
           ${isInputFocused ? 'opacity-30 blur-[0.5px]' : 'opacity-100'} 
@@ -391,11 +391,11 @@ export const ChatInterface = () => {
       </div>
 
       {/* Sticky Bottom Input Section */}
-      <div className="fixed bottom-0 left-0 w-full z-50 px-4 pb-[env(safe-area-inset-bottom)] bg-neutral-950/90 backdrop-blur-md border-t border-white/5 pb-[96px]">
+      <div className={`shrink-0 w-full z-50 px-4 pt-4 bg-neutral-950 border-t border-white/5 transition-all duration-300 ${isInputFocused ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[calc(64px+env(safe-area-inset-bottom))]'}`}>
         <div className="text-center pb-2">
             <p className="text-xs text-neutral-400 italic font-serif group cursor-default hover:text-neutral-300 transition-colors">AI processing is transient & ephemeral for your privacy.</p>
         </div>
-        <div className={`pt-2 pb-6 max-w-3xl mx-auto transition-all duration-500 ${isInputFocused ? 'pb-8 scale-[1.01]' : 'pb-4'}`}>
+        <div className={`pb-4 max-w-3xl mx-auto transition-all duration-500 ${isInputFocused ? 'pb-6' : ''}`}>
           <ChatInput 
             onSendMessage={handleSendMessage} 
             disabled={isThinking} 

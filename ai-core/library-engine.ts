@@ -1,4 +1,5 @@
 import { getGenAI } from "@/lib/genai";
+import { generateContentWithFallback } from "@/lib/genai-utils";
 
 /**
  * Library Engine handles the "Sealing" (Anonymization/Generalization) of stories
@@ -37,8 +38,8 @@ export async function sealAndGeneralizeStory(
   `;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+    const response = await generateContentWithFallback({
+      model: "gemini-3.1-pro-preview",
       contents: [
         {
           role: "user",
