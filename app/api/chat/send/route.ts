@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     const intelProfile = profile.intelligence_profile || {};
     const updatedIntelProfile = await extractIntelligenceProfile('chat', content, intelProfile as any);
 
-    // STEP 4: Orchestration and AI generation
+    // STEP 4: Orchestration and AI generation (Core Path - Keep Awaited)
     const [pipelineOutput, aiResponseText] = await Promise.all([
       orchestrator.processInteraction({
         userId: user_id,
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
 
     const analyzedEvent = pipelineOutput.extractedEvent;
     
-    // STEP 5: Reliable Persistence
+    // STEP 5: Reliable Persistence (Core Path - Keep Awaited)
     const { data: message, error: messageError } = await chatPersistence.saveUserMessage(supabase, {
         user_id, session_id, role, type, content, media_url: media_url || null,
         metadata: {
@@ -120,82 +120,87 @@ export async function POST(req: Request) {
       
     if (messageError) throw messageError;
 
-    // Concurrently handle secondary updates with error isolation
-    const safeUpdate = async (promise: Promise<any>, taskName: string) => {
-      try { return await promise; }
-      catch (e) { console.error(`Task ${taskName} failed:`, e); }
-    };
-
+    // Concurrently handle interactions & immediate AI response persistence
     await Promise.all([
-      (role === 'user' && type === 'text' && content) ? safeUpdate(coreService.updateInteraction(user_id, !!aiResponseText, supabase), 'updateInteraction') : Promise.resolve(),
-      aiResponseText ? safeUpdate(chatPersistence.saveAIResponse(supabase, { user_id, session_id, role: 'diary', type: 'text', content: aiResponseText }), 'insertAIResponse') : Promise.resolve(),
-      safeUpdate(chatPersistence.updateUserContext(supabase, user_id, { 
-        personality_summary: pipelineOutput.personaUpdate || profile.personality_summary,
-        bio: pipelineOutput.narrativeUpdate ? pipelineOutput.narrativeUpdate.summary : profile.bio,
-        intelligence_profile: updatedIntelProfile
-      }), 'updateUser'),
-      session_id ? safeUpdate(chatPersistence.updateSessionStatus(supabase, session_id, { 
-        processing_status: pipelineOutput.narrativeUpdate?.narrative ? 'woven' : (pipelineOutput.extractedEvent ? 'saved' : 'observed'),
-        impact_percentage: pipelineOutput.narrativeUpdate?.narrative ? 90 : (pipelineOutput.extractedEvent ? 50 : 10)
-      }), 'updateSession') : Promise.resolve()
+      (role === 'user' && type === 'text' && content) ? chatPersistence.saveAIResponse(supabase, { user_id, session_id, role: 'diary', type: 'text', content: aiResponseText }) : Promise.resolve(),
+      (role === 'user' && type === 'text' && content) ? coreService.updateInteraction(user_id, !!aiResponseText, supabase) : Promise.resolve()
     ]);
 
-    if (aiResponseText) {
-      coreService.autoSaveChapter(user_id, aiResponseText);
-    }
-
-
-    // Save narrative chapter if triggered
-    if (pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative) {
-      await chatPersistence.saveChapter(supabase, {
-        user_id,
-        volume_id: activeVolume?.id,
-        title: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
-        content: pipelineOutput.narrativeUpdate.narrative,
-        created_at: new Date().toISOString()
-      });
-
-      // Handle Volume Sealing
-      if (pipelineOutput.narrativeUpdate.shouldSealVolume && activeVolume) {
-        await chatPersistence.sealVolume(supabase, activeVolume.id, { 
-          status: 'completed',
-          epilogue: pipelineOutput.narrativeUpdate.currentVolumeEpilogue || null
-        });
-        
-        if (pipelineOutput.narrativeUpdate.newVolumeMetadata) {
-          const meta = pipelineOutput.narrativeUpdate.newVolumeMetadata;
-          await chatPersistence.createNewVolume(supabase, {
-            user_id,
-            volume_number: activeVolume.volume_number + 1,
-            title: meta.title || 'Next Phase',
-            prologue: meta.prologue,
-            epigraph: meta.epigraph,
-            aura: meta.aura,
-            status: 'ongoing'
-          });
-        }
-      }
-    }
-
-    if (session_id) {
-      const { data: session } = await supabase.from('chat_sessions').select('title').eq('id', session_id).single();
-      const isGeneric = !session?.title || session.title === 'New Chat' || session.title.startsWith('Chat ') || session.title.includes(new Date().toLocaleDateString());
-
-      if (isGeneric) {
-        const { data: sessionMessages } = await supabase.from('chat_messages').select('content').eq('session_id', session_id).order('created_at', { ascending: true }).limit(5);
-        if (sessionMessages && sessionMessages.length >= 2) {
-          const contents = sessionMessages.map(m => m.content || "");
-          const title = await pipelineForAsync.generateSessionTitle(contents);
-          if (title) await supabase.from('chat_sessions').update({ title }).eq('id', session_id);
-        }
-      }
-    }
-
-    return NextResponse.json({
+    // Return the response promptly! The heavy lifting below happens in the background.
+    const responseToUser = NextResponse.json({
       message,
       aiResponse: aiResponseText ? { role: 'diary', content: aiResponseText, created_at: new Date().toISOString() } : null,
       event_score: pipelineOutput.extractedEvent?.score || 0
     });
+
+    // --- BACKGROUND TASKS (Fire and forget, do not await) ---
+    (async () => {
+      try {
+        await Promise.all([
+          // Update Context
+          chatPersistence.updateUserContext(supabase, user_id, { 
+            personality_summary: pipelineOutput.personaUpdate || profile.personality_summary,
+            bio: pipelineOutput.narrativeUpdate ? pipelineOutput.narrativeUpdate.summary : profile.bio,
+            intelligence_profile: updatedIntelProfile
+          }),
+          // Update Session
+          session_id ? chatPersistence.updateSessionStatus(supabase, session_id, { 
+            processing_status: pipelineOutput.narrativeUpdate?.narrative ? 'woven' : (pipelineOutput.extractedEvent ? 'saved' : 'observed'),
+            impact_percentage: pipelineOutput.narrativeUpdate?.narrative ? 90 : (pipelineOutput.extractedEvent ? 50 : 10)
+          }) : Promise.resolve(),
+          // Narrative Chapters & Volumes
+          (pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative) ? (async () => {
+             await chatPersistence.saveChapter(supabase, {
+              user_id,
+              volume_id: activeVolume?.id,
+              title: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
+              content: pipelineOutput.narrativeUpdate.narrative,
+              created_at: new Date().toISOString()
+            });
+
+            if (pipelineOutput.narrativeUpdate.shouldSealVolume && activeVolume) {
+              await chatPersistence.sealVolume(supabase, activeVolume.id, { 
+                status: 'completed',
+                epilogue: pipelineOutput.narrativeUpdate.currentVolumeEpilogue || null
+              });
+              
+              if (pipelineOutput.narrativeUpdate.newVolumeMetadata) {
+                const meta = pipelineOutput.narrativeUpdate.newVolumeMetadata;
+                await chatPersistence.createNewVolume(supabase, {
+                  user_id,
+                  volume_number: activeVolume.volume_number + 1,
+                  title: meta.title || 'Next Phase',
+                  prologue: meta.prologue,
+                  epigraph: meta.epigraph,
+                  aura: meta.aura,
+                  status: 'ongoing'
+                });
+              }
+            }
+          })() : Promise.resolve(),
+          // Title Generation
+          session_id ? (async () => {
+            const { data: session } = await supabase.from('chat_sessions').select('title').eq('id', session_id).single();
+            const isGeneric = !session?.title || session.title === 'New Chat' || session.title.startsWith('Chat ') || session.title.includes(new Date().toLocaleDateString());
+            if (isGeneric) {
+              const { data: sessionMessages } = await supabase.from('chat_messages').select('content').eq('session_id', session_id).order('created_at', { ascending: true }).limit(5);
+              if (sessionMessages && sessionMessages.length >= 2) {
+                const contents = sessionMessages.map(m => m.content || "");
+                const title = await pipelineForAsync.generateSessionTitle(contents);
+                if (title) await supabase.from('chat_sessions').update({ title }).eq('id', session_id);
+              }
+            }
+          })() : Promise.resolve(),
+          // Chapter Auto-save
+          aiResponseText ? coreService.autoSaveChapter(user_id, aiResponseText) : Promise.resolve()
+        ]);
+      } catch (e) {
+        console.error("Background task failure:", e);
+      }
+    })();
+
+    return responseToUser;
+
   } catch (error: any) {
     console.error("Send message error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
