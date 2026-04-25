@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Send, Handshake, Sparkles, BookOpen, Activity, Leaf, Droplets, ChevronDown } from 'lucide-react';
 
 interface EngagementMetrics {

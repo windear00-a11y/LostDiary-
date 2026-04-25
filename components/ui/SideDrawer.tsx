@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   X, User, Settings, Book, LogOut, Heart, Search, 
   Sparkles, BookOpen, PenLine, History, ChevronRight,
-  Plus, MessageSquare, Wand2, Languages, Compass, Feather
+  Plus, MessageSquare, Wand2, Languages, Compass, Feather, Fingerprint
 } from 'lucide-react';
 import Image from 'next/image';
 import { useAuth } from '@/components/auth/auth-provider';
