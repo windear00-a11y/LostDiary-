@@ -7,6 +7,17 @@ import { PipelineController } from "@/ai-core/pipeline-controller";
 import { generateStoryResponse } from "@/ai-core/ai-engine";
 import { extractIntelligenceProfile } from "@/ai-core/intelligence-engine";
 
+// Helper to determine the best model for the interaction ("Magic Way")
+function determineModelForInput(content: string): string {
+  const wordCount = content.split(/\s+/).length;
+  // Use Pro for long reflections or deep analytical intent
+  if (wordCount > 40 || content.toLowerCase().match(/why|explain|deep|analyze|reflect|meaning/)) {
+    return "gemini-3.1-pro-preview";
+  }
+  // Use Flash Lite for quick, everyday chat
+  return "gemini-3.1-flash-lite-preview";
+}
+
 export async function POST(req: Request) {
   try {
     const supabase = getSupabaseAdmin();
@@ -90,6 +101,9 @@ export async function POST(req: Request) {
     const updatedIntelProfile = await extractIntelligenceProfile('chat', content, intelProfile as any);
 
     // STEP 4: Orchestration and AI generation (Core Path - Keep Awaited)
+    const selectedModel = determineModelForInput(content);
+    console.log(`[Magic Way] Selected model: ${selectedModel}`);
+    
     const [pipelineOutput, aiResponseText] = await Promise.all([
       orchestrator.processInteraction({
         userId: user_id,
@@ -100,7 +114,7 @@ export async function POST(req: Request) {
         contextChapters,
         updatedIntelProfile
       }),
-      generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary, updatedIntelProfile as any),
+      generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary, updatedIntelProfile as any, { model: selectedModel, isNarrativeMode: false }),
     ]);
 
     const analyzedEvent = pipelineOutput.extractedEvent;
