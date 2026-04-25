@@ -314,6 +314,7 @@ export const JournalEditor = () => {
       </div>
 
       {/* Continue vs New Nudge */}
+      {/* 
       <AnimatePresence>
         {showAuthModal && (
           <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
@@ -364,7 +365,8 @@ export const JournalEditor = () => {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> 
+      */}
 
       {/* Floating Toolbar (Helper Icons) - Pattern 1 & 6 */}
       <motion.div 

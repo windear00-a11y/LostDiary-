@@ -224,6 +224,7 @@ export const ChatInterface = () => {
       <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       
       {/* Nudge / Motivation UI - Emotional Decision Point (Moved outside blurred container) */}
+      {/* 
       <AnimatePresence>
         {showNudge && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-neutral-950/80 backdrop-blur-sm">
@@ -234,7 +235,6 @@ export const ChatInterface = () => {
               transition={{ type: 'spring', damping: 20, stiffness: 100 }}
               className="bg-neutral-900/80 border border-white/10 rounded-[32px] p-8 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl relative overflow-hidden"
             >
-              {/* Decorative Glow */}
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none" />
               
               <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -279,7 +279,8 @@ export const ChatInterface = () => {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      </AnimatePresence> 
+      */}
 
       {/* Top Gradient Mask for smooth scrolling transition */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-neutral-950 via-neutral-950/90 to-transparent z-40 pointer-events-none" />
