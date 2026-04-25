@@ -209,7 +209,7 @@ export const ChatInterface = () => {
       console.error("Failed to sync message with backend:", error);
       const errorMsg = error.message?.includes('API Key') 
         ? "AI configuration missing. Please check your API keys."
-        : "Connection pause. Your memory is safe, but I couldn't reflect right now.";
+        : "Connection pause: " + (error.message || "Unknown error");
         
       setMessages(prev => prev.map(m => 
         m.id === aiTempId ? { ...m, content: errorMsg, role: 'diary' } : m
