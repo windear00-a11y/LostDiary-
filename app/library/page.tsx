@@ -121,6 +121,24 @@ export default function GlobalLibraryPage() {
     setBridgeConfirmSheet({ open: true, plane });
   };
 
+  const handleRejectPlane = async (planeId: string) => {
+     try {
+         const res = await fetch('/api/profile/planes/reject', {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify({ planeId })
+         });
+         if (res.ok) {
+             setInboxPlanes(curr => curr.filter(p => p.id !== planeId));
+             toast.info("Plane archived silently.");
+         } else {
+             throw new Error("Failed to archive");
+         }
+     } catch (e) {
+         toast.error("Failed to archive plane.");
+     }
+  };
+
   const confirmBridge = async () => {
     const plane = bridgeConfirmSheet.plane;
     if (!plane) return;
@@ -135,7 +153,7 @@ export default function GlobalLibraryPage() {
         setInboxPlanes(curr => curr.filter(p => p.id !== plane.id));
         setBridgeConfirmSheet({ open: false, plane: null });
         toast.success("Bridge Manifested");
-        fetchBridges(); // Refresh list
+        router.push(`/bridge/${data.bridgeId}`);
       }
     } catch (e) {
       toast.error("Failed to build bridge.");
@@ -752,15 +770,21 @@ export default function GlobalLibraryPage() {
                                   </div>
                                   <AnimatePresence>
                                      {isExpanded && (
-                                        <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="px-5 pb-5">
+                                         <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="px-5 pb-5">
                                            <p className="p-4 bg-slate-50 dark:bg-white/[0.03] rounded-2xl text-xs font-serif italic text-slate-600 dark:text-slate-400 mb-4 line-relaxed">
                                               &quot;{plane.content}&quot;
                                            </p>
                                            <button 
                                              onClick={() => handleAcceptPlane(plane)}
-                                             className="w-full py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                                             className="w-full py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mb-2"
                                            >
                                               Accept Connection <Handshake className="w-3.5 h-3.5" />
+                                           </button>
+                                           <button 
+                                             onClick={() => handleRejectPlane(plane.id)}
+                                             className="w-full py-3 bg-slate-100 dark:bg-white/5 text-slate-500 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-white/10 transition-all text-center"
+                                           >
+                                              Reject & Archive
                                            </button>
                                         </motion.div>
                                      )}

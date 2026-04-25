@@ -47,7 +47,7 @@ export async function POST(req: Request) {
          user_a_id: plane.sender_id,
          user_b_id: plane.receiver_id,
          origin_story_id: plane.story_id,
-         status: 'active',
+         status: 'pending',
          mode: mode
       })
       .select()

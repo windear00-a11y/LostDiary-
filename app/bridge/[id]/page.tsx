@@ -105,6 +105,28 @@ export default function BridgePage({ params }: { params: { id: string } }) {
         {/* Header Section */}
         <BridgeHeader bridgeData={bridgeData} resonanceMsg={resonanceMsg} checkResonance={checkResonance} />
 
+        {/* Conditional Rendering: Pending vs Active */}
+        {bridgeData.status === 'pending' ? (
+           <div className="flex-1 flex items-center justify-center">
+              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="p-8 border border-white/10 rounded-3xl bg-white/[0.03] text-center max-w-sm">
+                 <Sparkles className="w-12 h-12 text-indigo-400 mx-auto mb-6" />
+                 <h3 className="text-xl font-serif text-white mb-2">Bridge Invitation</h3>
+                 <p className="text-white/60 text-sm mb-6 leading-relaxed">
+                    &quot;{bridgeData.planeContent}&quot;
+                 </p>
+                 <button 
+                    onClick={async () => {
+                        await fetch(`/api/bridge/${bridgeId}`, { method: 'PATCH', body: JSON.stringify({ status: 'active' }) });
+                        fetchBridge();
+                    }}
+                    className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-indigo-700 transition"
+                 >
+                    Build the Bridge
+                 </button>
+              </motion.div>
+           </div>
+        ) : (
+        <>
         {/* Message Area */}
         <div className="flex-1 overflow-y-auto min-h-0 space-y-6 scrollbar-whatsapp pr-2">
            <div className="p-6 border border-white/5 rounded-3xl bg-white/[0.01] text-center mb-8">
@@ -112,7 +134,6 @@ export default function BridgePage({ params }: { params: { id: string } }) {
                  &quot;You are standing on a bridge built from silent resonance. Your soul is private, but your safety is our priority. No logs are kept—this bridge dissolves with the dawn.&quot;
               </p>
            </div>
-
            <AnimatePresence>
              {messages.map((msg, i) => {
                 const isMine = msg.isMine;
@@ -181,7 +202,6 @@ export default function BridgePage({ params }: { params: { id: string } }) {
            </AnimatePresence>
            <div ref={endOfMessagesRef} className="h-4" />
         </div>
-
         {/* Input Area */}
         <div className="flex-shrink-0 pt-4 pb-6 mt-4">
            {error && bridgeData.status === 'broken' && (
@@ -208,6 +228,8 @@ export default function BridgePage({ params }: { params: { id: string } }) {
               </button>
            </form>
         </div>
+        </>
+        )}
       </main>
     </div>
   );

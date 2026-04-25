@@ -26,7 +26,7 @@ export const Header = () => {
         setActiveView(activeView === 'chat' ? 'journal' : 'chat');
       }
       setDisplayMode('idle');
-    }, 1500);
+    }, 400);
   };
 
   return (
@@ -64,9 +64,10 @@ export const Header = () => {
                     {displayMode === 'switching' ? (
                       <motion.div 
                         key="switching"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -5 }}
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
                         className="flex items-center gap-2"
                       >
                         {isLibrary 
