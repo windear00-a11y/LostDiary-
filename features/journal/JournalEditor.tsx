@@ -15,6 +15,7 @@ import { useSearchParams } from 'next/navigation';
 import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
 import { SuccessMoment } from '@/components/ui/SuccessMoment';
 import { toast } from 'sonner';
+import { NudgeService } from '@/lib/services/nudge-service';
 
 export const JournalEditor = () => {
   const { setActiveView, selectedJournalContent, setSelectedJournalContent, language, isInputFocused, setInputFocused } = useUIStore();
@@ -24,7 +25,6 @@ export const JournalEditor = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showNudge, setShowNudge] = useState(false);
-  const [hasShownNudge, setHasShownNudge] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSuccessMoment, setShowSuccessMoment] = useState(false);
   const [recentEntry, setRecentEntry] = useState<any>(null);
@@ -55,11 +55,11 @@ export const JournalEditor = () => {
         const now = new Date().getTime();
         const diffHours = (now - lastTime) / (1000 * 60 * 60);
 
-        // If less than 12 hours, show nudge - only if not shown yet this session
-        if (diffHours < 12 && !selectedJournalContent && !hasShownNudge) {
+        // If less than 12 hours since last entry, show nudge
+        if (diffHours < 12 && !selectedJournalContent && NudgeService.shouldShowNudge('journal', 12)) {
           setRecentEntry(latest);
           setShowNudge(true);
-          setHasShownNudge(true);
+          NudgeService.markNudgeShown('journal');
         }
       }
     };
@@ -314,7 +314,6 @@ export const JournalEditor = () => {
       </div>
 
       {/* Continue vs New Nudge */}
-      {/* 
       <AnimatePresence>
         {showAuthModal && (
           <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
@@ -366,7 +365,6 @@ export const JournalEditor = () => {
           </div>
         )}
       </AnimatePresence> 
-      */}
 
       {/* Floating Toolbar (Helper Icons) - Pattern 1 & 6 */}
       <motion.div 

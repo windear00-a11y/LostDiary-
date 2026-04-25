@@ -10,6 +10,7 @@ import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
+import { NudgeService } from '@/lib/services/nudge-service';
 
 export interface ChatMessage {
   id: string;
@@ -78,24 +79,12 @@ export const ChatInterface = () => {
           }));
           setMessages(mappedMessages);
 
-          // 3. Check for inactivity nudge (2 hours) - only if we haven't shown it this mount
-          if (!hasShownNudge) {
-            if (mappedMessages.length > 0) {
-              const lastMsg = mappedMessages[mappedMessages.length - 1];
-              const lastTime = new Date(lastMsg.created_at).getTime();
-              const now = new Date().getTime();
-              const hoursPassed = (now - lastTime) / (1000 * 60 * 60);
-
-              if (hoursPassed > 2) {
-                setShowNudge(true);
-                setHasShownNudge(true);
-              }
-            } else {
-              // Empty session, show greeting
-              setShowNudge(true);
-              setHasShownNudge(true);
-            }
+          // 3. Check for inactivity nudge (2 hours)
+          if (NudgeService.shouldShowNudge('chat', 2)) {
+            setShowNudge(true);
+            NudgeService.markNudgeShown('chat');
           }
+
         }
       } catch (error) {
         console.error("Session initialization failed:", error);
@@ -224,7 +213,6 @@ export const ChatInterface = () => {
       <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       
       {/* Nudge / Motivation UI - Emotional Decision Point (Moved outside blurred container) */}
-      {/* 
       <AnimatePresence>
         {showNudge && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-neutral-950/80 backdrop-blur-sm">
@@ -280,7 +268,6 @@ export const ChatInterface = () => {
           </div>
         )}
       </AnimatePresence> 
-      */}
 
       {/* Top Gradient Mask for smooth scrolling transition */}
       <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-neutral-950 via-neutral-950/90 to-transparent z-40 pointer-events-none" />

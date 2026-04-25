@@ -61,7 +61,7 @@ export const SideDrawer = ({ isOpen, onClose }: SideDrawerProps) => {
             animate={{ x: 0, borderTopRightRadius: '32px', borderBottomRightRadius: '32px' }}
             exit={{ x: '-100%', borderTopRightRadius: '100px', borderBottomRightRadius: '100px' }}
             transition={{ type: 'spring', damping: 28, stiffness: 200 }}
-            className="fixed top-0 left-0 bottom-0 w-[85vw] max-w-[340px] bg-[#050505] z-[70] shadow-[30px_0_60px_rgba(0,0,0,0.8)] flex flex-col border-r border-indigo-500/20 overflow-hidden"
+            className="fixed top-0 left-0 bottom-0 w-[85vw] max-w-[340px] bg-[#050505] z-[150] shadow-[30px_0_60px_rgba(0,0,0,0.8)] flex flex-col border-r border-indigo-500/20 overflow-hidden"
           >
             {/* Background Texture in Drawer */}
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-[0.03] mix-blend-screen pointer-events-none" />
