@@ -423,53 +423,58 @@ export default function GlobalLibraryPage() {
       
       {/* Mood Navigator & Tab Switcher */}
       <div className="sticky top-20 z-30 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md pt-6 pb-4 mb-4 border-b border-gray-100 dark:border-white/5">
-        <div className="flex justify-center gap-6 mb-6">
-          <button
-            onClick={() => { setActiveLibraryTab('feed'); setIsReadingSelf(false); }}
-            className={`text-xs font-bold uppercase tracking-widest ${
-              !isReadingSelf && activeLibraryTab === 'feed' ? 'text-indigo-600' : 'text-slate-400'
-            }`}
-          >
-            Global Library
-          </button>
-          <button
-            onClick={() => setIsReadingSelf(true)}
-            className={`text-xs font-bold uppercase tracking-widest ${
-              isReadingSelf ? 'text-indigo-600' : 'text-slate-400'
-            }`}
-          >
-            My Sanctuary
-          </button>
+        
+        {/* Top Integration: Tab Switcher & Constellation Toggle */}
+        <div className="flex items-center justify-between px-6 mb-6">
+            <div className="flex bg-slate-100 dark:bg-white/5 rounded-full p-1">
+              <button
+                onClick={() => { setActiveLibraryTab('feed'); setIsReadingSelf(false); }}
+                className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full transition-all ${
+                  !isReadingSelf && activeLibraryTab === 'feed' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400'
+                }`}
+              >
+                Global
+              </button>
+              <button
+                onClick={() => setIsReadingSelf(true)}
+                className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full transition-all ${
+                  isReadingSelf ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400'
+                }`}
+              >
+                Sanctuary
+              </button>
+            </div>
+
+            {!isReadingSelf && activeLibraryTab === 'feed' && (
+              <button
+                 onClick={() => setIsConstellationView(!isConstellationView)}
+                 className={`p-2 rounded-full transition-all ${isConstellationView ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}
+                 title="Toggle Constellation Map"
+              >
+                 <Sparkles className="w-4 h-4" />
+              </button>
+            )}
         </div>
 
-        {/* Mood Filter */}
-        {!isReadingSelf && activeLibraryTab === 'feed' && (
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-4 justify-center w-full max-w-2xl">
-                {moods.map((mood) => (
-                    <button
-                        key={mood}
-                        onClick={() => setActiveMood(mood)}
-                        className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-all whitespace-nowrap ${
-                            activeMood === mood 
-                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
-                            : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-white/10'
-                        }`}
-                    >
-                        {mood}
-                    </button>
-                ))}
+        {/* Mood Filter - Expandable (Only visible on Global Library + List view) */}
+        {!isReadingSelf && activeLibraryTab === 'feed' && !isConstellationView && (
+            <div className="px-6 pb-2">
+                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
+                    {moods.map((mood) => (
+                        <button
+                            key={mood}
+                            onClick={() => setActiveMood(mood)}
+                            className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${
+                                activeMood === mood 
+                                ? 'bg-indigo-600 border-indigo-600 text-white' 
+                                : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500 hover:border-slate-400'
+                            }`}
+                        >
+                            {mood}
+                        </button>
+                    ))}
+                </div>
             </div>
-            
-            <button
-               onClick={() => setIsConstellationView(!isConstellationView)}
-               className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-indigo-500 transition-colors"
-               title="Toggle Constellation Map"
-            >
-               <Sparkles className={`w-3.5 h-3.5 ${isConstellationView ? 'text-indigo-500 animate-pulse' : ''}`} />
-               {isConstellationView ? 'Return to Feed' : 'View Constellation Map'}
-            </button>
-          </div>
         )}
       </div>
 
