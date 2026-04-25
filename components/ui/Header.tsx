@@ -43,7 +43,8 @@ export const Header = () => {
             {(isLibrary || activeView === 'chat' || activeView === 'journal') ? (
               <motion.button
                 layout
-                whileTap={{ scale: 0.95 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                whileTap={displayMode === 'idle' ? { scale: 0.95 } : undefined}
                 onClick={handleToggle}
                 disabled={displayMode === 'switching'}
                 className={`flex items-center gap-3 px-6 py-2 rounded-full border shadow-xl backdrop-blur-3xl pointer-events-auto transition-all duration-300 group ${
@@ -59,45 +60,49 @@ export const Header = () => {
                 }`}
                 title={isLibrary ? (activeLibraryTab === 'feed' ? 'Switch to Soul Signals' : 'Switch to Feed') : (activeView === 'chat' ? 'Switch to Deep Weave' : 'Switch to Whispers')}
               >
-                {displayMode === 'switching' ? (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="flex items-center gap-2"
-                  >
-                    {isLibrary 
-                      ? (activeLibraryTab === 'feed' ? <MessageSquare className="w-4 h-4" /> : <Globe className="w-4 h-4" />)
-                      : (activeView === 'chat' ? <Feather className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />)
-                    }
-                    <span className="text-[10px] font-bold uppercase tracking-widest">
-                      Switching to {isLibrary 
-                        ? (activeLibraryTab === 'feed' ? 'Soul Signals' : 'Global Feed')
-                        : (activeView === 'chat' ? 'Deep Weave' : 'Whispers')}
-                    </span>
-                  </motion.div>
-                ) : isLibrary ? (
-                  activeLibraryTab === 'feed' ? (
-                    <>
-                      <Globe className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Global Feed</span>
-                    </>
-                  ) : (
-                    <>
-                      <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                      <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Soul Signals</span>
-                    </>
-                  )
-                ) : activeView === 'chat' ? (
-                  <>
-                    <Feather className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Deep Weave</span>
-                  </>
-                ) : (
-                  <>
-                    <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Whispers</span>
-                  </>
-                )}
+                  <AnimatePresence mode="wait">
+                    {displayMode === 'switching' ? (
+                      <motion.div 
+                        key="switching"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex items-center gap-2"
+                      >
+                        {isLibrary 
+                          ? (activeLibraryTab === 'feed' ? <MessageSquare className="w-4 h-4" /> : <Globe className="w-4 h-4" />)
+                          : (activeView === 'chat' ? <Feather className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />)
+                        }
+                        <span className="text-[10px] font-bold uppercase tracking-widest">
+                          Switching to {isLibrary 
+                            ? (activeLibraryTab === 'feed' ? 'Soul Signals' : 'Global Feed')
+                            : (activeView === 'chat' ? 'Deep Weave' : 'Whispers')}
+                        </span>
+                      </motion.div>
+                    ) : isLibrary ? (
+                      activeLibraryTab === 'feed' ? (
+                        <motion.div key="feed" className="flex items-center gap-3" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
+                          <Globe className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Global Feed</span>
+                        </motion.div>
+                      ) : (
+                        <motion.div key="echoes" className="flex items-center gap-3" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
+                          <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                          <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Soul Signals</span>
+                        </motion.div>
+                      )
+                    ) : activeView === 'chat' ? (
+                      <motion.div key="chat" className="flex items-center gap-3" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
+                        <Feather className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Deep Weave</span>
+                      </motion.div>
+                    ) : (
+                      <motion.div key="journal" className="flex items-center gap-3" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
+                        <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Whispers</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
               </motion.button>
             ) : (
               <div className="w-10 h-10 shrink-0" />
