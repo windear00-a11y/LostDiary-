@@ -422,9 +422,28 @@ export default function GlobalLibraryPage() {
       </BottomSheet>
       
       {/* Mood Navigator & Tab Switcher */}
-      <div className="sticky top-20 z-30 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md pt-10 pb-4 mb-4 border-b border-gray-100 dark:border-white/5">
+      <div className="sticky top-20 z-30 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md pt-6 pb-4 mb-4 border-b border-gray-100 dark:border-white/5">
+        <div className="flex justify-center gap-6 mb-6">
+          <button
+            onClick={() => { setActiveLibraryTab('feed'); setIsReadingSelf(false); }}
+            className={`text-xs font-bold uppercase tracking-widest ${
+              !isReadingSelf && activeLibraryTab === 'feed' ? 'text-indigo-600' : 'text-slate-400'
+            }`}
+          >
+            Global Library
+          </button>
+          <button
+            onClick={() => setIsReadingSelf(true)}
+            className={`text-xs font-bold uppercase tracking-widest ${
+              isReadingSelf ? 'text-indigo-600' : 'text-slate-400'
+            }`}
+          >
+            My Sanctuary
+          </button>
+        </div>
+
         {/* Mood Filter */}
-        {activeLibraryTab === 'feed' && (
+        {!isReadingSelf && activeLibraryTab === 'feed' && (
           <div className="flex flex-col items-center gap-4">
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-4 justify-center w-full max-w-2xl">
                 {moods.map((mood) => (

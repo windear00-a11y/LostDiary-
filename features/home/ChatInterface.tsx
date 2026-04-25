@@ -379,9 +379,20 @@ export const ChatInterface = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm md:text-base leading-relaxed tracking-wide whitespace-pre-wrap">
-                      {msg.content}
-                    </p>
+                    <>
+                      <p className="text-sm md:text-base leading-relaxed tracking-wide whitespace-pre-wrap">
+                        {msg.content}
+                      </p>
+                      {/* Processing Status Indicator */}
+                      {msg.role === 'diary' && msg.processing_status && msg.processing_status !== 'observed' && (
+                        <div className={`mt-2 text-[10px] uppercase tracking-widest font-bold flex items-center gap-1.5 ${
+                          msg.processing_status === 'woven' ? 'text-amber-400' : 'text-emerald-400'
+                        }`}>
+                          <Sparkles className="w-3 h-3" />
+                          {msg.processing_status === 'woven' ? 'Narrative Woven' : 'Moment Saved'}
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </motion.div>

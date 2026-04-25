@@ -1,3 +1,4 @@
+import { chatPersistence } from "@/lib/services/chat-persistence";
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { AIOrchestrator } from "@/ai-core/ai-orchestrator";
@@ -35,15 +36,15 @@ export async function POST(req: Request) {
     const pipelineForAsync = new PipelineController(apiKey, profile.personality_summary);
 
     // --- SMART SESSION MANAGEMENT ---
-    // ...(omitted for brevity during fetch, handled implicitly via database)
     if (!session_id) {
-      const { data: recentSession } = await supabase
+       // Only fetch if session_id is missing
+       const { data: recentSession } = await supabase
         .from('chat_sessions')
-        .select('*')
+        .select('id, updated_at')
         .eq('user_id', user_id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle(); // Use maybeSingle to avoid 404/Empty issues
       
       const twelveHoursAgo = new Date();
       twelveHoursAgo.setHours(twelveHoursAgo.getHours() - 12);
@@ -54,34 +55,24 @@ export async function POST(req: Request) {
         const { data: newSession } = await supabase
           .from('chat_sessions')
           .insert({ user_id, title: `Chapter: ${new Date().toLocaleDateString()}` })
-          .select()
+          .select('id')
           .single();
         session_id = newSession?.id;
       }
     }
 
-    let query = supabase
-      .from('chat_messages')
-      .select('content, role')
-      .eq('user_id', user_id)
-      .order('created_at', { ascending: false })
-      .limit(10);
-    if (session_id) query = query.eq('session_id', session_id);
-    const { data: recentMessages } = await query;
-    const contextMessages = recentMessages?.map(m => ({ content: m.content || "", role: m.role })) || [];
-    
-    // Safety fallback for empty intelligence profile
-    const currentIntelProfile = profile.intelligence_profile || {
-      basic_profile: {}, thinking_style: {}, emotional_state: {},
-      interests_goals: {}, behavior_patterns: {}, communication_style: {},
-      sensitive_insights: {}, source_weights: { chat: 0.3, diary: 0.7 }
-    };
-
-    // STEP 2: parallelize tasks (Reply, Pipeline, and Deep Intelligence Extraction)
-    const [{ data: contextChaptersData }, { data: currentVolume }] = await Promise.all([
+    // Parallel fetch only essential context for this turn
+    const [ { data: recentMessages }, { data: contextChaptersData }, { data: currentVolume }] = await Promise.all([
+      supabase.from('chat_messages').select('content, role')
+        .eq('user_id', user_id)
+        .eq('session_id', session_id)
+        .order('created_at', { ascending: false })
+        .limit(10),
       supabase.from('chapters').select('content').eq('user_id', user_id).order('created_at', { ascending: false }).limit(3),
       supabase.from('volumes').select('*').eq('user_id', user_id).eq('status', 'ongoing').maybeSingle()
     ]);
+
+    const contextMessages = recentMessages?.map(m => ({ content: m.content || "", role: m.role })) || [];
     const contextChapters = contextChaptersData?.map(c => c.content) || [];
     let activeVolume = currentVolume;
 
@@ -94,99 +85,86 @@ export async function POST(req: Request) {
        activeVolume = newVol;
     }
 
-    const [pipelineOutput, aiResponseText, updatedIntelProfile] = await Promise.all([
+    // Sequential extraction to ensure AI response uses updated intelligence
+    const intelProfile = profile.intelligence_profile || {};
+    const updatedIntelProfile = await extractIntelligenceProfile('chat', content, intelProfile as any);
+
+    // STEP 4: Orchestration and AI generation
+    const [pipelineOutput, aiResponseText] = await Promise.all([
       orchestrator.processInteraction({
         userId: user_id,
         message: { role, type, content },
         contextMessages: contextMessages.map(m => m.content),
         apiKey: apiKey,
         language,
-        contextChapters
+        contextChapters,
+        updatedIntelProfile
       }),
-      generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary, currentIntelProfile as any),
-      extractIntelligenceProfile('chat', content, currentIntelProfile as any)
+      generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary, updatedIntelProfile as any),
     ]);
 
     const analyzedEvent = pipelineOutput.extractedEvent;
     
-    // STEP 3: Save user message with rich metadata from pipeline
-    const enrichedMetadata = {
-      ...(metadata || {}),
-      emotion: analyzedEvent?.emotion || 'neutral',
-      importance: analyzedEvent?.score || 0,
-      category: analyzedEvent?.category || 'General'
+    // STEP 5: Reliable Persistence
+    const { data: message, error: messageError } = await chatPersistence.saveUserMessage(supabase, {
+        user_id, session_id, role, type, content, media_url: media_url || null,
+        metadata: {
+          ...(metadata || {}),
+          emotion: analyzedEvent?.emotion || 'neutral',
+          importance: analyzedEvent?.score || 0,
+          category: analyzedEvent?.category || 'General'
+        },
+        event_score: analyzedEvent?.score || 0,
+        processing_status: pipelineOutput.narrativeUpdate?.narrative ? 'woven' : (pipelineOutput.extractedEvent ? 'saved' : 'observed')
+    });
+      
+    if (messageError) throw messageError;
+
+    // Concurrently handle secondary updates with error isolation
+    const safeUpdate = async (promise: Promise<any>, taskName: string) => {
+      try { return await promise; }
+      catch (e) { console.error(`Task ${taskName} failed:`, e); }
     };
 
-    // Determine status and impact
-    let processingStatus: 'woven' | 'saved' | 'observed' = 'observed';
-    let impactPercentage = 10; // Default for observed
+    await Promise.all([
+      (role === 'user' && type === 'text' && content) ? safeUpdate(coreService.updateInteraction(user_id, !!aiResponseText, supabase), 'updateInteraction') : Promise.resolve(),
+      aiResponseText ? safeUpdate(chatPersistence.saveAIResponse(supabase, { user_id, session_id, role: 'diary', type: 'text', content: aiResponseText }), 'insertAIResponse') : Promise.resolve(),
+      safeUpdate(chatPersistence.updateUserContext(supabase, user_id, { 
+        personality_summary: pipelineOutput.personaUpdate || profile.personality_summary,
+        bio: pipelineOutput.narrativeUpdate ? pipelineOutput.narrativeUpdate.summary : profile.bio,
+        intelligence_profile: updatedIntelProfile
+      }), 'updateUser'),
+      session_id ? safeUpdate(chatPersistence.updateSessionStatus(supabase, session_id, { 
+        processing_status: pipelineOutput.narrativeUpdate?.narrative ? 'woven' : (pipelineOutput.extractedEvent ? 'saved' : 'observed'),
+        impact_percentage: pipelineOutput.narrativeUpdate?.narrative ? 90 : (pipelineOutput.extractedEvent ? 50 : 10)
+      }), 'updateSession') : Promise.resolve()
+    ]);
 
-    if (pipelineOutput.narrativeUpdate?.narrative) {
-      processingStatus = 'woven';
-      impactPercentage = 85 + Math.floor(Math.random() * 15); // 85-100%
-    } else if (pipelineOutput.extractedEvent) {
-      processingStatus = 'saved';
-      impactPercentage = 40 + Math.floor(Math.random() * 30); // 40-70%
-    } else if (analyzedEvent?.score && analyzedEvent.score > 0.3) {
-      impactPercentage = Math.floor(analyzedEvent.score * 100);
-    }
-
-    const { data: message, error } = await supabase
-      .from('chat_messages')
-      .insert({
-        user_id, session_id, role, type, content, media_url,
-        metadata: enrichedMetadata, event_score: analyzedEvent?.score || 0,
-        processing_status: processingStatus
-      }).select().single();
-    if (error) throw error;
-
-    if (role === 'user' && type === 'text' && content) {
-      await coreService.updateInteraction(user_id, !!aiResponseText, supabase);
-    }
-    
-    // STEP 4: Save AI Response
     if (aiResponseText) {
-      await supabase.from('chat_messages').insert({
-        user_id, session_id, role: 'diary', type: 'text', content: aiResponseText
-      });
       coreService.autoSaveChapter(user_id, aiResponseText);
     }
 
-    // STEP 5: Update session title, user identity and narrative
-    await supabase.from('users').update({ 
-      personality_summary: pipelineOutput.personaUpdate || profile.personality_summary,
-      bio: pipelineOutput.narrativeUpdate ? pipelineOutput.narrativeUpdate.summary : profile.bio,
-      intelligence_profile: updatedIntelProfile
-    }).eq('id', user_id);
-
-    // Update Session status
-    if (session_id) {
-       await supabase.from('chat_sessions').update({ 
-         processing_status: processingStatus,
-         impact_percentage: impactPercentage
-       }).eq('id', session_id);
-    }
 
     // Save narrative chapter if triggered
     if (pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative) {
-      const { data: newChapter } = await supabase.from('chapters').insert({
+      await chatPersistence.saveChapter(supabase, {
         user_id,
         volume_id: activeVolume?.id,
         title: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
         content: pipelineOutput.narrativeUpdate.narrative,
         created_at: new Date().toISOString()
-      }).select().single();
+      });
 
       // Handle Volume Sealing
       if (pipelineOutput.narrativeUpdate.shouldSealVolume && activeVolume) {
-        await supabase.from('volumes').update({ 
+        await chatPersistence.sealVolume(supabase, activeVolume.id, { 
           status: 'completed',
           epilogue: pipelineOutput.narrativeUpdate.currentVolumeEpilogue || null
-        }).eq('id', activeVolume.id);
+        });
         
         if (pipelineOutput.narrativeUpdate.newVolumeMetadata) {
           const meta = pipelineOutput.narrativeUpdate.newVolumeMetadata;
-          await supabase.from('volumes').insert({
+          await chatPersistence.createNewVolume(supabase, {
             user_id,
             volume_number: activeVolume.volume_number + 1,
             title: meta.title || 'Next Phase',
