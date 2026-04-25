@@ -26,7 +26,7 @@ export const Header = () => {
         setActiveView(activeView === 'chat' ? 'journal' : 'chat');
       }
       setDisplayMode('idle');
-    }, 400);
+    }, 1000);
   };
 
   return (
@@ -67,7 +67,7 @@ export const Header = () => {
                         initial={{ opacity: 0, y: 5 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -5 }}
-                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        transition={{ duration: 0.5, ease: "easeInOut" }}
                         className="flex items-center gap-2"
                       >
                         {isLibrary 

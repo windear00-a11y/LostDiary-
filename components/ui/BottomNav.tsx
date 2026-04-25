@@ -47,7 +47,7 @@ export const BottomNav = () => {
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab)}
-                  className={`group relative flex items-center justify-center transition-all duration-300 ease-out overflow-hidden
+                  className={`group relative flex items-center justify-center transition-all duration-500 ease-in-out overflow-hidden
                     ${isActive 
                       ? 'bg-indigo-500/10 text-indigo-400 px-4 py-2.5 rounded-full' 
                       : 'w-12 h-12 rounded-full text-neutral-500 hover:text-neutral-300 hover:bg-white/5'
@@ -58,7 +58,7 @@ export const BottomNav = () => {
                   
                   {/* Expandable Label */}
                   <span 
-                    className={`text-[12px] sm:text-[13px] font-medium tracking-wide whitespace-nowrap overflow-hidden transition-all duration-300 ease-out 
+                    className={`text-[12px] sm:text-[13px] font-medium tracking-wide whitespace-nowrap overflow-hidden transition-all duration-500 ease-in-out
                       ${isActive ? 'ml-2 max-w-[120px] opacity-100' : 'max-w-0 opacity-0 ml-0'}
                     `}
                   >
