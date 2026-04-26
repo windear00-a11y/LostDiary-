@@ -116,73 +116,108 @@ export default function ProfilePage() {
       setError(null);
       
       const messages = await coreService.fetchMessages(user.id);
-      if (messages.length < 3) {
-        setError("WinDear needs at least 3 entries to understand your persona.");
+      const intel = profile?.intelligence_profile;
+      const personalitySummary = profile?.personality_summary;
+
+      const hasMirrorData = intel && Object.keys(intel).some(k => Object.keys((intel as any)[k] || {}).length > 0);
+      
+      // If no mirror data, need at least some messages
+      if (!personalitySummary && !hasMirrorData && messages.length < 3) {
+        setError("WinDear needs more reflection data. Try writing 3+ entries or syncing your Sanctuary Mirror first.");
         return;
       }
 
+      const mirrorInsights = intel ? `
+- Thinking Style: ${JSON.stringify(intel.thinking_style || {})}
+- Soul Mood: ${JSON.stringify(intel.emotional_state || {})}
+- Echo Patterns: ${JSON.stringify(intel.communication_style || {})}
+- Deep Orbits: ${JSON.stringify(intel.interests_goals || {})}
+` : "";
+
       const recentContext = messages
-        .filter(m => m.role === 'user')
-        .slice(-10)
+        .filter(m => m.role === 'user' && m.content)
+        .slice(-15)
         .map(m => m.content)
         .join('\n');
 
-      // Incorporate Sanctuary Mirror intelligence for deeper alignment
-      const intel = profile?.intelligence_profile;
-      const mirrorInsights = intel ? `
-- Core Thinking: ${JSON.stringify(intel.thinking_style)}
-- Emotional Baseline: ${JSON.stringify(intel.emotional_state)}
-- Interests & Subconscious Goals: ${JSON.stringify(intel.interests_goals)}
-` : "";
-
       const promptResponse = await generateContentWithFallback({
         model: "gemini-3.1-pro-preview",
-        contents: `Based on these diary entries and deeper psychological intelligence from their "Sanctuary Mirror", describe a symbolic, artistic, and abstract avatar that represents this person's unique soul and personality.
+        contents: `Generate a visual prompt for a professional, abstract profile avatar. 
+Use the Soul Signature and Mirror Intelligence as the primary source of truth for the persona's essence.
 
-Mirror Intelligence:
-${profile?.personality_summary || "Unknown"}
-${mirrorInsights}
+PRIMARY SOURCE - Soul Signature:
+${personalitySummary || "A deep, unfolding mystery."}
 
-Recent Entries:
+SECONDARY SOURCE - Mirror Intelligence:
+${mirrorInsights || "Patterns still forming."}
+
+SUPPORTING CONTEXT - Recent Thoughts:
 ${recentContext}
 
-The avatar should not be a direct portrait of a person, but an abstract representation of their inner world. Keep the description concise, evocative, and visual.
+The avatar must be highly SYMBOLIC and ABSTRACT. It should represent their unique spiritual or psychological signature using geometric patterns, ethereal structures, cosmic phenomena, or organic textures. 
+IMPORTANT: DO NOT describe a literal portrait of a person.
 
-Output only the visual description for an image generation tool.`,
+Output ONLY the visual description for an image generation tool.`,
       });
 
       const visualPrompt = promptResponse.text || "A serene and abstract representation of a thoughtful soul, soft colors, ethereal light.";
 
       const imageResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
+        model: 'gemini-3.1-flash-image-preview',
         contents: {
           parts: [
             {
-              text: `A professional, artistic profile avatar: ${visualPrompt}. Minimalist, elegant, high quality, soft lighting, artistic style.`,
+              text: `Artistic minimalist avatar: ${visualPrompt}. High precision, ethereal glow, dark sophisticated background, masterpiece quality, clean lines.`,
             },
           ],
         },
+        config: {
+          imageConfig: {
+            aspectRatio: "1:1"
+          }
+        }
       });
+
+      if (!imageResponse.candidates?.[0]?.content?.parts) {
+        throw new Error("EMPTY_IMAGE_RESPONSE");
+      }
 
       let base64Image = '';
       for (const part of imageResponse.candidates[0].content.parts) {
-        if (part.inlineData) {
-          base64Image = `data:image/png;base64,${part.inlineData.data}`;
+        if (part.inlineData?.data) {
+          base64Image = part.inlineData.data;
           break;
         }
       }
 
-      if (base64Image) {
-        const publicUrl = await coreService.uploadAvatar(user.id, base64Image);
-        const updated = await coreService.updateProfile(user.id, {
-          avatar_url: publicUrl
-        });
-        setProfile(updated);
-        toast.success("Avatar manifested from your Sanctuary Mirror.");
+      if (!base64Image) throw new Error("NO_IMAGE_DATA_EXTRACTED");
+
+      const publicUrl = await coreService.uploadAvatar(user.id, base64Image);
+      const updated = await coreService.updateProfile(user.id, {
+        avatar_url: publicUrl
+      });
+      setProfile(updated);
+      toast.success("Identity visual manifested from your Sanctuary Mirror.");
+      
+    } catch (err: any) {
+      console.error("Avatar Gen Failure:", err);
+      
+      let message = "WinDear encountered an interference in the visualization.";
+      
+      if (err.message?.includes("SAFETY")) {
+        message = "Visualization blocked by safety filters. This can happen with very obscure abstract descriptions.";
+      } else if (err.message?.includes("quota")) {
+        message = "Imaging power exhausted. Please try again later.";
+      } else if (err.message === "EMPTY_IMAGE_RESPONSE") {
+        message = "The imagery node returned an empty response. Trying again might help.";
+      } else if (err.message === "NO_IMAGE_DATA_EXTRACTED") {
+        message = "Data stream corruption during manifest. Please retry.";
+      } else if (err.message) {
+        message = `Visualization failed: ${err.message}`;
       }
-    } catch (error) {
-      console.error("Error generating avatar:", error);
-      setError("AI generation failed. Please try again in a moment.");
+
+      setError(message);
+      toast.error(message);
     } finally {
       setIsGenerating(false);
     }
@@ -354,29 +389,31 @@ Output only the visual description for an image generation tool.`,
                 </div>
 
                 {profile?.personality_summary && (
-                  <div className="p-5 bg-indigo-500/5 rounded-2xl border border-indigo-500/10 mt-6">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Sparkles className="w-4 h-4 text-indigo-400" />
-                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">AI Insight</span>
+                  <div className="pt-6 mt-6 border-t border-white/5">
+                    <div className="flex items-center justify-between group/sig cursor-pointer" onClick={() => setActiveProfileTab('mirror')}>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-400/60 block">Soul Signature</label>
+                        <p className="text-sm font-serif italic text-white/80 line-clamp-2 leading-relaxed pr-4">
+                          &ldquo;{profile.personality_summary}&rdquo;
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-white/20 group-hover/sig:text-white group-hover/sig:translate-x-1 transition-all" />
                     </div>
-                    <p className="text-sm text-indigo-200/80 leading-relaxed">
-                      {profile.personality_summary}
-                    </p>
                   </div>
                 )}
               </div>
 
               {/* Portal Button */}
-              <div className="mt-12">
+              <div className="mt-10">
                 <button
                   onClick={() => setActiveProfileTab('mirror')}
-                  className="w-full relative overflow-hidden group rounded-2xl p-6 bg-white/[0.02] border border-white/5 hover:border-white/20 hover:bg-white/[0.04] transition-all"
+                  className="w-full group rounded-2xl py-4 px-6 bg-indigo-500/5 border border-indigo-500/10 hover:bg-indigo-500/10 hover:border-indigo-500/20 transition-all flex items-center justify-between"
                 >
-                  <div className="flex items-center justify-center gap-3">
-                    <Shield className="w-5 h-5 text-white/30 group-hover:text-white transition-colors" />
-                    <span className="text-white/70 font-sans tracking-wide text-lg group-hover:text-white transition-colors">Step into The Mirror</span>
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-indigo-200/70 group-hover:text-indigo-200">Reflect on Patterns</span>
                   </div>
-                  <p className="text-[11px] uppercase tracking-widest text-white/30 mt-3 font-bold">Deep intelligence gathered about your subconscious</p>
+                  <ChevronRight className="w-4 h-4 text-indigo-400 opacity-40 group-hover:opacity-100 transition-opacity" />
                 </button>
               </div>
 
