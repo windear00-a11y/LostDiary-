@@ -147,3 +147,16 @@
     transform: translateX(100%);
   }
 }
+
+/* Mirror Scan Animation */
+@keyframes scan {
+  0% { transform: translateY(-50%); opacity: 0; }
+  20% { opacity: 0.5; }
+  50% { opacity: 1; }
+  80% { opacity: 0.5; }
+  100% { transform: translateY(800%); opacity: 0; }
+}
+
+.animate-scan {
+  animation: scan 3s linear infinite;
+}

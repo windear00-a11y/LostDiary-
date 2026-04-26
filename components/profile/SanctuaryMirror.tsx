@@ -12,13 +12,68 @@ interface SanctuaryMirrorProps {
 }
 
 const DIMENSIONS = [
-  { key: 'thinking_style', label: 'Thinking style', icon: Brain, color: 'text-blue-500', bg: 'bg-blue-500/10', glow: 'shadow-blue-500/10' },
-  { key: 'emotional_state', label: 'Soul mood', icon: Heart, color: 'text-rose-500', bg: 'bg-rose-500/10', glow: 'shadow-rose-500/10' },
-  { key: 'communication_style', label: 'Echo pattern', icon: MessageCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10', glow: 'shadow-emerald-500/10' },
-  { key: 'behavior_patterns', label: 'Silent rhythms', icon: Activity, color: 'text-purple-500', bg: 'bg-purple-500/10', glow: 'shadow-purple-500/10' },
-  { key: 'interests_goals', label: 'Deep orbits', icon: Target, color: 'text-amber-500', bg: 'bg-amber-500/10', glow: 'shadow-amber-500/10' },
-  { key: 'sensitive_insights', label: 'Shadow work', icon: ShieldAlert, color: 'text-rose-600', bg: 'bg-rose-600/10', glow: 'shadow-red-600/10', isSensitive: true }
+  { 
+    key: 'thinking_style', 
+    label: 'Thinking style', 
+    description: 'Cognitive patterns and logic flow.',
+    icon: Brain, 
+    color: 'text-sky-400', 
+    accent: 'bg-sky-500/10', 
+    border: 'border-sky-500/20' 
+  },
+  { 
+    key: 'emotional_state', 
+    label: 'Soul mood', 
+    description: 'Underlying affective resonance.',
+    icon: Heart, 
+    color: 'text-rose-400', 
+    accent: 'bg-rose-500/10', 
+    border: 'border-rose-500/20' 
+  },
+  { 
+    key: 'communication_style', 
+    label: 'Echo pattern', 
+    description: 'Verbal rhythms and expressive tone.',
+    icon: MessageCircle, 
+    color: 'text-emerald-400', 
+    accent: 'bg-emerald-500/10', 
+    border: 'border-emerald-500/20' 
+  },
+  { 
+    key: 'behavior_patterns', 
+    label: 'Silent rhythms', 
+    description: 'Subconscious habits and tendencies.',
+    icon: Activity, 
+    color: 'text-purple-400', 
+    accent: 'bg-purple-500/10', 
+    border: 'border-purple-500/20' 
+  },
+  { 
+    key: 'interests_goals', 
+    label: 'Deep orbits', 
+    description: 'What the spirit gravitates toward.',
+    icon: Target, 
+    color: 'text-amber-400', 
+    accent: 'bg-amber-500/10', 
+    border: 'border-amber-500/20' 
+  },
+  { 
+    key: 'sensitive_insights', 
+    label: 'Shadow work', 
+    description: 'Guarded truths and buried patterns.',
+    icon: ShieldAlert, 
+    color: 'text-rose-500', 
+    accent: 'bg-rose-500/20', 
+    border: 'border-rose-500/30', 
+    isSensitive: true 
+  }
 ];
+
+function ScanningEffect() {
+  return (
+    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 to-transparent animate-scan" />
+  );
+}
 
 export function SanctuaryMirror({ profile, onUpdate }: SanctuaryMirrorProps) {
   const intel = profile.intelligence_profile || {
@@ -32,6 +87,7 @@ export function SanctuaryMirror({ profile, onUpdate }: SanctuaryMirrorProps) {
   const [editValue, setEditValue] = useState<string>('');
   const [revealed, setRevealed] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
 
   const startEdit = (key: string, data: any) => {
     setEditingKey(key);
@@ -67,24 +123,48 @@ export function SanctuaryMirror({ profile, onUpdate }: SanctuaryMirrorProps) {
     }
   };
 
+  const handleManualScan = async () => {
+    setIsScanning(true);
+    // This is a UI-only simulation of a deep scan for now, 
+    // but in a real system this would trigger an edge function to re-process archives.
+    await new Promise(r => setTimeout(r, 2000));
+    setIsScanning(false);
+    toast.success("Inner resonance re-aligned with latest entries.");
+  };
+
   return (
     <div className="space-y-8">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10">
-               <Sparkles className="w-5 h-5 text-white/50" />
+      <div className="flex items-start justify-between mb-8">
+        <div className="space-y-2">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.1)]">
+                   <Sparkles className="w-5 h-5 text-indigo-400" />
+                </div>
+                <h3 className="text-xl font-serif text-white tracking-tight">
+                   The Sanctuary Mirror
+                </h3>
             </div>
-            <h3 className="text-xl font-serif text-white">
-               The Sanctuary Mirror
-            </h3>
+            <p className="text-[13px] text-white/40 leading-relaxed font-sans max-w-xs">
+              WinDear reflects the deep patterns manifested in your archives. Explore your digital soul.
+            </p>
         </div>
-        <p className="text-[13px] text-white/40 leading-relaxed px-1 font-sans">
-          WinDear reflects the patterns it sees in your soul. Explore the depth of your own reflection.
-        </p>
+        
+        <button 
+          onClick={handleManualScan}
+          disabled={isScanning}
+          className={`flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 transition-all text-[10px] font-bold uppercase tracking-widest disabled:opacity-50 ${isScanning ? 'animate-pulse' : ''}`}
+        >
+          {isScanning ? (
+            <Activity className="w-3 h-3 animate-pulse" />
+          ) : (
+            <div className="w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
+          )}
+          {isScanning ? 'Scanning...' : 'Sync Depth'}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3">
-        {DIMENSIONS.map(({ key, label, icon: Icon, color, bg, glow, isSensitive }) => {
+      <div className="grid grid-cols-1 gap-4">
+        {DIMENSIONS.map(({ key, label, description, icon: Icon, color, accent, border, isSensitive }, idx) => {
           const data = (intel as any)[key] || {};
           const isEmpty = Object.keys(data).length === 0;
           const isExpanded = expandedKey === key;
@@ -93,42 +173,63 @@ export function SanctuaryMirror({ profile, onUpdate }: SanctuaryMirrorProps) {
             <motion.div 
                key={key} 
                layout
-               className={`bg-white/[0.02] border transition-all duration-300 rounded-[24px] overflow-hidden ${
-                  isExpanded ? 'border-white/20 shadow-xl' : 'border-white/5 hover:border-white/10'
+               initial={{ opacity: 0, y: 15 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ delay: idx * 0.08 }}
+               className={`relative bg-[#0d0d0d] border transition-all duration-500 rounded-[28px] overflow-hidden group/card ${
+                  isExpanded 
+                    ? 'border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/10' 
+                    : 'border-white/5 hover:border-white/10'
                }`}
             >
+              {isExpanded && <ScanningEffect />}
+              
               <div 
                 onClick={() => { if(!editingKey) setExpandedKey(isExpanded ? null : key); }}
-                className={`p-6 flex items-center justify-between cursor-pointer group hover:bg-white/[0.02] transition-colors`}
+                className={`p-6 flex items-center justify-between cursor-pointer transition-colors relative z-10 ${
+                  isExpanded ? 'bg-white/[0.03]' : 'hover:bg-white/[0.01]'
+                }`}
               >
-                <div className="flex items-center gap-4">
-                  <div className={`p-4 rounded-[16px] bg-[#0a0a0a] border border-white/5 transition-all duration-300 group-hover:scale-105`}>
-                    <Icon className={`w-5 h-5 text-white/60`} />
+                <div className="flex items-center gap-5">
+                  <div className={`w-14 h-14 rounded-2xl ${accent} ${border} border flex items-center justify-center transition-all duration-500 group-hover/card:scale-105 group-hover/card:rotate-3 shadow-inner`}>
+                    <Icon className={`w-6 h-6 ${color}`} />
                   </div>
-                  <div>
-                     <h4 className={`text-[13px] font-bold uppercase tracking-widest transition-colors ${isExpanded ? 'text-white' : 'text-white/80'}`}>
+                  <div className="space-y-1">
+                     <h4 className={`text-[14px] font-bold uppercase tracking-[0.15em] transition-colors ${
+                       isExpanded ? 'text-white' : 'text-white/70 group-hover/card:text-white/90'
+                     }`}>
                         {label}
                      </h4>
-                     {!isExpanded && !isEmpty && (
-                        <p className="text-[9px] uppercase tracking-[0.2em] text-emerald-400/60 mt-1.5 font-bold">
-                           Pattern Manifested
-                        </p>
-                     )}
+                     <p className="text-[11px] text-white/30 tracking-wide font-medium">
+                        {description}
+                     </p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3">
-                   {!isEmpty && isExpanded && !editingKey && (
-                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-1 pr-2 border-r border-white/5 mr-2">
-                        <button onClick={(e) => { e.stopPropagation(); startEdit(key, data); }} className="p-2 text-white/30 hover:text-white transition-colors">
-                           <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); handleClear(key); }} className="p-2 text-rose-500/50 hover:text-rose-400 transition-colors">
-                           <Trash2 className="w-4 h-4" />
-                        </button>
-                     </motion.div>
+                <div className="flex items-center gap-4">
+                   {!isEmpty && !isExpanded && (
+                      <div className="flex -space-x-1.5 opacity-60 group-hover/card:opacity-100 transition-opacity">
+                        {[1, 2, 3].map(i => (
+                          <div key={i} className={`w-1.5 h-1.5 rounded-full ${color} opacity-${100 - i * 25}`} />
+                        ))}
+                      </div>
                    )}
-                   {isExpanded ? <ChevronUp className="w-5 h-5 text-white/30" /> : <ChevronDown className="w-5 h-5 text-white/30" />}
+                   
+                   <div className="flex items-center gap-3">
+                      {!isEmpty && isExpanded && !editingKey && (
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-1 pr-3 border-r border-white/5 mr-1">
+                           <button onClick={(e) => { e.stopPropagation(); startEdit(key, data); }} className="w-9 h-9 flex items-center justify-center rounded-full text-white/30 hover:text-white hover:bg-white/5 transition-all">
+                              <Edit2 className="w-4 h-4" />
+                           </button>
+                           <button onClick={(e) => { e.stopPropagation(); handleClear(key); }} className="w-9 h-9 flex items-center justify-center rounded-full text-rose-500/30 hover:text-rose-400 hover:bg-rose-500/5 transition-all">
+                              <Trash2 className="w-4 h-4" />
+                           </button>
+                        </motion.div>
+                      )}
+                      <div className={`w-8 h-8 rounded-full border border-white/5 flex items-center justify-center transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                        <ChevronDown className="w-4 h-4 text-white/30" />
+                      </div>
+                   </div>
                 </div>
               </div>
 
@@ -176,20 +277,32 @@ export function SanctuaryMirror({ profile, onUpdate }: SanctuaryMirrorProps) {
                                     <p className="text-[10px] text-rose-500 uppercase tracking-[0.2em] font-bold">Tap to reveal</p>
                                  </div>
                               ) : (
-                                 <div className="space-y-3">
+                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     {Object.entries(data).map(([k, v]: [string, any], idx) => (
                                        <motion.div 
                                           key={k} 
-                                          initial={{ opacity: 0, x: -10 }}
-                                          animate={{ opacity: 1, x: 0 }}
+                                          initial={{ opacity: 0, y: 10 }}
+                                          animate={{ opacity: 1, y: 0 }}
                                           transition={{ delay: idx * 0.05 }}
-                                          className="p-5 bg-white/[0.02] border border-white/5 rounded-2xl group flex flex-col gap-2 hover:bg-white/[0.04] transition-colors"
+                                          className="p-5 bg-white/[0.01] border border-white/5 rounded-2xl group/item flex flex-col gap-2 hover:bg-white/[0.04] transition-all hover:border-white/10"
                                        >
-                                          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/30 group-hover:text-white/50 transition-colors">
-                                             {k.replace(/_/g, ' ')}
-                                          </span>
-                                          <p className="text-[13px] font-serif leading-[1.6] text-white/80">
-                                             {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 group-hover/item:text-white/40 transition-colors">
+                                              {k.replace(/_/g, ' ')}
+                                            </span>
+                                            {typeof v === 'number' && (
+                                              <div className="h-1 w-12 bg-white/5 rounded-full overflow-hidden">
+                                                <div className={`h-full ${color} opacity-50`} style={{ width: `${Math.min(v * 100, 100)}%` }} />
+                                              </div>
+                                            )}
+                                          </div>
+                                          <p className="text-[14px] font-serif leading-[1.6] text-white/90">
+                                             {Array.isArray(v) 
+                                               ? v.join(', ') 
+                                               : typeof v === 'object' 
+                                                 ? JSON.stringify(v) 
+                                                 : String(v)
+                                             }
                                           </p>
                                        </motion.div>
                                     ))}

@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { User, Camera, Sparkles, LogOut, Save, Edit2, Shield, Send, Book, Handshake, ChevronRight, MessageSquare, Heart, ChevronDown, ChevronUp, MoreVertical, Trash2, ExternalLink, BookOpen } from 'lucide-react';
 import { DeleteAccountModal } from '@/components/profile/DeleteAccountModal';
 import { FeedbackDrawer } from '@/components/ui/FeedbackDrawer';
-import { Header } from '@/components/ui/Header';
 import { SanctuaryMirror } from '@/components/profile/SanctuaryMirror';
 import { PrivacyTrustCenter } from '@/components/profile/PrivacyTrustCenter';
 import { SuccessMoment } from '@/components/ui/SuccessMoment';
@@ -24,7 +23,7 @@ export default function ProfilePage() {
   const ai = getGenAI();
   const { user, signOut } = useAuth();
   const router = useRouter();
-  const { setActiveView } = useUIStore();
+  const { setActiveView, activeProfileTab, setActiveProfileTab } = useUIStore();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +34,6 @@ export default function ProfilePage() {
   const [displayName, setDisplayName] = useState('');
   const [penName, setPenName] = useState('');
   const [bio, setBio] = useState('');
-  const [activeTab, setActiveTab] = useState<'general' | 'mirror' | 'sanctum' | 'privacy' | 'account'>('general');
 
   const handleDeleteAccount = async () => {
     if (!user) return;
@@ -223,9 +221,9 @@ Output only the visual description for an image generation tool.`,
         </AnimatePresence>
 
         <AnimatePresence mode="wait">
-          {activeTab === 'general' ? (
+          {activeProfileTab === 'identity' ? (
             <motion.div 
-              key="front"
+              key="identity"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -371,7 +369,7 @@ Output only the visual description for an image generation tool.`,
               {/* Portal Button */}
               <div className="mt-12">
                 <button
-                  onClick={() => setActiveTab('mirror')}
+                  onClick={() => setActiveProfileTab('mirror')}
                   className="w-full relative overflow-hidden group rounded-2xl p-6 bg-white/[0.02] border border-white/5 hover:border-white/20 hover:bg-white/[0.04] transition-all"
                 >
                   <div className="flex items-center justify-center gap-3">
@@ -395,58 +393,39 @@ Output only the visual description for an image generation tool.`,
             </motion.div>
           ) : (
             <motion.div 
-              key="back"
+              key="details"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
               className="bg-[#111] rounded-[32px] p-8 shadow-sm border border-white/10"
             >
-              <button 
-                onClick={() => setActiveTab('general')}
-                className="mb-8 text-[11px] font-bold uppercase tracking-[0.2em] text-white/40 hover:text-white flex items-center gap-2 transition-colors"
-              >
-                ← Return
-              </button>
-                            {/* Sub-Switcher */}
-              <div className="flex gap-2 mb-8 overflow-x-auto pb-4 no-scrollbar border-b border-white/5">
-                 <button onClick={() => setActiveTab('general')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-colors whitespace-nowrap ${activeTab === 'general' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
-                    <User className="w-3 h-3" /> Identity
-                 </button>
-                 <button onClick={() => setActiveTab('mirror')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-colors whitespace-nowrap ${activeTab === 'mirror' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
-                    <Sparkles className="w-3 h-3" /> Mirror
-                 </button>
-                 <button onClick={() => setActiveTab('privacy')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-colors whitespace-nowrap ${activeTab === 'privacy' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
-                    <Shield className="w-3 h-3" /> Rights
-                 </button>
-                 <button onClick={() => setActiveTab('account')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-colors whitespace-nowrap ${activeTab === 'account' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
-                    <MoreVertical className="w-3 h-3" /> Account
-                 </button>
-              </div>
-
-              {activeTab === 'mirror' ? (
+              {activeProfileTab === 'mirror' ? (
                 <>
                   {profile && <SanctuaryMirror profile={profile} onUpdate={handleUpdateIntelligence} />}
                 </>
-              ) : activeTab === 'privacy' ? (
-                <PrivacyTrustCenter />
-              ) : activeTab === 'account' ? (
-                <div className="flex flex-col gap-4 pt-4">
-                    <button 
-                      onClick={() => window.open('/api/profile/export', '_blank')}
-                      className="w-full text-[13px] text-white/80 hover:text-white font-bold uppercase tracking-widest transition-all px-6 py-5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10"
-                    >
-                      Export Data
-                    </button>
-                    <button 
-                      onClick={() => setShowDeleteModal(true)}
-                      className="w-full text-[13px] text-rose-400 hover:text-rose-300 font-bold uppercase tracking-widest transition-all px-6 py-5 bg-rose-500/5 border border-rose-500/10 rounded-2xl hover:bg-rose-500/10 mt-6"
-                    >
-                      Permadelete
-                    </button>
+              ) : activeProfileTab === 'vault' ? (
+                <div className="space-y-10">
+                   <PrivacyTrustCenter />
+                   
+                   <div className="pt-6 border-t border-white/5 flex flex-col gap-4">
+                      <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-white/30 px-2">Account Management</h4>
+                      <button 
+                        onClick={() => window.open('/api/profile/export', '_blank')}
+                        className="w-full text-[13px] text-white/80 hover:text-white font-bold uppercase tracking-widest transition-all px-6 py-5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 text-left"
+                      >
+                        Export Data
+                      </button>
+                      <button 
+                        onClick={() => setShowDeleteModal(true)}
+                        className="w-full text-[13px] text-rose-400 hover:text-rose-300 font-bold uppercase tracking-widest transition-all px-6 py-5 bg-rose-500/5 border border-rose-500/10 rounded-2xl hover:bg-rose-500/10 text-left"
+                      >
+                        Permadelete
+                      </button>
+                   </div>
                 </div>
               ) : (
-                <div className="text-center p-8 text-white/30">Select a tab.</div>
+                <div className="text-center p-8 text-white/30">Resonance lost. Try selecting a tab above.</div>
               )}
             </motion.div>
           )}
