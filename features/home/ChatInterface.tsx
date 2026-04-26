@@ -239,7 +239,7 @@ export const ChatInterface = () => {
                   onClick={() => setShowNudge(false)}
                   className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-medium transition-all"
                 >
-                  Let's continue
+                  Let&apos;s continue
                 </motion.button>
                 
                 <button 

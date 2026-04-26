@@ -144,10 +144,12 @@ export const coreService = {
       .eq('user_id', userId)
       .order('created_at', { ascending: true });
 
-    if (sessionId) {
-      query = query.eq('session_id', sessionId);
-    } else {
-      query = query.is('session_id', null);
+    if (sessionId !== undefined) {
+      if (sessionId === null) {
+        query = query.is('session_id', null);
+      } else {
+        query = query.eq('session_id', sessionId);
+      }
     }
 
     const { data, error } = await query;

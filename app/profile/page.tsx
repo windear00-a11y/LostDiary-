@@ -195,14 +195,14 @@ export default function ProfilePage() {
         type="save"
       />
 
-      <main className="max-w-2xl mx-auto px-6 pt-24 perspective-1000">
+      <main className="max-w-2xl mx-auto px-6 pt-24 font-sans">
         <AnimatePresence mode="wait">
           {error && (
             <motion.div 
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="mb-6 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-900/30 rounded-2xl text-sm text-rose-600 dark:text-rose-400 text-center font-serif italic"
+              className="mb-8 p-4 bg-rose-500/10 border border-rose-500/30 rounded-2xl text-[13px] text-rose-400 text-center uppercase tracking-widest font-bold"
             >
               {error}
             </motion.div>
@@ -213,16 +213,16 @@ export default function ProfilePage() {
           {activeTab === 'general' ? (
             <motion.div 
               key="front"
-              initial={{ opacity: 0, rotateY: -10 }}
-              animate={{ opacity: 1, rotateY: 0 }}
-              exit={{ opacity: 0, rotateY: 10 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
-              className="bg-white dark:bg-[#1A1A1D] rounded-[32px] p-8 shadow-sm border border-gray-100 dark:border-white/5"
+              className="bg-[#111] rounded-[32px] p-8 shadow-sm border border-white/10"
             >
               {/* Avatar Section */}
-              <div className="flex flex-col items-center mb-8">
+              <div className="flex flex-col items-center mb-10">
                 <div className="relative group">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 dark:bg-white/5 border-4 border-white dark:border-[#1A1A1D] shadow-xl relative">
+                  <div className="w-32 h-32 rounded-[32px] overflow-hidden bg-white/5 border border-white/10 shadow-xl relative">
                     {profile?.avatar_url ? (
                       <Image 
                         src={profile.avatar_url} 
@@ -232,7 +232,7 @@ export default function ProfilePage() {
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <div className="w-full h-full flex items-center justify-center text-white/30">
                         <User className="w-12 h-12" />
                       </div>
                     )}
@@ -258,28 +258,28 @@ export default function ProfilePage() {
                   <button 
                     onClick={generateAIAvatar}
                     disabled={isGenerating}
-                    className="absolute -bottom-2 -right-2 p-3 bg-indigo-500 text-white rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-50"
+                    className="absolute -bottom-3 -right-3 p-3 bg-white text-black hover:bg-neutral-200 rounded-full shadow-lg hover:scale-105 transition-transform disabled:opacity-50"
                     title="Generate AI Avatar"
                   >
                     <Sparkles className="w-5 h-5" />
                   </button>
                 </div>
                 
-                <p className="mt-4 text-xs font-medium uppercase tracking-widest text-gray-400 dark:text-gray-500">
+                <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
                   Anonymous Avatar
                 </p>
               </div>
 
               {/* Info Section */}
-              <div className="space-y-6">
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">Personal Display Name</label>
+              <div className="space-y-8">
+                <div className="group">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Personal Display Name</label>
                     <button 
                       onClick={() => { if(isEditing) handleSaveProfile(); setIsEditing(!isEditing); }}
-                      className="text-indigo-500 hover:underline text-sm flex items-center gap-1"
+                      className="text-white/40 hover:text-white text-sm flex items-center gap-1 transition-colors"
                     >
-                      {isEditing ? <Save className="w-4 h-4" /> : <Edit2 className="w-4 h-4" />}
+                      {isEditing ? <Save className="w-4 h-4" /> : <Edit2 className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />}
                     </button>
                   </div>
                   {isEditing ? (
@@ -287,20 +287,20 @@ export default function ProfilePage() {
                       type="text"
                       value={displayName}
                       onChange={(e) => setDisplayName(e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-indigo-500 transition-colors"
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-white/30 transition-colors text-white text-lg placeholder:text-white/20"
                       placeholder="Your private name..."
                     />
                   ) : (
-                    <h2 className="text-xl font-medium text-gray-900 dark:text-gray-100">
+                    <h2 className="text-2xl font-serif text-white/90">
                       {profile?.display_name || user?.email?.split('@')[0] || 'Unknown'}
                     </h2>
                   )}
-                  <p className="text-xs text-gray-400 mt-1">Visible only to you and WinDear.</p>
+                  <p className="text-[11px] text-emerald-400/60 mt-2 tracking-wide">Visible only to you and WinDear.</p>
                 </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-semibold uppercase tracking-wider text-indigo-500/80">Pen Name & Tag (For the Library)</label>
+                <div className="group">
+                  <div className="flex items-center justify-between mb-3">
+                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400/60">Pen Name (For Library)</label>
                   </div>
                   
                   {isEditing ? (
@@ -308,47 +308,47 @@ export default function ProfilePage() {
                       type="text"
                       value={penName}
                       onChange={(e) => setPenName(e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-indigo-500 transition-colors"
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-white/30 transition-colors text-white text-lg placeholder:text-white/20"
                       placeholder="E.g., The Midnight Thinker"
                     />
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-2xl font-serif font-medium text-gray-900 dark:text-gray-100">
+                    <div className="flex items-center gap-3">
+                      <h2 className="text-xl font-serif italic text-white/90">
                         {profile?.pen_name || 'Anonymous Author'}
                       </h2>
                       {profile?.pen_name_tag && (
-                        <span className="bg-indigo-500/10 text-indigo-500 font-mono text-sm px-2 py-1 rounded-lg">
+                        <span className="bg-white/5 border border-white/10 text-white/60 font-mono text-xs px-2 py-1 rounded-lg">
                           #{profile.pen_name_tag}
                         </span>
                       )}
                     </div>
                   )}
-                  <p className="text-xs text-gray-400 mt-1">This is how you will uniquely be known if you publish stories to the Global Library.</p>
+                  <p className="text-[11px] text-white/30 mt-2 tracking-wide">This is how you will uniquely be known.</p>
                 </div>
 
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-gray-400 block mb-2">Author&apos;s Bio</label>
+                <div className="group">
+                  <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 block mb-3">Author&apos;s Bio</label>
                   {isEditing ? (
                     <textarea 
                       value={bio}
                       onChange={(e) => setBio(e.target.value)}
-                      className="w-full p-3 bg-gray-50 dark:bg-black/20 border border-gray-100 dark:border-white/5 rounded-xl outline-none focus:border-indigo-500 transition-colors resize-none h-24"
+                      className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:border-white/30 transition-colors text-white text-[15px] placeholder:text-white/20 resize-none h-28 leading-relaxed"
                       placeholder="Write a little about the mind behind the stories..."
                     />
                   ) : (
-                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed italic font-serif">
+                    <p className="text-white/60 leading-relaxed font-serif text-[15px]">
                       {profile?.bio || "A silent observer writing their way through life."}
                     </p>
                   )}
                 </div>
 
                 {profile?.personality_summary && (
-                  <div className="p-4 bg-indigo-500/5 rounded-2xl border border-indigo-500/10">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles className="w-4 h-4 text-indigo-500" />
-                      <span className="text-xs font-bold uppercase tracking-wider text-indigo-500">AI Insight</span>
+                  <div className="p-5 bg-indigo-500/5 rounded-2xl border border-indigo-500/10 mt-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Sparkles className="w-4 h-4 text-indigo-400" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400">AI Insight</span>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                    <p className="text-sm text-indigo-200/80 leading-relaxed">
                       {profile.personality_summary}
                     </p>
                   </div>
@@ -359,60 +359,55 @@ export default function ProfilePage() {
               <div className="mt-12">
                 <button
                   onClick={() => setActiveTab('mirror')}
-                  className="w-full relative overflow-hidden group rounded-2xl p-6 bg-gray-900 dark:bg-black border border-gray-800 hover:border-gray-700 transition-all shadow-2xl"
+                  className="w-full relative overflow-hidden group rounded-2xl p-6 bg-white/[0.02] border border-white/5 hover:border-white/20 hover:bg-white/[0.04] transition-all"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-rose-500/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
                   <div className="flex items-center justify-center gap-3">
-                    <Shield className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" />
-                    <span className="text-gray-300 font-serif text-lg group-hover:text-white transition-colors">Step into The Mirror</span>
+                    <Shield className="w-5 h-5 text-white/30 group-hover:text-white transition-colors" />
+                    <span className="text-white/70 font-sans tracking-wide text-lg group-hover:text-white transition-colors">Step into The Mirror</span>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">View the deep intelligence WinDear has gathered about your subconscious.</p>
+                  <p className="text-[11px] uppercase tracking-widest text-white/30 mt-3 font-bold">Deep intelligence gathered about your subconscious</p>
                 </button>
               </div>
 
               {/* Actions */}
-              <div className="mt-8 pt-6 border-t border-gray-100 dark:border-white/5">
+              <div className="mt-10 pt-6 border-t border-white/5">
                 <button 
                   onClick={() => signOut()}
-                  className="w-full flex items-center justify-center gap-2 p-4 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-2xl transition-colors font-medium"
+                  className="w-full flex items-center justify-center gap-3 p-4 text-white/40 hover:text-white hover:bg-white/5 rounded-2xl transition-colors font-bold uppercase tracking-widest text-xs"
                 >
-                  <LogOut className="w-5 h-5" />
-                  Sign Out
+                  <LogOut className="w-4 h-4" />
+                  Drop Connection
                 </button>
               </div>
             </motion.div>
           ) : (
             <motion.div 
               key="back"
-              initial={{ opacity: 0, rotateY: 10 }}
-              animate={{ opacity: 1, rotateY: 0 }}
-              exit={{ opacity: 0, rotateY: -10 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
-              className="bg-gray-50 dark:bg-[#0A0A0B] rounded-[32px] p-8 shadow-2xl border border-gray-200 dark:border-gray-800"
+              className="bg-[#111] rounded-[32px] p-8 shadow-sm border border-white/10"
             >
               <button 
                 onClick={() => setActiveTab('general')}
-                className="mb-8 text-xs font-semibold uppercase tracking-wider text-gray-500 hover:text-gray-900 dark:hover:text-white flex items-center gap-2 transition-colors"
+                className="mb-8 text-[11px] font-bold uppercase tracking-[0.2em] text-white/40 hover:text-white flex items-center gap-2 transition-colors"
               >
-                ← Return to Surface
+                ← Return
               </button>
-              
-              {/* Sub-Switcher */}
-              <div className="flex gap-2 mb-8 overflow-x-auto pb-4 no-scrollbar border-b border-gray-200 dark:border-white/5">
-                 <button onClick={() => setActiveTab('general')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap text-gray-400 hover:text-gray-600 dark:hover:text-gray-200`}>
+                            {/* Sub-Switcher */}
+              <div className="flex gap-2 mb-8 overflow-x-auto pb-4 no-scrollbar border-b border-white/5">
+                 <button onClick={() => setActiveTab('general')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-colors whitespace-nowrap ${activeTab === 'general' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
                     <User className="w-3 h-3" /> Identity
                  </button>
-                 <button onClick={() => setActiveTab('sanctum')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'sanctum' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
-                    <BookOpen className="w-3 h-3" /> Sanctum
+                 <button onClick={() => setActiveTab('mirror')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-colors whitespace-nowrap ${activeTab === 'mirror' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
+                    <Sparkles className="w-3 h-3" /> Mirror
                  </button>
-                 <button onClick={() => setActiveTab('mirror')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'mirror' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
-                    <Shield className="w-3 h-3" /> Mirror
-                 </button>
-                 <button onClick={() => setActiveTab('privacy')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'privacy' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                 <button onClick={() => setActiveTab('privacy')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-colors whitespace-nowrap ${activeTab === 'privacy' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
                     <Shield className="w-3 h-3" /> Rights
                  </button>
-                 <button onClick={() => setActiveTab('account')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'account' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
-                    <User className="w-3 h-3" /> Account
+                 <button onClick={() => setActiveTab('account')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] transition-colors whitespace-nowrap ${activeTab === 'account' ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white'}`}>
+                    <MoreVertical className="w-3 h-3" /> Account
                  </button>
               </div>
 
@@ -420,33 +415,31 @@ export default function ProfilePage() {
                 <>
                   {profile && <SanctuaryMirror profile={profile} onUpdate={handleUpdateIntelligence} />}
                 </>
-              ) : activeTab === 'sanctum' ? (
-                <div className="text-center p-8 text-gray-500">Sanctum data moved to Library.</div>
               ) : activeTab === 'privacy' ? (
                 <PrivacyTrustCenter />
               ) : activeTab === 'account' ? (
-                <div className="flex flex-col gap-6 pt-10">
+                <div className="flex flex-col gap-4 pt-4">
                     <button 
                       onClick={() => window.open('/api/profile/export', '_blank')}
-                      className="w-full text-sm text-indigo-400 hover:text-indigo-300 font-bold uppercase tracking-widest transition-all px-6 py-4 border border-indigo-500/20 rounded-2xl hover:bg-indigo-500/10"
+                      className="w-full text-[13px] text-white/80 hover:text-white font-bold uppercase tracking-widest transition-all px-6 py-5 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10"
                     >
-                      Export My Vault Data
+                      Export Data
                     </button>
                     <button 
                       onClick={() => setShowDeleteModal(true)}
-                      className="w-full text-sm text-red-500 hover:text-red-400 font-bold uppercase tracking-widest transition-all px-6 py-4 border border-red-500/20 rounded-2xl hover:bg-red-500/10"
+                      className="w-full text-[13px] text-rose-400 hover:text-rose-300 font-bold uppercase tracking-widest transition-all px-6 py-5 bg-rose-500/5 border border-rose-500/10 rounded-2xl hover:bg-rose-500/10 mt-6"
                     >
-                      Delete Sanctuary Forever
+                      Permadelete
                     </button>
                 </div>
               ) : (
-                <div className="text-center p-8 text-gray-500">Select a tab.</div>
+                <div className="text-center p-8 text-white/30">Select a tab.</div>
               )}
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div className="mt-12 pt-8 border-t border-gray-200 dark:border-white/10 text-center flex flex-col items-center gap-6">
+        <div className="mt-12 pt-8 border-t border-white/5 text-center flex flex-col items-center gap-6">
         </div>
 
         <DeleteAccountModal 
@@ -457,8 +450,8 @@ export default function ProfilePage() {
         
         <FeedbackDrawer />
 
-        <p className="text-center mt-8 text-xs text-gray-400 dark:text-gray-600">
-          Your deep data never leaves the Mirror. Only your Pen Name and Avatar are seen in the Global Library.
+        <p className="text-center mt-8 text-[11px] font-bold uppercase tracking-[0.2em] text-white/30">
+          Your deep data never leaves the Mirror.
         </p>
       </main>
     </div>
