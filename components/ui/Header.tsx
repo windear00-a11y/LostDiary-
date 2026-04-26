@@ -10,7 +10,6 @@ export const Header = () => {
   const { isInputFocused, activeView, activeLibraryTab, setActiveLibraryTab, activeProfileTab, setActiveProfileTab } = useUIStore();
 
   const isLibrary = pathname === '/library';
-  const isHome = pathname === '/home';
 
   return (
     <>
@@ -45,14 +44,6 @@ export const Header = () => {
                   Soul Signals
                 </button>
               </div>
-            )}
-
-            {isHome && (
-               <div className="pointer-events-none px-6 py-2 rounded-full border border-white/5 bg-[#0A0A0A]/80 backdrop-blur-md shadow-sm">
-                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#E0E0E0]">
-                    {activeView === 'chat' ? 'Whispers' : activeView === 'journal' ? 'Journal' : activeView === 'story' ? 'Story Canvas' : 'Reflections'}
-                 </span>
-               </div>
             )}
 
             {pathname === '/profile' && (

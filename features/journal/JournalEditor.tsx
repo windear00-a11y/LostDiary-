@@ -44,6 +44,22 @@ export const JournalEditor = () => {
        setContent(language === 'hi' ? `Maine library mein ${author ? author + ' ki ' : ''}kahani padhi aur mujhe yaad aaya...\n\n` : `"I read a whisper ${author ? 'by ' + author + ' ' : ''}in the library, and it reminded me of..."\n\n`);
        return; // skip nudge check if inspired
     }
+
+    // Check local draft first
+    const localDraftTitle = localStorage.getItem('journalDraft_title');
+    const localDraftContent = localStorage.getItem('journalDraft_content');
+    
+    if (localDraftTitle || localDraftContent) {
+      if (!selectedJournalContent) {
+        setRecentEntry({ 
+          content: `${localDraftTitle ? `# ${localDraftTitle}\n\n` : ''}${localDraftContent || ''}`.trim(),
+          isLocalDraft: true 
+        });
+        setShowNudge(true);
+        return; // Don't check server if local draft exists
+      }
+    }
+
     const checkRecent = async () => {
       const user = await authService.getUser();
       if (!user) return;
@@ -65,6 +81,21 @@ export const JournalEditor = () => {
     };
     checkRecent();
   }, [selectedJournalContent, language, searchParams]);
+
+  // Auto-save logic
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (title || content) {
+        localStorage.setItem('journalDraft_title', title);
+        localStorage.setItem('journalDraft_content', content);
+      } else {
+        localStorage.removeItem('journalDraft_title');
+        localStorage.removeItem('journalDraft_content');
+      }
+    }, 1000); // 1-second debounce
+    
+    return () => clearTimeout(timer);
+  }, [title, content]);
 
   // Update content when selected content changes (from drawer)
   useEffect(() => {
@@ -120,6 +151,11 @@ export const JournalEditor = () => {
       });
       setSaveStatus('success');
       setShowSuccessMoment(true);
+      
+      // Clear auto-saved draft
+      localStorage.removeItem('journalDraft_title');
+      localStorage.removeItem('journalDraft_content');
+      
       // No more auto-redirect to chat. Stay on page for "Suqoon".
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error) {
@@ -135,6 +171,10 @@ export const JournalEditor = () => {
     setContent('');
     setSelectedJournalContent(null);
     setShowNudge(false);
+    
+    // Clear auto-saved draft
+    localStorage.removeItem('journalDraft_title');
+    localStorage.removeItem('journalDraft_content');
   };
 
   const handleFormat = (type: string) => {
@@ -222,7 +262,7 @@ export const JournalEditor = () => {
         className="flex items-center justify-between px-6 pt-16 pb-4 border-b border-white/5 z-20 bg-transparent"
       >
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex flex-col select-none">
+          <div className="flex flex-col select-none">
             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Canvas</span>
             <span className="text-sm font-serif italic text-white/70">Sanctuary</span>
           </div>
@@ -254,24 +294,25 @@ export const JournalEditor = () => {
       </motion.div>
 
       {/* Metadata Stats */}
-      <div className={`px-6 pt-12 pb-6 max-w-3xl mx-auto w-full transition-all duration-700 relative z-10 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
-        <input 
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Title your entry..."
-          className="w-full bg-transparent border-none outline-none text-3xl md:text-5xl font-serif italic text-white placeholder:text-white/20 selection:bg-white/20"
-        />
-        <div className="flex items-center gap-6 mt-6 text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">
-          <span className="flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5" />
-            {stats.date}
-          </span>
-          <div className="w-1 h-1 rounded-full bg-white/20" />
-          <span className="flex items-center gap-2">
-            <Hash className="w-3.5 h-3.5" />
-            {stats.chars} Words
-          </span>
+      <div className={`px-6 pt-8 pb-4 max-w-3xl mx-auto w-full transition-all duration-700 relative z-10 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
+        <div className="flex flex-col gap-5">
+          <input 
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Title your entry..."
+            className="w-full bg-transparent border-none outline-none text-3xl md:text-5xl font-serif italic text-white placeholder:text-white/20 selection:bg-white/20 transition-all placeholder:transition-colors focus:placeholder:text-white/5"
+          />
+          <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.15em] text-white/40 font-bold overflow-x-auto scrollbar-hide py-1">
+            <span className="flex items-center gap-2 whitespace-nowrap bg-white/[0.03] py-1.5 px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
+              <Clock className="w-3.5 h-3.5 opacity-70" />
+              {stats.date}
+            </span>
+            <span className="flex items-center gap-2 whitespace-nowrap bg-white/[0.03] py-1.5 px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
+              <Hash className="w-3.5 h-3.5 opacity-70" />
+              {stats.chars} Words
+            </span>
+          </div>
         </div>
       </div>
 
@@ -291,23 +332,33 @@ export const JournalEditor = () => {
         />
         
         {content.length === 0 && title.length === 0 && !showNudge && (
-           <div className="absolute inset-0 flex flex-col pt-10 pointer-events-none">
-             <div className="w-full max-w-lg space-y-4 pointer-events-auto">
-               <p className="text-xs uppercase tracking-[0.2em] text-white/30 font-bold mb-6">Prompts to start</p>
-               <div className="flex flex-col gap-2">
+           <div className="absolute inset-0 flex flex-col pt-10 pointer-events-none px-6">
+             <div className="w-full max-w-2xl mx-auto space-y-6 pointer-events-auto">
+               <div className="flex items-center gap-4 mb-8">
+                 <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
+                 <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold flex items-center gap-2">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Prompts to start
+                 </p>
+                 <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
+               </div>
+               <div className="grid gap-3">
                  {journalStarters.map((starter, i) => (
                    <motion.button
                      key={i}
-                     whileHover={{ x: 4, backgroundColor: "rgba(255,255,255,0.03)" }}
-                     whileTap={{ scale: 0.98 }}
+                     whileHover={{ scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
+                     whileTap={{ scale: 0.99 }}
                      onClick={() => handleSelectStarter(starter.text)}
-                     className="w-full flex items-center gap-4 py-3 px-4 rounded-xl text-[14px] text-white/60 hover:text-white transition-all text-left group border border-transparent hover:border-white/5"
+                     className="w-full flex items-center gap-5 py-4 px-5 rounded-2xl text-[14px] text-white/60 hover:text-white transition-all text-left bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 hover:shadow-[0_0_30px_rgba(99,102,241,0.05)] group"
                    >
-                     <span className="text-xl shrink-0 opacity-70 group-hover:opacity-100 transition-opacity group-hover:scale-110">{starter.icon}</span>
-                     <span className="font-sans leading-relaxed pt-0.5">{starter.text}</span>
+                     <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-indigo-500/10 group-hover:scale-110 transition-all border border-white/5 group-hover:border-indigo-500/30">
+                       <span className="text-lg opacity-80 group-hover:opacity-100 transition-opacity">{starter.icon}</span>
+                     </div>
+                     <span className="font-serif italic leading-relaxed pt-1 group-hover:translate-x-1 transition-transform duration-300">{starter.text}</span>
                    </motion.button>
                  ))}
                </div>
+               {/* Add extra padding at the bottom so it doesn't hide under the floating toolbar */}
+               <div className="h-40" />
              </div>
            </div>
         )}
@@ -332,10 +383,10 @@ export const JournalEditor = () => {
 
               <div className="space-y-3 mb-10 relative z-10">
                 <h3 className="text-2xl font-serif italic text-white leading-tight">
-                  Draft saved...
+                  {recentEntry?.isLocalDraft ? 'Unsaved draft found...' : 'Draft saved...'}
                 </h3>
                 <p className="text-sm text-white/50 font-sans leading-relaxed px-4">
-                  Would you like to pick up where you left off, or start a new weave?
+                  {recentEntry?.isLocalDraft ? 'You have an unsaved reflection. Would you like to continue it?' : 'Would you like to pick up where you left off, or start a new weave?'}
                 </p>
               </div>
 
