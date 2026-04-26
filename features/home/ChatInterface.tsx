@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatInput } from './ChatInput';
 import { generateStoryResponse } from '@/ai-core/ai-engine';
@@ -368,9 +369,9 @@ export const ChatInterface = () => {
                     </div>
                   ) : (
                     <>
-                      <p className="text-sm md:text-base leading-relaxed tracking-wide whitespace-pre-wrap">
-                        {msg.content}
-                      </p>
+                      <div className="text-sm md:text-base leading-relaxed tracking-wide whitespace-pre-wrap">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
                       {/* Processing Status Indicator */}
                       {msg.role === 'diary' && msg.processing_status && msg.processing_status !== 'observed' && (
                         <div className={`mt-2 text-[10px] uppercase tracking-widest font-bold flex items-center gap-1.5 ${

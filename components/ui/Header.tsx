@@ -1,33 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { Menu, MessageSquare, Feather, Globe } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
-import { SideDrawer } from './SideDrawer';
+import React from 'react';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUIStore } from '@/lib/store/use-ui-store';
 
 export const Header = () => {
-  const router = useRouter();
   const pathname = usePathname();
-  const { isInputFocused, activeView, setActiveView, isDrawerOpen, setIsDrawerOpen, activeLibraryTab, setActiveLibraryTab } = useUIStore();
-
-  const [displayMode, setDisplayMode] = useState<'idle' | 'switching'>('idle');
+  const { isInputFocused, activeView, activeLibraryTab, setActiveLibraryTab } = useUIStore();
 
   const isLibrary = pathname === '/library';
-
-  const handleToggle = () => {
-    setDisplayMode('switching');
-    setTimeout(() => {
-      if (isLibrary) {
-        setActiveLibraryTab(activeLibraryTab === 'feed' ? 'echoes' : 'feed');
-      } else {
-        setActiveView(activeView === 'chat' ? 'journal' : 'chat');
-      }
-      setDisplayMode('idle');
-    }, 1000);
-  };
+  const isHome = pathname === '/home';
 
   return (
     <>
@@ -37,82 +20,51 @@ export const Header = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-4 inset-x-0 z-[70] pointer-events-none flex justify-end items-center px-4"
+            className="fixed top-4 inset-x-0 z-[70] pointer-events-none flex justify-center items-center px-4 w-full"
           >
-            {/* Right Toggle Button */}
-            {(isLibrary || activeView === 'chat' || activeView === 'journal') ? (
-              <motion.button
-                layout
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                whileTap={displayMode === 'idle' ? { scale: 0.95 } : undefined}
-                onClick={handleToggle}
-                disabled={displayMode === 'switching'}
-                className={`flex items-center gap-3 px-6 py-2 rounded-full border shadow-xl backdrop-blur-3xl pointer-events-auto transition-all duration-300 group ${
-                  displayMode === 'switching'
-                    ? 'bg-amber-900/30 border-amber-500/30 text-amber-300'
-                    : isLibrary
-                      ? (activeLibraryTab === 'feed'
-                          ? 'bg-indigo-900/30 border-indigo-500/30 text-indigo-300 hover:bg-indigo-800/40'
-                          : 'bg-emerald-900/30 border-emerald-500/30 text-emerald-300 hover:bg-emerald-800/40')
-                      : (activeView === 'chat'
-                          ? 'bg-emerald-900/30 border-emerald-500/30 text-emerald-300 hover:bg-emerald-800/40'
-                          : 'bg-indigo-900/30 border-indigo-500/30 text-indigo-300 hover:bg-indigo-800/40')
-                }`}
-                title={isLibrary ? (activeLibraryTab === 'feed' ? 'Switch to Soul Signals' : 'Switch to Feed') : (activeView === 'chat' ? 'Switch to Deep Weave' : 'Switch to Whispers')}
-              >
-                  <AnimatePresence mode="wait">
-                    {displayMode === 'switching' ? (
-                      <motion.div 
-                        key="switching"
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -5 }}
-                        transition={{ duration: 0.5, ease: "easeInOut" }}
-                        className="flex items-center gap-2"
-                      >
-                        {isLibrary 
-                          ? (activeLibraryTab === 'feed' ? <MessageSquare className="w-4 h-4" /> : <Globe className="w-4 h-4" />)
-                          : (activeView === 'chat' ? <Feather className="w-4 h-4" /> : <MessageSquare className="w-4 h-4" />)
-                        }
-                        <span className="text-[10px] font-bold uppercase tracking-widest">
-                          Switching to {isLibrary 
-                            ? (activeLibraryTab === 'feed' ? 'Soul Signals' : 'Global Feed')
-                            : (activeView === 'chat' ? 'Deep Weave' : 'Whispers')}
-                        </span>
-                      </motion.div>
-                    ) : isLibrary ? (
-                      activeLibraryTab === 'feed' ? (
-                        <motion.div key="feed" className="flex items-center gap-3" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
-                          <Globe className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Global Feed</span>
-                        </motion.div>
-                      ) : (
-                        <motion.div key="echoes" className="flex items-center gap-3" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
-                          <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Soul Signals</span>
-                        </motion.div>
-                      )
-                    ) : activeView === 'chat' ? (
-                      <motion.div key="chat" className="flex items-center gap-3" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
-                        <Feather className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Deep Weave</span>
-                      </motion.div>
-                    ) : (
-                      <motion.div key="journal" className="flex items-center gap-3" initial={{opacity: 0}} animate={{opacity: 1}} exit={{opacity: 0}}>
-                        <MessageSquare className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Whispers</span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-              </motion.button>
-            ) : (
-              <div className="w-10 h-10 shrink-0" />
+            {isLibrary && (
+              <div className="flex bg-[#0A0A0A]/80 backdrop-blur-md border border-white/10 rounded-full p-1 shadow-lg pointer-events-auto">
+                <button
+                  onClick={() => setActiveLibraryTab('feed')}
+                  className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    activeLibraryTab === 'feed'
+                      ? 'bg-indigo-500/20 text-indigo-300'
+                      : 'text-neutral-500 hover:text-neutral-300'
+                  }`}
+                >
+                  Global Feed
+                </button>
+                <button
+                  onClick={() => setActiveLibraryTab('echoes')}
+                  className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    activeLibraryTab === 'echoes'
+                      ? 'bg-emerald-500/20 text-emerald-300'
+                      : 'text-neutral-500 hover:text-neutral-300'
+                  }`}
+                >
+                  Soul Signals
+                </button>
+              </div>
+            )}
+
+            {isHome && (
+               <div className="pointer-events-none px-6 py-2 rounded-full border border-white/5 bg-[#0A0A0A]/80 backdrop-blur-md shadow-sm">
+                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#E0E0E0]">
+                    {activeView === 'chat' ? 'Whispers' : activeView === 'journal' ? 'Journal' : activeView === 'story' ? 'Story Canvas' : 'Reflections'}
+                 </span>
+               </div>
+            )}
+
+            {pathname === '/profile' && (
+               <div className="pointer-events-none px-6 py-2 rounded-full border border-white/5 bg-[#0A0A0A]/80 backdrop-blur-md shadow-sm">
+                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#E0E0E0]">
+                    Profile
+                 </span>
+               </div>
             )}
           </motion.div>
         )}
       </AnimatePresence>
-
-      <SideDrawer isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
     </>
   );
 };

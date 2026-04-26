@@ -9,7 +9,9 @@ interface UIState {
   language: string;
   hasSetLanguage: boolean;
   isDrawerOpen: boolean;
+  isBottomSheetOpen: boolean;
   setIsDrawerOpen: (isOpen: boolean) => void;
+  setIsBottomSheetOpen: (isOpen: boolean) => void;
   setActiveView: (view: 'chat' | 'story' | 'journal' | 'reflect') => void;
   setActiveLibraryTab: (tab: 'feed' | 'echoes') => void;
   setInputFocused: (focused: boolean) => void;
@@ -28,7 +30,9 @@ export const useUIStore = create<UIState>()(
       language: 'en',
       hasSetLanguage: false,
       isDrawerOpen: false,
+      isBottomSheetOpen: false,
       setIsDrawerOpen: (isOpen) => set({ isDrawerOpen: isOpen }),
+      setIsBottomSheetOpen: (isOpen) => set({ isBottomSheetOpen: isOpen }),
       setActiveView: (view) => set({ activeView: view }),
       setActiveLibraryTab: (tab) => set({ activeLibraryTab: tab }),
       setInputFocused: (focused) => set({ isInputFocused: focused }),

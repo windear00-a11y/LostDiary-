@@ -795,7 +795,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                   </div>
                   <div>
                     <h3 className="font-serif text-lg font-medium text-slate-900 dark:text-white">Privacy Seal Protocol</h3>
-                    <p className="text-xs font-sans text-slate-500 dark:text-zinc-400">Review the AI's redactions to protect your identity.</p>
+                    <p className="text-xs font-sans text-slate-500 dark:text-zinc-400">Review the AI&apos;s redactions to protect your identity.</p>
                   </div>
                 </div>
                 <button 

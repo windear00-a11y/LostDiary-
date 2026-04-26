@@ -4,12 +4,14 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 import { Header } from '@/components/ui/Header';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { MenuContent } from '@/components/ui/MenuContent';
 import { MicroInteractionToast } from '@/components/ui/MicroInteractionToast';
 import { useUIStore } from '@/lib/store/use-ui-store';
 
 export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const { activeView, activeLibraryTab } = useUIStore();
+  const { activeView, activeLibraryTab, isBottomSheetOpen, setIsBottomSheetOpen } = useUIStore();
   
   // Create a unique key for the content to trigger animation
   const routeKey = `${pathname}-${activeView}-${activeLibraryTab}`;
@@ -17,6 +19,14 @@ export const AppLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0A0A0A] text-gray-900 dark:text-gray-100">
       <Header />
+      
+      <BottomSheet 
+        isOpen={isBottomSheetOpen} 
+        onClose={() => setIsBottomSheetOpen(false)}
+        title="Menu"
+      >
+        <MenuContent onClose={() => setIsBottomSheetOpen(false)} isOpen={isBottomSheetOpen}/>
+      </BottomSheet>
       
       <div className="flex h-[calc(100vh-64px)]">
         <main className="flex-1 overflow-y-auto p-4 md:p-8">
