@@ -461,6 +461,63 @@ export const coreService = {
     return data;
   },
 
+  async syncSanctuaryMirror(userId: string): Promise<{ profile: UserProfile, summary: string }> {
+    const messages = await this.fetchMessages(userId);
+    const context = messages
+      .filter(m => m.role === 'user' && m.content)
+      .slice(-50) // Analyze up to 50 recent messages for depth
+      .map(m => m.content)
+      .join('\n');
+
+    if (!context) {
+      throw new Error("No entries found to analyze. Start writing in your sanctuary.");
+    }
+
+    const response = await generateContentWithFallback({
+      model: "gemini-3.1-pro-preview",
+      contents: `Perform a deep psychological and spiritual analysis of this digital archive. 
+Your goal is to populate a "Sanctuary Mirror" across several dimensions and provide a "Soul Signature" summary.
+
+Archive Context:
+${context}
+
+Return a JSON object with the following structure:
+{
+  "summary": "A 1-2 sentence deep, evocative Soul Signature (poetic and insightful)",
+  "intelligence": {
+    "thinking_style": { "pattern_name": "value", ... },
+    "emotional_state": { "core_resonance": "value", ... },
+    "communication_style": { "rhythm": "value", ... },
+    "behavior_patterns": { "tendency": "value", ... },
+    "interests_goals": { "orbit": "value", ... },
+    "sensitive_insights": { "unspoken": "value", ... }
+  }
+}
+
+Be insightful, non-judgmental, and evocative. Use high-level vocabulary fitting a "Mirror of the Soul".`,
+    });
+
+    try {
+      const text = response.text || "{}";
+      const cleaned = text.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+
+      const updated = await this.updateProfile(userId, {
+        personality_summary: parsed.summary,
+        intelligence_profile: {
+          ...parsed.intelligence,
+          source_weights: { chat: 0.5, diary: 0.5 },
+          last_updated: new Date().toISOString()
+        }
+      });
+
+      return { profile: updated, summary: parsed.summary };
+    } catch (e) {
+      console.error("Mirror Analysis Parse Error:", e);
+      throw new Error("WinDear encountered a cognitive blur. Please try syncing again.");
+    }
+  },
+
   async uploadAvatar(userId: string, base64Image: string): Promise<string> {
     const supabase = getSupabase();
     if (!supabase) throw new Error("Supabase not initialized");

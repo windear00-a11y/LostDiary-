@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 interface SanctuaryMirrorProps {
   profile: UserProfile;
   onUpdate: (updatedProfile: IntelligenceProfile) => Promise<void>;
+  onSync: () => Promise<void>;
 }
 
 const DIMENSIONS = [
@@ -125,11 +126,14 @@ export function SanctuaryMirror({ profile, onUpdate }: SanctuaryMirrorProps) {
 
   const handleManualScan = async () => {
     setIsScanning(true);
-    // This is a UI-only simulation of a deep scan for now, 
-    // but in a real system this would trigger an edge function to re-process archives.
-    await new Promise(r => setTimeout(r, 2000));
-    setIsScanning(false);
-    toast.success("Inner resonance re-aligned with latest entries.");
+    try {
+      await onSync();
+      toast.success("Inner resonance re-aligned with latest entries.");
+    } catch (e: any) {
+      toast.error(e.message || "Cognitive haze blocked the sync.");
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   return (

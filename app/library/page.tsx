@@ -66,7 +66,15 @@ export default function GlobalLibraryPage() {
   // CONSTELLATION VIEW STATE
   const [isConstellationView, setIsConstellationView] = useState(false);
 
-  const moods = ['all', 'hope', 'tear', 'resonance', 'reflective', 'courage', 'calm'];
+  const moods = [
+    { id: 'all', label: 'All Whispers', color: 'bg-indigo-500' },
+    { id: 'hope', label: 'Hope', color: 'bg-emerald-500' },
+    { id: 'tear', label: 'Tears', color: 'bg-blue-500' },
+    { id: 'resonance', label: 'Resonance', color: 'bg-indigo-600' },
+    { id: 'reflective', label: 'Reflections', color: 'bg-slate-400' },
+    { id: 'courage', label: 'Courage', color: 'bg-rose-500' },
+    { id: 'calm', label: 'Stillness', color: 'bg-violet-400' }
+  ];
 
   const filteredStories = activeMood === 'all' 
     ? stories 
@@ -422,55 +430,81 @@ export default function GlobalLibraryPage() {
       </BottomSheet>
       
       {/* Mood Navigator & Tab Switcher */}
-      <div className="sticky top-20 z-30 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-md pt-6 pb-4 mb-4 border-b border-gray-100 dark:border-white/5">
+      <div className="sticky top-20 z-30 bg-white/40 dark:bg-[#060606]/40 backdrop-blur-xl pt-4 pb-2 border-b border-gray-100 dark:border-white/5 transition-all duration-500">
         
         {/* Top Integration: Tab Switcher & Constellation Toggle */}
-        <div className="flex items-center justify-between px-6 mb-6">
-            <div className="flex bg-slate-100 dark:bg-white/5 rounded-full p-1">
+        <div className="flex items-center justify-between px-6 mb-4">
+            <div className="flex bg-slate-200/50 dark:bg-white/5 rounded-2xl p-1 border border-white/5">
               <button
                 onClick={() => { setActiveLibraryTab('feed'); setIsReadingSelf(false); }}
-                className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full transition-all ${
-                  !isReadingSelf && activeLibraryTab === 'feed' ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400'
+                className={`text-[9px] font-bold uppercase tracking-[0.2em] px-5 py-2 rounded-xl transition-all duration-500 ${
+                  !isReadingSelf && activeLibraryTab === 'feed' 
+                    ? 'bg-white dark:bg-zinc-800 text-indigo-500 shadow-lg' 
+                    : 'text-slate-500'
                 }`}
               >
                 Global
               </button>
               <button
                 onClick={() => setIsReadingSelf(true)}
-                className={`text-[10px] font-bold uppercase tracking-widest px-4 py-2 rounded-full transition-all ${
-                  isReadingSelf ? 'bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 shadow-sm' : 'text-slate-400'
+                className={`text-[9px] font-bold uppercase tracking-[0.2em] px-5 py-2 rounded-xl transition-all duration-500 ${
+                  isReadingSelf 
+                    ? 'bg-white dark:bg-zinc-800 text-indigo-500 shadow-lg' 
+                    : 'text-slate-500'
                 }`}
               >
                 Sanctuary
               </button>
             </div>
 
-            {!isReadingSelf && activeLibraryTab === 'feed' && (
+            <div className="flex items-center gap-2">
+              {!isReadingSelf && activeLibraryTab === 'feed' && (
+                <button
+                   onClick={() => setIsConstellationView(!isConstellationView)}
+                   className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border ${
+                     isConstellationView 
+                      ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg' 
+                      : 'bg-slate-200/50 dark:bg-white/5 border-white/5 text-slate-500'
+                   }`}
+                >
+                   <Sparkles className={`w-4 h-4 ${isConstellationView ? 'animate-pulse' : ''}`} />
+                </button>
+              )}
+              
               <button
-                 onClick={() => setIsConstellationView(!isConstellationView)}
-                 className={`p-2 rounded-full transition-all ${isConstellationView ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-white/5 text-slate-500'}`}
-                 title="Toggle Constellation Map"
+                onClick={() => setActiveLibraryTab(activeLibraryTab === 'feed' ? 'signals' : 'feed')}
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border ${
+                  activeLibraryTab === 'signals'
+                    ? 'bg-amber-600 border-amber-500 text-white shadow-lg'
+                    : 'bg-slate-200/50 dark:bg-white/5 border-white/5 text-slate-500'
+                }`}
               >
-                 <Sparkles className="w-4 h-4" />
+                <div className="relative">
+                  <Send className="w-4 h-4" />
+                  {inboxPlanes.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-rose-500 rounded-full" />
+                  )}
+                </div>
               </button>
-            )}
+            </div>
         </div>
 
-        {/* Mood Filter - Expandable (Only visible on Global Library + List view) */}
+        {/* Mood Filter - Simplified chips */}
         {!isReadingSelf && activeLibraryTab === 'feed' && !isConstellationView && (
-            <div className="px-6 pb-2">
+            <div className="px-6 pb-1">
                 <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
                     {moods.map((mood) => (
                         <button
-                            key={mood}
-                            onClick={() => setActiveMood(mood)}
-                            className={`px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all whitespace-nowrap border ${
-                                activeMood === mood 
-                                ? 'bg-indigo-600 border-indigo-600 text-white' 
-                                : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-500 hover:border-slate-400'
+                            key={mood.id}
+                            onClick={() => setActiveMood(mood.id)}
+                            className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-500 whitespace-nowrap border flex items-center gap-2 ${
+                                activeMood === mood.id 
+                                ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' 
+                                : 'bg-transparent border-transparent text-slate-500 hover:text-slate-400'
                             }`}
                         >
-                            {mood}
+                            <div className={`w-1 h-1 rounded-full ${mood.color} ${activeMood === mood.id ? 'animate-pulse' : 'opacity-40'}`} />
+                            {mood.label}
                         </button>
                     ))}
                 </div>
@@ -487,25 +521,40 @@ export default function GlobalLibraryPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="w-full h-full bg-[#0a0a0a] relative overflow-hidden flex items-center justify-center z-0 cursor-crosshair min-h-[500px]"
+                className="w-full h-full bg-[#050505] relative overflow-hidden flex items-center justify-center z-0 cursor-crosshair min-h-[600px] rounded-[40px] border border-white/5 mx-6"
               >
-                 <div className="absolute inset-0 pointer-events-none mix-blend-screen opacity-40 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/40 via-black to-black" />
+                 {/* Depth Layers */}
+                 <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/30 via-black to-black" />
                  
+                 {/* Cosmic Dust / Background Stars */}
+                 <div className="absolute inset-0 pointer-events-none">
+                    {[...Array(100)].map((_, i) => (
+                      <div 
+                        key={`bg-star-${i}`}
+                        className="absolute w-px h-px bg-white rounded-full opacity-20"
+                        style={{ 
+                          left: `${Math.random() * 100}%`, 
+                          top: `${Math.random() * 100}%`,
+                          animation: `pulse ${2 + Math.random() * 4}s infinite ease-in-out ${Math.random() * 5}s`
+                        }}
+                      />
+                    ))}
+                 </div>
+
                  {filteredStories.map((story, idx) => {
-                    // Generate random positions but consistent by using index logic, or Math.sin
                     const seed = story.id.length * (idx + 1);
                     const top = 15 + (Math.abs(Math.sin(seed * 1.3)) * 70);
                     const left = 10 + (Math.abs(Math.cos(seed * 2.7)) * 80);
                     
-                    const glowColor = 
-                        story.dominant_emotion === 'hope' ? 'shadow-[0_0_20px_#10B981]' :
-                        story.dominant_emotion === 'tear' ? 'shadow-[0_0_20px_#3B82F6]' :
-                        story.dominant_emotion === 'resonance' ? 'shadow-[0_0_30px_#6366F1]' :
-                        story.dominant_emotion === 'reflective' ? 'shadow-[0_0_15px_#CBD5E1]' :
-                        story.dominant_emotion === 'courage' ? 'shadow-[0_0_25px_#E11D48]' :
-                        'shadow-[0_0_15px_#8B5CF6]';
+                    const auraColor = 
+                        story.dominant_emotion === 'hope' ? 'text-emerald-400' :
+                        story.dominant_emotion === 'tear' ? 'text-blue-400' :
+                        story.dominant_emotion === 'resonance' ? 'text-indigo-400' :
+                        story.dominant_emotion === 'reflective' ? 'text-slate-300' :
+                        story.dominant_emotion === 'courage' ? 'text-rose-400' :
+                        'text-violet-400';
                     
-                    const starColor = 
+                    const starBg = 
                         story.dominant_emotion === 'hope' ? 'bg-emerald-400' :
                         story.dominant_emotion === 'tear' ? 'bg-blue-400' :
                         story.dominant_emotion === 'resonance' ? 'bg-indigo-400' :
@@ -518,27 +567,36 @@ export default function GlobalLibraryPage() {
                           key={`star-${story.id}`}
                           initial={{ opacity: 0, scale: 0 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: idx * 0.1, duration: 1 }}
+                          transition={{ delay: idx * 0.05, duration: 1.5, ease: "easeOut" }}
                           className="absolute group z-10"
                           style={{ top: `${top}%`, left: `${left}%` }}
                         >
-                            <button
-                               onClick={() => setReadingStory(story)}
-                               className={`w-3 h-3 md:w-4 md:h-4 rounded-full ${starColor} ${glowColor} opacity-70 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500`}
-                            />
-                            {/* Tooltip line linking star to text */}
-                            <div className="absolute top-1/2 left-1/2 w-[2px] h-[30px] bg-white/20 origin-top rotate-45 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100 pointer-events-none" />
-                            
-                            <div className="absolute top-[35px] left-[35px] w-48 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-300 pointer-events-none z-50 bg-black/60 backdrop-blur-sm p-3 rounded-xl border border-white/10">
-                                <p className="text-[9px] uppercase tracking-widest text-white/50">{story.pen_name}</p>
-                                <h4 className="font-serif text-white text-sm line-clamp-2">{story.title}</h4>
+                            <div className="relative">
+                                {/* Aura Ring */}
+                                <div className={`absolute inset-0 rounded-full blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-700 ${starBg}`} />
+                                
+                                <button
+                                   onClick={() => setReadingStory(story)}
+                                   className={`w-4 h-4 rounded-full ${starBg} shadow-[0_0_20px_rgba(255,255,255,0.2)] group-hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] group-hover:scale-150 transition-all duration-700 relative z-10`}
+                                />
+                                
+                                <div className="absolute top-1/2 left-full ml-4 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-2 group-hover:translate-x-0 pointer-events-none">
+                                    <div className="bg-black/80 backdrop-blur-md border border-white/10 p-3 rounded-2xl shadow-2xl">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <div className={`w-1.5 h-1.5 rounded-full ${starBg}`} />
+                                            <span className="text-[8px] font-bold uppercase tracking-widest text-white/40">{story.pen_name}</span>
+                                        </div>
+                                        <h4 className="font-serif text-white text-sm max-w-[120px] leading-tight">{story.title}</h4>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
                     );
                  })}
                  
-                 <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-[0.3em] text-white/30 font-bold pointer-events-none">
-                     The Constellation of Souls
+                 <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none">
+                     <div className="h-10 w-px bg-gradient-to-t from-white/20 to-transparent" />
+                     <span className="text-[10px] uppercase tracking-[0.4em] text-white/40 font-bold">The Constellation of Collective Soul</span>
                  </div>
               </motion.div>
             ) : (
@@ -656,83 +714,99 @@ export default function GlobalLibraryPage() {
 
                   {filteredStories.map((story, i) => {
                     const isExpanded = expandedStories.has(story.id);
+                    const auraColor = 
+                        story.dominant_emotion === 'hope' ? 'from-emerald-500/20' :
+                        story.dominant_emotion === 'tear' ? 'from-blue-500/20' :
+                        story.dominant_emotion === 'resonance' ? 'from-indigo-500/20' :
+                        story.dominant_emotion === 'reflective' ? 'from-slate-500/20' :
+                        story.dominant_emotion === 'courage' ? 'from-rose-500/20' :
+                        'from-violet-500/20';
+
                     return (
                       <motion.article
                         key={story.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className={`group bg-white dark:bg-[#0d0d0d] border border-slate-100 dark:border-white/5 rounded-[32px] overflow-hidden transition-all duration-700 cursor-pointer ${isExpanded ? 'ring-2 ring-indigo-500/20 shadow-2xl' : 'hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)] dark:hover:shadow-indigo-500/5'}`}
+                        initial={{ opacity: 0, y: 30 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: "-50px" }}
+                        transition={{ duration: 0.8, ease: "easeOut", delay: i * 0.05 }}
+                        className="relative group cursor-pointer"
                         onClick={() => setReadingStory(story)}
                       >
-                        <div className="md:grid md:grid-cols-[180px_1fr] flex flex-col min-h-full">
-                           <div className={`relative flex flex-col items-center justify-center p-6 text-center shadow-[inset_-5px_0_15px_rgba(0,0,0,0.1)] ${
-                            story.dominant_emotion === 'hope' ? 'bg-emerald-600' :
-                            story.dominant_emotion === 'tear' ? 'bg-blue-600' :
-                            story.dominant_emotion === 'resonance' ? 'bg-indigo-600' :
-                            story.dominant_emotion === 'reflective' ? 'bg-slate-700' :
-                            story.dominant_emotion === 'courage' ? 'bg-rose-600' :
-                            'bg-violet-600'
-                          }`}>
-                             <div className="absolute inset-0 opacity-20 mix-blend-overlay" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/leather.png")' }} />
-                             <div className="absolute left-0 top-0 bottom-0 w-3 bg-black/10" />
-                             
-                             <div className="relative z-10 transition-transform duration-500 group-hover:scale-105">
-                                <BookOpen className="w-8 h-8 text-white/50 mb-4 mx-auto" />
-                                <h3 className="font-serif font-bold text-white text-base leading-tight drop-shadow-md">{story.pen_name}</h3>
-                                
-                                <div className="mt-3 flex items-center justify-center gap-1.5 py-1 px-3 bg-black/20 rounded-full backdrop-blur-sm border border-white/5">
-                                   <div className={`w-1.5 h-1.5 rounded-full ${
-                                      story.dominant_emotion === 'hope' ? 'bg-emerald-400' :
-                                      story.dominant_emotion === 'tear' ? 'bg-blue-400' :
-                                      story.dominant_emotion === 'resonance' ? 'bg-indigo-400' :
-                                      'bg-white/60'
-                                   }`} />
-                                   <span className="text-[8px] font-mono text-white/80 uppercase tracking-widest">{story.pen_name_tag}</span>
-                                </div>
-                             </div>
-                           </div>
+                        {/* Dynamic Aura Background (Focus only) */}
+                        <div className={`absolute -inset-4 bg-gradient-to-br ${auraColor} to-transparent rounded-[48px] opacity-0 group-hover:opacity-40 transition-all duration-1000 blur-3xl -z-10`} />
 
-                           <div className="p-8 flex flex-col justify-between">
-                              <div>
-                                <header className="flex items-start justify-between mb-4">
-                                   <div>
-                                     <h4 className="text-2xl font-serif font-bold text-slate-900 dark:text-white leading-tight group-hover:text-indigo-500 transition-colors">{story.title}</h4>
-                                     <div className="flex items-center gap-3 mt-2">
-                                        <div className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-slate-400">
-                                           <Clock className="w-3 h-3" /> {new Date(story.created_at).toLocaleDateString()}
-                                        </div>
-                                     </div>
-                                   </div>
-                                   <button 
-                                     onClick={(e) => { e.stopPropagation(); handleHoldTreasury(story.id); }} 
-                                     className="p-3 bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl text-slate-400 hover:text-indigo-500 transition-all"
-                                   >
-                                     <Bookmark className="w-4 h-4" />
-                                   </button>
+                        <div className="bg-white dark:bg-[#0a0a0a] border border-slate-100 dark:border-white/5 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:border-white/10 group-hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] group-hover:-translate-y-1">
+                          <div className="md:grid md:grid-cols-[160px_1fr] flex flex-col min-h-[220px]">
+                            
+                            {/* Visual Side (Compact) */}
+                            <div className={`relative flex flex-col items-center justify-center p-6 text-center transition-all duration-700 ${
+                              story.dominant_emotion === 'hope' ? 'bg-emerald-600/90' :
+                              story.dominant_emotion === 'tear' ? 'bg-sky-600/90' :
+                              story.dominant_emotion === 'resonance' ? 'bg-indigo-600/90' :
+                              story.dominant_emotion === 'reflective' ? 'bg-zinc-700/90' :
+                              story.dominant_emotion === 'courage' ? 'bg-rose-600/90' :
+                              'bg-violet-600/90'
+                            }`}>
+                              <div className="absolute inset-0 opacity-5 mix-blend-overlay" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/leather.png")' }} />
+                              
+                              <div className="relative z-10 flex flex-col items-center gap-4 group-hover:scale-105 transition-transform duration-700">
+                                <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20">
+                                  <BookOpen className="w-6 h-6 text-white/80" />
+                                </div>
+                                <div className="space-y-1">
+                                  <h3 className="font-serif font-bold text-white text-sm uppercase tracking-wider">{story.pen_name}</h3>
+                                  <span className="text-[8px] font-mono text-white/50 uppercase tracking-[0.2em]">{story.pen_name_tag}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Content Side */}
+                            <div className="p-8 flex flex-col justify-between dark:bg-[#0c0c0c]/20">
+                              <div className="space-y-4">
+                                <header className="flex items-start justify-between">
+                                  <div className="space-y-1">
+                                    <h4 className="text-xl font-serif font-bold text-slate-800 dark:text-white leading-tight transition-colors group-hover:text-indigo-400">{story.title}</h4>
+                                    <div className="flex items-center gap-3 text-slate-400 dark:text-slate-500">
+                                      <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest">
+                                        <Clock className="w-3 h-3" /> 
+                                        {new Date(story.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
+                                      </div>
+                                      <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-400/60">
+                                        {story.dominant_emotion}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <button 
+                                    onClick={(e) => { e.stopPropagation(); handleHoldTreasury(story.id); }} 
+                                    className="w-8 h-8 flex items-center justify-center bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/5 rounded-xl text-slate-400 hover:text-indigo-500 transition-all"
+                                  >
+                                    <Bookmark className="w-3.5 h-3.5" />
+                                  </button>
                                 </header>
-                                <p className="text-sm text-slate-500 dark:text-zinc-400 font-serif leading-relaxed line-clamp-3 italic">
-                                   &quot;{story.story_content.substring(0, 180)}...&quot;
+
+                                <p className="text-[14px] text-slate-600 dark:text-zinc-400 font-serif leading-relaxed line-clamp-2 italic opacity-80 group-hover:opacity-100 transition-opacity">
+                                  &ldquo;{story.story_content.substring(0, 160)}...&rdquo;
                                 </p>
                               </div>
-                              
-                              <div className="mt-8 flex items-center justify-between pt-6 border-t border-slate-50 dark:border-white/5">
-                                 <div className="flex items-center gap-6">
-                                    <div className="flex items-center gap-1.5">
-                                       <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500/20" />
-                                       <span className="text-[10px] font-bold font-mono text-slate-500">{story.likes_count}</span>
-                                    </div>
-                                    <div className="flex items-center gap-1.5">
-                                       <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                                       <span className="text-[10px] font-bold font-mono text-slate-500">{story.echoes?.length || 0}</span>
-                                    </div>
-                                 </div>
-                                 
-                                 <div className="flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-500 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
-                                    Touch the soul <Sparkles className="w-3 h-3" />
-                                 </div>
+
+                              <div className="pt-6 mt-4 border-t border-slate-50 dark:border-white/[0.03] flex items-center justify-between">
+                                <div className="flex items-center gap-6">
+                                  <div className="flex items-center gap-2 group/stat">
+                                    <Heart className="w-3.5 h-3.5 text-slate-400" />
+                                    <span className="text-xs font-mono font-bold text-slate-500">{story.likes_count}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2 group/stat">
+                                    <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
+                                    <span className="text-xs font-mono font-bold text-slate-500">{story.echoes?.length || 0}</span>
+                                  </div>
+                                </div>
+
+                                <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-500/40 group-hover:text-indigo-400 transition-colors">
+                                  Read entry →
+                                </div>
                               </div>
-                           </div>
+                            </div>
+                          </div>
                         </div>
                       </motion.article>
                     );

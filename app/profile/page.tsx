@@ -108,6 +108,17 @@ export default function ProfilePage() {
       throw error;
     }
   };
+  
+  const handleSyncMirror = async () => {
+    if (!user) return;
+    try {
+      const { profile: updated } = await coreService.syncSanctuaryMirror(user.id);
+      setProfile(updated);
+    } catch (error) {
+      console.error("Error syncing mirror:", error);
+      throw error;
+    }
+  };
 
   const generateAIAvatar = async () => {
     if (!user) return;
@@ -185,7 +196,8 @@ Output ONLY the visual description for an image generation tool.`,
       let base64Image = '';
       for (const part of imageResponse.candidates[0].content.parts) {
         if (part.inlineData?.data) {
-          base64Image = part.inlineData.data;
+          // Prepend data prefix so core-service fetch works correctly
+          base64Image = `data:image/png;base64,${part.inlineData.data}`;
           break;
         }
       }
@@ -205,15 +217,13 @@ Output ONLY the visual description for an image generation tool.`,
       let message = "WinDear encountered an interference in the visualization.";
       
       if (err.message?.includes("SAFETY")) {
-        message = "Visualization blocked by safety filters. This can happen with very obscure abstract descriptions.";
-      } else if (err.message?.includes("quota")) {
-        message = "Imaging power exhausted. Please try again later.";
+        message = "Visualization dimmed by safety resonance. Try a different mood.";
+      } else if (err.message?.includes("quota") || err.message?.includes("429")) {
+        message = "The Archive's creative energy is depleted for now. Try again later.";
       } else if (err.message === "EMPTY_IMAGE_RESPONSE") {
-        message = "The imagery node returned an empty response. Trying again might help.";
-      } else if (err.message === "NO_IMAGE_DATA_EXTRACTED") {
-        message = "Data stream corruption during manifest. Please retry.";
+        message = "The visual stream was empty. Retrying might clear the haze.";
       } else if (err.message) {
-        message = `Visualization failed: ${err.message}`;
+        message = `Resonance Error: ${err.message}`;
       }
 
       setError(message);
@@ -439,7 +449,7 @@ Output ONLY the visual description for an image generation tool.`,
             >
               {activeProfileTab === 'mirror' ? (
                 <>
-                  {profile && <SanctuaryMirror profile={profile} onUpdate={handleUpdateIntelligence} />}
+                  {profile && <SanctuaryMirror profile={profile} onUpdate={handleUpdateIntelligence} onSync={handleSyncMirror} />}
                 </>
               ) : activeProfileTab === 'vault' ? (
                 <div className="space-y-10">
