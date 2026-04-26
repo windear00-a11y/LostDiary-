@@ -3,7 +3,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, BookOpen, ChevronRight } from 'lucide-react';
-import { Chapter } from '@/lib/services/core-service';
+import { Chapter, Volume } from '@/lib/services/core-service';
 
 interface TableOfContentsProps {
   chapters: Chapter[];

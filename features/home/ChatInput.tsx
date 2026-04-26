@@ -54,11 +54,11 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
   };
 
   return (
-    <div className="w-full relative group">
-      <div className={`relative w-full rounded-2xl backdrop-blur-md transition-all duration-700 shadow-sm border
+    <div className="w-full relative group font-sans">
+      <div className={`relative w-full rounded-3xl backdrop-blur-md transition-all duration-500 border
         ${isFocused 
-          ? 'bg-neutral-900/90 border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.3)]' 
-          : 'bg-neutral-900/80 border-white/5' }`}>
+          ? 'bg-white/[0.04] border-white/20 shadow-[0_4px_30px_rgba(255,255,255,0.05)]' 
+          : 'bg-white/[0.02] border-white/5 shadow-sm' }`}>
         
         <textarea
           ref={textareaRef}
@@ -75,27 +75,29 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
           }}
           onKeyDown={handleKeyDown}
           onScroll={handleScroll}
-          placeholder={disabled ? "Processing..." : "Write your moment..."}
+          placeholder={disabled ? "Processing..." : "Write your thoughts here..."}
           style={{ height: '48px' }}
-          className={`w-full px-4 py-3 min-h-[48px] max-h-[160px] bg-transparent border-none focus:ring-0 resize-none text-base md:text-lg leading-relaxed outline-none overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} text-white placeholder:text-white/40 transition-[height,opacity] duration-200 disabled:opacity-50 pr-12`}
+          className={`w-full px-5 py-3 min-h-[48px] max-h-[160px] bg-transparent border-none focus:ring-0 resize-none text-[15px] sm:text-base leading-relaxed outline-none overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} text-white placeholder:text-white/30 transition-[height,opacity] duration-200 disabled:opacity-50 pr-12`}
         />
 
-        <div className={`absolute right-2 bottom-2`}>
+        <div className={`absolute right-2 bottom-1.5`}>
           <AnimatePresence>
-            {text.trim() && !disabled && (
+            {text.trim() && !disabled ? (
               <motion.button
                 key="send-button"
-                initial={{ opacity: 0, scale: 0.5, x: 10 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.5, x: 10 }}
-                whileHover={{ scale: 1.1, color: '#fff' }}
-                whileTap={{ scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.5, rotate: 45 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={handleSend}
                 aria-label="Send message"
-                className="p-2 bg-indigo-500 rounded-xl text-white shadow-lg shadow-indigo-500/20 shrink-0 flex items-center justify-center"
+                className="p-2 bg-white text-black hover:bg-neutral-200 rounded-full shadow-lg shrink-0 flex items-center justify-center transition-colors"
               >
-                <Send className="w-4 h-4" />
+                <Send className="w-4 h-4 ml-0.5" />
               </motion.button>
+            ) : (
+                <div className="w-[36px] h-[36px]" />
             )}
           </AnimatePresence>
         </div>

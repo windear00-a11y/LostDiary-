@@ -25,7 +25,18 @@ export interface PipelineOutput {
   shouldRespond: boolean;
   aiResponse: any | null;
   isHighValue: boolean;
-  narrativeUpdate: { summary: string; narrative: string } | null;
+  narrativeUpdate: { 
+    summary: string; 
+    narrative: string;
+    shouldSealVolume?: boolean;
+    currentVolumeEpilogue?: string | null;
+    newVolumeMetadata?: {
+      title?: string;
+      prologue?: string;
+      epigraph?: string;
+      aura?: string;
+    };
+  } | null;
   personaUpdate: string | null;
 }
 
@@ -73,9 +84,8 @@ export class PipelineController {
 
     // Step 7: Persona Update (Identity extraction)
     let personaUpdate = null;
-    if (decisions.shouldExtractEvent) {
-      personaUpdate = await this.extractPersonaInsights(input.message.content, this.currentPersona);
-    }
+    // Bypassed: Intel profile extraction is now handled directly by intelligence-engine in route.ts
+    // to prevent calling LLM twice for same data.
 
     // Step 8: Generate AI response (Bypassed in favor of primary ai-engine.ts)
     console.log("[Pipeline] Step 7: Generate AI response (Delegated to ai-engine)");
@@ -217,7 +227,7 @@ ${sortedEvents.map(e => `[Raw: "${e.raw_fragment || e.summary}" | Mood: ${e.emot
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-1.5-pro",
+        model: "gemini-3.1-pro-preview",
         contents: [{ role: "user", parts: [{ text: structuredData }] }],
         config: { systemInstruction, temperature: 0.7, responseMimeType: "application/json" }
       });
@@ -249,7 +259,7 @@ Rules:
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-2.0-flash",
+        model: "gemini-3.1-flash-lite-preview",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.1 }
       });
@@ -279,7 +289,7 @@ Output: ONLY a valid JSON object.
     const data = chapters.map(c => c.title).join(', ');
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-2.0-flash",
+        model: "gemini-3.1-flash-lite-preview",
         contents: [{ role: "user", parts: [{ text: `Chapters: ${data}` }] }],
         config: { systemInstruction, temperature: 0.8, responseMimeType: "application/json" }
       });
@@ -304,7 +314,7 @@ Rules:
     const content = messages.join('\n');
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-2.0-flash",
+        model: "gemini-3.1-flash-lite-preview",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.7 }
       });
@@ -345,7 +355,7 @@ Rules:
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-2.0-flash",
+        model: "gemini-3.1-flash-lite-preview",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.5, responseMimeType: "application/json" }
       });

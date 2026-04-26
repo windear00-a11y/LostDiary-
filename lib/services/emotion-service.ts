@@ -9,7 +9,7 @@ export async function updateStoryEmotion(
   // 1. Fetch current scores
   const { data: story, error: fetchError } = await supabase
     .from('library_stories')
-    .select('emotion_scores')
+    .select('emotion_scores, dominant_emotion')
     .eq('id', storyId)
     .single();
 
@@ -21,7 +21,7 @@ export async function updateStoryEmotion(
   scores[emotionKey] = (scores[emotionKey] || 0) + weight;
 
   // 3. Determine new dominant
-  let dominant = story.dominant_emotion;
+  let dominant = (story as any).dominant_emotion;
   let maxScore = -1;
   for (const [key, val] of Object.entries(scores)) {
     if ((val as number) > maxScore) {

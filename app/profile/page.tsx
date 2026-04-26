@@ -399,7 +399,7 @@ export default function ProfilePage() {
               
               {/* Sub-Switcher */}
               <div className="flex gap-2 mb-8 overflow-x-auto pb-4 no-scrollbar border-b border-gray-200 dark:border-white/5">
-                 <button onClick={() => setActiveTab('general')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'general' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>
+                 <button onClick={() => setActiveTab('general')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap text-gray-400 hover:text-gray-600 dark:hover:text-gray-200`}>
                     <User className="w-3 h-3" /> Identity
                  </button>
                  <button onClick={() => setActiveTab('sanctum')} className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-colors whitespace-nowrap ${activeTab === 'sanctum' ? 'bg-white dark:bg-white/10 shadow-sm' : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-200'}`}>

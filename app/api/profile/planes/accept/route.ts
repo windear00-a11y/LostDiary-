@@ -7,7 +7,7 @@ export async function POST(req: Request) {
     const { planeId } = await req.json();
     if (!planeId) return NextResponse.json({ error: 'Plane ID required' }, { status: 400 });
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const adminSupabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,

@@ -32,14 +32,14 @@ export function useChapterEngagement(chapterId: string | null, userId: string = 
         const state = channel.presenceState();
         setActiveGhosts(Object.keys(state).length);
       })
-      .subscribe(async (status) => {
+      .subscribe(async (status: string) => {
         if (status === 'SUBSCRIBED') {
           await channel.track({ online_at: new Date().toISOString() });
         }
       });
 
     // 3. Broadcast handling (Instant resonance feedback)
-    channel.on('broadcast', { event: 'resonance' }, ({ payload }) => {
+    channel.on('broadcast', { event: 'resonance' }, ({ payload }: { payload: any }) => {
       setLastResonance(payload);
     });
 

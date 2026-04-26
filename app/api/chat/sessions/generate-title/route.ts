@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No messages found for this session' }, { status: 404 });
     }
 
-    const messageContents = messages.map(m => m.content || "");
+    const messageContents = messages.map((m: any) => m.content || "");
     
     const pipeline = new PipelineController(apiKey);
     const title = await pipeline.generateSessionTitle(messageContents);

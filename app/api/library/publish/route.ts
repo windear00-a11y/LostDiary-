@@ -11,7 +11,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Chapter ID is required' }, { status: 400 });
     }
 
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!, // Use service role for elevated access or simple insert without strict RLS hurdles around complex joins for now, but auth must be validated
@@ -67,9 +67,11 @@ export async function POST(req: Request) {
 
     // AI classify emotion
     const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
-    const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(`Analyze this story content and classify it into one of these emotions: hope, tear, resonance, reflective, courage, calm. Return only the emotion word. Content: ${chapter.content.substring(0, 500)}`);
-    const emotion = result.text().trim().toLowerCase() || 'reflective';
+    const result = await ai.models.generateContent({
+      model: "gemini-3.1-flash-lite-preview",
+      contents: `Analyze this story content and classify it into one of these emotions: hope, tear, resonance, reflective, courage, calm. Return only the emotion word. Content: ${chapter.content.substring(0, 500)}`
+    });
+    const emotion = (result.text || '').trim().toLowerCase() || 'reflective';
 
     // 2. Fetch User Profile for Pen Name
     const { data: profile, error: profileError } = await supabase

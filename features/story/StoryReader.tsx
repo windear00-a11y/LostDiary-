@@ -162,6 +162,26 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
      }
   }, [lastResonance, currentChapterId]);
 
+  const handleMarkAsRead = React.useCallback((id: string) => {
+    setReadChapters(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
+
+  const scrollToChapter = React.useCallback((id: string) => {
+    setReadingStage('reading');
+    handleMarkAsRead(id);
+    const el = document.getElementById(`chapter-${id}`);
+    if (el) {
+      setTimeout(() => {
+        el.scrollIntoView({ behavior: 'smooth' });
+        setIsTOCOpen(false);
+      }, 100);
+    }
+  }, [handleMarkAsRead]);
+
   // Scroll to initial chapter if provided
   React.useEffect(() => {
     if (initialChapterId) {
@@ -191,26 +211,6 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
     localStorage.setItem('manuscript_bookmark', id);
     showToast("⚓ Bookmark dropped at this memory.");
   };
-
-  const handleMarkAsRead = React.useCallback((id: string) => {
-    setReadChapters(prev => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
-  }, []);
-
-  const scrollToChapter = React.useCallback((id: string) => {
-    setReadingStage('reading');
-    handleMarkAsRead(id);
-    const el = document.getElementById(`chapter-${id}`);
-    if (el) {
-      setTimeout(() => {
-        el.scrollIntoView({ behavior: 'smooth' });
-        setIsTOCOpen(false);
-      }, 100);
-    }
-  }, [handleMarkAsRead]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);

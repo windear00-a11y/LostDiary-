@@ -48,8 +48,8 @@ export interface Chapter {
   id: string;
   user_id: string;
   volume_id?: string;
-  title: string;
-  content: string;
+  name: string;
+  narrative: string;
   is_sealed: boolean;
   created_at: string;
 }
@@ -305,8 +305,8 @@ export const coreService = {
       await supabase.from('chapters').insert({
         user_id: userId,
         volume_id: volumeId,
-        title: title || 'New Chapter',
-        content: content,
+        name: title || 'New Chapter',
+        narrative: content,
         created_at: new Date().toISOString(),
       });
     } catch (error) {

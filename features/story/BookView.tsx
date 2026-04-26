@@ -78,10 +78,10 @@ export const BookView = () => {
           if (chaptersData.length > 0) {
             const pipeline = new PipelineController(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
             const patterns = analyzeEntries(messagesData.map(m => m.content || ""));
-            const allEvents = chaptersData.flatMap(c => c.events || []);
+            const allEvents = chaptersData.flatMap(c => (c as any)?.events || []);
             
             const [opening, cover] = await Promise.all([
-              pipeline.generateOpening(allEvents, patterns),
+              pipeline.generateOpening(allEvents),
               pipeline.generateBookCoverData(chaptersData)
             ]);
             

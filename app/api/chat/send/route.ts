@@ -43,8 +43,8 @@ export async function POST(req: Request) {
 
     // STEP 1: Fetch user profile for context, including intelligence_profile
     const profile = await coreService.getProfile(user_id, supabase);
-    const orchestrator = new AIOrchestrator(apiKey, profile.personality_summary);
-    const pipelineForAsync = new PipelineController(apiKey, profile.personality_summary);
+    const orchestrator = new AIOrchestrator(apiKey, profile.personality_summary || undefined);
+    const pipelineForAsync = new PipelineController(apiKey, profile.personality_summary || undefined);
 
     // --- SMART SESSION MANAGEMENT ---
     if (!session_id) {
@@ -79,12 +79,12 @@ export async function POST(req: Request) {
         .eq('session_id', session_id)
         .order('created_at', { ascending: false })
         .limit(10),
-      supabase.from('chapters').select('content').eq('user_id', user_id).order('created_at', { ascending: false }).limit(3),
+      supabase.from('chapters').select('narrative').eq('user_id', user_id).order('created_at', { ascending: false }).limit(3),
       supabase.from('volumes').select('*').eq('user_id', user_id).eq('status', 'ongoing').maybeSingle()
     ]);
 
-    const contextMessages = recentMessages?.map(m => ({ content: m.content || "", role: m.role })) || [];
-    const contextChapters = contextChaptersData?.map(c => c.content) || [];
+    const contextMessages = recentMessages?.map((m: any) => ({ content: m.content || "", role: m.role })).reverse() || [];
+    const contextChapters = contextChaptersData?.map((c: any) => c.narrative) || [];
     let activeVolume = currentVolume;
 
     if (!activeVolume) {
@@ -98,30 +98,43 @@ export async function POST(req: Request) {
 
     // Sequential extraction to ensure AI response uses updated intelligence
     const intelProfile = profile.intelligence_profile || {};
+    // Skip duplicate pipeline extraction if orchestrated
     const updatedIntelProfile = await extractIntelligenceProfile('chat', content, intelProfile as any);
 
     // STEP 4: Orchestration and AI generation (Core Path - Keep Awaited)
     const selectedModel = determineModelForInput(content);
     console.log(`[Magic Way] Selected model: ${selectedModel}`);
     
-    const [pipelineOutput, aiResponseText] = await Promise.all([
+    // Tell orchestrator to evaluate the mode
+    const [pipelineOutput] = await Promise.all([
       orchestrator.processInteraction({
         userId: user_id,
         message: { role, type, content },
-        contextMessages: contextMessages.map(m => m.content),
+        contextMessages: contextMessages.map((m: any) => m.content as string),
         apiKey: apiKey,
         language,
-        contextChapters,
-        updatedIntelProfile
-      }),
-      generateStoryResponse(content, contextMessages, profile.bio, profile.personality_summary, updatedIntelProfile as any, { model: selectedModel, isNarrativeMode: false }),
+        contextChapters
+      })
     ]);
+
+    const isNarrative = !!(pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative);
+
+    // Call the AI engine specifically with the context of whether this is narrative or chat mode
+    // We await this so the user gets an instant empathetic reply
+    const aiResponseText = await generateStoryResponse(
+        content || "", 
+        contextMessages, 
+        profile.bio || undefined, 
+        profile.personality_summary || undefined, 
+        updatedIntelProfile as any, 
+        { model: selectedModel, isNarrativeMode: isNarrative }
+    );
 
     const analyzedEvent = pipelineOutput.extractedEvent;
     
     // STEP 5: Reliable Persistence (Core Path - Keep Awaited)
     const { data: message, error: messageError } = await chatPersistence.saveUserMessage(supabase, {
-        user_id, session_id, role, type, content, media_url: media_url || null,
+        user_id, session_id: session_id || undefined, role, type, content, media_url: media_url || null,
         metadata: {
           ...(metadata || {}),
           emotion: analyzedEvent?.emotion || 'neutral',
@@ -136,7 +149,7 @@ export async function POST(req: Request) {
 
     // Concurrently handle interactions & immediate AI response persistence
     await Promise.all([
-      (role === 'user' && type === 'text' && content) ? chatPersistence.saveAIResponse(supabase, { user_id, session_id, role: 'diary', type: 'text', content: aiResponseText }) : Promise.resolve(),
+      (role === 'user' && type === 'text' && content) ? chatPersistence.saveAIResponse(supabase, { user_id, session_id: session_id || undefined, role: 'diary', type: 'text', content: aiResponseText as string }) : Promise.resolve(),
       (role === 'user' && type === 'text' && content) ? coreService.updateInteraction(user_id, !!aiResponseText, supabase) : Promise.resolve()
     ]);
 
@@ -153,8 +166,8 @@ export async function POST(req: Request) {
         await Promise.all([
           // Update Context
           chatPersistence.updateUserContext(supabase, user_id, { 
-            personality_summary: pipelineOutput.personaUpdate || profile.personality_summary,
-            bio: pipelineOutput.narrativeUpdate ? pipelineOutput.narrativeUpdate.summary : profile.bio,
+            personality_summary: pipelineOutput.personaUpdate || profile.personality_summary || undefined,
+            bio: pipelineOutput.narrativeUpdate ? pipelineOutput.narrativeUpdate!.summary : (profile.bio || undefined),
             intelligence_profile: updatedIntelProfile
           }),
           // Update Session
@@ -163,23 +176,23 @@ export async function POST(req: Request) {
             impact_percentage: pipelineOutput.narrativeUpdate?.narrative ? 90 : (pipelineOutput.extractedEvent ? 50 : 10)
           }) : Promise.resolve(),
           // Narrative Chapters & Volumes
-          (pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative) ? (async () => {
+          (pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate!.narrative) ? (async () => {
              await chatPersistence.saveChapter(supabase, {
               user_id,
               volume_id: activeVolume?.id,
-              title: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
-              content: pipelineOutput.narrativeUpdate.narrative,
+              title: pipelineOutput.narrativeUpdate!.summary.substring(0, 50),
+              content: pipelineOutput.narrativeUpdate!.narrative,
               created_at: new Date().toISOString()
             });
 
-            if (pipelineOutput.narrativeUpdate.shouldSealVolume && activeVolume) {
+            if (pipelineOutput.narrativeUpdate!.shouldSealVolume && activeVolume) {
               await chatPersistence.sealVolume(supabase, activeVolume.id, { 
                 status: 'completed',
-                epilogue: pipelineOutput.narrativeUpdate.currentVolumeEpilogue || null
+                epilogue: pipelineOutput.narrativeUpdate!.currentVolumeEpilogue || null
               });
               
-              if (pipelineOutput.narrativeUpdate.newVolumeMetadata) {
-                const meta = pipelineOutput.narrativeUpdate.newVolumeMetadata;
+              if (pipelineOutput.narrativeUpdate!.newVolumeMetadata) {
+                const meta = pipelineOutput.narrativeUpdate!.newVolumeMetadata;
                 await chatPersistence.createNewVolume(supabase, {
                   user_id,
                   volume_number: activeVolume.volume_number + 1,
@@ -199,14 +212,14 @@ export async function POST(req: Request) {
             if (isGeneric) {
               const { data: sessionMessages } = await supabase.from('chat_messages').select('content').eq('session_id', session_id).order('created_at', { ascending: true }).limit(5);
               if (sessionMessages && sessionMessages.length >= 2) {
-                const contents = sessionMessages.map(m => m.content || "");
+                const contents = sessionMessages.map((m: any) => m.content || "");
                 const title = await pipelineForAsync.generateSessionTitle(contents);
                 if (title) await supabase.from('chat_sessions').update({ title }).eq('id', session_id);
               }
             }
           })() : Promise.resolve(),
           // Chapter Auto-save
-          aiResponseText ? coreService.autoSaveChapter(user_id, aiResponseText) : Promise.resolve()
+          aiResponseText ? coreService.autoSaveChapter(user_id, aiResponseText as string) : Promise.resolve()
         ]);
       } catch (e) {
         console.error("Background task failure:", e);

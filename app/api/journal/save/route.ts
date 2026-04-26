@@ -42,11 +42,11 @@ export async function POST(req: Request) {
     
     const [{ data: recentEvents }, { data: contextChaptersData }, { data: currentVolume }] = await Promise.all([
       supabase.from('life_events').select('*').eq('user_id', user_id).order('created_at', { ascending: false }).limit(10),
-      supabase.from('chapters').select('content').eq('user_id', user_id).order('created_at', { ascending: false }).limit(3),
+      supabase.from('chapters').select('narrative').eq('user_id', user_id).order('created_at', { ascending: false }).limit(3),
       supabase.from('volumes').select('*').eq('user_id', user_id).eq('status', 'ongoing').maybeSingle()
     ]);
 
-    const contextChapters = contextChaptersData?.map(c => c.content) || [];
+    const contextChapters = contextChaptersData?.map(c => c.narrative) || [];
     let activeVolume = currentVolume;
 
     if (!activeVolume) {
@@ -117,8 +117,8 @@ export async function POST(req: Request) {
       const { data: newChapter } = await supabase.from('chapters').insert({
         user_id,
         volume_id: activeVolume?.id,
-        title: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
-        content: pipelineOutput.narrativeUpdate.narrative,
+        name: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
+        narrative: pipelineOutput.narrativeUpdate.narrative,
         inspired_by_story_id: metadata?.inspired_by || null,
         inspiration_author: metadata?.inspiration_author || null,
         created_at: new Date().toISOString()

@@ -35,8 +35,8 @@ export async function POST(req: Request) {
       .select('message_id')
       .eq('user_id', userId);
       
-    const existingMessageIds = new Set(existingEvents?.map(e => e.message_id) || []);
-    const unprocessedMessages = messages.filter(m => !existingMessageIds.has(m.id));
+    const existingMessageIds = new Set(existingEvents?.map((e: any) => e.message_id) || []);
+    const unprocessedMessages = messages.filter((m: any) => !existingMessageIds.has(m.id));
 
     if (unprocessedMessages.length === 0) {
       return new Response(JSON.stringify({ message: "All messages are already processed" }), { status: 200 });
@@ -147,7 +147,7 @@ export async function POST(req: Request) {
       chapters: Array.from(allChaptersMap.entries()).map(([category, events]) => ({
         title: category,
         description: `Your journey in ${category}`,
-        events: events.map(e => e.id)
+        events: events.map((e: any) => e.id)
       }))
     };
 
@@ -160,22 +160,22 @@ export async function POST(req: Request) {
     for (const chap of organization.chapters) {
       if (!chap.events || chap.events.length === 0) continue;
 
-      const chapterEvents = allEvents.filter(e => chap.events.includes(e.id));
+      const chapterEvents = allEvents.filter((e: any) => chap.events.includes(e.id));
       if (chapterEvents.length === 0) continue;
       
-      const chapterInput = chapterEvents.map(e => ({
+      const chapterInput = chapterEvents.map((e: any) => ({
         summary: e.summary,
         emotion: e.emotion,
         category: chap.title,
         date: format(new Date(e.created_at), 'MMM d, yyyy')
       }));
 
-      const chapterData = await pipeline.generateNarrative(chapterInput);
+      const chapterData = await pipeline.generateNarrative(chapterInput, []);
       if (!chapterData) continue;
       
       // Determine dominant emotion
-      const emotions = chapterEvents.map(e => e.emotion);
-      const dominantEmotion = emotions.sort((a,b) => emotions.filter(v => v===a).length - emotions.filter(v => v===b).length).pop();
+      const emotions = chapterEvents.map((e: any) => e.emotion);
+      const dominantEmotion = emotions.sort((a: any, b: any) => emotions.filter((v: any) => v===a).length - emotions.filter((v: any) => v===b).length).pop();
 
       // Create or Update Chapter
       const { data: chapter, error: chapterError } = await supabase

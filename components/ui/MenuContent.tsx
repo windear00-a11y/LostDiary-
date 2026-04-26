@@ -20,7 +20,7 @@ interface MenuContentProps {
 export const MenuContent = ({ onClose, isOpen }: MenuContentProps) => {
   const { user } = useAuth();
   const router = useRouter();
-  const { setActiveView, setSelectedJournalContent } = useUIStore();
+  const { activeView, setActiveView, setSelectedJournalContent } = useUIStore();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
   const [activeTab, setActiveTab] = useState<'chats' | 'reflections'>('chats');
@@ -108,7 +108,7 @@ export const MenuContent = ({ onClose, isOpen }: MenuContentProps) => {
                   whileTap={{ scale: 0.9 }}
                   onClick={() => {
                     setActiveView('chat');
-                    router.push('/home');
+                    router.push('/home?session=new');
                     onClose();
                   }}
                   className="p-1.5 hover:bg-indigo-500/10 rounded-full transition-colors text-indigo-400"

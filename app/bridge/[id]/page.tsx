@@ -7,8 +7,8 @@ import { Send, Handshake, AlertTriangle, ArrowLeft, Sparkles, MessageSquare, Hea
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-export default function BridgePage({ params }: { params: { id: string } }) {
-  const bridgeId = params.id;
+export default function BridgePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: bridgeId } = React.use(params);
   const router = useRouter();
   const [bridgeData, setBridgeData] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -78,7 +78,7 @@ export default function BridgePage({ params }: { params: { id: string } }) {
       const data = await res.json();
       if (!res.ok) {
          if (data.status === 'broken') {
-             setBridgeData(prev => ({...prev, status: 'broken'}));
+             setBridgeData((prev: any) => ({...prev, status: 'broken'}));
              setError(data.message);
          } else {
              alert(data.error || 'Failed to send message');

@@ -4,9 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatInput } from './ChatInput';
-import { generateStoryResponse } from '@/ai-core/ai-engine';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { User, Sparkles, X, Heart, Shield, Book } from 'lucide-react';
+import { User, Sparkles, X, Shield, Plus, MessageSquare } from 'lucide-react';
 import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -26,7 +25,6 @@ export const ChatInterface = () => {
   const [isThinking, setIsThinking] = useState(false);
   const [activeSession, setActiveSession] = useState<ChatSession | null>(null);
   const [showNudge, setShowNudge] = useState(false);
-  const [hasShownNudge, setHasShownNudge] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -51,25 +49,32 @@ export const ChatInterface = () => {
       try {
         let targetSessionId = sessionId;
 
-        // 1. If no session in URL, find the latest one
+        if (targetSessionId === 'new') {
+           const newSession = await coreService.createSession(user.id, "New whisper");
+           router.replace(`/home?session=${newSession.id}`);
+           return;
+        }
+
         if (!targetSessionId) {
           const sessions = await coreService.fetchSessions(user.id);
           if (sessions.length > 0) {
             targetSessionId = sessions[0].id;
-            // Update URL silently or just set state
             router.replace(`/home?session=${targetSessionId}`);
-            return; // Effect will re-run with updated sessionId
+            return; 
           } else {
-            // No sessions at all? Create a default one
             const newSession = await coreService.createSession(user.id, "First entry");
             targetSessionId = newSession.id;
             router.replace(`/home?session=${targetSessionId}`);
-            return; // Effect will re-run
+            return; 
           }
         }
 
-        // 2. Load messages for the determined session
         if (targetSessionId) {
+          // Fetch current session title
+          const sessions = await coreService.fetchSessions(user.id);
+          const current = sessions.find(s => s.id === targetSessionId);
+          if (current) setActiveSession(current);
+
           const history = await coreService.fetchMessages(user.id, targetSessionId);
           const mappedMessages: ChatMessage[] = history.map(m => ({
             id: m.id,
@@ -80,12 +85,10 @@ export const ChatInterface = () => {
           }));
           setMessages(mappedMessages);
 
-          // 3. Check for inactivity nudge (2 hours)
           if (NudgeService.shouldShowNudge('chat', 2)) {
             setShowNudge(true);
             NudgeService.markNudgeShown('chat');
           }
-
         }
       } catch (error) {
         console.error("Session initialization failed:", error);
@@ -96,11 +99,10 @@ export const ChatInterface = () => {
   }, [sessionId, router]);
 
   const starters = [
-    { text: "Aaj mera dimag thoda uljha hai, clarity chahiye.", icon: "🧠" },
-    { text: "Mujhe ek decision lena hai, kya tum sunoge?", icon: "⚖️" },
-    { text: "Main aaj thoda low hoon, let's talk.", icon: "🤝" },
-    { text: "Mujhe meri hi kisi purani growth ki yaad dilao.", icon: "🌱" },
-    { text: "Aaj ka din 3 anokhe shabdon mein batao?", icon: "🎭" },
+    { text: "My mind feels a bit tangled, I need clarity.", icon: "💭" },
+    { text: "I have a decision to make, will you listen?", icon: "⚖️" },
+    { text: "I'm feeling a little low today, let's talk.", icon: "🌿" },
+    { text: "Remind me of a moment I showed growth.", icon: "🌱" },
   ];
 
   const handleStartNewSession = async () => {
@@ -112,13 +114,11 @@ export const ChatInterface = () => {
       router.push(`/home?session=${newSession.id}`);
       setShowNudge(false);
       setMessages([]);
-      // This will trigger the empty state view with starters
     } catch (e) {
       console.error(e);
     }
   };
 
-  // Auto-scroll to bottom
   const scrollToBottom = () => {
     if (scrollRef.current) {
       scrollRef.current.scrollTo({
@@ -138,20 +138,13 @@ export const ChatInterface = () => {
 
     const user = await authService.getUser();
     
-    // Guest Quota: Limit to 3 messages
     if (!user) {
-       const guestCount = parseInt(localStorage.getItem('guest_msg_count') || '0');
-       if (guestCount >= 3) {
-         setShowAuthModal(true);
-         return;
-       }
-       localStorage.setItem('guest_msg_count', (guestCount + 1).toString());
+      setShowAuthModal(true);
+      return;
     }
 
-    // Auto-hide nudge and starters when active conversation begins
     setShowNudge(false);
 
-    // 1. Optimistic Update (Show user message instantly)
     const userMsg: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -171,7 +164,6 @@ export const ChatInterface = () => {
     setIsThinking(true);
 
     try {
-      // 2. Persistent Backend Call
       const result = await coreService.sendMessage({
         user_id: user.id,
         session_id: sessionId || undefined,
@@ -180,14 +172,13 @@ export const ChatInterface = () => {
         metadata: { language }
       });
 
-      // 3. Update messages using the direct response from API
-      if (result.aiResponse) {
+      if ((result as any).aiResponse) {
         setMessages(prev => prev.map(m => 
           m.id === aiTempId ? { 
             ...m, 
-            id: `ai-${Date.now()}`, 
-            content: result.aiResponse.content, 
-            role: 'diary' 
+            content: (result as any).aiResponse.content, 
+            role: (result as any).aiResponse.role || 'diary',
+            processing_status: (result as any).processing_status
           } : m
         ));
       } else {
@@ -210,10 +201,10 @@ export const ChatInterface = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-neutral-950 text-white relative overflow-hidden font-sans">
+    <div className="flex flex-col h-full bg-[#0a0a0a] text-white relative overflow-hidden font-sans">
       <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       
-      {/* Nudge / Motivation UI - Emotional Decision Point (Moved outside blurred container) */}
+      {/* Nudge / Motivation UI - Emotional Decision Point */}
       <AnimatePresence>
         {showNudge && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-neutral-950/80 backdrop-blur-sm">
@@ -224,14 +215,14 @@ export const ChatInterface = () => {
               transition={{ type: 'spring', damping: 20, stiffness: 100 }}
               className="bg-neutral-900/80 border border-white/10 rounded-[32px] p-8 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl relative overflow-hidden"
             >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-purple-500/10 blur-[60px] rounded-full pointer-events-none" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-indigo-500/10 blur-[60px] rounded-full pointer-events-none" />
               
-              <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Sparkles className="w-8 h-8 text-purple-400" />
+              <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="w-8 h-8 text-indigo-400" />
               </div>
 
               <div className="space-y-3 mb-10">
-                <h3 className="text-2xl font-serif italic text-white leading-tight">
+                <h3 className="text-xl font-serif italic text-white leading-tight">
                   {messages.length === 0 ? "Aapki baaton ka intezar hai." : "Main kab se sunne ke liye rukka tha."}
                 </h3>
                 <p className="text-sm text-slate-400 font-serif leading-relaxed px-4">
@@ -246,16 +237,16 @@ export const ChatInterface = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setShowNudge(false)}
-                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-medium shadow-[0_10px_20px_rgba(79,70,229,0.3)] transition-all"
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-medium transition-all"
                 >
-                  Haan, wahin se aage badhte hain
+                  Let's continue
                 </motion.button>
                 
                 <button 
                   onClick={handleStartNewSession}
-                  className="w-full py-3 text-white/60 hover:text-white text-xs font-medium transition-all"
+                  className="w-full py-3 text-white/50 hover:text-white text-xs tracking-wide uppercase font-semibold transition-all"
                 >
-                  Nayi baatchit shuru karein
+                  Start Fresh
                 </button>
               </div>
 
@@ -270,27 +261,41 @@ export const ChatInterface = () => {
         )}
       </AnimatePresence> 
 
-      {/* Top Gradient Mask for smooth scrolling transition */}
-      <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-neutral-950 via-neutral-950/90 to-transparent z-40 pointer-events-none" />
+      {/* Header Inline */}
+      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[#0a0a0a] via-[#0a0a0a]/90 to-transparent pt-6 pb-12 px-6 flex items-center justify-between pointer-events-none">
+        <div className="flex items-center gap-3">
+           <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+              <MessageSquare className="w-4 h-4 text-white/50" />
+           </div>
+           <div className="flex flex-col pointer-events-auto">
+             <span className="text-[10px] uppercase font-bold tracking-widest text-white/40">Active Thread</span>
+             <span className="text-sm font-serif italic text-white/80">{activeSession?.title || 'Reflection'}</span>
+           </div>
+        </div>
+        <button 
+          onClick={handleStartNewSession}
+          className="pointer-events-auto w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all group lg:mr-8"
+          title="Start a new chat"
+        >
+          <Plus className="w-4 h-4 text-white/60 group-hover:text-white transition-colors" />
+        </button>
+      </div>
 
       {/* Messages Container */}
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-40 pb-6 transition-all duration-700`}
+        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-32 pb-6 transition-all duration-700`}
       >
-        <div className={`max-w-2xl mx-auto space-y-8 min-h-full flex flex-col pt-10 transition-all duration-700 
+        <div className={`max-w-2xl mx-auto space-y-8 min-h-full flex flex-col transition-all duration-700 
           ${isInputFocused ? 'opacity-30 blur-[0.5px]' : 'opacity-100'} 
           ${showNudge ? 'blur-sm scale-[0.99] opacity-40 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
         >
           {/* Privacy Trust Signal */}
-          <div className="flex flex-col items-center justify-center space-y-2 mb-4 select-none">
-             <div className="flex items-center gap-2 bg-emerald-500/10 px-4 py-1.5 rounded-full border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)]">
-                <Shield className="w-4 h-4 text-emerald-400 drop-shadow-md" />
-                <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-emerald-300 drop-shadow-sm">End-to-End Soul Privacy</span>
-             </div>
-             <p className="text-[10px] sm:text-xs font-serif italic text-center max-w-[280px] text-emerald-100/90 drop-shadow-sm">
-                Your reflections are sealed within your unique neural resonance. WinDear never logs human-readable data.
+          <div className="flex flex-col items-center justify-center space-y-3 mb-10 select-none opacity-60 hover:opacity-100 transition-opacity">
+             <Shield className="w-6 h-6 text-emerald-500/50 drop-shadow-md" />
+             <p className="text-[11px] font-sans text-center max-w-[280px] text-emerald-100/60 drop-shadow-sm uppercase tracking-widest leading-relaxed">
+                Your reflections are sealed within your unique neural resonance.
              </p>
           </div>
 
@@ -302,26 +307,30 @@ export const ChatInterface = () => {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
                 transition={{ duration: 0.4, ease: "circOut" }}
-                className="flex-1 flex flex-col items-center justify-center space-y-8"
+                className="flex-1 flex flex-col items-center justify-center space-y-10"
               >
-                <motion.div 
-                  animate={{ y: [0, -5, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="w-20 h-20 bg-indigo-500/10 rounded-full flex items-center justify-center border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.2)]"
-                >
-                   <Sparkles className="w-10 h-10 text-indigo-400 drop-shadow-lg" />
-                </motion.div>
-                <h2 className="text-2xl md:text-3xl font-serif italic text-white drop-shadow-lg pb-2 font-medium">Silence is a blank page...</h2>
-                <div className="flex flex-col w-full max-w-sm space-y-3">
+                <div className="flex flex-col items-center space-y-4">
+                  <motion.div 
+                    animate={{ y: [0, -5, 0] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    className="w-16 h-16 bg-white/5 rounded-2xl rotate-3 flex items-center justify-center border border-white/10"
+                  >
+                     <Sparkles className="w-6 h-6 text-indigo-400" />
+                  </motion.div>
+                  <h2 className="text-xl md:text-2xl font-serif italic text-white/80 pb-2">What is on your mind?</h2>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
                   {starters.map((starter, i) => (
                     <motion.button
                       key={i}
-                      whileHover={{ scale: 1.02, backgroundColor: "rgba(99,102,241,0.15)" }}
+                      whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.08)" }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleSendMessage({ type: 'text', content: starter.text })}
-                      className="w-full text-left px-5 py-4 bg-neutral-900 border border-indigo-500/30 rounded-2xl text-sm md:text-base text-indigo-50 font-medium transition-all hover:border-indigo-400/50 hover:shadow-[0_0_20px_rgba(99,102,241,0.2)] flex items-center justify-start gap-4 shadow-md"
+                      className="w-full text-left p-4 bg-white/[0.03] border border-white/5 rounded-2xl text-[13px] md:text-sm text-white/70 font-sans transition-all flex flex-col gap-3 group"
                     >
-                      <span className="text-2xl drop-shadow-sm">{starter.icon}</span> <span>{starter.text}</span>
+                      <span className="text-xl group-hover:scale-110 transition-transform origin-bottom-left">{starter.icon}</span>
+                      <span className="leading-relaxed font-medium">{starter.text}</span>
                     </motion.button>
                   ))}
                 </div>
@@ -331,70 +340,69 @@ export const ChatInterface = () => {
 
           {messages.map((msg) => {
             const isUser = msg.role === 'user';
-            const isThinkingMsg = msg.content === 'Thinking...';
+            const isThinkingMsg = msg.role === 'ai' && msg.content === 'Thinking...';
 
             return (
-              <motion.div
-                key={msg.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.2, ease: 'easeOut' }}
-                className={`flex items-start gap-4 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
-              >
-                {/* Avatar */}
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border shadow-sm ${
-                  isUser 
-                    ? 'bg-neutral-800 border-white/10' 
-                    : 'bg-indigo-500/10 border-indigo-500/20 shadow-indigo-500/5'
-                }`}>
-                  {isUser ? <User className="w-4 h-4 text-white/50" /> : <Sparkles className="w-4 h-4 text-indigo-400" />}
-                </div>
+              <div key={msg.id} className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                  className={`flex items-end max-w-[95%] md:max-w-[85%] relative ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+                >
+                  {/* Avatar with Custom Cutout Effect */}
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-[4px] border-[#0a0a0a] z-10 box-content mb-1 ${
+                    isUser 
+                      ? 'bg-neutral-800 -ml-4' 
+                      : 'bg-indigo-900/80 -mr-4'
+                  }`}>
+                    {isUser ? <User className="w-3.5 h-3.5 text-white/60" /> : <Sparkles className="w-3.5 h-3.5 text-indigo-300" />}
+                  </div>
 
-                {/* Bubble */}
-                <div className={`max-w-[85%] px-5 py-3.5 rounded-2xl ${
-                  isUser 
-                    ? 'bg-white text-black rounded-tr-none shadow-xl' 
-                    : 'bg-[#151515] border border-white/20 text-white drop-shadow-md rounded-tl-none shadow-[0_10px_30px_rgba(0,0,0,0.5)]'
-                }`}>
+                  {/* Bubble */}
+                  <div className={`max-w-full px-5 py-4 z-0 ${
+                    isUser 
+                      ? 'bg-[#212121] text-white rounded-[24px] shadow-md' 
+                      : 'bg-white/[0.04] border border-white/5 text-white rounded-[24px] backdrop-blur-md shadow-sm'
+                  }`} style={{ minWidth: '40px' }}>
                   {isThinkingMsg ? (
-                    <div className="flex gap-1 py-1.5">
+                    <div className="flex gap-1.5 py-2">
                       {[0, 1, 2].map((i) => (
                         <motion.div
                           key={i}
-                          animate={{ opacity: [0.3, 1, 0.3] }}
-                          transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
-                          className="w-1.5 h-1.5 bg-white/40 rounded-full"
+                          animate={{ opacity: [0.2, 1, 0.2], scale: [0.9, 1.1, 0.9] }}
+                          transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
+                          className="w-1.5 h-1.5 bg-indigo-400 rounded-full"
                         />
                       ))}
                     </div>
                   ) : (
                     <>
-                      <div className="text-sm md:text-base leading-relaxed tracking-wide whitespace-pre-wrap">
+                      <div className="text-[15px] leading-relaxed tracking-wide prose prose-invert prose-p:leading-[1.7] prose-p:last:mb-0 max-w-none text-white/90">
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                       </div>
+                      
                       {/* Processing Status Indicator */}
                       {msg.role === 'diary' && msg.processing_status && msg.processing_status !== 'observed' && (
-                        <div className={`mt-2 text-[10px] uppercase tracking-widest font-bold flex items-center gap-1.5 ${
+                        <div className={`mt-3 pt-3 border-t border-white/10 text-[9px] uppercase tracking-[0.2em] font-bold flex items-center gap-1.5 opacity-60 ${
                           msg.processing_status === 'woven' ? 'text-amber-400' : 'text-emerald-400'
                         }`}>
-                          <Sparkles className="w-3 h-3" />
+                          <Sparkles className="w-2.5 h-2.5" />
                           {msg.processing_status === 'woven' ? 'Narrative Woven' : 'Moment Saved'}
                         </div>
                       )}
                     </>
                   )}
                 </div>
-              </motion.div>
+                </motion.div>
+              </div>
             );
           })}
         </div>
       </div>
 
       {/* Sticky Bottom Input Section */}
-      <div className={`shrink-0 w-full z-50 px-4 pt-4 bg-neutral-950 border-t border-white/5 transition-all duration-300 ${isInputFocused ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[calc(64px+env(safe-area-inset-bottom))]'}`}>
-        <div className="text-center pb-2">
-            <p className="text-xs text-neutral-400 italic font-serif group cursor-default hover:text-neutral-300 transition-colors">AI processing is transient & ephemeral for your privacy.</p>
-        </div>
+      <div className={`shrink-0 w-full z-50 px-4 pt-4 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/95 to-transparent transition-all duration-300 ${isInputFocused ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[calc(64px+env(safe-area-inset-bottom))]'}`}>
         <div className={`pb-4 max-w-3xl mx-auto transition-all duration-500 ${isInputFocused ? 'pb-6' : ''}`}>
           <ChatInput 
             onSendMessage={handleSendMessage} 
@@ -406,3 +414,4 @@ export const ChatInterface = () => {
     </div>
   );
 };
+

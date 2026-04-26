@@ -3,7 +3,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
 export async function GET() {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -51,7 +51,7 @@ export async function GET() {
     userStories?.forEach(story => {
       const echoes = (story as any).ahsas || (story as any).echoes;
       if (echoes && Array.isArray(echoes)) {
-        const paragraphs = story.story_content.split('\n').filter(p => p.trim());
+        const paragraphs = story.story_content.split('\n').filter((p: any) => p.trim());
         echoes.forEach((echo: any) => {
           totalResonances += (echo.count || 0);
           if (echo.count > 0 && paragraphs[echo.paragraph_index]) {
