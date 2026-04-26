@@ -7,6 +7,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from 'sonner';
 import { Header } from '@/components/ui/Header';
 import { BottomNav } from '@/components/ui/BottomNav';
+import { GlobalMenuSheet } from '@/components/ui/GlobalMenuSheet';
 import './globals.css';
 
 const inter = Inter({
@@ -53,6 +54,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
               <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
                 <Header />
                 <BottomNav />
+                <GlobalMenuSheet />
                 <Toaster position="bottom-right" toastOptions={{
                   style: {
                     background: 'rgba(23, 23, 23, 0.8)',

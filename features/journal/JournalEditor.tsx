@@ -165,19 +165,18 @@ export const JournalEditor = () => {
   };
 
   const [showUI, setShowUI] = useState(true);
-  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Focus Mode logic - Pattern 6 (Smart Interactions)
   useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (content.length > 0) {
-      if (typingTimeout) clearTimeout(typingTimeout);
-      const timer = setTimeout(() => {
+      timer = setTimeout(() => {
         setShowUI(false);
       }, 2500); 
-      setTypingTimeout(timer);
     } else {
       setShowUI(true);
     }
+    return () => clearTimeout(timer);
   }, [content]);
 
   // Visual cues for focus mode

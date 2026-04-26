@@ -60,7 +60,7 @@ export const AuthorHeartbeat = () => {
                 </h2>
                 <div className="flex items-center gap-4 text-xs font-bold uppercase tracking-[0.3em] text-slate-400">
                     <div className="w-8 h-px bg-slate-300 dark:bg-white/10" />
-                    The Author's Soul Chart
+                    The Author&apos;s Soul Chart
                     <div className="w-8 h-px bg-slate-300 dark:bg-white/10" />
                 </div>
             </div>
@@ -163,7 +163,7 @@ export const AuthorHeartbeat = () => {
                                             {story.title}
                                         </h3>
                                         <p className="text-sm text-slate-500 dark:text-slate-400 font-serif italic line-clamp-2">
-                                            "A deeply personal reflection mapping the architecture of your experiences."
+                                            &quot;A deeply personal reflection mapping the architecture of your experiences.&quot;
                                         </p>
                                     </div>
                                     
@@ -187,13 +187,13 @@ export const AuthorHeartbeat = () => {
                         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/20 via-transparent to-transparent pointer-events-none" />
                         <Droplets className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-6 opacity-30" />
                         <h4 className="text-xl font-serif text-white mb-2 italic">The canvas is blank</h4>
-                        <p className="text-slate-500 text-sm font-serif italic">Publish your first legacy to start mapping your author's soul.</p>
+                        <p className="text-slate-500 text-sm font-serif italic">Publish your first legacy to start mapping your author&apos;s soul.</p>
                     </div>
                 )}
             </div>
             
             <p className="text-center text-[10px] text-slate-400 uppercase tracking-[0.3em] font-bold pt-16 opacity-50">
-               // Tracking Emotional Footprints
+               {`// Tracking Emotional Footprints`}
             </p>
         </div>
     );

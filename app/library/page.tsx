@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Globe, Heart, BookOpen, User, Droplets, Leaf, Send, Sparkles, Handshake, Anchor, BookMarked, ChevronDown, ChevronUp, MoreHorizontal, Bookmark, ArrowRight, Clock, MessageSquare, Shield, PenTool, ChevronRight } from 'lucide-react';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
@@ -72,7 +72,7 @@ export default function GlobalLibraryPage() {
     ? stories 
     : stories.filter(s => s.dominant_emotion === activeMood);
 
-  const fetchBridges = async () => {
+  const fetchBridges = useCallback(async () => {
     if (!authUser) return;
     try {
       const [planesRes, bridgesRes] = await Promise.all([
@@ -90,7 +90,7 @@ export default function GlobalLibraryPage() {
     } catch (e) {
       console.error("Bridge fetch failed:", e);
     }
-  };
+  }, [authUser]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -115,7 +115,7 @@ export default function GlobalLibraryPage() {
     };
 
     fetchAllData();
-  }, [authUser]);
+  }, [authUser, fetchBridges]);
 
   const handleAcceptPlane = async (plane: any) => {
     setBridgeConfirmSheet({ open: true, plane });
@@ -399,7 +399,7 @@ export default function GlobalLibraryPage() {
       >
         <div className="space-y-6">
           <div className="p-4 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-serif italic leading-relaxed">
-            &quot;A bridge is more than a path; it is a shared space of trust. Conversations here are protected by the sanctuary's silence.&quot;
+            &quot;A bridge is more than a path; it is a shared space of trust. Conversations here are protected by the sanctuary&apos;s silence.&quot;
           </div>
           
           <div className="space-y-3">
