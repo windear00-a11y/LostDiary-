@@ -129,14 +129,28 @@ export default function ProfilePage() {
         .map(m => m.content)
         .join('\n');
 
+      // Incorporate Sanctuary Mirror intelligence for deeper alignment
+      const intel = profile?.intelligence_profile;
+      const mirrorInsights = intel ? `
+- Core Thinking: ${JSON.stringify(intel.thinking_style)}
+- Emotional Baseline: ${JSON.stringify(intel.emotional_state)}
+- Interests & Subconscious Goals: ${JSON.stringify(intel.interests_goals)}
+` : "";
+
       const promptResponse = await generateContentWithFallback({
         model: "gemini-3.1-pro-preview",
-        contents: `Based on these diary entries, describe a symbolic, artistic, and abstract avatar that represents this person's personality and current emotional state. Keep the description concise and visual.
-        
-        Entries:
-        ${recentContext}
-        
-        Output only the visual description for an image generation tool.`,
+        contents: `Based on these diary entries and deeper psychological intelligence from their "Sanctuary Mirror", describe a symbolic, artistic, and abstract avatar that represents this person's unique soul and personality.
+
+Mirror Intelligence:
+${profile?.personality_summary || "Unknown"}
+${mirrorInsights}
+
+Recent Entries:
+${recentContext}
+
+The avatar should not be a direct portrait of a person, but an abstract representation of their inner world. Keep the description concise, evocative, and visual.
+
+Output only the visual description for an image generation tool.`,
       });
 
       const visualPrompt = promptResponse.text || "A serene and abstract representation of a thoughtful soul, soft colors, ethereal light.";
@@ -163,11 +177,10 @@ export default function ProfilePage() {
       if (base64Image) {
         const publicUrl = await coreService.uploadAvatar(user.id, base64Image);
         const updated = await coreService.updateProfile(user.id, {
-          avatar_url: publicUrl,
-          personality_summary: visualPrompt
+          avatar_url: publicUrl
         });
         setProfile(updated);
-        toast.success("AI Avatar manifested from your thoughts.");
+        toast.success("Avatar manifested from your Sanctuary Mirror.");
       }
     } catch (error) {
       console.error("Error generating avatar:", error);
