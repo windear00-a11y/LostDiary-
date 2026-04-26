@@ -1,12 +1,19 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BottomSheet } from './BottomSheet';
 import { MenuContent } from './MenuContent';
 import { useUIStore } from '@/lib/store/use-ui-store';
 
 export const GlobalMenuSheet = () => {
+  const [mounted, setMounted] = useState(false);
   const { isBottomSheetOpen, setIsBottomSheetOpen } = useUIStore();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <BottomSheet 

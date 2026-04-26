@@ -3,6 +3,7 @@
 import { ChatInterface } from '@/features/home/ChatInterface';
 import { BookView } from '@/features/story/BookView';
 import { JournalEditor } from '@/features/journal/JournalEditor';
+import { InsightsView } from '@/features/story/InsightsView';
 import { LanguageOnboarding } from '@/features/onboarding/LanguageOnboarding';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useRouter } from 'next/navigation';
@@ -14,7 +15,7 @@ import { Suspense } from 'react';
 
 export default function HomePage() {
   const { user } = useAuth();
-  const { activeView, hasSetLanguage } = useUIStore();
+  const { activeView, setActiveView, hasSetLanguage } = useUIStore();
   const [isHydrated, setIsHydrated] = useState(false);
 
   // Handle store hydration to avoid SSR mismatch
@@ -56,6 +57,32 @@ export default function HomePage() {
               className="absolute inset-0 z-[60] bg-neutral-950"
             >
               <JournalEditor />
+            </motion.div>
+          )}
+
+          {activeView === 'story' && (
+            <motion.div
+              key="story-view"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 z-[60] bg-neutral-950 overflow-y-auto w-full h-[100dvh]"
+            >
+              <BookView />
+            </motion.div>
+          )}
+
+          {activeView === 'reflect' && (
+            <motion.div
+              key="reflect-view"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 z-[60] bg-neutral-950 overflow-y-auto w-full h-[100dvh]"
+            >
+              <InsightsView />
             </motion.div>
           )}
         </AnimatePresence>

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { Sparkles, TrendingUp, TrendingDown, Minus, Hash } from 'lucide-react';
-import { chatService } from '@/lib/services/chat-service';
+import { coreService } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { analyzeEntries, PatternReport } from '@/ai-core/pattern-detector';
 
@@ -16,7 +16,8 @@ export const InsightsView = () => {
       try {
         const user = await authService.getUser();
         if (user) {
-          const messages = await chatService.fetchMessages(user.id);
+          const sessions = await coreService.fetchSessions(user.id);
+          const messages = sessions.length > 0 ? await coreService.fetchMessages(user.id, sessions[0].id) : [];
           const analysis = analyzeEntries(messages.map(m => m.content || ""));
           setReport(analysis);
         }

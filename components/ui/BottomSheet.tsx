@@ -26,9 +26,10 @@ export const BottomSheet = ({ isOpen, onClose, title, subtitle, children }: Bott
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
+        <React.Fragment key="bottom-sheet">
           {/* Backdrop */}
           <motion.div
+            key="backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -38,6 +39,7 @@ export const BottomSheet = ({ isOpen, onClose, title, subtitle, children }: Bott
 
           {/* Sheet */}
           <motion.div
+            key="sheet"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
@@ -67,7 +69,7 @@ export const BottomSheet = ({ isOpen, onClose, title, subtitle, children }: Bott
               {children}
             </div>
           </motion.div>
-        </>
+        </React.Fragment>
       )}
     </AnimatePresence>
   );

@@ -81,9 +81,10 @@ export const LanguageSwitcher = () => {
 
       <AnimatePresence>
         {isOpen && (
-          <>
+          <React.Fragment key="language-modal">
             {/* Backdrop */}
             <motion.div
+              key="backdrop"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -93,6 +94,7 @@ export const LanguageSwitcher = () => {
 
             {/* Modal */}
             <motion.div
+              key="modal"
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -146,7 +148,7 @@ export const LanguageSwitcher = () => {
                 </div>
               </div>
             </motion.div>
-          </>
+          </React.Fragment>
         )}
       </AnimatePresence>
     </div>

@@ -27,8 +27,8 @@ export const MenuContent = ({ onClose, isOpen }: MenuContentProps) => {
 
   useEffect(() => {
     if (isOpen && user) {
-      coreService.fetchSessions(user.id).then(setSessions);
-      coreService.fetchDiaryEntries(user.id).then(setDiaryEntries);
+      coreService.fetchSessions(user.id).then(setSessions).catch(console.error);
+      coreService.fetchDiaryEntries(user.id).then(setDiaryEntries).catch(console.error);
     }
   }, [isOpen, user]);
 
