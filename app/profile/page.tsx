@@ -174,7 +174,7 @@ Output ONLY the visual description for an image generation tool.`,
       const visualPrompt = promptResponse.text || "A serene and abstract representation of a thoughtful soul, soft colors, ethereal light.";
 
       const imageResponse = await ai.models.generateContent({
-        model: 'gemini-3.1-flash-image-preview',
+        model: 'gemini-2.5-flash-image',
         contents: {
           parts: [
             {
