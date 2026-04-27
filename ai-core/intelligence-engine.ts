@@ -42,7 +42,7 @@ Return ONLY JSON. No explanations. Be the quiet observer behind the Mirror.
 
   try {
     const response = await generateContentWithFallback({
-      model: "gemini-2.5-flash", // Flash is fast and good enough for structured extraction
+      model: "gemini-3-flash-preview", // Flash is fast and good enough for structured extraction
       contents: [{ role: "user", parts: [{ text: "Process input and output updated profile." }] }],
       config: { 
         systemInstruction, 

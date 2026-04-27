@@ -15,7 +15,7 @@ function determineModelForInput(content: string): string {
     return "gemini-3.1-pro-preview";
   }
   // Use Flash Lite for quick, everyday chat
-  return "gemini-2.5-flash";
+  return "gemini-3-flash-preview";
 }
 
 export async function POST(req: Request) {

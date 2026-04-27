@@ -62,7 +62,7 @@ export async function POST(req: Request) {
     `;
 
     const response = await generateContentWithFallback({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: prompt,
       config: { temperature: 0.1 }
     });

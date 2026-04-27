@@ -200,12 +200,18 @@ export const ChatInterface = () => {
       }
     } catch (error: any) {
       console.error("Failed to sync message with backend:", error);
-      const errorMsg = error.message?.includes('API Key') 
-        ? "AI configuration missing. Please check your API keys."
-        : "Connection pause: " + (error.message || "Unknown error");
-        
+      
+      let displayError = "Something went wrong.";
+      try {
+        // Try to see if it's a JSON error from Firestore/Supabase or AI
+        const parsed = JSON.parse(error.message);
+        displayError = parsed.error || error.message;
+      } catch (e) {
+        displayError = error.message || "Unknown error";
+      }
+
       setMessages(prev => prev.map(m => 
-        m.id === aiTempId ? { ...m, content: errorMsg, role: 'diary' } : m
+        m.id === aiTempId ? { ...m, content: `Err: ${displayError}`, role: 'diary' } : m
       ));
     } finally {
       setIsThinking(false);

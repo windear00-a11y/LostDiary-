@@ -68,7 +68,7 @@ export async function POST(req: Request) {
     // AI classify emotion
     const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
     const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: "gemini-3-flash-preview",
       contents: `Analyze this story content and classify it into one of these emotions: hope, tear, resonance, reflective, courage, calm. Return only the emotion word. Content: ${chapter.content.substring(0, 500)}`
     });
     const emotion = (result.text || '').trim().toLowerCase() || 'reflective';

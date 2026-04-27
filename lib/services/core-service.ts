@@ -208,6 +208,10 @@ export const coreService = {
         }
       }
 
+      if (!aiFullContent || aiFullContent.trim().length === 0) {
+        throw new Error('AI could not generate a reflection at this moment. Please try a different thought.');
+      }
+
       return {
         id: `diary-${Date.now()}`,
         user_id,
@@ -368,7 +372,7 @@ export const coreService = {
   async generateTitle(content: string): Promise<string | null> {
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: [{ role: "user", parts: [{ text: `Generate a short title (max 5 words) for this chapter content: ${content.substring(0, 200)}` }] }],
         config: { temperature: 0.7 }
       });

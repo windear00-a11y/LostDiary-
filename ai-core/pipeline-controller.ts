@@ -133,7 +133,7 @@ Rules:
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-2.5-flash",
+        model: "gemini-3-flash-preview",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.1, responseMimeType: "application/json" }
       });
@@ -259,7 +259,7 @@ Rules:
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-3.1-flash-lite-preview",
+        model: "gemini-3-flash-preview",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.1 }
       });
