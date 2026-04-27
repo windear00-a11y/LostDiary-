@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  ChevronLeft, Undo, Redo, Type, Bold, Italic, 
+  ChevronLeft, ChevronRight, Undo, Redo, Type, Bold, Italic, 
   Underline, List, AlignLeft, AlignCenter, AlignRight, 
   CheckSquare, Save, Check, X,
   Clock, Hash, Sparkles, Plus, Shield
@@ -28,6 +28,7 @@ export const JournalEditor = () => {
   const [showNudge, setShowNudge] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSuccessMoment, setShowSuccessMoment] = useState(false);
+  const [isFormattingExpanded, setIsFormattingExpanded] = useState(false);
   const [recentEntry, setRecentEntry] = useState<any>(null);
   const [inspiredBy, setInspiredBy] = useState<string | null>(null);
   const [inspirationAuthor, setInspirationAuthor] = useState<string | null>(null);
@@ -489,25 +490,48 @@ export const JournalEditor = () => {
           opacity: showUI || isInputFocused ? 1 : 0, 
           y: showUI || isInputFocused ? 0 : 20,
           pointerEvents: showUI || isInputFocused ? 'auto' : 'none'
-      }}
-      whileHover={{ opacity: 1, y: 0 }}
-      className={`fixed left-1/2 -translate-x-1/2 bg-[#1A1A1A]/95 backdrop-blur-md border border-white/10 rounded-full shadow-2xl flex items-center justify-center px-2 py-1.5 z-[70] transition-all duration-500 ${isInputFocused ? 'top-20' : 'bottom-[calc(80px+env(safe-area-inset-bottom))]'}`}
-    >
-      <div className="flex items-center gap-1">
-          <button onClick={() => handleFormat('checklist')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
-            <CheckSquare className="w-4 h-4" />
-          </button>
-          <div className="w-[1px] h-4 bg-white/10 mx-1 shrink-0" />
-          <button onClick={() => handleFormat('bold')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
-            <Bold className="w-4 h-4" />
-          </button>
-          <button onClick={() => handleFormat('italic')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0" >
-            <Italic className="w-4 h-4" />
-          </button>
-          <button onClick={() => handleFormat('bullet')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
-            <List className="w-4 h-4" />
-          </button>
-        </div>
+        }}
+        className={`fixed right-4 bg-[#1A1A1A]/95 backdrop-blur-md border border-white/10 rounded-full shadow-2xl flex items-center justify-center p-1 z-[70] transition-all duration-500 overflow-hidden ${isInputFocused ? 'bottom-4' : 'bottom-[calc(80px+env(safe-area-inset-bottom))]'}`}
+      >
+        <AnimatePresence mode="wait">
+          {isFormattingExpanded ? (
+            <motion.div 
+              key="expanded"
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: "auto", opacity: 1 }}
+              exit={{ width: 0, opacity: 0 }}
+              className="flex items-center gap-1 overflow-hidden"
+            >
+              <button onClick={() => handleFormat('checklist')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
+                <CheckSquare className="w-4 h-4" />
+              </button>
+              <button onClick={() => handleFormat('bold')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
+                <Bold className="w-4 h-4" />
+              </button>
+              <button onClick={() => handleFormat('italic')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0" >
+                <Italic className="w-4 h-4" />
+              </button>
+              <button onClick={() => handleFormat('bullet')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
+                <List className="w-4 h-4" />
+              </button>
+              <div className="w-[1px] h-4 bg-white/10 mx-1 shrink-0" />
+              <button onClick={() => { setIsFormattingExpanded(false); }} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </motion.div>
+          ) : (
+            <motion.button 
+              key="collapsed"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              onClick={() => setIsFormattingExpanded(true)}
+              className="p-3 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0"
+            >
+              <Type className="w-4 h-4" />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </motion.div>
       <SuccessMoment 
         isOpen={showSuccessMoment} 
