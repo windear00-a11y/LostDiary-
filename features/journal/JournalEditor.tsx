@@ -32,7 +32,23 @@ export const JournalEditor = () => {
   const [inspiredBy, setInspiredBy] = useState<string | null>(null);
   const [inspirationAuthor, setInspirationAuthor] = useState<string | null>(null);
   
+  const titleRef = useRef<HTMLTextAreaElement>(null);
   const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize areas on content change
+  useEffect(() => {
+    if (titleRef.current) {
+      titleRef.current.style.height = 'auto';
+      titleRef.current.style.height = titleRef.current.scrollHeight + 'px';
+    }
+  }, [title]);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.style.height = 'auto';
+      contentRef.current.style.height = contentRef.current.scrollHeight + 'px';
+    }
+  }, [content]);
 
   // Check for recent entries on mount
   useEffect(() => {
@@ -303,11 +319,10 @@ export const JournalEditor = () => {
         <div className="flex flex-col gap-4 mb-6 pt-2">
           <div className="flex justify-between items-start w-full gap-4">
             <textarea 
+              ref={titleRef}
               value={title}
               onChange={(e) => {
                 setTitle(e.target.value);
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
               }}
               onFocus={() => {
                 handleEditorFocus();
@@ -373,9 +388,6 @@ export const JournalEditor = () => {
             onChange={(e) => {
               setContent(e.target.value);
               setShowUI(true);
-              // Auto resize
-              e.target.style.height = 'auto';
-              e.target.style.height = e.target.scrollHeight + 'px';
             }}
             onFocus={handleEditorFocus}
             onBlur={handleEditorBlur}
