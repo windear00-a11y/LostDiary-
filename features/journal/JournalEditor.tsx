@@ -297,9 +297,11 @@ export const JournalEditor = () => {
         </div>
       </motion.div>
 
-      {/* Metadata Stats */}
-      <div className={`px-6 pt-8 pb-4 max-w-3xl mx-auto w-full transition-all duration-700 relative z-10 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
-        <div className="flex flex-col gap-5">
+      {/* Editor Area */}
+      <div className={`flex-1 px-6 pt-16 max-w-3xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-40 relative z-10 transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
+        
+        {/* Metadata Stats & Title (Moved inside scroll container) */}
+        <div className="flex flex-col gap-5 mb-8 pt-4">
           <div className="flex justify-between items-center w-full">
             <input 
               type="text"
@@ -359,57 +361,60 @@ export const JournalEditor = () => {
             </AnimatePresence>
           </div>
         </div>
-      </div>
 
-      {/* Editor Area */}
-      <div className={`flex-1 px-6 max-w-3xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-40 relative z-10 transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
-        <textarea
-          ref={contentRef}
-          value={content}
-          onChange={(e) => {
-            setContent(e.target.value);
-            setShowUI(true);
-          }}
-          onFocus={handleEditorFocus}
-          onBlur={handleEditorBlur}
-          onClick={handleEditorClick}
-          placeholder="Write your thoughts..."
-          className="w-full h-full bg-transparent border-none outline-none resize-none 
-                     text-lg md:text-xl leading-[1.8] font-serif text-white/90 placeholder:text-white/20
-                     selection:bg-white/20"
-        />
-        
-        {content.length === 0 && title.length === 0 && !showNudge && (
-           <div className="absolute inset-0 flex flex-col pt-10 pointer-events-none px-6">
-             <div className="w-full max-w-2xl mx-auto space-y-6 pointer-events-auto">
-               <div className="flex items-center gap-4 mb-8">
-                 <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
-                 <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Prompts to start
-                 </p>
-                 <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
+        {/* Text Area & Overlay Container */}
+        <div className="relative w-full min-h-[60vh] pb-40">
+          <textarea
+            ref={contentRef}
+            value={content}
+            onChange={(e) => {
+              setContent(e.target.value);
+              setShowUI(true);
+              // Auto resize
+              e.target.style.height = 'auto';
+              e.target.style.height = e.target.scrollHeight + 'px';
+            }}
+            onFocus={handleEditorFocus}
+            onBlur={handleEditorBlur}
+            onClick={handleEditorClick}
+            placeholder="Write your thoughts..."
+            className="w-full h-full bg-transparent border-none outline-none resize-none 
+                       text-lg md:text-xl leading-[1.8] font-serif text-white/90 placeholder:text-white/20
+                       selection:bg-white/20 overflow-hidden min-h-[200px]"
+          />
+          
+          {content.length === 0 && title.length === 0 && !showNudge && (
+             <div className="absolute top-0 left-0 w-full pt-16 pointer-events-none">
+               <div className="w-full max-w-2xl mx-auto space-y-6 pointer-events-auto">
+                 <div className="flex items-center gap-4 mb-8">
+                   <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
+                   <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Prompts to start
+                   </p>
+                   <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
+                 </div>
+                 <div className="grid gap-3">
+                   {journalStarters.map((starter, i) => (
+                     <motion.button
+                       key={i}
+                       whileHover={{ scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
+                       whileTap={{ scale: 0.99 }}
+                       onClick={() => handleSelectStarter(starter.text)}
+                       className="w-full flex items-center gap-5 py-4 px-5 rounded-2xl text-[14px] text-white/60 hover:text-white transition-all text-left bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 hover:shadow-[0_0_30px_rgba(99,102,241,0.05)] group"
+                     >
+                       <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-indigo-500/10 group-hover:scale-110 transition-all border border-white/5 group-hover:border-indigo-500/30">
+                         <span className="text-lg opacity-80 group-hover:opacity-100 transition-opacity">{starter.icon}</span>
+                       </div>
+                       <span className="font-serif italic leading-relaxed pt-1 group-hover:translate-x-1 transition-transform duration-300">{starter.text}</span>
+                     </motion.button>
+                   ))}
+                 </div>
+                 {/* Add extra padding at the bottom so it doesn't hide under the floating toolbar */}
+                 <div className="h-40" />
                </div>
-               <div className="grid gap-3">
-                 {journalStarters.map((starter, i) => (
-                   <motion.button
-                     key={i}
-                     whileHover={{ scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
-                     whileTap={{ scale: 0.99 }}
-                     onClick={() => handleSelectStarter(starter.text)}
-                     className="w-full flex items-center gap-5 py-4 px-5 rounded-2xl text-[14px] text-white/60 hover:text-white transition-all text-left bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 hover:shadow-[0_0_30px_rgba(99,102,241,0.05)] group"
-                   >
-                     <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-indigo-500/10 group-hover:scale-110 transition-all border border-white/5 group-hover:border-indigo-500/30">
-                       <span className="text-lg opacity-80 group-hover:opacity-100 transition-opacity">{starter.icon}</span>
-                     </div>
-                     <span className="font-serif italic leading-relaxed pt-1 group-hover:translate-x-1 transition-transform duration-300">{starter.text}</span>
-                   </motion.button>
-                 ))}
-               </div>
-               {/* Add extra padding at the bottom so it doesn't hide under the floating toolbar */}
-               <div className="h-40" />
              </div>
-           </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Continue vs New Nudge */}
