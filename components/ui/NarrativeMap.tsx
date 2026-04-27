@@ -32,7 +32,7 @@ export const NarrativeMap = ({ chapters, onChapterSelect }: NarrativeMapProps) =
               className="absolute p-6 bg-white border border-indigo-100 rounded-full shadow-lg flex flex-col items-center justify-center text-center cursor-pointer"
             >
               <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Ch. {index + 1}</span>
-              <span className="font-serif text-sm text-slate-800">{chapter.title.substring(0, 15)}...</span>
+              <span className="font-serif text-sm text-slate-800">{chapter.name.substring(0, 15)}...</span>
             </motion.button>
           );
         })}

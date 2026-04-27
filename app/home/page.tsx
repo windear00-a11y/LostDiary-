@@ -56,7 +56,9 @@ export default function HomePage() {
               transition={{ type: 'spring', damping: 35, stiffness: 350 }}
               className="absolute inset-0 z-[60] bg-neutral-950"
             >
-              <JournalEditor />
+              <Suspense fallback={<LoadingSpace />}>
+                <JournalEditor />
+              </Suspense>
             </motion.div>
           )}
 

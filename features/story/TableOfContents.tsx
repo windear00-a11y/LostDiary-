@@ -74,7 +74,7 @@ export const TableOfContents = ({ chapters, volumes = [], onSelectChapter, onBac
                     </span>
                     <div className="space-y-1">
                       <span className="text-lg md:text-xl text-slate-800 dark:text-slate-200 group-hover:text-black dark:group-hover:text-white transition-colors">
-                        {chapter.title}
+                        {chapter.name}
                       </span>
                       <div className="text-[9px] uppercase tracking-widest text-slate-400">
                         {new Date(chapter.created_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}

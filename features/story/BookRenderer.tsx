@@ -32,7 +32,7 @@ export const BookRenderer = ({ chapters }: BookRendererProps) => {
           <header className="mb-16 text-center">
             <div className="text-[10px] uppercase tracking-[0.5em] text-gray-400 mb-4">Chapter {index + 1}</div>
             <h2 className="text-4xl font-serif font-medium text-gray-900 dark:text-gray-100 tracking-tight">
-              {chapter.title}
+              {chapter.name}
             </h2>
             <div className="mt-6 flex justify-center">
               <div className="w-8 h-px bg-gray-200 dark:bg-gray-800" />
@@ -41,8 +41,8 @@ export const BookRenderer = ({ chapters }: BookRendererProps) => {
 
           {/* Narrative Content */}
           <div className="text-xl md:text-2xl leading-[1.8] text-gray-800 dark:text-gray-200 space-y-10 text-justify hyphens-auto">
-            {chapter.content ? (
-              chapter.content.split('\n').filter(p => p.trim()).map((paragraph: any, pIdx: any) => (
+            {chapter.narrative ? (
+              chapter.narrative.split('\n').filter((p: string) => p.trim()).map((paragraph: string, pIdx: number) => (
                 <p 
                   key={pIdx} 
                   className="first-letter:text-4xl first-letter:font-bold first-letter:mr-1 first-letter:float-left first-letter:leading-none"

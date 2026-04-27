@@ -472,9 +472,9 @@ export default function GlobalLibraryPage() {
               )}
               
               <button
-                onClick={() => setActiveLibraryTab(activeLibraryTab === 'feed' ? 'signals' : 'feed')}
+                onClick={() => setActiveLibraryTab(activeLibraryTab === 'feed' ? 'echoes' : 'feed')}
                 className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border ${
-                  activeLibraryTab === 'signals'
+                  activeLibraryTab === 'echoes'
                     ? 'bg-amber-600 border-amber-500 text-white shadow-lg'
                     : 'bg-slate-200/50 dark:bg-white/5 border-white/5 text-slate-500'
                 }`}

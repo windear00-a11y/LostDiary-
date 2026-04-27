@@ -65,7 +65,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
         setIsPlayingAudio(false);
         showToast("Audiobook paused.");
      } else {
-        const fullTextContext = chapters.map(c => `${c.title}. ${c.content}`).join('. ');
+        const fullTextContext = chapters.map(c => `${c.name}. ${c.narrative}`).join('. ');
         const utterance = new SpeechSynthesisUtterance(fullTextContext);
         utterance.rate = 0.9;
         utterance.pitch = 0.8;
@@ -288,7 +288,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
             handleMarkAsRead(chapId);
             
             // Mood Analysis Trigger
-            const chapterContent = chapters.find(c => c.id === chapId)?.content;
+            const chapterContent = chapters.find(c => c.id === chapId)?.narrative;
             if (chapterContent) {
                analyzeMood(chapterContent);
             }
@@ -454,7 +454,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                                <div className="flex items-center gap-3">
                                  <span className={`text-[10px] font-mono tracking-tighter ${readChapters.has(chap.id) ? 'text-slate-300' : 'text-slate-400'}`}>0{cIdx + 1}</span>
                                  <h4 className={`font-serif text-lg transition-colors ${readChapters.has(chap.id) ? 'text-slate-400 dark:text-zinc-500 italic' : 'text-slate-800 dark:text-slate-200'} group-hover:text-indigo-500`}>
-                                   {chap.title}
+                                   {chap.name}
                                  </h4>
                                  {readChapters.has(chap.id) && <Sparkles className="w-3 h-3 text-indigo-400/50" />}
                                </div>
@@ -571,7 +571,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                               className="w-full text-left group"
                             >
                               <div className="text-[11px] font-serif text-slate-500 dark:text-zinc-400 group-hover:text-indigo-400 transition-colors line-clamp-1">
-                                {idx + 1}. {chapter.title}
+                                {idx + 1}. {chapter.name}
                               </div>
                             </button>
                           ))}
@@ -588,7 +588,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                     >
                       <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-1">Entry {idx + 1}</div>
                       <div className="text-sm font-serif text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors line-clamp-2 leading-relaxed">
-                        {chapter.title}
+                        {chapter.name}
                       </div>
                     </button>
                   ))
@@ -685,7 +685,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                   <h2 className="text-4xl text-center font-serif">{volume.title}</h2>
                   {chapters.filter(c => c.volume_id === volume.id).map((chapter, index) => (
                     <article id={`chapter-${chapter.id}`} key={chapter.id} className="space-y-12 relative group/chapter border-b border-indigo-500/5 pb-32">
-                      <h3 className="text-3xl font-serif text-center">{chapter.title}</h3>
+                      <h3 className="text-3xl font-serif text-center">{chapter.name}</h3>
                       <div className="space-y-8 relative">
                         
                         {/* Ghost Layer Sidebar */}
@@ -698,7 +698,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                           )}
                         </div>
 
-                        {chapter.content.split('\n').filter(p=>p.trim()).map((para, pIdx) => (
+                        {chapter.narrative.split('\n').filter((p: string)=>p.trim()).map((para: string, pIdx: number) => (
                           <p 
                             key={pIdx} 
                             className={`text-xl font-serif leading-relaxed cursor-pointer transition-colors duration-500 ${resonatingParagraphs.has(pIdx) ? 'bg-indigo-500/20 rounded-md ring-4 ring-indigo-500/10' : 'hover:text-indigo-600'}`}

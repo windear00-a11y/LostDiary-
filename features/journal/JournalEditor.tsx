@@ -273,6 +273,37 @@ export const JournalEditor = () => {
     return () => clearTimeout(timer);
   }, [content]);
 
+  // Cleanup focus state on unmount
+  useEffect(() => {
+    return () => setInputFocused(false);
+  }, [setInputFocused]);
+
+  // Robustly detect keyboard visibility using visualViewport API
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const MIN_KEYBOARD_HEIGHT = 150; // Threshold for keyboard detection
+
+    const handleResize = () => {
+      // If the visual viewport height is significantly less than the window's innerHeight,
+      // it's highly likely the virtual keyboard is active.
+      const isKeyboardOpen = window.innerHeight - viewport.height > MIN_KEYBOARD_HEIGHT;
+      setInputFocused(isKeyboardOpen);
+      if (isKeyboardOpen) {
+        setShowUI(true);
+      }
+    };
+
+    viewport.addEventListener('resize', handleResize);
+    
+    return () => {
+      viewport.removeEventListener('resize', handleResize);
+    };
+  }, [setInputFocused]);
+
   // Visual cues for focus mode
   const handleEditorFocus = () => {
     setShowUI(true);

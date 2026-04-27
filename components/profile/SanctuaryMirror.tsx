@@ -76,7 +76,7 @@ function ScanningEffect() {
   );
 }
 
-export function SanctuaryMirror({ profile, onUpdate }: SanctuaryMirrorProps) {
+export function SanctuaryMirror({ profile, onUpdate, onSync }: SanctuaryMirrorProps) {
   const intel = profile.intelligence_profile || {
     basic_profile: {}, thinking_style: {}, emotional_state: {},
     interests_goals: {}, behavior_patterns: {}, communication_style: {},
