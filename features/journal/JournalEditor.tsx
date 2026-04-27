@@ -305,6 +305,11 @@ export const JournalEditor = () => {
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onFocus={() => {
+                handleEditorFocus();
+                setShowUI(true);
+              }}
+              onBlur={handleEditorBlur}
               placeholder="Title your entry..."
               className="w-full bg-transparent border-none outline-none text-3xl md:text-5xl font-serif italic text-white placeholder:text-white/20 selection:bg-white/20 transition-all placeholder:transition-colors focus:placeholder:text-white/5"
             />
@@ -325,14 +330,14 @@ export const JournalEditor = () => {
               )}
             </AnimatePresence>
           </div>
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.15em] text-white/40 font-bold overflow-x-auto scrollbar-hide py-1">
-              <span className="flex items-center gap-2 whitespace-nowrap bg-white/[0.03] py-1.5 px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
-                <Clock className="w-3.5 h-3.5 opacity-70" />
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] uppercase tracking-[0.15em] text-white/40 font-bold py-1">
+              <span className="flex items-center gap-1.5 sm:gap-2 whitespace-nowrap bg-white/[0.03] py-1 sm:py-1.5 px-2.5 sm:px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
+                <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5 opacity-70" />
                 {stats.date}
               </span>
-              <span className="flex items-center gap-2 whitespace-nowrap bg-white/[0.03] py-1.5 px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
-                <Hash className="w-3.5 h-3.5 opacity-70" />
+              <span className="flex items-center gap-1.5 sm:gap-2 whitespace-nowrap bg-white/[0.03] py-1 sm:py-1.5 px-2.5 sm:px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
+                <Hash className="w-3 sm:w-3.5 h-3 sm:h-3.5 opacity-70" />
                 {stats.words} Words
               </span>
             </div>
@@ -343,7 +348,7 @@ export const JournalEditor = () => {
                    initial={{ opacity: 0, scale: 0.9 }}
                    animate={{ opacity: 1, scale: 1 }}
                    exit={{ opacity: 0, scale: 0.9 }}
-                   className="flex sm:hidden items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 whitespace-nowrap shrink-0"
+                   className="flex sm:hidden items-center gap-1.5 px-2.5 py-1 sm:py-1.5 rounded-full bg-white/5 border border-white/5 whitespace-nowrap shrink-0"
                  >
                    <span className={`w-1.5 h-1.5 rounded-full ${isSavingLocal ? 'bg-white/40 animate-pulse' : 'bg-indigo-500'}`} />
                    <span className="text-[9px] uppercase tracking-widest text-white/50 font-medium">
