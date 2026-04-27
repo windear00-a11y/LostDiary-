@@ -40,6 +40,8 @@ export const JournalEditor = () => {
   const [inspiredBy, setInspiredBy] = useState<string | null>(null);
   const [inspirationAuthor, setInspirationAuthor] = useState<string | null>(null);
   
+  const [lastSavedContent, setLastSavedContent] = useState<string>('');
+  
   const titleRef = useRef<HTMLTextAreaElement>(null);
 
   // TipTap Editor
@@ -211,6 +213,7 @@ export const JournalEditor = () => {
         inspiration_author: inspirationAuthor 
       });
       setSaveStatus('success');
+      setLastSavedContent(fullContent);
       setShowSuccessMoment(true);
       
       // Clear auto-saved draft
@@ -230,6 +233,7 @@ export const JournalEditor = () => {
   const handleStartNewEntry = () => {
     setTitle('');
     setContent('');
+    setLastSavedContent('');
     editor?.commands.setContent('');
     setSelectedJournalContent(null);
     setShowNudge(false);
@@ -278,31 +282,7 @@ export const JournalEditor = () => {
     return () => setInputFocused(false);
   }, [setInputFocused]);
 
-  // Robustly detect keyboard visibility using visualViewport API
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    const MIN_KEYBOARD_HEIGHT = 150; // Threshold for keyboard detection
-
-    const handleResize = () => {
-      // If the visual viewport height is significantly less than the window's innerHeight,
-      // it's highly likely the virtual keyboard is active.
-      const isKeyboardOpen = window.innerHeight - viewport.height > MIN_KEYBOARD_HEIGHT;
-      setInputFocused(isKeyboardOpen);
-      if (isKeyboardOpen) {
-        setShowUI(true);
-      }
-    };
-
-    viewport.addEventListener('resize', handleResize);
-    
-    return () => {
-      viewport.removeEventListener('resize', handleResize);
-    };
-  }, [setInputFocused]);
+  // Handle focus mode global state listener in custom global component
 
   // Visual cues for focus mode
   const handleEditorFocus = () => {
@@ -321,8 +301,11 @@ export const JournalEditor = () => {
   };
 
   const textToCount = `${title} ${content}`.trim();
+  const currentFullContent = title ? `# ${title}\n\n${content}` : content;
+  const isContentUnchanged = lastSavedContent === currentFullContent;
+
   const stats = {
-    words: textToCount ? textToCount.split(/\\s+/).length : 0,
+    words: textToCount ? textToCount.split(/\s+/).length : 0,
     date: new Date().toLocaleDateString('en-GB', { 
       day: 'numeric', 
       month: 'long', 
@@ -364,7 +347,7 @@ export const JournalEditor = () => {
           <div className="w-[1px] h-3 bg-white/10 mx-1" />
           <button 
             onClick={handleSave}
-            disabled={isSaving || (!title.trim() && !content.trim())}
+            disabled={isSaving || (!title.trim() && !content.trim()) || isContentUnchanged}
             className={`px-4 py-1.5 flex items-center gap-2 rounded-full font-medium text-[10px] uppercase tracking-widest transition-all ${saveStatus === 'success' ? 'text-emerald-400' : 'text-white/60 hover:text-white disabled:opacity-30'}`}
           >
             {isSaving ? (

@@ -8,6 +8,7 @@ import { Toaster } from 'sonner';
 import { Header } from '@/components/ui/Header';
 import { BottomNav } from '@/components/ui/BottomNav';
 import { GlobalMenuSheet } from '@/components/ui/GlobalMenuSheet';
+import { KeyboardDetection } from '@/components/ui/KeyboardDetection';
 import './globals.css';
 
 const inter = Inter({
@@ -57,6 +58,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`} suppressHydrationWarning>
       <body className="antialiased min-h-screen">
+        <KeyboardDetection />
         <ErrorBoundary>
           <AuthProvider>
             <AuthGuard>
