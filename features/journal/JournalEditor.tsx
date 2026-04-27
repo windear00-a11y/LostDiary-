@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, Undo, Redo, Type, Bold, Italic, 
   Underline, List, AlignLeft, AlignCenter, AlignRight, 
-  Image as ImageIcon, CheckSquare, Save, Check, X,
+  CheckSquare, Save, Check, X,
   Clock, Hash, Sparkles, Plus, Shield
 } from 'lucide-react';
 import { coreService } from '@/lib/services/core-service';
@@ -263,57 +263,61 @@ export const JournalEditor = () => {
           y: showUI ? 0 : -20,
           pointerEvents: showUI ? 'auto' : 'none'
         }}
-        className="flex items-center justify-between px-6 pt-16 pb-4 border-b border-white/5 z-20 bg-transparent"
+        className="flex items-center justify-between px-6 pt-12 pb-2 z-20 bg-transparent"
       >
         <div className="flex items-center gap-3">
-          <div className="flex flex-col select-none">
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Canvas</span>
-            <span className="text-sm font-serif italic text-white/70">Sanctuary</span>
+          <div className="flex flex-col select-none opacity-50">
+            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/40">Sanctuary</span>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button 
             onClick={handleStartNewEntry}
-            className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5 transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white transition-colors"
             title="New Journal"
           >
             <Plus className="w-4 h-4" />
           </button>
-          <div className="w-[1px] h-4 bg-white/10 mx-2" />
+          <div className="w-[1px] h-3 bg-white/10 mx-1" />
           <button 
             onClick={handleSave}
             disabled={isSaving || (!title.trim() && !content.trim())}
-            className={`px-6 py-2.5 flex items-center gap-2 rounded-full font-bold text-[11px] uppercase tracking-widest transition-all ${saveStatus === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white text-black hover:bg-neutral-200 disabled:opacity-50 disabled:bg-white/20 disabled:text-white/50'}`}
+            className={`px-4 py-1.5 flex items-center gap-2 rounded-full font-medium text-[10px] uppercase tracking-widest transition-all ${saveStatus === 'success' ? 'text-emerald-400' : 'text-white/60 hover:text-white disabled:opacity-30'}`}
           >
             {isSaving ? (
-              <div className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             ) : saveStatus === 'success' ? (
-              <>Saved <Check className="w-3.5 h-3.5" /></>
+              <>Saved</>
             ) : (
-              <>Save <Save className="w-3.5 h-3.5" /></>
+              <>Save</>
             )}
           </button>
         </div>
       </motion.div>
 
       {/* Editor Area */}
-      <div className={`flex-1 px-6 pt-16 max-w-3xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-40 relative z-10 transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
+      <div className={`flex-1 px-6 pt-8 max-w-3xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-40 relative z-10 transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
         
         {/* Metadata Stats & Title (Moved inside scroll container) */}
-        <div className="flex flex-col gap-5 mb-8 pt-4">
-          <div className="flex justify-between items-center w-full">
-            <input 
-              type="text"
+        <div className="flex flex-col gap-4 mb-6 pt-2">
+          <div className="flex justify-between items-start w-full gap-4">
+            <textarea 
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+              }}
               onFocus={() => {
                 handleEditorFocus();
                 setShowUI(true);
               }}
               onBlur={handleEditorBlur}
               placeholder="Title your entry..."
-              className="w-full bg-transparent border-none outline-none text-3xl md:text-5xl font-serif italic text-white placeholder:text-white/20 selection:bg-white/20 transition-all placeholder:transition-colors focus:placeholder:text-white/5"
+              rows={1}
+              className="w-full bg-transparent border-none outline-none resize-none text-2xl md:text-4xl font-serif italic text-white placeholder:text-white/20 selection:bg-white/20 transition-all placeholder:transition-colors focus:placeholder:text-white/5 overflow-hidden"
+              style={{ minHeight: '40px' }}
             />
             {/* Auto-save indicator */}
             <AnimatePresence>
@@ -333,13 +337,12 @@ export const JournalEditor = () => {
             </AnimatePresence>
           </div>
           <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full">
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[10px] uppercase tracking-[0.15em] text-white/40 font-bold py-1">
-              <span className="flex items-center gap-1.5 sm:gap-2 whitespace-nowrap bg-white/[0.03] py-1 sm:py-1.5 px-2.5 sm:px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
-                <Clock className="w-3 sm:w-3.5 h-3 sm:h-3.5 opacity-70" />
+            <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-[0.2em] text-white/30 font-medium py-1">
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
                 {stats.date}
               </span>
-              <span className="flex items-center gap-1.5 sm:gap-2 whitespace-nowrap bg-white/[0.03] py-1 sm:py-1.5 px-2.5 sm:px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
-                <Hash className="w-3 sm:w-3.5 h-3 sm:h-3.5 opacity-70" />
+              <span className="w-1 h-1 rounded-full bg-white/20" />
+              <span className="flex items-center gap-1.5 whitespace-nowrap">
                 {stats.words} Words
               </span>
             </div>
@@ -347,13 +350,13 @@ export const JournalEditor = () => {
             <AnimatePresence>
               {(title || content) && (
                  <motion.div 
-                   initial={{ opacity: 0, scale: 0.9 }}
-                   animate={{ opacity: 1, scale: 1 }}
-                   exit={{ opacity: 0, scale: 0.9 }}
-                   className="flex sm:hidden items-center gap-1.5 px-2.5 py-1 sm:py-1.5 rounded-full bg-white/5 border border-white/5 whitespace-nowrap shrink-0"
+                   initial={{ opacity: 0 }}
+                   animate={{ opacity: 1 }}
+                   exit={{ opacity: 0 }}
+                   className="flex sm:hidden items-center gap-1.5 ml-2 whitespace-nowrap shrink-0"
                  >
-                   <span className={`w-1.5 h-1.5 rounded-full ${isSavingLocal ? 'bg-white/40 animate-pulse' : 'bg-indigo-500'}`} />
-                   <span className="text-[9px] uppercase tracking-widest text-white/50 font-medium">
+                   <span className={`w-1 h-1 rounded-full ${isSavingLocal ? 'bg-white/30 animate-pulse' : 'bg-white/30'}`} />
+                   <span className="text-[9px] uppercase tracking-widest text-white/30 font-medium">
                      {isSavingLocal ? 'Saving...' : 'Saved'}
                    </span>
                  </motion.div>
@@ -378,9 +381,9 @@ export const JournalEditor = () => {
             onBlur={handleEditorBlur}
             onClick={handleEditorClick}
             placeholder="Write your thoughts..."
-            className="w-full h-full bg-transparent border-none outline-none resize-none 
+            className="w-full bg-transparent border-none outline-none resize-none 
                        text-lg md:text-xl leading-[1.8] font-serif text-white/90 placeholder:text-white/20
-                       selection:bg-white/20 overflow-hidden min-h-[200px]"
+                       selection:bg-white/20 overflow-hidden min-h-[50vh] pb-32"
           />
           
           {content.length === 0 && title.length === 0 && !showNudge && (
@@ -476,14 +479,11 @@ export const JournalEditor = () => {
           pointerEvents: showUI || isInputFocused ? 'auto' : 'none'
       }}
       whileHover={{ opacity: 1, y: 0 }}
-      className={`fixed left-1/2 -translate-x-1/2 bg-[#1A1A1A] border border-white/10 rounded-full shadow-2xl flex items-center justify-center px-2 py-1.5 z-[70] transition-all duration-500 ${isInputFocused ? 'bottom-4' : 'bottom-[calc(80px+env(safe-area-inset-bottom))]'}`}
+      className={`fixed left-1/2 -translate-x-1/2 bg-[#1A1A1A]/95 backdrop-blur-md border border-white/10 rounded-full shadow-2xl flex items-center justify-center px-2 py-1.5 z-[70] transition-all duration-500 ${isInputFocused ? 'top-20' : 'bottom-[calc(80px+env(safe-area-inset-bottom))]'}`}
     >
       <div className="flex items-center gap-1">
           <button onClick={() => handleFormat('checklist')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
             <CheckSquare className="w-4 h-4" />
-          </button>
-          <button onClick={() => handleFormat('image')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
-            <ImageIcon className="w-4 h-4" />
           </button>
           <div className="w-[1px] h-4 bg-white/10 mx-1 shrink-0" />
           <button onClick={() => handleFormat('bold')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
