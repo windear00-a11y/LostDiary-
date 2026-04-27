@@ -17,6 +17,13 @@ import { SuccessMoment } from '@/components/ui/SuccessMoment';
 import { toast } from 'sonner';
 import { NudgeService } from '@/lib/services/nudge-service';
 
+// TipTap Imports
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Placeholder from '@tiptap/extension-placeholder';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
+
 export const JournalEditor = () => {
   const { setActiveView, selectedJournalContent, setSelectedJournalContent, language, isInputFocused, setInputFocused } = useUIStore();
   const searchParams = useSearchParams();
@@ -34,7 +41,46 @@ export const JournalEditor = () => {
   const [inspirationAuthor, setInspirationAuthor] = useState<string | null>(null);
   
   const titleRef = useRef<HTMLTextAreaElement>(null);
-  const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  // TipTap Editor
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        bulletList: {
+          keepMarks: true,
+          keepAttributes: false,
+        },
+      }),
+      Placeholder.configure({
+        placeholder: 'Write your thoughts...',
+        emptyEditorClass: 'is-editor-empty',
+      }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+    ],
+    content: selectedJournalContent || content || '',
+    editorProps: {
+      attributes: {
+        class: 'w-full min-h-[50vh] prose prose-invert prose-p:text-lg md:prose-p:text-xl prose-p:leading-[1.8] prose-p:font-serif prose-p:text-white/90 prose-headings:font-serif prose-headings:text-white focus:outline-none selection:bg-white/20 pb-32 max-w-none',
+      },
+      handleDOMEvents: {
+        focus: () => {
+          handleEditorFocus();
+          return false;
+        },
+        blur: () => {
+          handleEditorBlur();
+          return false;
+        }
+      }
+    },
+    onUpdate: ({ editor }) => {
+      setContent(editor.getHTML());
+      setShowUI(true);
+    },
+  });
 
   // Auto-resize areas on content change
   useEffect(() => {
@@ -124,12 +170,15 @@ export const JournalEditor = () => {
       if (selectedJournalContent.startsWith('# ')) {
         const lines = selectedJournalContent.split('\n');
         setTitle(lines[0].replace('# ', ''));
-        setContent(lines.slice(1).join('\n').trim());
+        const restContent = lines.slice(1).join('\n').trim();
+        setContent(restContent);
+        editor?.commands.setContent(restContent);
       } else {
         setContent(selectedJournalContent);
+        editor?.commands.setContent(selectedJournalContent);
       }
     }
-  }, [selectedJournalContent]);
+  }, [selectedJournalContent, editor]);
 
   const journalStarters = [
     { text: "Aaj mere dil ki baatein jo sirf yahan hain...", icon: "🗝️" },
@@ -142,9 +191,8 @@ export const JournalEditor = () => {
   const handleSelectStarter = (starterText: string) => {
     setTitle(starterText);
     setContent('');
-    if (contentRef.current) {
-      contentRef.current.focus();
-    }
+    editor?.commands.setContent('');
+    editor?.commands.focus();
   };
 
   const handleSave = async () => {
@@ -189,6 +237,7 @@ export const JournalEditor = () => {
   const handleStartNewEntry = () => {
     setTitle('');
     setContent('');
+    editor?.commands.setContent('');
     setSelectedJournalContent(null);
     setShowNudge(false);
     
@@ -198,30 +247,22 @@ export const JournalEditor = () => {
   };
 
   const handleFormat = (type: string) => {
-    // Simple formatting logic for a textarea
-    if (!contentRef.current) return;
-    const textarea = contentRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
+    if (!editor) return;
 
-    let replacement = '';
     switch (type) {
-      case 'bold': replacement = `**${selectedText}**`; break;
-      case 'italic': replacement = `*${selectedText}*`; break;
-      case 'bullet': replacement = `\n- ${selectedText}`; break;
-      case 'checklist': replacement = `\n- [ ] ${selectedText}`; break;
-      default: replacement = selectedText;
+      case 'bold': 
+        editor.chain().focus().toggleBold().run();
+        break;
+      case 'italic': 
+        editor.chain().focus().toggleItalic().run();
+        break;
+      case 'bullet': 
+        editor.chain().focus().toggleBulletList().run();
+        break;
+      case 'checklist': 
+        editor.chain().focus().toggleTaskList().run();
+        break;
     }
-
-    const newContent = content.substring(0, start) + replacement + content.substring(end);
-    setContent(newContent);
-    
-    // Maintain focus and selection
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + replacement.length, start + replacement.length);
-    }, 0);
   };
 
   const [showUI, setShowUI] = useState(true);
@@ -383,23 +424,11 @@ export const JournalEditor = () => {
 
         {/* Text Area & Overlay Container */}
         <div className="relative w-full min-h-[60vh] pb-40">
-          <textarea
-            ref={contentRef}
-            value={content}
-            onChange={(e) => {
-              setContent(e.target.value);
-              setShowUI(true);
-            }}
-            onFocus={handleEditorFocus}
-            onBlur={handleEditorBlur}
-            onClick={handleEditorClick}
-            placeholder="Write your thoughts..."
-            className="w-full bg-transparent border-none outline-none resize-none 
-                       text-lg md:text-xl leading-[1.8] font-serif text-white/90 placeholder:text-white/20
-                       selection:bg-white/20 overflow-hidden min-h-[50vh] pb-32"
-          />
+          <div onClick={handleEditorClick} className="w-full h-full cursor-text">
+            <EditorContent editor={editor} />
+          </div>
           
-          {content.length === 0 && title.length === 0 && !showNudge && (
+          {editor?.isEmpty && title.length === 0 && !showNudge && (
              <div className="absolute top-0 left-0 w-full pt-16 pointer-events-none">
                <div className="w-full max-w-2xl mx-auto space-y-6 pointer-events-auto">
                  <div className="flex items-center gap-4 mb-8">
@@ -502,16 +531,28 @@ export const JournalEditor = () => {
               exit={{ width: 0, opacity: 0 }}
               className="flex items-center gap-1 overflow-hidden"
             >
-              <button onClick={() => handleFormat('checklist')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
+              <button 
+                onClick={() => handleFormat('checklist')} 
+                className={`p-2.5 rounded-full transition-colors shrink-0 ${editor?.isActive('taskList') ? 'text-white bg-white/20' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+              >
                 <CheckSquare className="w-4 h-4" />
               </button>
-              <button onClick={() => handleFormat('bold')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
+              <button 
+                onClick={() => handleFormat('bold')} 
+                className={`p-2.5 rounded-full transition-colors shrink-0 ${editor?.isActive('bold') ? 'text-white bg-white/20' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+              >
                 <Bold className="w-4 h-4" />
               </button>
-              <button onClick={() => handleFormat('italic')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0" >
+              <button 
+                onClick={() => handleFormat('italic')} 
+                className={`p-2.5 rounded-full transition-colors shrink-0 ${editor?.isActive('italic') ? 'text-white bg-white/20' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+              >
                 <Italic className="w-4 h-4" />
               </button>
-              <button onClick={() => handleFormat('bullet')} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
+              <button 
+                onClick={() => handleFormat('bullet')} 
+                className={`p-2.5 rounded-full transition-colors shrink-0 ${editor?.isActive('bulletList') ? 'text-white bg-white/20' : 'text-white/40 hover:text-white hover:bg-white/10'}`}
+              >
                 <List className="w-4 h-4" />
               </button>
               <div className="w-[1px] h-4 bg-white/10 mx-1 shrink-0" />

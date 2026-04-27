@@ -91,6 +91,71 @@
     display: none;
   }
 
+  /* Tiptap styles */
+  .ProseMirror p.is-editor-empty:first-child::before {
+    color: rgba(255, 255, 255, 0.2);
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+  }
+  
+  ul[data-type="taskList"] {
+    list-style: none;
+    padding: 0;
+  }
+
+  ul[data-type="taskList"] p {
+    margin: 0;
+  }
+
+  ul[data-type="taskList"] li {
+    display: flex;
+  }
+
+  ul[data-type="taskList"] li > label {
+    flex: 0 0 auto;
+    margin-right: 0.75rem;
+    user-select: none;
+  }
+  
+  ul[data-type="taskList"] li > label input[type="checkbox"] {
+    appearance: none;
+    background-color: transparent;
+    margin: 0;
+    font: inherit;
+    color: currentColor;
+    width: 1.15em;
+    height: 1.15em;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 0.15em;
+    display: grid;
+    place-content: center;
+    cursor: pointer;
+    margin-top: 0.4em;
+    transition: all 0.2s;
+  }
+
+  ul[data-type="taskList"] li > label input[type="checkbox"]::before {
+    content: "";
+    width: 0.65em;
+    height: 0.65em;
+    transform: scale(0);
+    transition: 120ms transform ease-in-out;
+    box-shadow: inset 1em 1em white;
+    background-color: CanvasText;
+    transform-origin: bottom left;
+    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  }
+
+  ul[data-type="taskList"] li > label input[type="checkbox"]:checked::before {
+    transform: scale(1);
+  }
+
+  ul[data-type="taskList"] li > div {
+    flex: 1 1 auto;
+  }
+
   /* Physical Book Layout Enhancements */
   .book-page-container {
     background: linear-gradient(to right, #e8e4d9 0%, #fdfcf8 5%, #fdfcf8 95%, #e8e4d9 100%);
