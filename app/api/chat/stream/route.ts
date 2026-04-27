@@ -13,7 +13,7 @@ function determineModelForInput(content: string): string {
   if (wordCount > 40 || content.toLowerCase().match(/why|explain|deep|analyze|reflect|meaning/)) {
     return "gemini-3.1-pro-preview";
   }
-  return "gemini-3.1-flash-lite-preview";
+  return "gemini-2.5-flash";
 }
 
 const DEFAULT_SYSTEM_INSTRUCTION = `
@@ -69,6 +69,15 @@ export async function POST(req: Request) {
       .eq('user_id', user_id).order('created_at', { ascending: false }).limit(3);
   const { data: currentVolume } = await supabase.from('volumes').select('*')
       .eq('user_id', user_id).eq('status', 'ongoing').maybeSingle();
+
+  // Fetch recent messages for working memory
+  const { data: recentMessagesData } = await supabase.from('chat_messages').select('content, role')
+      .eq('user_id', user_id)
+      .eq('session_id', session_id)
+      .order('created_at', { ascending: false })
+      .limit(10);
+  
+  const recentMessages = (recentMessagesData || []).reverse();
 
   let olderContextMessages: any[] = [];
   let userEmbedding: number[] | null = null;
@@ -163,11 +172,15 @@ ${memoriesContext}
 `.trim();
 
   // Create standard messages array for AI SDK
-  // Add a system prompt internally via 'system' propery of streamText
-  const aiMessages = messages.map((m: any) => ({
+  const aiMessages = recentMessages.map((m: any) => ({
     role: m.role === 'user' ? 'user' : 'assistant',
     content: m.content
   }));
+  
+  // Append current message if it's not already at the end
+  if (aiMessages.length === 0 || aiMessages[aiMessages.length - 1].content !== content) {
+    aiMessages.push({ role: 'user', content: content });
+  }
 
   const result = streamText({
     model: google(selectedModel),
