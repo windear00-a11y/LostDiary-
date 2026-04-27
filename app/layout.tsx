@@ -1,4 +1,4 @@
-import type {Metadata} from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Inter, Cormorant_Garamond } from 'next/font/google';
 import { AuthProvider } from '@/components/auth/auth-provider';
 import { AuthGuard } from '@/components/auth/auth-guard';
@@ -42,6 +42,15 @@ export const metadata: Metadata = {
     locale: 'en_US',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#0a0a0a',
+  // @ts-ignore
+  interactiveWidget: 'resizes-content',
 };
 
 export default function RootLayout({children}: {children: React.ReactNode}) {

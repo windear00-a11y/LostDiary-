@@ -23,6 +23,7 @@ export const JournalEditor = () => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState(selectedJournalContent || '');
   const [isSaving, setIsSaving] = useState(false);
+  const [isSavingLocal, setIsSavingLocal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showNudge, setShowNudge] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -84,6 +85,7 @@ export const JournalEditor = () => {
 
   // Auto-save logic
   useEffect(() => {
+    setIsSavingLocal(true);
     const timer = setTimeout(() => {
       if (title || content) {
         localStorage.setItem('journalDraft_title', title);
@@ -92,6 +94,7 @@ export const JournalEditor = () => {
         localStorage.removeItem('journalDraft_title');
         localStorage.removeItem('journalDraft_content');
       }
+      setIsSavingLocal(false);
     }, 1000); // 1-second debounce
     
     return () => clearTimeout(timer);
@@ -235,8 +238,9 @@ export const JournalEditor = () => {
     if (!showUI) setShowUI(true);
   };
 
+  const textToCount = `${title} ${content}`.trim();
   const stats = {
-    chars: content.length + title.length,
+    words: textToCount ? textToCount.split(/\\s+/).length : 0,
     date: new Date().toLocaleDateString('en-GB', { 
       day: 'numeric', 
       month: 'long', 
@@ -296,22 +300,58 @@ export const JournalEditor = () => {
       {/* Metadata Stats */}
       <div className={`px-6 pt-8 pb-4 max-w-3xl mx-auto w-full transition-all duration-700 relative z-10 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
         <div className="flex flex-col gap-5">
-          <input 
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Title your entry..."
-            className="w-full bg-transparent border-none outline-none text-3xl md:text-5xl font-serif italic text-white placeholder:text-white/20 selection:bg-white/20 transition-all placeholder:transition-colors focus:placeholder:text-white/5"
-          />
-          <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.15em] text-white/40 font-bold overflow-x-auto scrollbar-hide py-1">
-            <span className="flex items-center gap-2 whitespace-nowrap bg-white/[0.03] py-1.5 px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
-              <Clock className="w-3.5 h-3.5 opacity-70" />
-              {stats.date}
-            </span>
-            <span className="flex items-center gap-2 whitespace-nowrap bg-white/[0.03] py-1.5 px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
-              <Hash className="w-3.5 h-3.5 opacity-70" />
-              {stats.chars} Words
-            </span>
+          <div className="flex justify-between items-center w-full">
+            <input 
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Title your entry..."
+              className="w-full bg-transparent border-none outline-none text-3xl md:text-5xl font-serif italic text-white placeholder:text-white/20 selection:bg-white/20 transition-all placeholder:transition-colors focus:placeholder:text-white/5"
+            />
+            {/* Auto-save indicator */}
+            <AnimatePresence>
+              {(title || content) && (
+                 <motion.div 
+                   initial={{ opacity: 0, scale: 0.9 }}
+                   animate={{ opacity: 1, scale: 1 }}
+                   exit={{ opacity: 0, scale: 0.9 }}
+                   className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/5 whitespace-nowrap shrink-0"
+                 >
+                   <span className={`w-1.5 h-1.5 rounded-full ${isSavingLocal ? 'bg-white/40 animate-pulse' : 'bg-indigo-500'}`} />
+                   <span className="text-[9px] uppercase tracking-widest text-white/50 font-medium">
+                     {isSavingLocal ? 'Saving...' : 'Draft Saved'}
+                   </span>
+                 </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3 text-[10px] uppercase tracking-[0.15em] text-white/40 font-bold overflow-x-auto scrollbar-hide py-1">
+              <span className="flex items-center gap-2 whitespace-nowrap bg-white/[0.03] py-1.5 px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
+                <Clock className="w-3.5 h-3.5 opacity-70" />
+                {stats.date}
+              </span>
+              <span className="flex items-center gap-2 whitespace-nowrap bg-white/[0.03] py-1.5 px-3.5 rounded-full border border-white/5 backdrop-blur-sm">
+                <Hash className="w-3.5 h-3.5 opacity-70" />
+                {stats.words} Words
+              </span>
+            </div>
+             {/* Mobile Auto-save indicator */}
+            <AnimatePresence>
+              {(title || content) && (
+                 <motion.div 
+                   initial={{ opacity: 0, scale: 0.9 }}
+                   animate={{ opacity: 1, scale: 1 }}
+                   exit={{ opacity: 0, scale: 0.9 }}
+                   className="flex sm:hidden items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 whitespace-nowrap shrink-0"
+                 >
+                   <span className={`w-1.5 h-1.5 rounded-full ${isSavingLocal ? 'bg-white/40 animate-pulse' : 'bg-indigo-500'}`} />
+                   <span className="text-[9px] uppercase tracking-widest text-white/50 font-medium">
+                     {isSavingLocal ? 'Saving...' : 'Saved'}
+                   </span>
+                 </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -321,7 +361,10 @@ export const JournalEditor = () => {
         <textarea
           ref={contentRef}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={(e) => {
+            setContent(e.target.value);
+            setShowUI(true);
+          }}
           onFocus={handleEditorFocus}
           onBlur={handleEditorBlur}
           onClick={handleEditorClick}
@@ -418,9 +461,9 @@ export const JournalEditor = () => {
       {/* Floating Toolbar (Helper Icons) - Minimal*/}
       <motion.div 
         animate={{ 
-          opacity: showUI ? 1 : 0, 
-          y: showUI ? 0 : 20,
-          pointerEvents: showUI ? 'auto' : 'none'
+          opacity: showUI || isInputFocused ? 1 : 0, 
+          y: showUI || isInputFocused ? 0 : 20,
+          pointerEvents: showUI || isInputFocused ? 'auto' : 'none'
       }}
       whileHover={{ opacity: 1, y: 0 }}
       className={`fixed left-1/2 -translate-x-1/2 bg-[#1A1A1A] border border-white/10 rounded-full shadow-2xl flex items-center justify-center px-2 py-1.5 z-[70] transition-all duration-500 ${isInputFocused ? 'bottom-4' : 'bottom-[calc(80px+env(safe-area-inset-bottom))]'}`}
