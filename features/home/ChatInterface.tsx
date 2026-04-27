@@ -192,7 +192,7 @@ export const ChatInterface = () => {
         setMessages(prev => prev.map(m => 
           m.id === aiTempId ? { 
             ...m, 
-            content: result.content || "I've saved that for you.", 
+            content: result.content || "My mind was cloudy just then... Could you tell me again?", 
             role: result.role || 'diary',
             processing_status: result.processing_status
           } : m

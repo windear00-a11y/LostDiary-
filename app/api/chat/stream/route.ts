@@ -1,5 +1,5 @@
 import { streamText } from 'ai';
-import { google } from '@ai-sdk/google';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { AIOrchestrator } from "@/ai-core/ai-orchestrator";
 import { coreService } from "@/lib/services/core-service";
@@ -31,15 +31,16 @@ CORE IDENTITY & SOUL:
 `.trim();
 
 export async function POST(req: Request) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return new Response('Supabase not initialized', { status: 500 });
-  
-  const body = await req.json();
-  const { messages, user_id, session_id: initialSessionId, language } = body;
-  
-  if (!user_id || !messages || messages.length === 0) {
-    return new Response('Missing required fields', { status: 400 });
-  }
+  try {
+    const supabase = getSupabaseAdmin();
+    if (!supabase) return new Response('Supabase not initialized', { status: 500 });
+    
+    const body = await req.json();
+    const { messages, user_id, session_id: initialSessionId, language } = body;
+    
+    if (!user_id || !messages || messages.length === 0) {
+      return new Response('Missing required fields', { status: 400 });
+    }
 
   const latestMessage = messages[messages.length - 1];
   const content = latestMessage.content;
@@ -188,8 +189,12 @@ ${memoriesContext}
     aiMessages.push({ role: 'user', content: content });
   }
 
+  const googleConfig = createGoogleGenerativeAI({
+    apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '',
+  });
+
   const result = streamText({
-    model: google(selectedModel, {
+    model: googleConfig(selectedModel, {
       safetySettings: [
         { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
         { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -252,8 +257,15 @@ ${memoriesContext}
       } catch (err) {
         console.error("onFinish background tasks failed", err);
       }
+    },
+    onError: ({ error }) => {
+      console.error('AI SDK Stream Error:', error);
     }
   });
 
   return result.toTextStreamResponse();
+  } catch (error: any) {
+    console.error("Stream route error:", error);
+    return new Response(error.message || "Failed to process reflection.", { status: 500 });
+  }
 }
