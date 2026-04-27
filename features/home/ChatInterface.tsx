@@ -120,18 +120,24 @@ export const ChatInterface = () => {
     }
   };
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (smooth = true) => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
+      if (smooth) {
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      } else {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
     }
   };
 
+  // Scroll to bottom immediately when new messages arrive, or when thinking state changes
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isThinking]);
+    // If thinking is true, it's starting to type or stream. Use instant to prevent jitter
+    scrollToBottom(!isThinking);
+  }, [messages.length, messages[messages.length - 1]?.content, isThinking]);
 
   const handleSendMessage = async (input: { type: 'text'; content: string }) => {
     const trimmedContent = input.content.trim();

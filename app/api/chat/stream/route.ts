@@ -79,6 +79,10 @@ export async function POST(req: Request) {
   
   const recentMessages = (recentMessagesData || []).reverse();
 
+  // Fetch Meta Context (e.g. for questions like "when did we first talk?")
+  const { data: firstMessage } = await supabase.from('chat_messages').select('created_at').eq('user_id', user_id).order('created_at', { ascending: true }).limit(1).maybeSingle();
+  const { count: sessionCount } = await supabase.from('chat_sessions').select('*', { count: 'exact', head: true }).eq('user_id', user_id);
+
   let olderContextMessages: any[] = [];
   let userEmbedding: number[] | null = null;
   if (content && content.trim().length > 0) {
@@ -165,6 +169,8 @@ ${baseInstruction}
 
 [CONTEXTUAL BACKDROP]
 Current Time: ${new Date().toLocaleString()}
+Journey Began (First Message): ${firstMessage ? new Date(firstMessage.created_at).toLocaleString() : 'Today'}
+Total Chat Sessions: ${sessionCount || 1}
 Current Journey: ${profile.bio || "Starting a new journey."}
 ${intelContext}
 ${memoriesContext}
@@ -183,7 +189,14 @@ ${memoriesContext}
   }
 
   const result = streamText({
-    model: google(selectedModel),
+    model: google(selectedModel, {
+      safetySettings: [
+        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+      ],
+    }),
     system: systemInstruction,
     messages: aiMessages,
     async onFinish({ text }) {
