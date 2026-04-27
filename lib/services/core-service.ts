@@ -164,8 +164,9 @@ export const coreService = {
     type: 'text' | 'image' | 'video' | 'audio' | 'location';
     content: string | File | null;
     metadata?: any;
+    onUpdate?: (content: string) => void;
   }): Promise<ChatMessage> {
-    const { type, content, metadata, user_id, session_id } = input;
+    const { type, content, metadata, user_id, session_id, onUpdate } = input;
     
     let finalContent = typeof content === 'string' ? content : null;
     let mediaUrl = null;
@@ -175,26 +176,74 @@ export const coreService = {
       mediaUrl = finalContent;
     }
 
-    const response = await fetch('/api/chat/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    if (onUpdate) {
+      // Stream path
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id,
+          session_id,
+          messages: [{ role: 'user', content: finalContent }],
+          language: metadata?.language || 'en'
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to send message');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let aiFullContent = '';
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          aiFullContent += chunk;
+          onUpdate(aiFullContent);
+        }
+      }
+
+      return {
+        id: `diary-${Date.now()}`,
         user_id,
         session_id,
-        role: 'user',
-        type,
-        content: finalContent,
-        media_url: mediaUrl,
-        metadata: metadata || {}
-      })
-    });
+        role: 'diary',
+        type: 'text',
+        content: aiFullContent,
+        media_url: null,
+        metadata: {},
+        created_at: new Date().toISOString(),
+        processing_status: 'saved' // fallback
+      } as ChatMessage;
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Failed to send message');
+    } else {
+      // Legacy path
+      const response = await fetch('/api/chat/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id,
+          session_id,
+          role: 'user',
+          type,
+          content: finalContent,
+          media_url: mediaUrl,
+          metadata: metadata || {}
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to send message');
+      }
+
+      return response.json();
     }
-
-    return response.json();
   },
 
   async uploadMedia(file: File, userId: string): Promise<string> {

@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase";
 import { AIOrchestrator } from "@/ai-core/ai-orchestrator";
 import { coreService } from "@/lib/services/core-service";
 import { PipelineController } from "@/ai-core/pipeline-controller";
-import { generateStoryResponse } from "@/ai-core/ai-engine";
+import { generateStoryResponse, generateEmbedding } from "@/ai-core/ai-engine";
 import { extractIntelligenceProfile } from "@/ai-core/intelligence-engine";
 
 // Helper to determine the best model for the interaction ("Magic Way")
@@ -73,15 +73,52 @@ export async function POST(req: Request) {
     }
 
     // Parallel fetch only essential context for this turn
-    const [ { data: recentMessages }, { data: contextChaptersData }, { data: currentVolume }] = await Promise.all([
-      supabase.from('chat_messages').select('content, role')
+    // STEP 1: Sliding Window - Fetch only the last 15 messages for direct working memory
+    const { data: recentMessages } = await supabase.from('chat_messages').select('content, role')
         .eq('user_id', user_id)
         .eq('session_id', session_id)
         .order('created_at', { ascending: false })
-        .limit(10),
-      supabase.from('chapters').select('narrative').eq('user_id', user_id).order('created_at', { ascending: false }).limit(3),
-      supabase.from('volumes').select('*').eq('user_id', user_id).eq('status', 'ongoing').maybeSingle()
-    ]);
+        .limit(15);
+
+    const { data: contextChaptersData } = await supabase.from('chapters').select('narrative')
+        .eq('user_id', user_id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+    const { data: currentVolume } = await supabase.from('volumes').select('*')
+        .eq('user_id', user_id)
+        .eq('status', 'ongoing')
+        .maybeSingle();
+
+    // STEP 2: Semantic Search (True Vector RAG)
+    // Generate embedding for the current user input
+    let olderContextMessages: any[] = [];
+    let userEmbedding: number[] | null = null;
+    
+    if (content && content.trim().length > 0) {
+      try {
+        userEmbedding = await generateEmbedding(content);
+        
+        if (userEmbedding && userEmbedding.length > 0) {
+          // Fetch up to 5 relevant messages from older interactions across ANY session using match_messages RPC
+          const { data: relatedMessages, error: searchError } = await supabase.rpc('match_messages', {
+            query_embedding: userEmbedding,
+            match_threshold: 0.7, // 70% similarity threshold
+            match_count: 5,
+            p_user_id: user_id,
+            p_session_id: session_id || '00000000-0000-0000-0000-000000000000'
+          });
+             
+          if (!searchError && relatedMessages && relatedMessages.length > 0) {
+             olderContextMessages = relatedMessages;
+          } else if (searchError) {
+             console.warn("Vector search failed (ensure pgvector and match_messages are setup):", searchError);
+          }
+        }
+      } catch (e) {
+        console.warn("Embedding generation or search failed:", e);
+      }
+    }
 
     const contextMessages = recentMessages?.map((m: any) => ({ content: m.content || "", role: m.role })).reverse() || [];
     const contextChapters = contextChaptersData?.map((c: any) => c.narrative) || [];
@@ -127,7 +164,7 @@ export async function POST(req: Request) {
         profile.bio || undefined, 
         profile.personality_summary || undefined, 
         updatedIntelProfile as any, 
-        { model: selectedModel, isNarrativeMode: isNarrative }
+        { model: selectedModel, isNarrativeMode: isNarrative, retrievedMemories: olderContextMessages }
     );
 
     const analyzedEvent = pipelineOutput.extractedEvent;
@@ -142,7 +179,8 @@ export async function POST(req: Request) {
           category: analyzedEvent?.category || 'General'
         },
         event_score: analyzedEvent?.score || 0,
-        processing_status: pipelineOutput.narrativeUpdate?.narrative ? 'woven' : (pipelineOutput.extractedEvent ? 'saved' : 'observed')
+        processing_status: pipelineOutput.narrativeUpdate?.narrative ? 'woven' : (pipelineOutput.extractedEvent ? 'saved' : 'observed'),
+        embedding: userEmbedding
     });
       
     if (messageError) throw messageError;

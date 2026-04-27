@@ -14,6 +14,7 @@ export const chatPersistence = {
       metadata: Record<string, any>;
       event_score: number;
       processing_status: 'woven' | 'saved' | 'observed';
+      embedding?: number[] | null;
     }
   ) => {
     return await supabase.from('chat_messages').insert(data).select().single();

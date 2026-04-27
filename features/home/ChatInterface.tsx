@@ -11,6 +11,7 @@ import { authService } from '@/lib/services/auth-service';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
 import { NudgeService } from '@/lib/services/nudge-service';
+import { useChat } from '@ai-sdk/react';
 
 export interface ChatMessage {
   id: string;
@@ -169,21 +170,26 @@ export const ChatInterface = () => {
         session_id: sessionId || undefined,
         type: 'text',
         content: trimmedContent,
-        metadata: { language }
+        metadata: { language },
+        onUpdate: (streamedText) => {
+          setMessages(prev => prev.map(m => 
+            m.id === aiTempId ? { 
+              ...m, 
+              content: streamedText, 
+              role: 'diary',
+            } : m
+          ));
+        }
       });
 
-      if ((result as any).aiResponse) {
+      if (result) {
         setMessages(prev => prev.map(m => 
           m.id === aiTempId ? { 
             ...m, 
-            content: (result as any).aiResponse.content, 
-            role: (result as any).aiResponse.role || 'diary',
-            processing_status: (result as any).processing_status
+            content: result.content || "I've saved that for you.", 
+            role: result.role || 'diary',
+            processing_status: result.processing_status
           } : m
-        ));
-      } else {
-        setMessages(prev => prev.map(m => 
-          m.id === aiTempId ? { ...m, content: "I've saved that for you. Tell me more when you're ready.", role: 'diary' } : m
         ));
       }
     } catch (error: any) {

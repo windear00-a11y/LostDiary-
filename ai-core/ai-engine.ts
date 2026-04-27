@@ -1,4 +1,5 @@
 import { getGenAI } from "@/lib/genai";
+import { GoogleGenAI } from "@google/genai";
 import { IntelligenceProfile } from "@/lib/services/core-service";
 import { generateContentWithFallback } from "@/lib/genai-utils";
 
@@ -11,6 +12,7 @@ export interface HistoryEntry {
 export interface StoryEngineConfig {
   model: string;
   isNarrativeMode: boolean; // Toggle for story vs chat
+  retrievedMemories?: any[]; // For semantic RAG context
 }
 
 const DEFAULT_SYSTEM_INSTRUCTION = `
@@ -45,6 +47,23 @@ TECHNICAL FIREWALL:
 /**
  * Enhanced AI Engine for story generation with better observability.
  */
+export async function generateEmbedding(text: string): Promise<number[]> {
+  try {
+    const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY });
+    const response = await ai.models.embedContent({
+      model: 'text-embedding-004',
+      contents: text
+    });
+    if (response.embeddings && response.embeddings.length > 0 && response.embeddings[0].values) {
+      return response.embeddings[0].values;
+    }
+    return [];
+  } catch (error) {
+    console.error("Embedding Error:", error);
+    return [];
+  }
+}
+
 export async function generateStoryResponse(
   input: string,
   history: HistoryEntry[],
@@ -65,22 +84,49 @@ export async function generateStoryResponse(
   try {
     const isNewUser = (!history || history.length < 3) && !summary;
     
-    // Convert history into proper Gemini multi-turn format
-    const formattedHistory = history.map((m) => ({
+    // Convert history into proper Gemini multi-turn format, ensuring strictly alternating roles
+    const rawHistory = history.map((m) => ({
       role: m.role === 'user' ? 'user' : 'model',
-      parts: [{ text: m.content }]
-    }));
+      text: m.content || ""
+    })).filter(m => m.text.trim().length > 0);
+
+    const formattedHistory: { role: string, parts: { text: string }[] }[] = [];
+    
+    for (const m of rawHistory) {
+      if (formattedHistory.length === 0) {
+        if (m.role === 'model') {
+           formattedHistory.push({ role: 'user', parts: [{ text: '[Silence]' }]});
+        }
+        formattedHistory.push({ role: m.role, parts: [{ text: m.text }] });
+      } else {
+        const last = formattedHistory[formattedHistory.length - 1];
+        if (last.role === m.role) {
+          last.parts[0].text += '\n\n' + m.text;
+        } else {
+          formattedHistory.push({ role: m.role, parts: [{ text: m.text }] });
+        }
+      }
+    }
 
     // Add the latest distinct user input
-    formattedHistory.push({
-      role: 'user',
-      parts: [{ text: input }]
-    });
+    if (formattedHistory.length > 0 && formattedHistory[formattedHistory.length - 1].role === 'user') {
+      formattedHistory[formattedHistory.length - 1].parts[0].text += '\n\n' + input;
+    } else {
+      formattedHistory.push({
+        role: 'user',
+        parts: [{ text: input }]
+      });
+    }
 
     const intelContext = intelligenceProfile ? `
 [SUBCONSCIOUS PROFILE]
 - Core Emotion: ${intelligenceProfile.emotional_state?.summary || "Neutral"}
 - Contextual Needs: ${intelligenceProfile.interests_goals?.summary || "Reflective"}` : "";
+
+    const memoriesContext = config.retrievedMemories && config.retrievedMemories.length > 0 ? `
+[RETRIEVED PAST MEMORIES]
+${config.retrievedMemories.map(m => `- [${new Date(m.created_at).toLocaleDateString()}] ${m.content}`).join('\n')}
+(Use these past memories IF they relevantly answer or contextualize the user's current thought. They show you HAVE remembered things from the past.)` : "";
 
     // Differentiated instructions based on mode
     let baseInstruction = config.isNarrativeMode 
@@ -95,6 +141,7 @@ Current Time: ${new Date().toLocaleString()}
 User Status: ${isNewUser ? "New" : "Returning"}
 Current Journey: ${summary || "Starting a new journey."}
 ${intelContext}
+${memoriesContext}
 (Note: Do not address this backdrop directly. Internalize it to guide your tone.)
 `.trim();
 
