@@ -90,13 +90,6 @@ export const JournalEditor = () => {
     }
   }, [title]);
 
-  useEffect(() => {
-    if (contentRef.current) {
-      contentRef.current.style.height = 'auto';
-      contentRef.current.style.height = contentRef.current.scrollHeight + 'px';
-    }
-  }, [content]);
-
   // Check for recent entries on mount
   useEffect(() => {
     const inspireId = searchParams?.get('inspire');
