@@ -1,7 +1,9 @@
 import { getGenAI } from "./genai";
 
 const FALLBACK_MODELS = [
+  "gemini-1.5-flash-latest",
   "gemini-1.5-flash",
+  "gemini-1.5-pro-latest",
   "gemini-1.5-pro",
 ];
 
@@ -17,18 +19,27 @@ export async function generateContentWithFallback(params: any): Promise<any> {
       if (process.env.NODE_ENV !== 'production') {
         console.log(`Attempting generation with model: ${model}`);
       }
-      const response = await ai.models.generateContent({
-        ...params,
+      
+      // Flatten config for @google/genai SDK
+      const { config, ...restOfParams } = params;
+      const finalParams = {
+        ...restOfParams,
+        ...config, // contains systemInstruction, temperature, etc.
         model
-      });
+      };
+
+      const response = await ai.models.generateContent(finalParams);
       return response;
     } catch (error: any) {
-      console.warn(`Model ${model} failed:`, error.message);
-      lastError = error;
+      const errorMsg = error.message || String(error);
+      console.warn(`Model ${model} failed:`, errorMsg);
       
-      // Check if it's a structural error (like invalid schema) in which case switching models probably won't help,
-      // but if it's quota (429) or overloaded (503) or not found (404), we should definitely try the next.
-      // Easiest is to always fallback.
+      // Check for specific "not found" or "supported" errors to log more info
+      if (errorMsg.includes('not found') || errorMsg.includes('not supported')) {
+        console.warn(`Note: Model ${model} might not be available in this environment/region.`);
+      }
+      
+      lastError = error;
     }
   }
 

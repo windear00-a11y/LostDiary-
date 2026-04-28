@@ -355,7 +355,7 @@ Rules:
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-3.1-flash-lite-preview",
+        model: "gemini-1.5-flash",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.5, responseMimeType: "application/json" }
       });
