@@ -335,9 +335,9 @@ export const coreService = {
         let errorMessage = "I'm holding this space for you, but my words are lost in the mist for a moment.";
         if (lastThinkingStep) {
           if (lastThinkingStep.includes('Server Error') || lastThinkingStep.includes('Error:')) {
-            errorMessage = `[WinDear Debug] Cognitive Shadow Detected:\n"${lastThinkingStep}"\n\nThis usually occurs when the model is not found in the specified API version (attempted v1) or region. This message is for developers.`;
+            errorMessage = `[WinDear Technical Error]\nEvent: Cognitive Shadow\nContext: Stream Failure\nTechnical Detail: "${lastThinkingStep}"\n\nPossible Causes: API Rate Limit, Model Unavailability, or Regional Deployment Shadow. Check Console for Pipeline Logs.`;
           } else {
-            errorMessage = `WinDear was processing a thought: "${lastThinkingStep}", but the connection was severed. Could you share that with me again?`;
+            errorMessage = `WinDear was processing a thought: "${lastThinkingStep}", but the connection was severed. Status: Stream Terminated.`;
           }
         }
 

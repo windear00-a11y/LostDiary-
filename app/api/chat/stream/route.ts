@@ -18,11 +18,11 @@ function getTavily() {
 
 function determineModelForInput(content: string): string {
   const wordCount = content.split(/\s+/).length;
-  // Use stable production models for maximum reliability
+  // Use stable production models with full paths
   if (wordCount > 40 || content.toLowerCase().match(/why|explain|deep|analyze|reflect|meaning/)) {
-    return "gemini-1.5-pro";
+    return "models/gemini-1.5-pro";
   }
-  return "gemini-1.5-flash";
+  return "models/gemini-1.5-flash";
 }
 
 const DEFAULT_SYSTEM_INSTRUCTION = `
@@ -272,7 +272,6 @@ ${memoriesContext}
 
     const googleConfig = createGoogleGenerativeAI({
       apiKey,
-      baseURL: 'https://generativelanguage.googleapis.com/v1',
     });
 
     // data.append removed

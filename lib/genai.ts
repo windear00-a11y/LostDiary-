@@ -14,11 +14,10 @@ export function getGenAI() {
     }
   }
 
-  // Use the new @google/genai pattern
+  // Use default API version to allow SDK to handle stable/beta transitions
   try {
     genAIInstance = new GoogleGenAI({ 
       apiKey: apiKey || "MISSING_API_KEY",
-      apiVersion: 'v1', // Fixed as v1 for stable model IDs
     });
   } catch (e) {
     console.error("Failed to initialize GoogleGenAI:", e);
