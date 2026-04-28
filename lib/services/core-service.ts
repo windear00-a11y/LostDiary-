@@ -225,39 +225,56 @@ export const coreService = {
           buffer = lines.pop() || '';
 
           for (const line of lines) {
-            if (!line) continue;
-            
+            const trimmedLine = line.trim();
+            if (!trimmedLine) continue;
+
             // Handle SSE (Server-Sent Events) from UIMessage stream or AgentUI stream
-            if (line.startsWith('data: ')) {
+            if (trimmedLine.startsWith('data: ')) {
+              const dataStr = trimmedLine.slice(6).trim();
+              if (dataStr === '[DONE]') continue;
+
               try {
-                const data = JSON.parse(line.slice(6));
+                const data = JSON.parse(dataStr);
                 
                 if (data.type === 'text-delta') {
-                  aiFullContent += data.delta;
+                  const delta = data.delta || data.text || data.textDelta || '';
+                  aiFullContent += delta;
                   if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
                 } else if (data.type === 'reasoning-delta') {
-                  // handle thinking if available
-                } else if (data.type === 'tool-call') {
-                  if (data.toolName === 'search') {
-                    lastThinkingStep = `Searching the web for "${data.args.query}"...`;
+                  const delta = data.delta || data.text || data.textDelta || '';
+                  if (delta) {
+                    lastThinkingStep = `Thinking: ${delta.slice(0, 30)}...`;
+                    if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                  }
+                } else if (data.type === 'tool-call' || data.type === 'tool-input-start' || data.type === 'tool-input-available') {
+                  const toolName = data.toolName || 'tool';
+                  if (toolName === 'search') {
+                    lastThinkingStep = `Searching the web...`;
                   } else {
-                    lastThinkingStep = `Using tool: ${data.toolName}...`;
+                    lastThinkingStep = `Using tool: ${toolName}...`;
                   }
                   if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
-                } else if (data.type === 'error') {
-                  lastThinkingStep = `Stream Error: ${data.errorText}`;
+                } else if (data.type === 'error' || data.type === 'tool-input-error') {
+                  lastThinkingStep = `Stream Error: ${data.errorText || data.error || 'Unknown error'}`;
                   if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
                 }
                 continue;
               } catch (e) {
-                // Not JSON data or not SSE, continue to data stream protocol check
+                // Not JSON data, continue to old protocol check
+              }
+            } else if (trimmedLine) {
+              // Raw text fallback (e.g. from toTextStreamResponse or plain chunks)
+              // But avoid adding numeric protocol lines if it's the old protocol
+              if (!/^[0-9abd-f]:/.test(trimmedLine)) {
+                aiFullContent += line; // Use original line to preserve spaces if any
+                if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
               }
             }
 
             // AI SDK Data Stream Protocol: https://sdk.vercel.ai/docs/reference/ai-sdk-ui/data-stream-protocol
             try {
-              const type = line[0];
-              const contentStr = line.slice(2);
+              const type = trimmedLine[0];
+              const contentStr = trimmedLine.slice(2);
               
               if (type === '0') {
                 // Text chunk
@@ -302,6 +319,27 @@ export const coreService = {
             } catch (e) {
               // Not a protocol line or malformed, skip
             }
+          }
+        }
+        
+        // Final attempt to process any remaining buffer
+        if (buffer.trim()) {
+          const line = buffer.trim();
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6).trim());
+              if (data.type === 'text-delta') {
+                aiFullContent += (data.delta || data.text || data.textDelta || '');
+              }
+            } catch (e) {}
+          } else {
+            // Try old protocol
+            try {
+              const type = line[0];
+              if (type === '0') {
+                aiFullContent += JSON.parse(line.slice(2));
+              }
+            } catch (e) {}
           }
         }
       }

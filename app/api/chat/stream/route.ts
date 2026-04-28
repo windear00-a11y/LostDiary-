@@ -271,7 +271,7 @@ ${memoriesContext}
     }
 
     const googleConfig = createGoogleGenerativeAI({
-      apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '',
+      apiKey,
     });
 
     // data.append removed
@@ -342,12 +342,12 @@ ${memoriesContext}
       }
     });
 
-    if (typeof (result as any).toUIMessageStreamResponse === 'function') {
-      return (result as any).toUIMessageStreamResponse();
-    }
-
     if (typeof (result as any).toTextStreamResponse === 'function') {
       return (result as any).toTextStreamResponse();
+    }
+
+    if (typeof (result as any).toUIMessageStreamResponse === 'function') {
+      return (result as any).toUIMessageStreamResponse();
     }
 
     console.error("No streaming response method found on streamText result. Keys:", Object.keys(result));
