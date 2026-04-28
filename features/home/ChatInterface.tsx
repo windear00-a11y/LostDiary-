@@ -13,7 +13,7 @@ import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
 import { NudgeService } from '@/lib/services/nudge-service';
 import { useChat } from '@ai-sdk/react';
 
-export interface ChatMessage {
+interface ChatMessage {
   id: string;
   role: 'user' | 'ai' | 'diary';
   content: string;
@@ -140,7 +140,6 @@ export const ChatInterface = () => {
   useEffect(() => {
     // If thinking is true, it's starting to type or stream. Use instant to prevent jitter
     scrollToBottom(!isThinking);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length, lastMessageContent, isThinking]);
 
   const handleSendMessage = async (input: { type: 'text'; content: string }) => {
@@ -247,63 +246,65 @@ export const ChatInterface = () => {
   };
 
   const ThinkingSkeleton = () => (
-    <div className="flex flex-col gap-4 py-2 w-full min-w-[240px]">
+    <div className="flex flex-col gap-4 py-3 w-full min-w-[240px]">
       <div className="flex gap-2 mb-1">
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
-            animate={{ opacity: [0.2, 0.8, 0.2] }}
+            animate={{ opacity: [0.2, 0.8, 0.2], y: [0, -2, 0] }}
             transition={{ duration: 2, repeat: Infinity, delay: i * 0.4 }}
-            className="w-1 h-1 bg-indigo-400 rounded-full"
+            className="w-1.5 h-1.5 bg-[var(--color-accent-amber)] rounded-full"
           />
         ))}
       </div>
-      <div className="space-y-3">
+      <div className="space-y-4">
         <motion.div 
           animate={{ opacity: [0.05, 0.15, 0.05] }}
           transition={{ duration: 3, repeat: Infinity }}
-          className="h-2.5 w-full bg-white rounded-full" 
+          className="h-2 w-full bg-[var(--color-primary-text-dark)] rounded-full" 
         />
         <motion.div 
           animate={{ opacity: [0.05, 0.15, 0.05] }}
           transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
-          className="h-2.5 w-[90%] bg-white rounded-full" 
+          className="h-2 w-[85%] bg-[var(--color-primary-text-dark)] rounded-full" 
         />
         <motion.div 
           animate={{ opacity: [0.05, 0.15, 0.05] }}
           transition={{ duration: 3, repeat: Infinity, delay: 1 }}
-          className="h-2.5 w-[65%] bg-white rounded-full" 
+          className="h-2 w-[60%] bg-[var(--color-primary-text-dark)] rounded-full" 
         />
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col h-full bg-[#0a0a0a] text-white relative overflow-hidden font-sans">
+    <div className="flex flex-col h-full bg-transparent text-[var(--color-primary-text-dark)] relative overflow-hidden font-sans">
+      <div className="atmosphere pointer-events-none" />
       <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       
       {/* Nudge / Motivation UI - Emotional Decision Point */}
       <AnimatePresence>
         {showNudge && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-neutral-950/80 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-neutral-950/80 backdrop-blur-md">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: -20 }}
-              transition={{ type: 'spring', damping: 20, stiffness: 100 }}
-              className="bg-neutral-900/80 border border-white/10 rounded-[32px] p-8 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-2xl relative overflow-hidden"
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className="glass-surface border border-white/5 rounded-[40px] p-10 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.8)] relative overflow-hidden"
             >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-indigo-500/10 blur-[60px] rounded-full pointer-events-none" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-[var(--color-accent-amber)]/10 blur-[60px] rounded-full pointer-events-none" />
               
-              <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Sparkles className="w-8 h-8 text-indigo-400" />
+              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 relative">
+                <div className="absolute inset-0 bg-[var(--color-accent-amber)]/20 blur-md rounded-full" />
+                <Sparkles className="w-8 h-8 text-[var(--color-accent-amber)] relative z-10" />
               </div>
 
-              <div className="space-y-3 mb-10">
-                <h3 className="text-xl font-serif italic text-white leading-tight">
+              <div className="space-y-4 mb-10">
+                <h3 className="text-2xl font-serif text-[var(--color-primary-text-dark)] leading-tight">
                   {messages.length === 0 ? "Aapki baaton ka intezar hai." : "Main kab se sunne ke liye rukka tha."}
                 </h3>
-                <p className="text-sm text-slate-400 font-serif leading-relaxed px-4">
+                <p className="text-[15px] text-[var(--color-secondary-text-dark)] leading-relaxed px-2 font-serif italic">
                   {messages.length === 0 
                     ? "Koi aisi baat jo aap kehna chahte hon? Main yahan hoon." 
                     : "Humari pichli baat mujhe yaad hai. Kya wahin se aage badhein ya koi nayi baatchit shuru karein?"}
@@ -315,14 +316,14 @@ export const ChatInterface = () => {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => setShowNudge(false)}
-                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-medium transition-all"
+                  className="w-full py-4 bg-[var(--color-primary-text-dark)] text-[var(--color-primary-text-light)] rounded-2xl font-medium transition-all shadow-[0_0_20px_rgba(232,226,217,0.1)] focus:outline-none"
                 >
                   Let&apos;s continue
                 </motion.button>
                 
                 <button 
                   onClick={handleStartNewSession}
-                  className="w-full py-3 text-white/50 hover:text-white text-xs tracking-wide uppercase font-semibold transition-all"
+                  className="w-full py-3 text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)] text-xs tracking-widest uppercase font-semibold transition-all focus:outline-none"
                 >
                   Start Fresh
                 </button>
@@ -330,7 +331,7 @@ export const ChatInterface = () => {
 
               <button 
                 onClick={() => setShowNudge(false)}
-                className="absolute top-6 right-6 text-white/20 hover:text-white transition-colors"
+                className="absolute top-6 right-6 text-white/30 hover:text-white transition-colors focus:outline-none"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -340,22 +341,22 @@ export const ChatInterface = () => {
       </AnimatePresence> 
 
       {/* Header Inline */}
-      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[#0a0a0a] via-[#0a0a0a]/90 to-transparent pt-6 pb-12 px-6 flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-3">
-           <div className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-              <MessageSquare className="w-4 h-4 text-white/50" />
+      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/80 to-transparent pt-6 pb-12 px-6 flex items-center justify-between pointer-events-none">
+        <div className="flex items-center gap-4">
+           <div className="w-10 h-10 rounded-full glass-surface flex items-center justify-center shrink-0 shadow-sm">
+              <MessageSquare className="w-4 h-4 text-[var(--color-accent-amber)]" />
            </div>
            <div className="flex flex-col pointer-events-auto">
-             <span className="text-[10px] uppercase font-bold tracking-widest text-white/40">Active Thread</span>
-             <span className="text-sm font-serif italic text-white/80">{activeSession?.title || 'Reflection'}</span>
+             <span className="text-[9px] uppercase font-bold tracking-[0.2em] text-[var(--color-secondary-text-dark)]">Active Reflection</span>
+             <span className="text-sm font-serif italic text-[var(--color-primary-text-dark)] opacity-90">{activeSession?.title || 'Sanctuary'}</span>
            </div>
         </div>
         <button 
           onClick={handleStartNewSession}
-          className="pointer-events-auto w-10 h-10 rounded-full border border-white/10 bg-white/5 flex items-center justify-center hover:bg-white/10 hover:border-white/20 transition-all group lg:mr-8"
+          className="pointer-events-auto w-12 h-12 rounded-full glass-surface flex items-center justify-center hover:bg-white/10 transition-all group shadow-sm focus:outline-none"
           title="Start a new chat"
         >
-          <Plus className="w-4 h-4 text-white/60 group-hover:text-white transition-colors" />
+          <Plus className="w-5 h-5 text-[var(--color-secondary-text-dark)] group-hover:text-[var(--color-primary-text-dark)] transition-colors" />
         </button>
       </div>
 
@@ -363,17 +364,17 @@ export const ChatInterface = () => {
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-32 pb-6 transition-all duration-700`}
+        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-32 pb-6 transition-all duration-700 relative z-10`}
       >
-        <div className={`max-w-2xl mx-auto space-y-8 min-h-full flex flex-col transition-all duration-700 
-          ${isInputFocused ? 'opacity-30 blur-[0.5px]' : 'opacity-100'} 
-          ${showNudge ? 'blur-sm scale-[0.99] opacity-40 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
+        <div className={`max-w-2xl mx-auto space-y-12 min-h-full flex flex-col transition-all duration-700 
+          ${isInputFocused ? 'opacity-40 blur-[1px]' : 'opacity-100'} 
+          ${showNudge ? 'blur-md scale-[0.98] opacity-30 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
         >
           {/* Privacy Trust Signal */}
-          <div className="flex flex-col items-center justify-center space-y-3 mb-10 select-none opacity-60 hover:opacity-100 transition-opacity">
-             <Shield className="w-6 h-6 text-emerald-500/50 drop-shadow-md" />
-             <p className="text-[11px] font-sans text-center max-w-[280px] text-emerald-100/60 drop-shadow-sm uppercase tracking-widest leading-relaxed">
-                Your reflections are sealed within your unique neural resonance.
+          <div className="flex flex-col items-center justify-center space-y-4 mb-12 select-none opacity-50 hover:opacity-100 transition-opacity duration-1000">
+             <Shield className="w-6 h-6 text-[#7a7266] drop-shadow-md" />
+             <p className="text-[10px] font-sans text-center max-w-[280px] text-[#7a7266] uppercase tracking-[0.2em] leading-relaxed">
+                Your reflections remain uniquely yours.
              </p>
           </div>
 
@@ -381,34 +382,34 @@ export const ChatInterface = () => {
             {messages.length === 0 && !showNudge && (
               <motion.div 
                 key="empty-suggestions"
-                initial={{ opacity: 0, scale: 0.98 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.98, filter: "blur(5px)" }}
+                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
                 exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                transition={{ duration: 0.4, ease: "circOut" }}
-                className="flex-1 flex flex-col items-center justify-center space-y-10"
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                className="flex-1 flex flex-col items-center justify-center space-y-12"
               >
-                <div className="flex flex-col items-center space-y-4">
+                <div className="flex flex-col items-center space-y-6">
                   <motion.div 
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-16 h-16 bg-white/5 rounded-2xl rotate-3 flex items-center justify-center border border-white/10"
+                    animate={{ y: [0, -8, 0] }}
+                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                    className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center border border-white/5 shadow-[0_0_40px_rgba(255,158,94,0.05)]"
                   >
-                     <Sparkles className="w-6 h-6 text-indigo-400" />
+                     <Sparkles className="w-8 h-8 text-[var(--color-accent-amber)] opacity-80" />
                   </motion.div>
-                  <h2 className="text-xl md:text-2xl font-serif italic text-white/80 pb-2">What is on your mind?</h2>
+                  <h2 className="text-3xl font-serif text-[var(--color-primary-text-dark)] tracking-wide">What is on your mind?</h2>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-lg">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-lg">
                   {starters.map((starter, i) => (
                     <motion.button
                       key={i}
-                      whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.08)" }}
+                      whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleSendMessage({ type: 'text', content: starter.text })}
-                      className="w-full text-left p-4 bg-white/[0.03] border border-white/5 rounded-2xl text-[13px] md:text-sm text-white/70 font-sans transition-all flex flex-col gap-3 group"
+                      className="w-full text-left p-6 glass-surface rounded-[24px] text-sm text-[var(--color-primary-text-dark)] transition-all flex flex-col gap-4 group focus:outline-none"
                     >
-                      <span className="text-xl group-hover:scale-110 transition-transform origin-bottom-left">{starter.icon}</span>
-                      <span className="leading-relaxed font-medium">{starter.text}</span>
+                      <span className="text-2xl group-hover:scale-110 transition-transform origin-bottom-left grayscale group-hover:grayscale-0 opacity-80">{starter.icon}</span>
+                      <span className="leading-relaxed font-serif italic text-lg tracking-wide opacity-90">{starter.text}</span>
                     </motion.button>
                   ))}
                 </div>
@@ -423,26 +424,17 @@ export const ChatInterface = () => {
             return (
               <div key={msg.id} className={`flex w-full ${isUser ? 'justify-end' : 'justify-start'}`}>
                 <motion.div
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, ease: [0.23, 1, 0.32, 1] }}
-                  className={`flex items-end max-w-[95%] md:max-w-[85%] relative ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
+                  transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+                  className={`flex items-end max-w-[90%] md:max-w-[80%] relative ${isUser ? 'flex-row-reverse' : 'flex-row'}`}
                 >
-                  {/* Avatar with Custom Cutout Effect */}
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-[4px] border-[#0a0a0a] z-10 box-content mb-1 ${
-                    isUser 
-                      ? 'bg-neutral-800 -ml-4' 
-                      : 'bg-indigo-900/80 -mr-4'
-                  }`}>
-                    {isUser ? <User className="w-3.5 h-3.5 text-white/60" /> : <Sparkles className="w-3.5 h-3.5 text-indigo-300" />}
-                  </div>
-
                   {/* Bubble */}
-                  <div className={`max-w-full px-5 py-4 z-0 ${
+                  <div className={`max-w-full px-7 py-6 z-0 ${
                     isUser 
-                      ? 'bg-[#212121] text-white rounded-[24px] shadow-md' 
-                      : 'bg-white/[0.04] border border-white/5 text-white rounded-[24px] backdrop-blur-md shadow-sm'
-                  }`} style={{ minWidth: '40px' }}>
+                      ? 'bubble-user text-[var(--color-primary-text-dark)] rounded-[32px] rounded-br-[8px]' 
+                      : 'bubble-ai text-[var(--color-primary-text-dark)] rounded-[32px] rounded-bl-[8px]'
+                  }`} style={{ minWidth: isThinkingMsg ? '200px' : '60px' }}>
                   {isThinkingMsg || (msg.role === 'diary' && !msg.content) ? (
                     <div className="flex flex-col gap-3">
                       <ThinkingSkeleton />
@@ -450,7 +442,7 @@ export const ChatInterface = () => {
                         <motion.p 
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="text-[10px] uppercase tracking-[0.15em] text-indigo-300/40 font-bold"
+                          className="text-[10px] uppercase tracking-[0.15em] text-[var(--color-secondary-text-dark)] pt-3"
                         >
                           {poetizeThinkingStep(msg.thinking_step)}
                         </motion.p>
@@ -458,7 +450,7 @@ export const ChatInterface = () => {
                     </div>
                   ) : (
                     <>
-                      <div className="text-[15px] leading-relaxed tracking-wide prose prose-invert prose-p:leading-[1.7] prose-p:last:mb-0 max-w-none text-white/90">
+                      <div className="prose-sanctuary">
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                       </div>
 
@@ -466,29 +458,34 @@ export const ChatInterface = () => {
                         <motion.div 
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="mt-3 pt-3 border-t border-white/5 flex items-center gap-3"
+                          className="mt-4 pt-4 border-t border-white/5 flex items-center gap-3"
                         >
-                          <div className="flex gap-1">
+                          <div className="flex gap-1.5">
                             {[0, 1, 2].map((i) => (
                               <motion.div
                                 key={i}
                                 animate={{ opacity: [0.3, 1, 0.3] }}
-                                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
-                                className="w-1 h-1 bg-indigo-400 rounded-full"
+                                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
+                                className="w-1.5 h-1.5 bg-[var(--color-accent-amber)] rounded-full"
                               />
                             ))}
                           </div>
-                          <span className="text-[9px] uppercase tracking-[0.1em] text-indigo-300/40 font-bold">{poetizeThinkingStep(msg.thinking_step)}</span>
+                          <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--color-secondary-text-dark)]">{poetizeThinkingStep(msg.thinking_step)}</span>
                         </motion.div>
                       )}
                       
                       {/* Processing Status Indicator */}
                       {msg.role === 'diary' && msg.processing_status && msg.processing_status !== 'observed' && (
-                        <div className={`mt-3 pt-3 border-t border-white/10 text-[9px] uppercase tracking-[0.2em] font-bold flex items-center gap-1.5 opacity-60 ${
-                          msg.processing_status === 'woven' ? 'text-amber-400' : 'text-emerald-400'
-                        }`}>
-                          <Sparkles className="w-2.5 h-2.5" />
-                          {msg.processing_status === 'woven' ? 'Narrative Woven' : 'Moment Saved'}
+                        <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+                          <div className={`text-[9px] uppercase tracking-[0.2em] flex items-center gap-2 opacity-60 ${
+                            msg.processing_status === 'woven' ? 'text-[var(--color-accent-gold)]' : 'text-[#859587]'
+                          }`}>
+                            <Sparkles className="w-3 h-3" />
+                            {msg.processing_status === 'woven' ? 'Narrative Woven' : 'Moment Saved'}
+                          </div>
+                          <span className="text-[10px] font-sans opacity-30 tracking-widest uppercase">
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         </div>
                       )}
                     </>
@@ -502,8 +499,8 @@ export const ChatInterface = () => {
       </div>
 
       {/* Sticky Bottom Input Section */}
-      <div className={`shrink-0 w-full z-50 px-4 pt-4 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/95 to-transparent transition-all duration-300 ${isInputFocused ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[calc(64px+env(safe-area-inset-bottom))]'}`}>
-        <div className={`pb-4 max-w-3xl mx-auto transition-all duration-500 ${isInputFocused ? 'pb-6' : ''}`}>
+      <div className={`shrink-0 w-full z-50 px-4 pt-8 bg-gradient-to-t from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/95 to-transparent transition-all duration-300 ${isInputFocused ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[calc(40px+env(safe-area-inset-bottom))]'}`}>
+        <div className={`pb-6 max-w-3xl mx-auto transition-all duration-500`}>
           <ChatInput 
             onSendMessage={handleSendMessage} 
             disabled={isThinking} 

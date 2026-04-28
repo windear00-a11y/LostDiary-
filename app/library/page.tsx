@@ -14,7 +14,7 @@ import { authService } from '@/lib/services/auth-service';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { useAuth } from '@/components/auth/auth-provider';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface LibraryStory {
   id: string;

@@ -1,11 +1,11 @@
-export interface EventMetrics {
+interface EventMetrics {
   emotion_intensity: number; // 0-5
   personal_relevance: number; // 0-5
   frequency_weight: number; // 0-3
   uniqueness: number; // 0-2
 }
 
-export interface ScoredEvent {
+interface ScoredEvent {
   score: number;
   eventType: 'minor' | 'major' | 'discard';
 }

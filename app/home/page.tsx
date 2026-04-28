@@ -5,7 +5,7 @@ import { BookView } from '@/features/story/BookView';
 import { JournalEditor } from '@/features/journal/JournalEditor';
 import { InsightsView } from '@/features/story/InsightsView';
 import { LanguageOnboarding } from '@/features/onboarding/LanguageOnboarding';
-import { useAuth } from '@/components/auth/auth-provider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';

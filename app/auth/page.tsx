@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react';
 import { authService } from '@/lib/services/auth-service';
 import { motion } from 'motion/react';
-import { useAuth } from '@/components/auth/auth-provider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 
 function AuthForm() {

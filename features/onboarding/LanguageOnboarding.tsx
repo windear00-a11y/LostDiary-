@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Globe, ArrowRight, Search, Sparkles } from 'lucide-react';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { useAuth } from '@/components/auth/auth-provider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { coreService } from '@/lib/services/core-service';
 
 const TOP_LANGUAGES = [

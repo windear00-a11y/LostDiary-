@@ -4,12 +4,12 @@ import { IntelligenceProfile } from "@/lib/services/core-service";
 import { generateContentWithFallback } from "@/lib/genai-utils";
 
 // Structured types for better safety
-export interface HistoryEntry {
+interface HistoryEntry {
   content: string;
   role: string;
 }
 
-export interface StoryEngineConfig {
+interface StoryEngineConfig {
   model: string;
   isNarrativeMode: boolean; // Toggle for story vs chat
   retrievedMemories?: any[]; // For semantic RAG context

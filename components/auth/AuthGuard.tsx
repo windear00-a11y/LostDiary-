@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from './auth-provider';
+import { useAuth } from './AuthProvider';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';

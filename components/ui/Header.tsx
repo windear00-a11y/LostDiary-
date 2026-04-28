@@ -22,23 +22,23 @@ export const Header = () => {
             className="fixed top-4 inset-x-0 z-[70] pointer-events-none flex justify-center items-center px-4 w-full"
           >
             {isLibrary && (
-              <div className="flex bg-[#0A0A0A]/80 backdrop-blur-md border border-white/10 rounded-full p-1 shadow-lg pointer-events-auto">
+              <div className="flex bg-[var(--color-bg-dark)]/80 backdrop-blur-md border border-white/5 rounded-full p-1 shadow-[0_4px_20px_rgba(0,0,0,0.5)] pointer-events-auto">
                 <button
                   onClick={() => setActiveLibraryTab('feed')}
-                  className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all focus:outline-none ${
                     activeLibraryTab === 'feed'
-                      ? 'bg-indigo-500/20 text-indigo-300'
-                      : 'text-neutral-500 hover:text-neutral-300'
+                      ? 'bg-[var(--color-accent-amber)]/20 text-[var(--color-accent-amber)]'
+                      : 'text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)]'
                   }`}
                 >
                   Global Feed
                 </button>
                 <button
                   onClick={() => setActiveLibraryTab('echoes')}
-                  className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                  className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all focus:outline-none ${
                     activeLibraryTab === 'echoes'
-                      ? 'bg-emerald-500/20 text-emerald-300'
-                      : 'text-neutral-500 hover:text-neutral-300'
+                      ? 'bg-[var(--color-accent-gold)]/20 text-[var(--color-accent-gold)]'
+                      : 'text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)]'
                   }`}
                 >
                   Soul Signals
@@ -47,33 +47,33 @@ export const Header = () => {
             )}
 
             {pathname === '/profile' && (
-               <div className="flex bg-[#0A0A0A]/80 backdrop-blur-md border border-white/10 rounded-full p-1 shadow-lg pointer-events-auto">
+               <div className="flex bg-[var(--color-bg-dark)]/80 backdrop-blur-md border border-white/5 rounded-full p-1 shadow-[0_4px_20px_rgba(0,0,0,0.5)] pointer-events-auto">
                  <button
                    onClick={() => setActiveProfileTab('identity')}
-                   className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                   className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all focus:outline-none ${
                     activeProfileTab === 'identity'
-                       ? 'bg-white/10 text-white'
-                       : 'text-neutral-500 hover:text-neutral-300'
+                       ? 'bg-white/10 text-[var(--color-primary-text-dark)]'
+                       : 'text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)]'
                    }`}
                  >
                    Identity
                  </button>
                  <button
                    onClick={() => setActiveProfileTab('mirror')}
-                   className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                   className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all focus:outline-none ${
                     activeProfileTab === 'mirror'
-                       ? 'bg-indigo-500/20 text-indigo-300'
-                       : 'text-neutral-500 hover:text-neutral-300'
+                       ? 'bg-[var(--color-accent-amber)]/20 text-[var(--color-accent-amber)]'
+                       : 'text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)]'
                    }`}
                  >
                    Mirror
                  </button>
                  <button
                    onClick={() => setActiveProfileTab('vault')}
-                   className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
+                   className={`px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all focus:outline-none ${
                     activeProfileTab === 'vault'
-                       ? 'bg-white/10 text-white'
-                       : 'text-neutral-500 hover:text-neutral-300'
+                       ? 'bg-[var(--color-accent-gold)]/20 text-[var(--color-accent-gold)]'
+                       : 'text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)]'
                    }`}
                  >
                    Vault

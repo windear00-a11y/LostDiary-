@@ -31,18 +31,18 @@ export const BottomNav = () => {
   };
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-[100] border-t border-white/5 bg-[#050505] pointer-events-auto pb-[env(safe-area-inset-bottom)]">
+    <div className="fixed bottom-0 inset-x-0 z-[100] border-t border-white/5 bg-[var(--color-bg-dark)] pointer-events-auto pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
       <div className="flex justify-between items-center h-16 max-w-lg mx-auto px-2">
         {/* Menu Button */}
         <button
           onClick={() => setIsBottomSheetOpen(true)}
-          className="flex items-center justify-center w-12 h-12 rounded-full text-neutral-400 hover:text-white transition-all hover:bg-white/5 shrink-0"
+          className="flex items-center justify-center w-12 h-12 rounded-full text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)] transition-all hover:bg-white/5 shrink-0 focus:outline-none"
         >
           <MoreHorizontal className="w-5 h-5 drop-shadow-md" />
         </button>
 
         {/* Dynamic Tabs */}
-        <div className="flex flex-1 justify-center items-center gap-1">
+        <div className="flex flex-1 justify-center items-center gap-2">
           <AnimatePresence mode="popLayout">
             {tabs.map((tab) => {
               const isActive = tab.active;
@@ -50,19 +50,19 @@ export const BottomNav = () => {
                 <button
                   key={tab.id}
                   onClick={() => handleTabClick(tab)}
-                  className={`group relative flex items-center justify-center transition-all duration-500 ease-in-out overflow-hidden
+                  className={`group relative flex items-center justify-center transition-all duration-500 ease-out overflow-hidden focus:outline-none
                     ${isActive 
-                      ? 'bg-indigo-500/10 text-indigo-400 px-3 py-2.5 rounded-full' 
-                      : 'w-10 h-10 sm:w-12 sm:h-12 rounded-full text-neutral-500 hover:text-neutral-300 hover:bg-white/5'
+                      ? 'bg-[var(--color-accent-amber)]/20 text-[var(--color-accent-amber)] px-4 py-2.5 rounded-full border border-[var(--color-accent-amber)]/10' 
+                      : 'w-10 h-10 sm:w-12 sm:h-12 rounded-full text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)] hover:bg-white/5'
                     }
                   `}
                 >
-                  <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 ${isActive ? 'drop-shadow-[0_0_8px_rgba(99,102,241,0.5)]' : ''}`} />
+                  <tab.icon className={`w-4 h-4 sm:w-5 sm:h-5 shrink-0 transition-transform ${isActive ? 'scale-110 drop-shadow-[0_0_8px_rgba(255,158,94,0.5)]' : 'scale-100 group-hover:scale-105'}`} />
                   
                   {/* Expandable Label */}
                   <span 
-                    className={`text-[11px] sm:text-[12px] font-medium tracking-wide whitespace-nowrap overflow-hidden transition-all duration-500 ease-in-out
-                      ${isActive ? 'ml-1.5 sm:ml-2 max-w-[120px] opacity-100' : 'max-w-0 opacity-0 ml-0'}
+                    className={`text-[11px] sm:text-[12px] font-sans uppercase tracking-[0.2em] whitespace-nowrap overflow-hidden transition-all duration-500 ease-out italic
+                      ${isActive ? 'ml-2 max-w-[120px] opacity-100' : 'max-w-0 opacity-0 ml-0'}
                     `}
                   >
                     {tab.label}

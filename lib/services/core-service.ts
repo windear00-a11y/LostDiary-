@@ -14,7 +14,7 @@ export interface ChatSession {
   updated_at: string;
 }
 
-export interface ChatMessage {
+interface ChatMessage {
   id: string;
   user_id: string;
   session_id?: string;

@@ -55,9 +55,9 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
 
   return (
     <div className="w-full relative group font-sans">
-      <div className={`relative w-full rounded-3xl backdrop-blur-md transition-all duration-500 border
+      <div className={`relative w-full rounded-3xl backdrop-blur-3xl transition-all duration-700 ease-out border
         ${isFocused 
-          ? 'bg-white/[0.04] border-white/20 shadow-[0_4px_30px_rgba(255,255,255,0.05)]' 
+          ? 'bg-white/[0.05] border-white/20 shadow-[0_10px_40px_rgba(255,158,94,0.08)]' 
           : 'bg-white/[0.02] border-white/5 shadow-sm' }`}>
         
         <textarea
@@ -75,9 +75,9 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
           }}
           onKeyDown={handleKeyDown}
           onScroll={handleScroll}
-          placeholder={disabled ? "Processing..." : "Write your thoughts here..."}
+          placeholder={disabled ? "Listening..." : "Whisper your thoughts..."}
           style={{ height: '48px' }}
-          className={`w-full px-5 py-3 min-h-[48px] max-h-[160px] bg-transparent border-none focus:ring-0 resize-none text-[15px] sm:text-base leading-relaxed outline-none overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} text-white placeholder:text-white/30 transition-[height,opacity] duration-200 disabled:opacity-50 pr-12`}
+          className={`w-full px-6 py-3 min-h-[48px] max-h-[160px] bg-transparent border-none focus:ring-0 resize-none text-[15px] sm:text-base leading-relaxed outline-none overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} text-[var(--color-primary-text-dark)] placeholder:text-[var(--color-secondary-text-dark)] placeholder:italic transition-[height,opacity] duration-200 disabled:opacity-50 pr-14`}
         />
 
         <div className={`absolute right-2 bottom-1.5`}>
@@ -92,7 +92,7 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleSend}
                 aria-label="Send message"
-                className="p-2 bg-white text-black hover:bg-neutral-200 rounded-full shadow-lg shrink-0 flex items-center justify-center transition-colors"
+                className="p-2.5 bg-[var(--color-accent-amber)]/90 text-[var(--color-primary-text-light)] hover:bg-[var(--color-accent-amber)] rounded-full shadow-[0_0_20px_rgba(255,158,94,0.3)] shrink-0 flex items-center justify-center transition-all focus:outline-none"
               >
                 <Send className="w-4 h-4 ml-0.5" />
               </motion.button>

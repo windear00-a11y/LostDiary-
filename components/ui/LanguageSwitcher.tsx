@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Languages, Check, Globe, Search, X } from 'lucide-react';
 import { useUIStore } from '@/lib/store/use-ui-store';
-import { useAuth } from '@/components/auth/auth-provider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { coreService } from '@/lib/services/core-service';
 
 const LANGUAGES = [

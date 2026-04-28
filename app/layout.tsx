@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter, Cormorant_Garamond } from 'next/font/google';
-import { AuthProvider } from '@/components/auth/auth-provider';
-import { AuthGuard } from '@/components/auth/auth-guard';
-import { ThemeProvider } from '@/components/theme-provider';
-import { ErrorBoundary } from '@/components/error-boundary';
+import { AuthProvider } from '@/components/auth/AuthProvider';
+import { AuthGuard } from '@/components/auth/AuthGuard';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Toaster } from 'sonner';
 import { Header } from '@/components/ui/Header';
 import { BottomNav } from '@/components/ui/BottomNav';

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/components/auth/auth-provider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { coreService, UserProfile, IntelligenceProfile } from '@/lib/services/core-service';
 import { getGenAI } from '@/lib/genai';
 import { generateContentWithFallback } from '@/lib/genai-utils';

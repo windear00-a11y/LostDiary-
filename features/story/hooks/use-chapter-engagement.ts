@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { getSupabase } from '@/lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
-export interface ResonanceEvent {
+interface ResonanceEvent {
   type: string;
   data: any;
   userId: string;

@@ -1,4 +1,4 @@
-import { streamText, tool, StreamData } from 'ai';
+import { streamText, tool } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { AIOrchestrator } from "@/ai-core/ai-orchestrator";
@@ -92,7 +92,6 @@ Always prioritize clarity + emotional connection over style.
 `.trim();
 
 export async function POST(req: Request) {
-  const data = new StreamData();
   try {
     const supabase = getSupabaseAdmin();
     if (!supabase) {
@@ -112,7 +111,7 @@ export async function POST(req: Request) {
       });
     }
 
-    data.append({ type: 'step', value: 'weaving_memories' });
+    // data.append removed
 
     const latestMessage = messages[messages.length - 1];
     const content = latestMessage.content;
@@ -124,9 +123,9 @@ export async function POST(req: Request) {
 
     let session_id = initialSessionId;
     const profile = await coreService.getProfile(user_id, supabase);
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
     if (!apiKey) {
-      console.error('AI API Key not configured (NEXT_PUBLIC_GEMINI_API_KEY)');
+      console.error('AI API Key not configured (GEMINI_API_KEY or NEXT_PUBLIC_GEMINI_API_KEY)');
       throw new Error('AI API Key not configured');
     }
 
@@ -160,7 +159,7 @@ export async function POST(req: Request) {
     const recentMessages = (recentMessagesRes.data || []).reverse();
 
     // 1. Parallelize AI & Vector Processing
-    data.append({ type: 'step', value: 'sensing_mood' });
+    // data.append removed
 
     const [userEmbedding, pipelineOutput, updatedIntelProfile] = await Promise.all([
       // Embedding & Vector Search
@@ -275,7 +274,7 @@ ${memoriesContext}
       apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '',
     });
 
-    data.append({ type: 'step', value: 'drawing_mirror' });
+    // data.append removed
 
     const result = streamText({
       model: googleConfig(selectedModel, {
@@ -339,19 +338,14 @@ ${memoriesContext}
           ]);
         } catch (err) {
           console.error("onFinish background tasks failed", err);
-        } finally {
-          data.close();
         }
       }
     });
 
-    return result.toDataStreamResponse({ data });
+    return result.toDataStreamResponse();
 
   } catch (error: any) {
     console.error("Stream route error:", error);
-    try {
-      data.close();
-    } catch (e) {}
     return new Response(JSON.stringify({ 
       error: error.message || "Failed to process reflection.",
       type: "server_error"

@@ -7,7 +7,7 @@ import {
   Plus, MessageSquare, Compass, Feather
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/auth/auth-provider';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { coreService, ChatSession, DiaryEntry } from '@/lib/services/core-service';
 import { LanguageSwitcher } from './LanguageSwitcher';

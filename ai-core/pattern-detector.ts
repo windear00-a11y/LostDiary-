@@ -3,8 +3,8 @@
  * Placeholder: Pattern analysis coming later.
  */
 
-export type EmotionalTrend = "improving" | "declining" | "stable";
-export type MoodLabel = "positive" | "negative" | "neutral";
+type EmotionalTrend = "improving" | "declining" | "stable";
+type MoodLabel = "positive" | "negative" | "neutral";
 
 export interface PatternReport {
   emotional_trend: EmotionalTrend;

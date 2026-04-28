@@ -1,95 +1,116 @@
 @import "tailwindcss";
 
 @theme {
-  --color-bg-dark: #0d0d0d;
-  --color-ai-bubble: #6366f1;
-  --color-user-bubble: #22d3ee;
-  --color-text-primary: #f8fafc;
-  --color-text-secondary: #94a3b8;
-  --animate-smooth: transition-all duration-300 ease-in-out;
+  --color-bg-light: #f9f6f0;
+  --color-bg-dark: #0f0a0a;
+  --color-accent-gold: #d4af37;
+  --color-accent-amber: #ff9e5e;
+  --color-accent-glow: #3a1510;
+  --color-primary-text-dark: #e8e2d9;
+  --color-secondary-text-dark: #8a8275;
+  --color-primary-text-light: #2c2825;
+  --color-secondary-text-light: #7a7266;
+  --animate-smooth: transition-all duration-500 ease-out;
+  --animate-float: float 8s ease-in-out infinite;
+  --animate-scan: scan 3s linear infinite;
 }
 
 @layer base {
   html, body {
-    @apply w-full overflow-x-hidden antialiased bg-neutral-950;
-    color: #f8fafc;
+    @apply w-full overflow-x-hidden antialiased;
+    background-color: var(--color-bg-light);
+    color: var(--color-primary-text-light);
   }
 
   .dark body {
-    @apply bg-neutral-950;
-    color: #f8fafc;
+    background-color: var(--color-bg-dark);
+    color: var(--color-primary-text-dark);
+  }
+
+  /* Typography Enhancements */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-serif);
+    font-weight: 400;
   }
 }
 
 @layer utilities {
-  .glass {
-    @apply backdrop-blur-md bg-white/70 dark:bg-black/40 border border-white/20 dark:border-white/5;
-  }
-  
-  .premium-shadow {
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
-  }
-
-  .custom-caret {
-    caret-color: #6C63FF;
-  }
-
-  @keyframes caret-blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0; }
+  .atmosphere {
+    background:
+      radial-gradient(circle at 50% 0%, var(--color-accent-glow) 0%, transparent 60%),
+      radial-gradient(circle at 10% 80%, rgba(255, 158, 94, 0.05) 0%, transparent 50%);
+    filter: blur(80px);
+    opacity: 0.7;
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
   }
 
-  /* We apply this to the glow to match the rhythm */
-  .magic-pulse {
-    animation: caret-blink 1.2s ease-in-out infinite;
+  .glass-surface {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .light .glass-surface {
+    background: rgba(0, 0, 0, 0.02);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+  }
+
+  .bubble-ai {
+    background: linear-gradient(145deg, rgba(230, 220, 200, 0.05), rgba(255, 255, 255, 0.01));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(12px);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+  }
+
+  .bubble-user {
+    background: rgba(200, 180, 150, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+  }
+
+  .scrollbar-whatsapp {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-whatsapp::-webkit-scrollbar {
+    width: 0;
   }
 
   @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-6px); }
-    100% { transform: translateY(0px); }
+    0% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(1deg); }
+    100% { transform: translateY(0px) rotate(0deg); }
   }
 
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
+  @keyframes shimmer-aurora {
+    0% {
+      background-position: 50% 50%, 50% 50%;
+    }
+    100% {
+      background-position: 350% 50%, 350% 50%;
+    }
   }
 
-  /* WhatsApp-style Scrollbar (Stealth mode) */
-  .scrollbar-whatsapp {
-    scrollbar-width: none; /* Firefox */
-    -ms-overflow-style: none; /* IE/Edge */
+  .animate-aurora {
+    animation: shimmer-aurora 60s linear infinite;
+    background-image: 
+      repeating-linear-gradient(100deg, transparent 0%, rgba(200,100,50,0.03) 25%, transparent 50%),
+      repeating-linear-gradient(100deg, rgba(80,40,20,0.05) 0%, transparent 25%, rgba(100,50,30,0.02) 50%);
+    background-size: 200% 200%;
   }
 
-  .scrollbar-whatsapp::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+  /* Smooth markdown text */
+  .prose-sanctuary p {
+    font-size: 16px;
+    line-height: 1.8;
+    letter-spacing: 0.01em;
+    color: var(--color-primary-text-dark);
+    margin-bottom: 1em;
   }
 
-  .scrollbar-whatsapp::-webkit-scrollbar-thumb {
-    background: transparent;
-    border-radius: 10px;
-    transition: background 0.3s;
-  }
-
-  /* Show thumb only when the 'is-scrolling' class is present or on interaction */
-  .scrollbar-whatsapp.is-scrolling::-webkit-scrollbar-thumb,
-  .scrollbar-whatsapp:active::-webkit-scrollbar-thumb,
-  .scrollbar-whatsapp:focus-within::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
-  }
-
-  .scrollbar-whatsapp::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  /* Hide scrollbar utility */
-  .scrollbar-none {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  .scrollbar-none::-webkit-scrollbar {
-    display: none;
-  }
 
   /* Tiptap styles */
   .ProseMirror p.is-editor-empty:first-child::before {

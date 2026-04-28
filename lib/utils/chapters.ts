@@ -3,7 +3,7 @@
  * Ensures all life events are categorized into a fixed set of chapters.
  */
 
-export const ALLOWED_CHAPTERS = [
+const ALLOWED_CHAPTERS = [
   "Love",
   "Work",
   "Family",
@@ -12,7 +12,7 @@ export const ALLOWED_CHAPTERS = [
   "Social"
 ] as const;
 
-export type ChapterCategory = typeof ALLOWED_CHAPTERS[number];
+type ChapterCategory = typeof ALLOWED_CHAPTERS[number];
 
 /**
  * Maps a raw category string to one of the fixed allowed chapters.
@@ -37,7 +37,7 @@ export function mapToChapter(category: string | null | undefined): ChapterCatego
   return found || "Growth";
 }
 
-export const ChapterValidationRules = {
+const ChapterValidationRules = {
   fixedCategories: ALLOWED_CHAPTERS,
   fallback: "Growth",
   dynamicCreation: "Forbidden",

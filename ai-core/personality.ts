@@ -1,6 +1,6 @@
-export type ToneMode = "soft_support" | "friendly_casual" | "deep_reflective" | "light_witty";
+type ToneMode = "soft_support" | "friendly_casual" | "deep_reflective" | "light_witty";
 
-export interface ToneContext {
+interface ToneContext {
   input: string;
   lastTone?: ToneMode;
 }

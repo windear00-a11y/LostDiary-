@@ -43,7 +43,7 @@ export function isImportantMessage(message: { content: string | null; type: stri
   return hasEmotion || hasIntent;
 }
 
-export const ImportanceRules = {
+const ImportanceRules = {
   important: [
     "Contains strong emotion (e.g., 'stress', 'happy', 'tension')",
     "Reflective intent (e.g., 'lag raha hai', 'realized', 'improve')",
