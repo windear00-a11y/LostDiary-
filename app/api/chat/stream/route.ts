@@ -229,7 +229,7 @@ export async function POST(req: Request) {
           },
           event_score: analyzedEvent?.score || 0,
           processing_status: isNarrative ? 'woven' : (analyzedEvent ? 'saved' : 'observed'),
-          embedding: userEmbedding
+          embedding: userEmbedding && userEmbedding.length > 0 ? userEmbedding : null
       }).catch(err => console.error("Save user message background error:", err));
     }
 
@@ -342,12 +342,27 @@ ${memoriesContext}
       }
     });
 
-    return result.toDataStreamResponse();
+    if (typeof (result as any).toUIMessageStreamResponse === 'function') {
+      return (result as any).toUIMessageStreamResponse();
+    }
+
+    if (typeof (result as any).toTextStreamResponse === 'function') {
+      return (result as any).toTextStreamResponse();
+    }
+
+    console.error("No streaming response method found on streamText result. Keys:", Object.keys(result));
+    
+    return new Response(JSON.stringify({ 
+      error: "Streaming method not found on result object.",
+      keys: Object.keys(result),
+      type: typeof result
+    }), { status: 500 });
 
   } catch (error: any) {
     console.error("Stream route error:", error);
     return new Response(JSON.stringify({ 
       error: error.message || "Failed to process reflection.",
+      stack: error.stack,
       type: "server_error"
     }), { 
       status: 500, 

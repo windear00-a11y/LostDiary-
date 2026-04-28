@@ -180,7 +180,7 @@ export async function POST(req: Request) {
         },
         event_score: analyzedEvent?.score || 0,
         processing_status: pipelineOutput.narrativeUpdate?.narrative ? 'woven' : (pipelineOutput.extractedEvent ? 'saved' : 'observed'),
-        embedding: userEmbedding
+        embedding: userEmbedding && userEmbedding.length > 0 ? userEmbedding : null
     });
       
     if (messageError) throw messageError;

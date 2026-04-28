@@ -4,6 +4,7 @@ import { AuthProvider } from '@/components/auth/AuthProvider';
 import { AuthGuard } from '@/components/auth/AuthGuard';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { PWARegister } from '@/components/ui/PWARegister';
 import { Toaster } from 'sonner';
 import { Header } from '@/components/ui/Header';
 import { BottomNav } from '@/components/ui/BottomNav';
@@ -43,6 +44,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     type: 'website',
   },
+  manifest: '/manifest.json',
 };
 
 export const viewport: Viewport = {
@@ -58,6 +60,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`} suppressHydrationWarning>
       <body className="antialiased min-h-screen">
+        <PWARegister />
         <KeyboardDetection />
         <ErrorBoundary>
           <AuthProvider>

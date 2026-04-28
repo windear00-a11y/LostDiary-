@@ -191,22 +191,22 @@ export const coreService = {
       });
 
       if (!response.ok) {
-        let errorTitle = `Server Error (${response.status})`;
+        let text = '';
         try {
-          const errorData = await response.json();
-          throw new Error(JSON.stringify({
-            error: errorData.error || errorData.message || 'Unknown server error',
-            status: response.status,
-            type: errorData.type || 'server_error'
-          }));
-        } catch (e) {
-          const text = await response.text().catch(() => '');
-          throw new Error(JSON.stringify({
-            error: text || 'Failed to send message',
-            status: response.status,
-            type: 'network_error'
-          }));
-        }
+          text = await response.text();
+        } catch (e) {}
+        
+        let parsedError = null;
+        try {
+          if (text) parsedError = JSON.parse(text);
+        } catch (e) {}
+
+        throw new Error(JSON.stringify({
+          error: parsedError?.error || parsedError?.message || text || 'Failed to send message',
+          stack: parsedError?.stack || undefined,
+          status: response.status,
+          type: parsedError?.type || 'server_error'
+        }));
       }
 
       const reader = response.body?.getReader();
@@ -227,12 +227,34 @@ export const coreService = {
           for (const line of lines) {
             if (!line) continue;
             
+            // Handle SSE (Server-Sent Events) from UIMessage stream or AgentUI stream
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                
+                if (data.type === 'text-delta') {
+                  aiFullContent += data.delta;
+                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                } else if (data.type === 'reasoning-delta') {
+                  // handle thinking if available
+                } else if (data.type === 'tool-call') {
+                  if (data.toolName === 'search') {
+                    lastThinkingStep = `Searching the web for "${data.args.query}"...`;
+                  } else {
+                    lastThinkingStep = `Using tool: ${data.toolName}...`;
+                  }
+                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                } else if (data.type === 'error') {
+                  lastThinkingStep = `Stream Error: ${data.errorText}`;
+                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                }
+                continue;
+              } catch (e) {
+                // Not JSON data or not SSE, continue to data stream protocol check
+              }
+            }
+
             // AI SDK Data Stream Protocol: https://sdk.vercel.ai/docs/reference/ai-sdk-ui/data-stream-protocol
-            // 0: "text" -> text part
-            // 9: {...} -> tool call
-            // e: {...} -> tool result
-            // d: {...} -> custom data
-            
             try {
               const type = line[0];
               const contentStr = line.slice(2);

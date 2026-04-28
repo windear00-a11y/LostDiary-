@@ -80,24 +80,28 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
           className={`w-full px-6 py-3 min-h-[48px] max-h-[160px] bg-transparent border-none focus:ring-0 resize-none text-[15px] sm:text-base leading-relaxed outline-none overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} text-[var(--color-primary-text-dark)] placeholder:text-[var(--color-secondary-text-dark)] placeholder:italic transition-[height,opacity] duration-200 disabled:opacity-50 pr-14`}
         />
 
-        <div className={`absolute right-2 bottom-1.5`}>
+        <div className={`absolute right-2 bottom-2`}>
           <AnimatePresence>
             {text.trim() && !disabled ? (
               <motion.button
                 key="send-button"
-                initial={{ opacity: 0, scale: 0.5, rotate: -45 }}
+                type="button"
+                initial={{ opacity: 0, scale: 0.8, rotate: -15 }}
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                exit={{ opacity: 0, scale: 0.5, rotate: 45 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleSend}
+                exit={{ opacity: 0, scale: 0.8, rotate: 15 }}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.92 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSend();
+                }}
                 aria-label="Send message"
-                className="p-2.5 bg-[var(--color-accent-amber)]/90 text-[var(--color-primary-text-light)] hover:bg-[var(--color-accent-amber)] rounded-full shadow-[0_0_20px_rgba(255,158,94,0.3)] shrink-0 flex items-center justify-center transition-all focus:outline-none"
+                className="w-11 h-11 bg-[var(--color-accent-amber)] text-[var(--color-primary-text-light)] rounded-full shadow-[0_8px_24px_rgba(255,158,94,0.35)] shrink-0 flex items-center justify-center transition-all focus:outline-none active:bg-[var(--color-accent-amber)]/80"
               >
-                <Send className="w-4 h-4 ml-0.5" />
+                <Send className="w-5 h-5 ml-0.5" />
               </motion.button>
             ) : (
-                <div className="w-[36px] h-[36px]" />
+                <div className="w-11 h-11" />
             )}
           </AnimatePresence>
         </div>
