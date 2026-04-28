@@ -95,13 +95,21 @@ export async function POST(req: Request) {
   const data = new StreamData();
   try {
     const supabase = getSupabaseAdmin();
-    if (!supabase) return new Response('Supabase not initialized', { status: 500 });
+    if (!supabase) {
+      return new Response(JSON.stringify({ error: 'Supabase not initialized', type: 'config_error' }), { 
+        status: 500, 
+        headers: { 'Content-Type': 'application/json' } 
+      });
+    }
     
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const { messages, user_id, session_id: initialSessionId, language } = body;
     
     if (!user_id || !messages || messages.length === 0) {
-      return new Response('Missing required fields', { status: 400 });
+      return new Response(JSON.stringify({ error: 'Missing required fields (user_id/messages)', type: 'validation_error' }), { 
+        status: 400, 
+        headers: { 'Content-Type': 'application/json' } 
+      });
     }
 
     data.append({ type: 'step', value: 'weaving_memories' });

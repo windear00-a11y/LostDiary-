@@ -207,16 +207,27 @@ export const ChatInterface = () => {
       console.error("Failed to sync message with backend:", error);
       
       let displayError = "Something went wrong.";
+      let statusCode = "";
+      
       try {
-        // Try to see if it's a JSON error from Firestore/Supabase or AI
+        // Try to parse the enhanced error JSON from coreService
         const parsed = JSON.parse(error.message);
-        displayError = parsed.error || error.message;
+        if (parsed.error) {
+          displayError = parsed.error;
+          if (parsed.status) statusCode = ` (${parsed.status})`;
+        } else {
+          displayError = error.message;
+        }
       } catch (e) {
         displayError = error.message || "Unknown error";
       }
 
       setMessages(prev => prev.map(m => 
-        m.id === aiTempId ? { ...m, content: `Err: ${displayError}`, role: 'diary' } : m
+        m.id === aiTempId ? { 
+          ...m, 
+          content: `Err: ${displayError}${statusCode}`, 
+          role: 'diary' 
+        } : m
       ));
     } finally {
       setIsThinking(false);

@@ -191,8 +191,22 @@ export const coreService = {
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Failed to send message');
+        let errorTitle = `Server Error (${response.status})`;
+        try {
+          const errorData = await response.json();
+          throw new Error(JSON.stringify({
+            error: errorData.error || errorData.message || 'Unknown server error',
+            status: response.status,
+            type: errorData.type || 'server_error'
+          }));
+        } catch (e) {
+          const text = await response.text().catch(() => '');
+          throw new Error(JSON.stringify({
+            error: text || 'Failed to send message',
+            status: response.status,
+            type: 'network_error'
+          }));
+        }
       }
 
       const reader = response.body?.getReader();
@@ -228,6 +242,13 @@ export const coreService = {
                 const text = JSON.parse(contentStr);
                 aiFullContent += text;
                 if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+              } else if (type === '3') {
+                // Error part
+                try {
+                  const errMessage = JSON.parse(contentStr);
+                  lastThinkingStep = `Stream Error: ${errMessage}`;
+                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                } catch (e) {}
               } else if (type === 'd') {
                 // Data part - custom steps
                 try {
