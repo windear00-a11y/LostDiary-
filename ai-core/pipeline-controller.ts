@@ -227,7 +227,7 @@ ${sortedEvents.map(e => `[Raw: "${e.raw_fragment || e.summary}" | Mood: ${e.emot
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-1.5-pro",
+        model: "gemini-1.5-flash", // Flash is sufficient for narrative weaving and much faster
         contents: [{ role: "user", parts: [{ text: structuredData }] }],
         config: { systemInstruction, temperature: 0.7, responseMimeType: "application/json" }
       });

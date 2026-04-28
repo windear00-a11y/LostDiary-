@@ -27,6 +27,7 @@ export interface ChatMessage {
   event_score?: number;
   status?: 'sending' | 'saved' | 'error';
   processing_status?: 'woven' | 'saved' | 'observed' | 'pending';
+  thinking_step?: string;
 }
 
 // --- Chapter Service ---
@@ -164,7 +165,7 @@ export const coreService = {
     type: 'text' | 'image' | 'video' | 'audio' | 'location';
     content: string | File | null;
     metadata?: any;
-    onUpdate?: (content: string) => void;
+    onUpdate?: (content: string, thinkingStep?: string) => void;
   }): Promise<ChatMessage> {
     const { type, content, metadata, user_id, session_id, onUpdate } = input;
     
@@ -197,14 +198,68 @@ export const coreService = {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let aiFullContent = '';
+      let lastThinkingStep = '';
 
       if (reader) {
+        let buffer = '';
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          const chunk = decoder.decode(value, { stream: true });
-          aiFullContent += chunk;
-          onUpdate(aiFullContent);
+          
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (!line) continue;
+            
+            // AI SDK Data Stream Protocol: https://sdk.vercel.ai/docs/reference/ai-sdk-ui/data-stream-protocol
+            // 0: "text" -> text part
+            // 9: {...} -> tool call
+            // e: {...} -> tool result
+            // d: {...} -> custom data
+            
+            try {
+              const type = line[0];
+              const contentStr = line.slice(2);
+              
+              if (type === '0') {
+                // Text chunk
+                const text = JSON.parse(contentStr);
+                aiFullContent += text;
+                if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+              } else if (type === 'd') {
+                // Data part - custom steps
+                try {
+                  const data = JSON.parse(contentStr);
+                  if (data.type === 'step') {
+                    if (data.value === 'weaving_memories') lastThinkingStep = 'Sifting through your echoes...';
+                    else if (data.value === 'sensing_mood') lastThinkingStep = 'Sensing the light and shadow...';
+                    else if (data.value === 'drawing_mirror') lastThinkingStep = 'Drawing the mirror...';
+                    else lastThinkingStep = data.value;
+                  }
+                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                } catch (e) { /* ignore malformed data */ }
+              } else if (type === '9') {
+                // Tool call
+                const toolCall = JSON.parse(contentStr);
+                if (toolCall.toolName === 'search') {
+                  lastThinkingStep = `Searching the web for "${toolCall.args.query}"...`;
+                } else {
+                  lastThinkingStep = `Using tool: ${toolCall.toolName}...`;
+                }
+                if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+              } else if (type === 'a') {
+                 // Finish or error sometimes? Protocol a is for finish details
+              } else if (type === 'e') {
+                // Tool result - can be used to say "Search finished"
+                lastThinkingStep = 'Thought complete.';
+                if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+              }
+            } catch (e) {
+              // Not a protocol line or malformed, skip
+            }
+          }
         }
       }
 

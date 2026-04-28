@@ -19,6 +19,7 @@ export interface ChatMessage {
   content: string;
   created_at: string;
   processing_status?: 'woven' | 'saved' | 'observed' | 'pending';
+  thinking_step?: string;
 }
 
 export const ChatInterface = () => {
@@ -180,12 +181,13 @@ export const ChatInterface = () => {
         type: 'text',
         content: trimmedContent,
         metadata: { language },
-        onUpdate: (streamedText) => {
+        onUpdate: (streamedText, thinkingStep) => {
           setMessages(prev => prev.map(m => 
             m.id === aiTempId ? { 
               ...m, 
               content: streamedText, 
               role: 'diary',
+              thinking_step: thinkingStep
             } : m
           ));
         }
@@ -220,6 +222,50 @@ export const ChatInterface = () => {
       setIsThinking(false);
     }
   };
+
+  const poetizeThinkingStep = (step?: string) => {
+    if (!step) return "Whispering to the silence...";
+    if (step.includes("Searching") || step.includes("search")) {
+      return "Gathering whispers from the collective mind...";
+    }
+    if (step.includes("Using tool") || step.includes("Consulting")) {
+      return "Consulting the infinite echoes...";
+    }
+    if (step === 'Thought complete.') return 'Almost there...';
+    return step;
+  };
+
+  const ThinkingSkeleton = () => (
+    <div className="flex flex-col gap-4 py-2 w-full min-w-[240px]">
+      <div className="flex gap-2 mb-1">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            animate={{ opacity: [0.2, 0.8, 0.2] }}
+            transition={{ duration: 2, repeat: Infinity, delay: i * 0.4 }}
+            className="w-1 h-1 bg-indigo-400 rounded-full"
+          />
+        ))}
+      </div>
+      <div className="space-y-3">
+        <motion.div 
+          animate={{ opacity: [0.05, 0.15, 0.05] }}
+          transition={{ duration: 3, repeat: Infinity }}
+          className="h-2.5 w-full bg-white rounded-full" 
+        />
+        <motion.div 
+          animate={{ opacity: [0.05, 0.15, 0.05] }}
+          transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
+          className="h-2.5 w-[90%] bg-white rounded-full" 
+        />
+        <motion.div 
+          animate={{ opacity: [0.05, 0.15, 0.05] }}
+          transition={{ duration: 3, repeat: Infinity, delay: 1 }}
+          className="h-2.5 w-[65%] bg-white rounded-full" 
+        />
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col h-full bg-[#0a0a0a] text-white relative overflow-hidden font-sans">
@@ -386,22 +432,44 @@ export const ChatInterface = () => {
                       ? 'bg-[#212121] text-white rounded-[24px] shadow-md' 
                       : 'bg-white/[0.04] border border-white/5 text-white rounded-[24px] backdrop-blur-md shadow-sm'
                   }`} style={{ minWidth: '40px' }}>
-                  {isThinkingMsg ? (
-                    <div className="flex gap-1.5 py-2">
-                      {[0, 1, 2].map((i) => (
-                        <motion.div
-                          key={i}
-                          animate={{ opacity: [0.2, 1, 0.2], scale: [0.9, 1.1, 0.9] }}
-                          transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
-                          className="w-1.5 h-1.5 bg-indigo-400 rounded-full"
-                        />
-                      ))}
+                  {isThinkingMsg || (msg.role === 'diary' && !msg.content) ? (
+                    <div className="flex flex-col gap-3">
+                      <ThinkingSkeleton />
+                      {msg.thinking_step && (
+                        <motion.p 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="text-[10px] uppercase tracking-[0.15em] text-indigo-300/40 font-bold"
+                        >
+                          {poetizeThinkingStep(msg.thinking_step)}
+                        </motion.p>
+                      )}
                     </div>
                   ) : (
                     <>
                       <div className="text-[15px] leading-relaxed tracking-wide prose prose-invert prose-p:leading-[1.7] prose-p:last:mb-0 max-w-none text-white/90">
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                       </div>
+
+                      {msg.thinking_step && msg.thinking_step !== 'Thought complete.' && isThinking && msg.id === messages[messages.length - 1].id && (
+                        <motion.div 
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          className="mt-3 pt-3 border-t border-white/5 flex items-center gap-3"
+                        >
+                          <div className="flex gap-1">
+                            {[0, 1, 2].map((i) => (
+                              <motion.div
+                                key={i}
+                                animate={{ opacity: [0.3, 1, 0.3] }}
+                                transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                                className="w-1 h-1 bg-indigo-400 rounded-full"
+                              />
+                            ))}
+                          </div>
+                          <span className="text-[9px] uppercase tracking-[0.1em] text-indigo-300/40 font-bold">{poetizeThinkingStep(msg.thinking_step)}</span>
+                        </motion.div>
+                      )}
                       
                       {/* Processing Status Indicator */}
                       {msg.role === 'diary' && msg.processing_status && msg.processing_status !== 'observed' && (

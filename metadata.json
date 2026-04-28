@@ -1,5 +1,5 @@
 {
   "name": "WinDear",
-  "description": "A silent mirror for the soul—a digital sanctuary for poetic reflection, deep intelligence, and the unfolding of your inner world.",
+  "description": "An AI Diary Assistant—a safe, empathetic sanctuary to express your thoughts, emotions, and daily experiences in a natural, human-like way.",
   "requestFramePermissions": ["camera", "microphone", "geolocation"]
 }
