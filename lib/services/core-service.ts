@@ -213,9 +213,9 @@ export const coreService = {
       const decoder = new TextDecoder();
       let aiFullContent = '';
       let lastThinkingStep = '';
+      let buffer = '';
 
       if (reader) {
-        let buffer = '';
         try {
           while (true) {
             const { done, value } = await reader.read();
@@ -267,6 +267,15 @@ export const coreService = {
                   const text = JSON.parse(contentStr);
                   aiFullContent += text;
                   if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                } else if (type === '1') {
+                  // Reasoning part (thinking)
+                  try {
+                    const text = JSON.parse(contentStr);
+                    if (text) {
+                      lastThinkingStep = `Thinking: ${text.slice(0, 30)}...`;
+                      if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                    }
+                  } catch (e) {}
                 } else if (type === '3') {
                   const errMessage = JSON.parse(contentStr);
                   lastThinkingStep = `Server Error: ${errMessage}`;
