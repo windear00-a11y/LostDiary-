@@ -116,8 +116,11 @@ export async function POST(req: Request) {
 
     let session_id = initialSessionId;
     const profile = await coreService.getProfile(user_id, supabase);
-    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
-    if (!apiKey) throw new Error('AI API Key not configured');
+    const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+    if (!apiKey) {
+      console.error('AI API Key not configured (NEXT_PUBLIC_GEMINI_API_KEY)');
+      throw new Error('AI API Key not configured');
+    }
 
     const orchestrator = new AIOrchestrator(apiKey, profile.personality_summary || undefined);
     const pipelineForAsync = new PipelineController(apiKey, profile.personality_summary || undefined);
@@ -128,7 +131,12 @@ export async function POST(req: Request) {
         .insert({ user_id, title: `Chapter: ${new Date().toLocaleDateString()}` })
         .select('id')
         .single();
-      if (sessionError) console.error("Session creation failed:", sessionError);
+      
+      if (sessionError) {
+        console.error("Session creation failed:", sessionError);
+        // If we can't create a session, we might still want to proceed as guest if possible, 
+        // but session_id is usually required for logic.
+      }
       session_id = newSession?.id || null;
     }
 
@@ -140,10 +148,6 @@ export async function POST(req: Request) {
       supabase.from('chat_messages').select('created_at').eq('user_id', user_id).order('created_at', { ascending: true }).limit(1).maybeSingle(),
       supabase.from('chat_sessions').select('*', { count: 'exact', head: true }).eq('user_id', user_id)
     ]);
-
-    // Log potential query errors but don't fail the whole request
-    if (contextChaptersRes.error) console.error("Chapters fetch error:", contextChaptersRes.error);
-    if (recentMessagesRes.error) console.error("Recent messages fetch error:", recentMessagesRes.error);
 
     const recentMessages = (recentMessagesRes.data || []).reverse();
 
@@ -184,13 +188,14 @@ export async function POST(req: Request) {
     let olderContextMessages: any[] = [];
     if (userEmbedding && userEmbedding.length > 0) {
       try {
-        const { data: relatedMessages } = await supabase.rpc('match_messages', {
+        const { data: relatedMessages, error: rpcError } = await supabase.rpc('match_messages', {
           query_embedding: userEmbedding,
           match_threshold: 0.7,
           match_count: 5,
           p_user_id: user_id,
           p_session_id: session_id || '00000000-0000-0000-0000-000000000000'
         });
+        if (rpcError) console.warn("Vector search RPC error:", rpcError);
         if (relatedMessages && relatedMessages.length > 0) olderContextMessages = relatedMessages;
       } catch (err) {
         console.warn("Vector search failed:", err);
@@ -203,11 +208,11 @@ export async function POST(req: Request) {
     // Optimized state resolution
     const analyzedEvent = pipelineOutput.extractedEvent;
     const isNarrative = !!(pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative);
-    const selectedModel = 'gemini-1.5-flash';
+    const selectedModel = determineModelForInput(content);
 
     // Persist the USER message
     if (session_id) {
-      await chatPersistence.saveUserMessage(supabase, {
+      chatPersistence.saveUserMessage(supabase, {
           user_id, session_id, role: 'user', type: 'text', content, media_url: null,
           metadata: {
             language,
@@ -218,7 +223,7 @@ export async function POST(req: Request) {
           event_score: analyzedEvent?.score || 0,
           processing_status: isNarrative ? 'woven' : (analyzedEvent ? 'saved' : 'observed'),
           embedding: userEmbedding
-      }).catch(err => console.error("Save user message failed:", err));
+      }).catch(err => console.error("Save user message background error:", err));
     }
 
     // Prepare system instruction
@@ -336,7 +341,15 @@ ${memoriesContext}
 
   } catch (error: any) {
     console.error("Stream route error:", error);
-    data.close();
-    return new Response(error.message || "Failed to process reflection.", { status: 500 });
+    try {
+      data.close();
+    } catch (e) {}
+    return new Response(JSON.stringify({ 
+      error: error.message || "Failed to process reflection.",
+      type: "server_error"
+    }), { 
+      status: 500, 
+      headers: { 'Content-Type': 'application/json' } 
+    });
   }
 }
