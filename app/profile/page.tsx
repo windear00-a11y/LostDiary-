@@ -273,7 +273,7 @@ Output ONLY the visual description for an image generation tool.`,
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
-              className="bg-[#111] rounded-[32px] p-8 shadow-sm border border-white/10"
+              className="bg-[var(--color-bg-dark)] rounded-[32px] p-8 shadow-2xl border border-white/5 glass-surface"
             >
               {/* Avatar Section */}
               <div className="flex flex-col items-center mb-10">
@@ -356,7 +356,7 @@ Output ONLY the visual description for an image generation tool.`,
 
                 <div className="group">
                   <div className="flex items-center justify-between mb-3">
-                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-indigo-400/60">Pen Name (For Library)</label>
+                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/60">Pen Name (For Library)</label>
                   </div>
                   
                   {isEditing ? (
@@ -402,7 +402,7 @@ Output ONLY the visual description for an image generation tool.`,
                   <div className="pt-6 mt-6 border-t border-white/5">
                     <div className="flex items-center justify-between group/sig cursor-pointer" onClick={() => setActiveProfileTab('mirror')}>
                       <div className="space-y-1">
-                        <label className="text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-400/60 block">Soul Signature</label>
+                        <label className="text-[10px] font-bold uppercase tracking-[0.3em] text-amber-400/60 block">Soul Signature</label>
                         <p className="text-sm font-serif italic text-white/80 line-clamp-2 leading-relaxed pr-4">
                           &ldquo;{profile.personality_summary}&rdquo;
                         </p>
@@ -417,13 +417,13 @@ Output ONLY the visual description for an image generation tool.`,
               <div className="mt-10">
                 <button
                   onClick={() => setActiveProfileTab('mirror')}
-                  className="w-full group rounded-2xl py-4 px-6 bg-indigo-500/5 border border-indigo-500/10 hover:bg-indigo-500/10 hover:border-indigo-500/20 transition-all flex items-center justify-between"
+                  className="w-full group rounded-2xl py-4 px-6 bg-[var(--color-accent-amber)]/5 border border-[var(--color-accent-amber)]/10 hover:bg-[var(--color-accent-amber)]/10 hover:border-[var(--color-accent-amber)]/20 transition-all flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3">
-                    <Sparkles className="w-4 h-4 text-indigo-400" />
-                    <span className="text-[11px] font-bold uppercase tracking-widest text-indigo-200/70 group-hover:text-indigo-200">Reflect on Patterns</span>
+                    <Sparkles className="w-4 h-4 text-[var(--color-accent-amber)]" />
+                    <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--color-accent-amber)]/70 group-hover:text-[var(--color-accent-amber)]">Reflect on Patterns</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-indigo-400 opacity-40 group-hover:opacity-100 transition-opacity" />
+                  <ChevronRight className="w-4 h-4 text-[var(--color-accent-amber)] opacity-40 group-hover:opacity-100 transition-opacity" />
                 </button>
               </div>
 
@@ -445,7 +445,7 @@ Output ONLY the visual description for an image generation tool.`,
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.4 }}
-              className="bg-[#111] rounded-[32px] p-8 shadow-sm border border-white/10"
+              className="bg-[var(--color-bg-dark)] rounded-[32px] p-8 shadow-2xl border border-white/5 glass-surface"
             >
               {activeProfileTab === 'mirror' ? (
                 <>

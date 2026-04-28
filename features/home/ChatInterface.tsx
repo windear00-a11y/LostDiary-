@@ -341,7 +341,7 @@ export const ChatInterface = () => {
       </AnimatePresence> 
 
       {/* Header Inline */}
-      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/80 to-transparent pt-6 pb-12 px-6 flex items-center justify-between pointer-events-none">
+      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/80 to-transparent pt-20 pb-12 px-6 flex items-center justify-between pointer-events-none">
         <div className="flex items-center gap-4">
            <div className="w-10 h-10 rounded-full glass-surface flex items-center justify-center shrink-0 shadow-sm">
               <MessageSquare className="w-4 h-4 text-[var(--color-accent-amber)]" />
@@ -353,10 +353,10 @@ export const ChatInterface = () => {
         </div>
         <button 
           onClick={handleStartNewSession}
-          className="pointer-events-auto w-12 h-12 rounded-full glass-surface flex items-center justify-center hover:bg-white/10 transition-all group shadow-sm focus:outline-none"
+          className="pointer-events-auto w-12 h-12 rounded-full glass-surface flex items-center justify-center hover:bg-[var(--color-primary-text-dark)] hover:text-[var(--color-bg-dark)] transition-all group shadow-sm focus:outline-none"
           title="Start a new chat"
         >
-          <Plus className="w-5 h-5 text-[var(--color-secondary-text-dark)] group-hover:text-[var(--color-primary-text-dark)] transition-colors" />
+          <Plus className="w-5 h-5 text-[var(--color-secondary-text-dark)] group-hover:text-[var(--color-bg-dark)] transition-colors" />
         </button>
       </div>
 

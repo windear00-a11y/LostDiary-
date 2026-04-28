@@ -7,7 +7,7 @@ import { Shield, Lock, EyeOff, Wind, ShieldCheck, Zap, Database, Brain } from 'l
 export const PrivacyTrustCenter = () => {
   const securityPillars = [
     {
-      icon: <Database className="w-5 h-5 text-indigo-500" />,
+      icon: <Database className="w-5 h-5 text-amber-500" />,
       title: "The Soul-Lock (RLS)",
       description: "Our database uses Row Level Security (RLS). Every thought you record is cryptographically bound to your unique ID. It is technically impossible for another user, or even us as developers, to query your raw data.",
       highlight: "Level: Infrastructure Hardened"

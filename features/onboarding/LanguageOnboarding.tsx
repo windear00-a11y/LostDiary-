@@ -76,7 +76,7 @@ export const LanguageOnboarding = () => {
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-neutral-950 overflow-hidden">
       {/* Immersive Background */}
       <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/10 blur-[140px] rounded-full animate-pulse" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-indigo-600/10 blur-[140px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-amber-600/10 blur-[140px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
       
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
@@ -87,7 +87,7 @@ export const LanguageOnboarding = () => {
           <motion.div 
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="w-16 h-16 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-[28px] flex items-center justify-center mx-auto border border-white/10 shadow-2xl"
+            className="w-16 h-16 bg-gradient-to-br from-amber-500/20 to-purple-500/20 rounded-[28px] flex items-center justify-center mx-auto border border-white/10 shadow-2xl"
           >
             <Globe className="w-8 h-8 text-white" />
           </motion.div>
@@ -105,7 +105,7 @@ export const LanguageOnboarding = () => {
         {!searchTerm && suggested.length > 0 && !showAll && (
           <div className="w-full max-w-2xl mb-10 overflow-hidden">
             <div className="flex items-center gap-2 mb-4 px-2">
-              <Sparkles className="w-3 h-3 text-indigo-400" />
+              <Sparkles className="w-3 h-3 text-amber-400" />
               <span className="text-[10px] uppercase tracking-[0.2em] text-neutral-400 font-bold">Suggested for you</span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -117,14 +117,14 @@ export const LanguageOnboarding = () => {
                   transition={{ delay: i * 0.1 }}
                   whileHover={{ scale: 1.05 }}
                   onClick={() => handleSelect(lang.code)}
-                  className="flex items-center gap-3 p-4 bg-indigo-500/10 border border-indigo-500/20 rounded-[20px] text-left hover:bg-indigo-500/20 transition-all"
+                  className="flex items-center gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-[20px] text-left hover:bg-amber-500/20 transition-all"
                 >
-                  <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center text-sm font-bold text-indigo-300 shrink-0">
+                  <div className="w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center text-sm font-bold text-amber-300 shrink-0">
                     {lang.native[0]}
                   </div>
                   <div className="min-w-0">
                     <div className="text-white text-sm font-medium truncate">{lang.native}</div>
-                    <div className="text-indigo-400/60 text-[10px] truncate">{lang.name}</div>
+                    <div className="text-amber-400/60 text-[10px] truncate">{lang.name}</div>
                   </div>
                 </motion.button>
               ))}
@@ -140,7 +140,7 @@ export const LanguageOnboarding = () => {
             placeholder="Search language or region..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-[20px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-indigo-500/50 transition-all text-sm"
+            className="w-full pl-12 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-[20px] text-white placeholder:text-neutral-700 focus:outline-none focus:border-amber-500/50 transition-all text-sm"
           />
         </div>
 
@@ -155,9 +155,9 @@ export const LanguageOnboarding = () => {
               whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.04)" }}
               whileTap={{ scale: 0.98 }}
               onClick={() => handleSelect(lang.code)}
-              className="group flex items-center gap-4 p-4 bg-neutral-900/40 border border-white/5 rounded-[20px] text-left transition-all hover:border-indigo-500/30"
+              className="group flex items-center gap-4 p-4 bg-neutral-900/40 border border-white/5 rounded-[20px] text-left transition-all hover:border-amber-500/30"
             >
-              <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center text-base font-medium shrink-0 group-hover:bg-indigo-500/10 transition-colors">
+              <div className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center text-base font-medium shrink-0 group-hover:bg-amber-500/10 transition-colors">
                 {lang.native[0]}
               </div>
               <div className="flex-1 min-w-0">
@@ -174,7 +174,7 @@ export const LanguageOnboarding = () => {
         {!searchTerm && !showAll && (
           <button 
             onClick={() => setShowAll(true)}
-            className="mt-8 text-indigo-400 text-xs font-medium uppercase tracking-[0.2em] hover:text-white transition-colors py-2 px-4 rounded-full bg-white/5 border border-white/10"
+            className="mt-8 text-amber-400 text-xs font-medium uppercase tracking-[0.2em] hover:text-white transition-colors py-2 px-4 rounded-full bg-white/5 border border-white/10"
           >
             Explore All 20+ Languages
           </button>

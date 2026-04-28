@@ -42,7 +42,7 @@ export const TableOfContents = ({ chapters, volumes = [], onSelectChapter, onBac
         
         <div className="space-y-4">
           <h2 className="text-sm uppercase tracking-[0.8em] text-slate-400 font-bold">Contents</h2>
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white tracking-tight">{title}</h1>
+          <h1 className="text-4xl font-bold text-[var(--color-primary-text-dark)] tracking-tight">{title}</h1>
           <div className="w-12 h-px bg-slate-200 dark:bg-white/10 mx-auto mt-6" />
         </div>
       </div>
@@ -53,7 +53,7 @@ export const TableOfContents = ({ chapters, volumes = [], onSelectChapter, onBac
           <div key={volIdx} className="space-y-8">
             {volumes.length > 0 && (
               <div className="flex items-center gap-4">
-                <span className="text-[10px] uppercase tracking-[0.4em] text-indigo-500 font-bold whitespace-nowrap">Volume {volIdx + 1}</span>
+                <span className="text-[10px] uppercase tracking-[0.4em] text-amber-500 font-bold whitespace-nowrap">Volume {volIdx + 1}</span>
                 <div className="h-px w-full bg-slate-100 dark:bg-white/5" />
               </div>
             )}
@@ -73,7 +73,7 @@ export const TableOfContents = ({ chapters, volumes = [], onSelectChapter, onBac
                       {String(index + 1).padStart(2, '0')}
                     </span>
                     <div className="space-y-1">
-                      <span className="text-lg md:text-xl text-slate-800 dark:text-slate-200 group-hover:text-black dark:group-hover:text-white transition-colors">
+                      <span className="text-lg md:text-xl text-[var(--color-primary-text-dark)] group-hover:text-black dark:group-hover:text-white transition-colors">
                         {chapter.name}
                       </span>
                       <div className="text-[9px] uppercase tracking-widest text-slate-400">
@@ -82,7 +82,7 @@ export const TableOfContents = ({ chapters, volumes = [], onSelectChapter, onBac
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-slate-300 dark:text-slate-700 group-hover:text-indigo-500 transition-colors">
+                  <div className="flex items-center gap-2 text-slate-300 dark:text-slate-700 group-hover:text-amber-500 transition-colors">
                     <ChevronRight className="w-4 h-4" />
                   </div>
                 </motion.button>

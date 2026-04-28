@@ -38,7 +38,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   // If still loading auth state, show global loader
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d]">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#fdfcfb] dark:bg-[var(--color-bg-dark)]">
         <LoadingSpace message="Finding your story..." />
       </div>
     );
@@ -48,7 +48,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const isRedirecting = (!loading && !user && isAppPage) || (!loading && user && (isAuthPage || isLandingPage));
   if (isRedirecting) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#fdfcfb] dark:bg-[#0d0d0d]">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#fdfcfb] dark:bg-[var(--color-bg-dark)]">
         <LoadingSpace message="Connecting..." />
       </div>
     );

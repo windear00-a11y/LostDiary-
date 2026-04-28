@@ -67,10 +67,10 @@ export default function GlobalLibraryPage() {
   const [isConstellationView, setIsConstellationView] = useState(false);
 
   const moods = [
-    { id: 'all', label: 'All Whispers', color: 'bg-indigo-500' },
+    { id: 'all', label: 'All Whispers', color: 'bg-amber-500' },
     { id: 'hope', label: 'Hope', color: 'bg-emerald-500' },
     { id: 'tear', label: 'Tears', color: 'bg-blue-500' },
-    { id: 'resonance', label: 'Resonance', color: 'bg-indigo-600' },
+    { id: 'resonance', label: 'Resonance', color: 'bg-amber-600' },
     { id: 'reflective', label: 'Reflections', color: 'bg-slate-400' },
     { id: 'courage', label: 'Courage', color: 'bg-rose-500' },
     { id: 'calm', label: 'Stillness', color: 'bg-violet-400' }
@@ -385,13 +385,13 @@ export default function GlobalLibraryPage() {
             value={planeMessage}
             onChange={(e) => setPlaneMessage(e.target.value)}
             placeholder="I read your story and I wanted you to know..."
-            className="w-full h-40 p-4 bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-white/5 rounded-2xl outline-none focus:border-indigo-500/30 transition-all resize-none font-serif text-sm"
+            className="w-full h-40 p-4 bg-slate-50 dark:bg-black/40 border border-slate-100 dark:border-white/5 rounded-2xl outline-none focus:border-amber-500/30 transition-all resize-none font-serif text-sm"
           />
 
           <button 
              disabled={sendingPlane || !planeMessage.trim()}
              onClick={handleSendPlane}
-             className="w-full py-4 rounded-2xl bg-indigo-600 text-white font-bold text-sm uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+             className="w-full py-4 rounded-2xl bg-amber-600 text-white font-bold text-sm uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
           >
              {sendingPlane ? "Crossing Bridge..." : "Throw Plane"} <Send className="w-4 h-4" />
           </button>
@@ -406,7 +406,7 @@ export default function GlobalLibraryPage() {
         subtitle={`Connecting with ${bridgeConfirmSheet.plane?.sender?.pen_name}. This will establish a persistent and private link between your sanctuaries.`}
       >
         <div className="space-y-6">
-          <div className="p-4 bg-indigo-50 dark:bg-indigo-500/10 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-xs font-serif italic leading-relaxed">
+          <div className="p-4 bg-amber-50 dark:bg-amber-500/10 rounded-2xl border border-amber-100 dark:border-amber-500/20 text-indigo-700 dark:text-amber-300 text-xs font-serif italic leading-relaxed">
             &quot;A bridge is more than a path; it is a shared space of trust. Conversations here are protected by the sanctuary&apos;s silence.&quot;
           </div>
           
@@ -422,7 +422,7 @@ export default function GlobalLibraryPage() {
 
           <button 
              onClick={confirmBridge}
-             className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+             className="w-full py-4 bg-amber-600 text-white rounded-2xl font-bold text-sm uppercase tracking-widest shadow-xl hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
           >
              Confirm and Open Bridge <Handshake className="w-4 h-4" />
           </button>
@@ -430,17 +430,17 @@ export default function GlobalLibraryPage() {
       </BottomSheet>
       
       {/* Mood Navigator & Tab Switcher */}
-      <div className="sticky top-20 z-30 bg-white/40 dark:bg-[#060606]/40 backdrop-blur-xl pt-4 pb-2 border-b border-gray-100 dark:border-white/5 transition-all duration-500">
+      <div className="sticky top-20 z-30 bg-[var(--color-bg-dark)]/90 backdrop-blur-xl pt-4 pb-2 border-b border-white/5 transition-all duration-500 glass-surface">
         
         {/* Top Integration: Tab Switcher & Constellation Toggle */}
         <div className="flex items-center justify-between px-6 mb-4">
-            <div className="flex bg-slate-200/50 dark:bg-white/5 rounded-2xl p-1 border border-white/5">
+            <div className="flex bg-white/5 rounded-2xl p-1 border border-white/5">
               <button
                 onClick={() => { setActiveLibraryTab('feed'); setIsReadingSelf(false); }}
                 className={`text-[9px] font-bold uppercase tracking-[0.2em] px-5 py-2 rounded-xl transition-all duration-500 ${
                   !isReadingSelf && activeLibraryTab === 'feed' 
-                    ? 'bg-white dark:bg-zinc-800 text-indigo-500 shadow-lg' 
-                    : 'text-slate-500'
+                    ? 'bg-white/10 text-[var(--color-primary-text-dark)] shadow-lg' 
+                    : 'text-white/40'
                 }`}
               >
                 Global
@@ -449,8 +449,8 @@ export default function GlobalLibraryPage() {
                 onClick={() => setIsReadingSelf(true)}
                 className={`text-[9px] font-bold uppercase tracking-[0.2em] px-5 py-2 rounded-xl transition-all duration-500 ${
                   isReadingSelf 
-                    ? 'bg-white dark:bg-zinc-800 text-indigo-500 shadow-lg' 
-                    : 'text-slate-500'
+                    ? 'bg-white/10 text-[var(--color-primary-text-dark)] shadow-lg' 
+                    : 'text-white/40'
                 }`}
               >
                 Sanctuary
@@ -461,10 +461,10 @@ export default function GlobalLibraryPage() {
               {!isReadingSelf && activeLibraryTab === 'feed' && (
                 <button
                    onClick={() => setIsConstellationView(!isConstellationView)}
-                   className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border ${
+                   className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border glass-panel ${
                      isConstellationView 
-                      ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg' 
-                      : 'bg-slate-200/50 dark:bg-white/5 border-white/5 text-slate-500'
+                      ? 'bg-[var(--color-accent-amber)]/20 border-[var(--color-accent-amber)]/50 text-[var(--color-accent-amber)] shadow-[0_0_20px_rgba(255,158,94,0.3)]' 
+                      : 'bg-white/5 border-white/5 text-white/40 hover:text-white/60'
                    }`}
                 >
                    <Sparkles className={`w-4 h-4 ${isConstellationView ? 'animate-pulse' : ''}`} />
@@ -473,10 +473,10 @@ export default function GlobalLibraryPage() {
               
               <button
                 onClick={() => setActiveLibraryTab(activeLibraryTab === 'feed' ? 'echoes' : 'feed')}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border ${
+                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border glass-panel ${
                   activeLibraryTab === 'echoes'
-                    ? 'bg-amber-600 border-amber-500 text-white shadow-lg'
-                    : 'bg-slate-200/50 dark:bg-white/5 border-white/5 text-slate-500'
+                    ? 'bg-[var(--color-accent-amber)]/20 border-[var(--color-accent-amber)]/50 text-[var(--color-accent-amber)] shadow-[0_0_20px_rgba(255,158,94,0.3)]'
+                    : 'bg-white/5 border-white/5 text-white/40 hover:text-white/60'
                 }`}
               >
                 <div className="relative">
@@ -499,7 +499,7 @@ export default function GlobalLibraryPage() {
                             onClick={() => setActiveMood(mood.id)}
                             className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-500 whitespace-nowrap border flex items-center gap-2 ${
                                 activeMood === mood.id 
-                                ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-400' 
+                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
                                 : 'bg-transparent border-transparent text-slate-500 hover:text-slate-400'
                             }`}
                         >
@@ -524,7 +524,7 @@ export default function GlobalLibraryPage() {
                 className="w-full h-full bg-[#050505] relative overflow-hidden flex items-center justify-center z-0 cursor-crosshair min-h-[600px] rounded-[40px] border border-white/5 mx-6"
               >
                  {/* Depth Layers */}
-                 <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-indigo-900/30 via-black to-black" />
+                 <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-900/30 via-black to-black" />
                  
                  {/* Cosmic Dust / Background Stars */}
                  <div className="absolute inset-0 pointer-events-none">
@@ -549,7 +549,7 @@ export default function GlobalLibraryPage() {
                     const auraColor = 
                         story.dominant_emotion === 'hope' ? 'text-emerald-400' :
                         story.dominant_emotion === 'tear' ? 'text-blue-400' :
-                        story.dominant_emotion === 'resonance' ? 'text-indigo-400' :
+                        story.dominant_emotion === 'resonance' ? 'text-amber-400' :
                         story.dominant_emotion === 'reflective' ? 'text-slate-300' :
                         story.dominant_emotion === 'courage' ? 'text-rose-400' :
                         'text-violet-400';
@@ -557,7 +557,7 @@ export default function GlobalLibraryPage() {
                     const starBg = 
                         story.dominant_emotion === 'hope' ? 'bg-emerald-400' :
                         story.dominant_emotion === 'tear' ? 'bg-blue-400' :
-                        story.dominant_emotion === 'resonance' ? 'bg-indigo-400' :
+                        story.dominant_emotion === 'resonance' ? 'bg-amber-400' :
                         story.dominant_emotion === 'reflective' ? 'bg-slate-300' :
                         story.dominant_emotion === 'courage' ? 'bg-rose-400' :
                         'bg-violet-400';
@@ -613,8 +613,8 @@ export default function GlobalLibraryPage() {
               </div>
 
               <header className="text-center mb-16 space-y-4">
-                <h1 className="text-4xl md:text-5xl font-serif italic text-slate-900 dark:text-white">The Global Library</h1>
-                <p className="text-slate-500 dark:text-slate-400 font-serif italic max-w-lg mx-auto">
+                <h1 className="text-4xl md:text-5xl font-serif italic text-[var(--color-primary-text-dark)]">The Global Library</h1>
+                <p className="text-[var(--color-secondary-text-dark)] font-serif italic max-w-lg mx-auto">
                   A living archive of souls. Click a story for an immersive reading experience.
                 </p>
               </header>
@@ -635,15 +635,15 @@ export default function GlobalLibraryPage() {
                     <motion.article
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="bg-indigo-50/30 dark:bg-indigo-500/[0.03] border border-indigo-500/20 rounded-[40px] overflow-hidden shadow-2xl relative group mb-16"
+                      className="glass-surface border border-white/5 rounded-[40px] overflow-hidden shadow-2xl relative group mb-16"
                     >
                       {/* Decorative Background Element */}
-                      <div className="absolute top-0 right-0 -mr-12 -mt-12 w-64 h-64 bg-indigo-500/5 blur-[100px] rounded-full pointer-events-none" />
+                      <div className="absolute top-0 right-0 -mr-12 -mt-12 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full pointer-events-none" />
 
                       <div className="md:grid md:grid-cols-[220px_1fr] flex flex-col min-h-[300px]">
                         <div 
                           onClick={() => setIsReadingSelf(true)}
-                          className="relative flex flex-col items-center justify-center p-8 text-center cursor-pointer group/spine bg-indigo-600 shadow-[inset_-10px_0_20px_rgba(0,0,0,0.3)]"
+                          className="relative flex flex-col items-center justify-center p-8 text-center cursor-pointer group/spine bg-amber-600 shadow-[inset_-10px_0_20px_rgba(0,0,0,0.3)]"
                         >
                           {/* Book Texture & Spine Depth */}
                           <div className="absolute inset-0 opacity-30 mix-blend-overlay" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/leather.png")' }} />
@@ -669,32 +669,32 @@ export default function GlobalLibraryPage() {
                           </div>
                         </div>
 
-                        <div className="p-10 flex flex-col justify-center relative z-10 bg-white dark:bg-[#0c0c0c]">
+                        <div className="p-10 flex flex-col justify-center relative z-10 bg-black/20 backdrop-blur-md">
                           <div className="flex items-start justify-between mb-6">
                              <div className="space-y-2">
                                <div className="flex items-center gap-3">
-                                  <h4 className="text-3xl font-serif font-bold text-slate-900 dark:text-white tracking-tight">Your Narrative Sanctuary</h4>
-                                  <div className="w-2 h-2 rounded-full bg-indigo-500 animate-ping" />
+                                  <h4 className="text-3xl font-serif font-bold text-[var(--color-primary-text-dark)] tracking-tight">Your Narrative Sanctuary</h4>
+                                  <div className="w-2 h-2 rounded-full bg-[var(--color-accent-amber)] animate-ping" />
                                </div>
-                               <p className="text-sm text-slate-400 dark:text-zinc-500 font-serif italic flex items-center gap-2">
+                               <p className="text-sm text-[var(--color-secondary-text-dark)] font-serif italic flex items-center gap-2">
                                  <PenTool className="w-3.5 h-3.5 opacity-50" /> {userChapters.length} Chapters Woven into Existence
                                </p>
                              </div>
                              <div className="flex flex-col items-end gap-2">
-                                <div className="bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-zinc-400 px-4 py-1.5 rounded-2xl text-[9px] font-bold uppercase tracking-[0.2em] border border-slate-200 dark:border-white/10">
+                                <div className="bg-white/5 text-[var(--color-secondary-text-dark)] px-4 py-1.5 rounded-2xl text-[9px] font-bold uppercase tracking-[0.2em] border border-white/10">
                                     Private Access
                                 </div>
                              </div>
                           </div>
                           
-                          <p className="text-slate-600 dark:text-zinc-400 text-lg font-serif leading-relaxed line-clamp-3 italic mb-10 border-l-2 border-indigo-500/10 pl-6">
+                          <p className="text-[var(--color-secondary-text-dark)] text-lg font-serif leading-relaxed line-clamp-3 italic mb-10 border-l-2 border-[var(--color-accent-amber)]/20 pl-6">
                              &quot;Every memory is a thread. This volume contains the raw essence of your journey—untouched by external eyes, yet ready to be shared as a gift to the world whenever you choose.&quot;
                           </p>
 
                           <div className="flex items-center gap-6">
                             <button 
                               onClick={() => setIsReadingSelf(true)}
-                              className="group relative flex items-center gap-3 px-10 py-5 bg-indigo-600 text-white rounded-[20px] font-bold text-xs uppercase tracking-[0.2em] shadow-[0_20px_40px_rgba(79,70,229,0.25)] hover:bg-indigo-700 hover:shadow-indigo-500/40 transition-all overflow-hidden"
+                              className="group relative flex items-center gap-3 px-10 py-5 bg-[var(--color-accent-amber)]/10 text-[var(--color-accent-amber)] border border-[var(--color-accent-amber)]/20 rounded-[20px] font-bold text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-[var(--color-accent-amber)]/20 transition-all overflow-hidden"
                             >
                               <span className="relative z-10">Step Into Your World</span>
                               <ArrowRight className="w-5 h-5 relative z-10 transition-transform group-hover:translate-x-1" />
@@ -717,7 +717,7 @@ export default function GlobalLibraryPage() {
                     const auraColor = 
                         story.dominant_emotion === 'hope' ? 'from-emerald-500/20' :
                         story.dominant_emotion === 'tear' ? 'from-blue-500/20' :
-                        story.dominant_emotion === 'resonance' ? 'from-indigo-500/20' :
+                        story.dominant_emotion === 'resonance' ? 'from-amber-500/20' :
                         story.dominant_emotion === 'reflective' ? 'from-slate-500/20' :
                         story.dominant_emotion === 'courage' ? 'from-rose-500/20' :
                         'from-violet-500/20';
@@ -735,14 +735,14 @@ export default function GlobalLibraryPage() {
                         {/* Dynamic Aura Background (Focus only) */}
                         <div className={`absolute -inset-4 bg-gradient-to-br ${auraColor} to-transparent rounded-[48px] opacity-0 group-hover:opacity-40 transition-all duration-1000 blur-3xl -z-10`} />
 
-                        <div className="bg-white dark:bg-[#0a0a0a] border border-slate-100 dark:border-white/5 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:border-white/10 group-hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.15)] group-hover:-translate-y-1">
+                        <div className="glass-surface border border-white/5 rounded-[32px] overflow-hidden transition-all duration-500 group-hover:border-white/10 group-hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.5)] group-hover:-translate-y-1">
                           <div className="md:grid md:grid-cols-[160px_1fr] flex flex-col min-h-[220px]">
                             
                             {/* Visual Side (Compact) */}
                             <div className={`relative flex flex-col items-center justify-center p-6 text-center transition-all duration-700 ${
                               story.dominant_emotion === 'hope' ? 'bg-emerald-600/90' :
                               story.dominant_emotion === 'tear' ? 'bg-sky-600/90' :
-                              story.dominant_emotion === 'resonance' ? 'bg-indigo-600/90' :
+                              story.dominant_emotion === 'resonance' ? 'bg-amber-600/90' :
                               story.dominant_emotion === 'reflective' ? 'bg-zinc-700/90' :
                               story.dominant_emotion === 'courage' ? 'bg-rose-600/90' :
                               'bg-violet-600/90'
@@ -765,20 +765,20 @@ export default function GlobalLibraryPage() {
                               <div className="space-y-4">
                                 <header className="flex items-start justify-between">
                                   <div className="space-y-1">
-                                    <h4 className="text-xl font-serif font-bold text-slate-800 dark:text-white leading-tight transition-colors group-hover:text-indigo-400">{story.title}</h4>
+                                    <h4 className="text-xl font-serif font-bold text-slate-800 dark:text-white leading-tight transition-colors group-hover:text-amber-400">{story.title}</h4>
                                     <div className="flex items-center gap-3 text-slate-400 dark:text-slate-500">
                                       <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-widest">
                                         <Clock className="w-3 h-3" /> 
                                         {new Date(story.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                       </div>
-                                      <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-400/60">
+                                      <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-400/60">
                                         {story.dominant_emotion}
                                       </div>
                                     </div>
                                   </div>
                                   <button 
                                     onClick={(e) => { e.stopPropagation(); handleHoldTreasury(story.id); }} 
-                                    className="w-8 h-8 flex items-center justify-center bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/5 rounded-xl text-slate-400 hover:text-indigo-500 transition-all"
+                                    className="w-8 h-8 flex items-center justify-center bg-slate-50 dark:bg-white/[0.03] border border-slate-100 dark:border-white/5 rounded-xl text-slate-400 hover:text-amber-500 transition-all"
                                   >
                                     <Bookmark className="w-3.5 h-3.5" />
                                   </button>
@@ -801,7 +801,7 @@ export default function GlobalLibraryPage() {
                                   </div>
                                 </div>
 
-                                <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-indigo-500/40 group-hover:text-indigo-400 transition-colors">
+                                <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-amber-500/40 group-hover:text-amber-400 transition-colors">
                                   Read entry →
                                 </div>
                               </div>
@@ -824,8 +824,8 @@ export default function GlobalLibraryPage() {
               className="space-y-12 pb-20"
             >
                <header className="text-center mb-16">
-                  <h2 className="text-3xl font-serif italic text-slate-900 dark:text-white">Soul Signals</h2>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 font-serif italic mt-2">Your connections and echoes from the library.</p>
+                  <h2 className="text-3xl font-serif italic text-[var(--color-primary-text-dark)]">Soul Signals</h2>
+                  <p className="text-sm text-[var(--color-secondary-text-dark)] font-serif italic mt-2">Your connections and echoes from the library.</p>
                </header>
 
                <div className="mb-16">
@@ -837,7 +837,7 @@ export default function GlobalLibraryPage() {
                   {/* Paper Planes (Inbox) */}
                   <div className="space-y-6">
                     <div className="flex items-center gap-2 border-b border-gray-100 dark:border-white/5 pb-2">
-                       <Send className="w-4 h-4 text-indigo-500" />
+                       <Send className="w-4 h-4 text-amber-500" />
                        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">Received Planes</h3>
                     </div>
                     
@@ -850,11 +850,11 @@ export default function GlobalLibraryPage() {
                           {inboxPlanes.map(plane => {
                              const isExpanded = expandedPlanes.has(plane.id);
                              return (
-                               <div key={plane.id} className="bg-white dark:bg-[#111] border border-slate-100 dark:border-white/5 rounded-[24px] overflow-hidden transition-all">
+                               <div key={plane.id} className="glass-surface bg-black/20 border border-slate-100 dark:border-white/5 rounded-[24px] overflow-hidden transition-all">
                                   <div onClick={() => togglePlane(plane.id)} className="p-5 cursor-pointer flex justify-between items-center">
                                      <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
-                                           <User className="w-4 h-4 text-indigo-500" />
+                                        <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center">
+                                           <User className="w-4 h-4 text-amber-500" />
                                         </div>
                                         <div>
                                            <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{plane.sender?.pen_name}</p>
@@ -869,12 +869,12 @@ export default function GlobalLibraryPage() {
                                   <AnimatePresence>
                                      {isExpanded && (
                                          <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="px-5 pb-5">
-                                           <p className="p-4 bg-slate-50 dark:bg-white/[0.03] rounded-2xl text-xs font-serif italic text-slate-600 dark:text-slate-400 mb-4 line-relaxed">
+                                           <p className="p-4 bg-slate-50 dark:bg-white/[0.03] rounded-2xl text-xs font-serif italic text-[var(--color-secondary-text-dark)] mb-4 line-relaxed">
                                               &quot;{plane.content}&quot;
                                            </p>
                                            <button 
                                              onClick={() => handleAcceptPlane(plane)}
-                                             className="w-full py-3 bg-indigo-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mb-2"
+                                             className="w-full py-3 bg-amber-600 text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 mb-2"
                                            >
                                               Accept Connection <Handshake className="w-3.5 h-3.5" />
                                            </button>
@@ -897,7 +897,7 @@ export default function GlobalLibraryPage() {
                   {/* Active Soul Bridges */}
                   <div className="space-y-6">
                     <div className="flex items-center gap-2 border-b border-gray-100 dark:border-white/5 pb-2">
-                       <Handshake className="w-4 h-4 text-indigo-500" />
+                       <Handshake className="w-4 h-4 text-amber-500" />
                        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">Active Bridges</h3>
                     </div>
                     
@@ -911,21 +911,21 @@ export default function GlobalLibraryPage() {
                             <div 
                               key={bridge.id} 
                               onClick={() => router.push(`/bridge/${bridge.id}`)}
-                              className="p-5 bg-white dark:bg-[#111] border border-slate-100 dark:border-white/5 rounded-2x flex items-center justify-between group cursor-pointer hover:border-indigo-500/20"
+                              className="p-5 glass-surface bg-black/20 border border-slate-100 dark:border-white/5 rounded-2x flex items-center justify-between group cursor-pointer hover:border-amber-500/20"
                             >
                                <div className="flex items-center gap-4">
-                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center border border-white/5">
-                                     <User className="w-5 h-5 text-indigo-400" />
+                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/20 to-purple-500/20 flex items-center justify-center border border-white/5">
+                                     <User className="w-5 h-5 text-amber-400" />
                                   </div>
                                   <div>
-                                     <p className="font-serif font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-400 transition-colors">{bridge.other.pen_name}</p>
+                                     <p className="font-serif font-bold text-slate-800 dark:text-slate-100 group-hover:text-amber-400 transition-colors">{bridge.other.pen_name}</p>
                                      <div className="flex gap-2">
-                                        <span className="text-[9px] uppercase font-bold text-indigo-500 bg-indigo-500/5 px-1 py-0.5 rounded">{bridge.mode}</span>
+                                        <span className="text-[9px] uppercase font-bold text-amber-500 bg-amber-500/5 px-1 py-0.5 rounded">{bridge.mode}</span>
                                         <span className="text-[9px] text-slate-400">{new Date(bridge.updated_at).toLocaleDateString()}</span>
                                      </div>
                                   </div>
                                </div>
-                               <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition-all" />
+                               <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-amber-400 transition-all" />
                             </div>
                           ))}
                        </div>

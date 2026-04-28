@@ -141,8 +141,8 @@ export function SanctuaryMirror({ profile, onUpdate, onSync }: SanctuaryMirrorPr
       <div className="flex items-start justify-between mb-8">
         <div className="space-y-2">
             <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.1)]">
-                   <Sparkles className="w-5 h-5 text-indigo-400" />
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-[0_0_20px_rgba(99,102,241,0.1)]">
+                   <Sparkles className="w-5 h-5 text-amber-400" />
                 </div>
                 <h3 className="text-xl font-serif text-white tracking-tight">
                    The Sanctuary Mirror
@@ -161,7 +161,7 @@ export function SanctuaryMirror({ profile, onUpdate, onSync }: SanctuaryMirrorPr
           {isScanning ? (
             <Activity className="w-3 h-3 animate-pulse" />
           ) : (
-            <div className="w-2 h-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
+            <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
           )}
           {isScanning ? 'Scanning...' : 'Sync Depth'}
         </button>
@@ -180,7 +180,7 @@ export function SanctuaryMirror({ profile, onUpdate, onSync }: SanctuaryMirrorPr
                initial={{ opacity: 0, y: 15 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ delay: idx * 0.08 }}
-               className={`relative bg-[#0d0d0d] border transition-all duration-500 rounded-[28px] overflow-hidden group/card ${
+               className={`relative bg-[var(--color-bg-dark)] border transition-all duration-500 rounded-[28px] overflow-hidden group/card ${
                   isExpanded 
                     ? 'border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.5)] ring-1 ring-white/10' 
                     : 'border-white/5 hover:border-white/10'

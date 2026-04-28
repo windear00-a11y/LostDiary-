@@ -9,7 +9,7 @@ export default function TermsOfUsePage() {
   const router = useRouter();
 
   return (
-    <main className="min-h-screen bg-[#0d0d0d] text-slate-300 font-sans selection:bg-indigo-500/20 px-6 py-20">
+    <main className="min-h-screen bg-[var(--color-bg-dark)] text-slate-300 font-sans selection:bg-amber-500/20 px-6 py-20">
       <div className="max-w-3xl mx-auto space-y-12">
         {/* Header */}
         <header className="space-y-6">

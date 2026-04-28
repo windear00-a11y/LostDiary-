@@ -25,16 +25,16 @@ const GhostBook = () => (
   <div className="max-w-[650px] mx-auto font-serif opacity-40 select-none pointer-events-none">
     <div className="text-center mb-16 space-y-4">
       <div className="text-[10px] uppercase tracking-[0.5em] text-gray-300">Chapter I</div>
-      <div className="h-8 bg-gray-100 dark:bg-gray-800 rounded-lg w-48 mx-auto blur-[2px]" />
-      <div className="w-8 h-px bg-gray-100 dark:bg-gray-800 mx-auto mt-6" />
+      <div className="h-8 bg-white/5 rounded-lg w-48 mx-auto blur-[2px]" />
+      <div className="w-8 h-px bg-white/10 mx-auto mt-6" />
     </div>
     
     <div className="space-y-10">
       {[1, 2, 3].map((i) => (
         <div key={i} className="space-y-4">
-          <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-full blur-[3px]" />
-          <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-full blur-[2px]" />
-          <div className="h-4 bg-gray-100 dark:bg-gray-800 rounded w-5/6 blur-[4px]" />
+          <div className="h-4 bg-white/5 rounded w-full blur-[3px]" />
+          <div className="h-4 bg-white/5 rounded w-full blur-[2px]" />
+          <div className="h-4 bg-white/5 rounded w-5/6 blur-[4px]" />
         </div>
       ))}
     </div>
@@ -134,14 +134,14 @@ export const BookView = () => {
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="w-20 h-20 bg-gray-50 dark:bg-[#1A1A1A] rounded-full flex items-center justify-center mx-auto mb-8 opacity-30"
+            className="w-20 h-20 bg-[var(--color-bg-dark)] border border-white/5 rounded-full flex items-center justify-center mx-auto mb-8 opacity-40 glass-surface"
           >
-            <BookOpen className="w-8 h-8 text-gray-300" />
+            <BookOpen className="w-8 h-8 text-white/20" />
           </motion.div>
-          <h2 className="text-4xl font-serif italic text-gray-400 dark:text-gray-600 tracking-tight">
+          <h2 className="text-4xl font-serif italic text-white/30 tracking-tight">
             Your story is waiting to be written...
           </h2>
-          <p className="text-gray-300 dark:text-gray-600 max-w-sm mx-auto leading-relaxed font-serif italic">
+          <p className="text-white/20 max-w-sm mx-auto leading-relaxed font-serif italic">
             जैसे-जैसे आप यादें साझा करेंगे, आपकी कहानी के पन्ने यहाँ खुद-ब-खुद जुड़ते जाएंगे।
           </p>
         </div>

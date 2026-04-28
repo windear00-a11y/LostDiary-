@@ -12,7 +12,7 @@ export const FeedbackDrawer = () => {
       <button 
         onClick={() => setIsOpen(true)}
         aria-label="Give feedback"
-        className="fixed bottom-6 right-6 p-4 bg-indigo-500 text-white rounded-full shadow-2xl z-50 hover:scale-110 transition-transform"
+        className="fixed bottom-6 right-6 p-4 bg-amber-500 text-white rounded-full shadow-2xl z-50 hover:scale-110 transition-transform"
       >
         <MessageSquare className="w-5 h-5" />
       </button>
@@ -38,13 +38,13 @@ export const FeedbackDrawer = () => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Share your raw thoughts..."
-                className="w-full p-4 bg-black/40 border border-white/5 rounded-2xl mb-6 text-sm outline-none focus:border-indigo-500"
+                className="w-full p-4 bg-black/40 border border-white/5 rounded-2xl mb-6 text-sm outline-none focus:border-amber-500"
                 rows={4}
                 aria-label="Feedback message"
               />
               <button 
                 onClick={() => { setMessage(''); setIsOpen(false); }}
-                className="w-full py-4 bg-indigo-500 hover:bg-indigo-600 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all"
+                className="w-full py-4 bg-amber-500 hover:bg-amber-600 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all"
               >
                 Send to WinDear
               </button>

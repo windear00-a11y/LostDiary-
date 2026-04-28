@@ -58,7 +58,7 @@ export const EngagementSoulCard = () => {
   const energyCards = [
     { label: 'Hope Given', value: metrics.energy_jar.hope, icon: Leaf, color: 'text-emerald-500', bg: 'bg-emerald-500/10', description: 'authored hope' },
     { label: 'Tears Shared', value: metrics.energy_jar.tear, icon: Droplets, color: 'text-blue-500', bg: 'bg-blue-500/10', description: 'soul touching' },
-    { label: 'Deep Resonance', value: metrics.energy_jar.resonance, icon: Handshake, color: 'text-indigo-500', bg: 'bg-indigo-500/10', description: 'shared truth' },
+    { label: 'Deep Resonance', value: metrics.energy_jar.resonance, icon: Handshake, color: 'text-amber-500', bg: 'bg-amber-500/10', description: 'shared truth' },
   ];
 
   const coreCards = [
@@ -70,8 +70,8 @@ export const EngagementSoulCard = () => {
     <div className="space-y-10 mb-20">
       {/* 1. The Energy Jar - Mood Breakdown */}
       <div className="space-y-6">
-        <div className="flex flex-col gap-1 px-2 border-l-2 border-indigo-500 pl-4">
-          <h3 className="text-sm font-serif font-bold text-slate-800 dark:text-slate-200">The Energy Jar</h3>
+        <div className="flex flex-col gap-1 px-2 border-l-2 border-amber-500 pl-4">
+          <h3 className="text-sm font-serif font-bold text-[var(--color-primary-text-dark)]">The Energy Jar</h3>
           <p className="text-[10px] uppercase tracking-widest text-slate-400">Emotional residues left by your readers</p>
         </div>
         
@@ -82,7 +82,7 @@ export const EngagementSoulCard = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="group relative p-6 bg-white dark:bg-[#0c0c0c] border border-slate-100 dark:border-white/5 rounded-[32px] overflow-hidden hover:border-indigo-500/20 transition-all shadow-sm"
+              className="group relative p-6 bg-white dark:bg-[#0c0c0c] border border-slate-100 dark:border-white/5 rounded-[32px] overflow-hidden hover:border-amber-500/20 transition-all shadow-sm"
             >
               <div className={`absolute top-0 right-0 w-24 h-24 ${card.bg} rounded-bl-full -mr-8 -mt-8 opacity-40 blur-2xl group-hover:opacity-60 transition-opacity`} />
               <div className="flex items-center gap-4">
@@ -90,7 +90,7 @@ export const EngagementSoulCard = () => {
                   <card.icon className={`w-5 h-5 ${card.color}`} />
                 </div>
                 <div>
-                  <div className="text-3xl font-serif font-bold text-slate-900 dark:text-white">{card.value}</div>
+                  <div className="text-3xl font-serif font-bold text-[var(--color-primary-text-dark)]">{card.value}</div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{card.label}</div>
                 </div>
               </div>
@@ -102,7 +102,7 @@ export const EngagementSoulCard = () => {
       {/* 2. Luminous Lines - Constellation Mapping (Paragraph Engagement) */}
       <div className="space-y-6">
         <div className="flex flex-col gap-1 px-2 border-l-2 border-amber-500 pl-4">
-          <h3 className="text-sm font-serif font-bold text-slate-800 dark:text-slate-200">Luminous Lines</h3>
+          <h3 className="text-sm font-serif font-bold text-[var(--color-primary-text-dark)]">Luminous Lines</h3>
           <p className="text-[10px] uppercase tracking-widest text-slate-400">Constellations of resonance in your paragraphs</p>
         </div>
         
@@ -198,7 +198,7 @@ export const EngagementSoulCard = () => {
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">{card.label}</span>
                </div>
-               <div className="text-2xl font-serif font-bold text-slate-900 dark:text-white">{card.value}</div>
+               <div className="text-2xl font-serif font-bold text-[var(--color-primary-text-dark)]">{card.value}</div>
             </div>
           ))}
         </div>
@@ -206,7 +206,7 @@ export const EngagementSoulCard = () => {
         {/* Spun Threads - The Woven Legacy */}
         <motion.div
           whileHover={{ scale: 1.01 }}
-          className="relative overflow-hidden p-8 bg-gradient-to-br from-indigo-600 via-violet-700 to-purple-800 rounded-[40px] text-white shadow-2xl shadow-indigo-500/30 flex flex-col justify-between"
+          className="relative overflow-hidden p-8 bg-gradient-to-br from-amber-600 via-violet-700 to-purple-800 rounded-[40px] text-white shadow-2xl shadow-amber-500/30 flex flex-col justify-between"
         >
           <div className="absolute top-0 right-0 p-8 opacity-20">
              <BookOpen className="w-32 h-32 text-white -mr-16 -mt-16 rotate-12" />

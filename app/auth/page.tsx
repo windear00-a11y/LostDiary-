@@ -20,9 +20,9 @@ function AuthForm() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0d0d0d] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
+    <main className="min-h-screen bg-[var(--color-bg-dark)] text-white flex flex-col items-center justify-center p-6 relative overflow-hidden">
       {/* Background Glow */}
-      <div className="absolute w-[800px] h-[800px] bg-indigo-500/10 rounded-full blur-[160px] z-0 -top-40" />
+      <div className="absolute w-[800px] h-[800px] bg-amber-500/10 rounded-full blur-[160px] z-0 -top-40" />
       <div className="absolute w-[600px] h-[600px] bg-amber-500/5 rounded-full blur-[140px] z-0 -bottom-40" />
 
       <motion.div 
@@ -32,7 +32,7 @@ function AuthForm() {
       >
         <div className="space-y-3">
           <h1 className="text-5xl font-serif font-semibold tracking-tight text-white/90">WinDear</h1>
-          <p className="text-base text-indigo-300/70 font-serif italic">Your private sanctuary, awaiting.</p>
+          <p className="text-base text-amber-300/70 font-serif italic">Your private sanctuary, awaiting.</p>
         </div>
 
         <div className="space-y-3">

@@ -19,7 +19,7 @@ export function BridgeHeader({ bridgeData, resonanceMsg, checkResonance }: Bridg
         protected: {
             title: "Guardian Protected",
             desc: "The AI Guardian acts as a silent witness, preventing toxic energy or identity leaks while keeping the bridge sacred.",
-            icon: <ShieldCheck className="w-5 h-5 text-indigo-400" />
+            icon: <ShieldCheck className="w-5 h-5 text-amber-400" />
         },
         trusted: {
             title: "Soul Trusted",
@@ -43,7 +43,7 @@ export function BridgeHeader({ bridgeData, resonanceMsg, checkResonance }: Bridg
                         <ArrowLeft className="w-4 h-4 text-white/50" />
                     </button>
                     <div>
-                        <h1 className="text-[10px] uppercase tracking-widest text-indigo-400 font-bold flex items-center gap-2 mb-1">
+                        <h1 className="text-[10px] uppercase tracking-widest text-amber-400 font-bold flex items-center gap-2 mb-1">
                             <Handshake className="w-3 h-3" />
                             The Midnight Bridge
                         </h1>
@@ -55,7 +55,7 @@ export function BridgeHeader({ bridgeData, resonanceMsg, checkResonance }: Bridg
                 </div>
                 
                 <div className="text-right flex items-center gap-3">
-                    <button onClick={checkResonance} className="p-2 text-indigo-400 hover:text-indigo-300 transition-colors" title="Check Resonance">
+                    <button onClick={checkResonance} className="p-2 text-amber-400 hover:text-amber-300 transition-colors" title="Check Resonance">
                         <Sparkles className="w-4 h-4" />
                     </button>
                     <div className="relative">
@@ -88,18 +88,18 @@ export function BridgeHeader({ bridgeData, resonanceMsg, checkResonance }: Bridg
                     <div className="flex items-start gap-4 p-5 bg-slate-50 dark:bg-white/5 rounded-3xl border border-slate-100 dark:border-white/5">
                         <div className="mt-1">{modeInfo[currentMode].icon}</div>
                         <div>
-                            <h4 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2">
+                            <h4 className="text-sm font-bold text-[var(--color-primary-text-dark)] uppercase tracking-wider mb-2">
                                 {modeInfo[currentMode].title}
                             </h4>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 font-serif leading-relaxed">
+                            <p className="text-xs text-[var(--color-secondary-text-dark)] font-serif leading-relaxed">
                                 {modeInfo[currentMode].desc}
                             </p>
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/10 text-center">
-                            <p className="text-[9px] text-indigo-400 uppercase tracking-widest mb-1 font-bold">Privacy Promise</p>
+                        <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 text-center">
+                            <p className="text-[9px] text-amber-400 uppercase tracking-widest mb-1 font-bold">Privacy Promise</p>
                             <p className="text-[10px] text-slate-500 italic">No logs stored.</p>
                         </div>
                         <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/10 text-center">
@@ -117,8 +117,8 @@ export function BridgeHeader({ bridgeData, resonanceMsg, checkResonance }: Bridg
             </BottomSheet>
 
             {resonanceMsg && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} layout className="p-4 mb-8 bg-indigo-900/40 border border-indigo-500/20 text-indigo-100 rounded-2xl text-xs font-serif italic text-center shadow-xl">
-                    <Sparkles className="w-3 h-3 inline-block mr-2 text-indigo-400" />
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} layout className="p-4 mb-8 bg-amber-900/40 border border-amber-500/20 text-amber-100 rounded-2xl text-xs font-serif italic text-center shadow-xl">
+                    <Sparkles className="w-3 h-3 inline-block mr-2 text-amber-400" />
                     {resonanceMsg}
                 </motion.div>
             )}

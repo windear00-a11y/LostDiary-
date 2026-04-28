@@ -6,7 +6,7 @@ import {
   ChevronLeft, ChevronRight, Undo, Redo, Type, Bold, Italic, 
   Underline, List, AlignLeft, AlignCenter, AlignRight, 
   CheckSquare, Save, Check, X,
-  Clock, Hash, Sparkles, Plus, Shield
+  Clock, Hash, Sparkles, Plus, Shield, Mic
 } from 'lucide-react';
 import { coreService } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
@@ -43,6 +43,9 @@ export const JournalEditor = () => {
   const [lastSavedContent, setLastSavedContent] = useState<string>('');
   
   const titleRef = useRef<HTMLTextAreaElement>(null);
+  
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   // TipTap Editor
   const editor = useEditor({
@@ -65,7 +68,7 @@ export const JournalEditor = () => {
     content: selectedJournalContent || content || '',
     editorProps: {
       attributes: {
-        class: 'w-full min-h-[50vh] prose prose-invert prose-p:text-lg md:prose-p:text-xl prose-p:leading-[1.8] prose-p:font-serif prose-p:text-white/90 prose-headings:font-serif prose-headings:text-white focus:outline-none selection:bg-white/20 pb-32 max-w-none',
+        class: 'w-full min-h-[50vh] prose prose-invert prose-p:text-lg md:prose-p:text-xl prose-p:leading-[1.8] prose-p:font-serif prose-p:text-[var(--color-primary-text-dark)] prose-headings:font-serif prose-headings:text-[var(--color-primary-text-dark)] focus:outline-none selection:bg-[var(--color-accent-amber)]/20 pb-32 max-w-none',
       },
       handleDOMEvents: {
         focus: () => {
@@ -83,6 +86,96 @@ export const JournalEditor = () => {
       setShowUI(true);
     },
   });
+
+  useEffect(() => {
+    // Initialize speech recognition
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        
+        recognitionRef.current.onresult = (event: any) => {
+          let finalTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+            }
+          }
+          if (finalTranscript) {
+            editor?.commands.insertContent(finalTranscript + ' ');
+          }
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error', event.error);
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+        };
+      }
+    }
+    
+    return () => {
+      if (recognitionRef.current) {
+         recognitionRef.current.stop();
+      }
+    };
+  }, [editor]);
+
+  const toggleListening = () => {
+    if (!recognitionRef.current) {
+        toast.error('Voice dictation is not supported in this browser.');
+        return;
+    }
+    
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+        toast.success(language === 'hi' ? 'Sunte hue...' : 'Listening...');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
+
+  // Offline sync
+  useEffect(() => {
+    const handleOnline = async () => {
+        const offlineEntries = JSON.parse(localStorage.getItem('journalOfflineQueue') || '[]');
+        if (offlineEntries.length > 0) {
+            const user = await authService.getUser();
+            if (user) {
+                toast.loading('Syncing offline entries...', { id: 'offline-sync' });
+                try {
+                    for (const entry of offlineEntries) {
+                        await coreService.saveDiaryEntry(user.id, entry.content, entry.metadata);
+                    }
+                    localStorage.removeItem('journalOfflineQueue');
+                    toast.dismiss('offline-sync');
+                    toast.success('Offline entries synced successfully.');
+                } catch (e) {
+                    console.error('Failed to sync offline entries', e);
+                    toast.dismiss('offline-sync');
+                    toast.error('Failed to sync some offline entries.');
+                }
+            }
+        }
+    };
+
+    window.addEventListener('online', handleOnline);
+    if (navigator.onLine) {
+        handleOnline();
+    }
+    return () => window.removeEventListener('online', handleOnline);
+  }, [language]);
 
   // Auto-resize areas on content change
   useEffect(() => {
@@ -207,6 +300,27 @@ export const JournalEditor = () => {
       // Combine title and content
       const fullContent = title ? `# ${title}\n\n${content}` : content;
 
+      if (!navigator.onLine) {
+        const offlineEntries = JSON.parse(localStorage.getItem('journalOfflineQueue') || '[]');
+        offlineEntries.push({
+           user_id: user.id,
+           content: fullContent,
+           metadata: { language, inspired_by: inspiredBy, inspiration_author: inspirationAuthor },
+           created_at: new Date().toISOString()
+        });
+        localStorage.setItem('journalOfflineQueue', JSON.stringify(offlineEntries));
+        
+        setSaveStatus('success');
+        setLastSavedContent(fullContent);
+        toast.success('Saved offline. Will sync when connection is restored.');
+        
+        localStorage.removeItem('journalDraft_title');
+        localStorage.removeItem('journalDraft_content');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+        setIsSaving(false);
+        return;
+      }
+
       await coreService.saveDiaryEntry(user.id, fullContent, { 
         language, 
         inspired_by: inspiredBy,
@@ -315,7 +429,8 @@ export const JournalEditor = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#0a0a0a] text-neutral-200 overflow-hidden relative font-sans" onMouseMove={handleMouseMove}>
+    <div className="h-full flex flex-col bg-[var(--color-bg-dark)] text-[var(--color-primary-text-dark)] overflow-hidden relative font-sans" onMouseMove={handleMouseMove}>
+
       {/* Background Ambience - Simplified and Elegant */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-white/[0.02] blur-[120px] rounded-[100%] pointer-events-none" />
@@ -328,27 +443,26 @@ export const JournalEditor = () => {
           y: showUI ? 0 : -20,
           pointerEvents: showUI ? 'auto' : 'none'
         }}
-        className="flex items-center justify-between px-6 pt-12 pb-2 z-20 bg-transparent"
+        className="flex items-center justify-between px-6 pt-20 pb-2 z-20 bg-transparent"
       >
         <div className="flex items-center gap-3">
           <div className="flex flex-col select-none opacity-50">
-            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-white/40">Sanctuary</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--color-primary-text-dark)] opacity-40">Write</span>
           </div>
         </div>
         
         <div className="flex items-center gap-2">
           <button 
             onClick={handleStartNewEntry}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-white/40 hover:text-white transition-colors"
+            className="w-10 h-10 rounded-full glass-surface flex items-center justify-center text-[var(--color-secondary-text-dark)] hover:bg-[var(--color-primary-text-dark)] hover:text-[var(--color-bg-dark)] transition-colors focus:outline-none"
             title="New Journal"
           >
             <Plus className="w-4 h-4" />
           </button>
-          <div className="w-[1px] h-3 bg-white/10 mx-1" />
           <button 
             onClick={handleSave}
             disabled={isSaving || (!title.trim() && !content.trim()) || isContentUnchanged}
-            className={`px-4 py-1.5 flex items-center gap-2 rounded-full font-medium text-[10px] uppercase tracking-widest transition-all ${saveStatus === 'success' ? 'text-emerald-400' : 'text-white/60 hover:text-white disabled:opacity-30'}`}
+            className={`px-5 py-2.5 flex items-center gap-2 rounded-full font-bold text-[10px] uppercase tracking-widest transition-all focus:outline-none ${saveStatus === 'success' ? 'bg-[var(--color-accent-amber)]/20 text-[var(--color-accent-amber)]' : 'bg-white/5 text-[var(--color-primary-text-dark)] hover:bg-white/10 disabled:opacity-30'}`}
           >
             {isSaving ? (
               <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -392,7 +506,7 @@ export const JournalEditor = () => {
                    exit={{ opacity: 0, scale: 0.9 }}
                    className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/5 whitespace-nowrap shrink-0"
                  >
-                   <span className={`w-1.5 h-1.5 rounded-full ${isSavingLocal ? 'bg-white/40 animate-pulse' : 'bg-indigo-500'}`} />
+                   <span className={`w-1.5 h-1.5 rounded-full ${isSavingLocal ? 'bg-white/40 animate-pulse' : 'bg-amber-500'}`} />
                    <span className="text-[9px] uppercase tracking-widest text-white/50 font-medium">
                      {isSavingLocal ? 'Saving...' : 'Draft Saved'}
                    </span>
@@ -441,7 +555,7 @@ export const JournalEditor = () => {
                  <div className="flex items-center gap-4 mb-8">
                    <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
                    <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-400" /> Prompts to start
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Prompts to start
                    </p>
                    <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
                  </div>
@@ -452,9 +566,9 @@ export const JournalEditor = () => {
                        whileHover={{ scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
                        whileTap={{ scale: 0.99 }}
                        onClick={() => handleSelectStarter(starter.text)}
-                       className="w-full flex items-center gap-5 py-4 px-5 rounded-2xl text-[14px] text-white/60 hover:text-white transition-all text-left bg-white/[0.02] border border-white/5 hover:border-indigo-500/30 hover:shadow-[0_0_30px_rgba(99,102,241,0.05)] group"
+                       className="w-full flex items-center gap-5 py-4 px-5 rounded-2xl text-[14px] text-white/60 hover:text-white transition-all text-left bg-white/[0.02] border border-white/5 hover:border-amber-500/30 hover:shadow-[0_0_30px_rgba(99,102,241,0.05)] group"
                      >
-                       <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-indigo-500/10 group-hover:scale-110 transition-all border border-white/5 group-hover:border-indigo-500/30">
+                       <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-amber-500/10 group-hover:scale-110 transition-all border border-white/5 group-hover:border-amber-500/30">
                          <span className="text-lg opacity-80 group-hover:opacity-100 transition-opacity">{starter.icon}</span>
                        </div>
                        <span className="font-serif italic leading-relaxed pt-1 group-hover:translate-x-1 transition-transform duration-300">{starter.text}</span>
@@ -527,7 +641,7 @@ export const JournalEditor = () => {
           y: showUI || isInputFocused ? 0 : 20,
           pointerEvents: showUI || isInputFocused ? 'auto' : 'none'
         }}
-        className={`fixed right-4 bg-[#1A1A1A]/95 backdrop-blur-md border border-white/10 rounded-full shadow-2xl flex items-center justify-center p-1 z-[70] transition-all duration-500 overflow-hidden ${isInputFocused ? 'bottom-4' : 'bottom-[calc(80px+env(safe-area-inset-bottom))]'}`}
+        className={`fixed right-4 bg-white/5/95 backdrop-blur-md border border-white/10 rounded-full shadow-2xl flex items-center justify-center p-1 z-[70] transition-all duration-500 overflow-hidden ${isInputFocused ? 'bottom-4' : 'bottom-[calc(80px+env(safe-area-inset-bottom))]'}`}
       >
         <AnimatePresence mode="wait">
           {isFormattingExpanded ? (
@@ -568,16 +682,31 @@ export const JournalEditor = () => {
               </button>
             </motion.div>
           ) : (
-            <motion.button 
-              key="collapsed"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
-              onClick={() => setIsFormattingExpanded(true)}
-              className="p-3 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0"
+            <motion.div
+               key="collapsed"
+               initial={{ scale: 0, opacity: 0 }}
+               animate={{ scale: 1, opacity: 1 }}
+               exit={{ scale: 0, opacity: 0 }}
+               className="flex items-center gap-1"
             >
-              <Type className="w-4 h-4" />
-            </motion.button>
+              <button
+                onClick={toggleListening}
+                className={`p-3 rounded-full transition-colors shrink-0 ${isListening ? 'text-amber-400 bg-amber-400/10' : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                title="Voice Dictation"
+              >
+                <div className="relative">
+                  <Mic className="w-4 h-4" />
+                  {isListening && <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full animate-ping" />}
+                </div>
+              </button>
+              <div className="w-[1px] h-4 bg-white/10 mx-1 shrink-0" />
+              <button 
+                onClick={() => setIsFormattingExpanded(true)}
+                className="p-3 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0"
+              >
+                <Type className="w-4 h-4" />
+              </button>
+            </motion.div>
           )}
         </AnimatePresence>
       </motion.div>

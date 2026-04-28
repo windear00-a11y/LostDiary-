@@ -37,11 +37,11 @@ export const MenuContent = ({ onClose, isOpen }: MenuContentProps) => {
       {/* Header */}
       <div className="pt-8 pb-6 px-6 flex items-start justify-between relative z-10 w-full">
         <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 text-indigo-400">
+          <div className="flex items-center gap-2 text-amber-400">
             <Compass className="w-6 h-6" />
             <span className="font-serif italic text-2xl font-bold tracking-tight text-white drop-shadow-md">Windear</span>
           </div>
-          <div className="text-[9px] uppercase tracking-[0.3em] font-bold text-indigo-500/50 ml-8">Archive & Soul</div>
+          <div className="text-[9px] uppercase tracking-[0.3em] font-bold text-amber-500/50 ml-8">Archive & Soul</div>
         </div>
         <div className="flex items-center gap-1">
           <LanguageSwitcher />
@@ -53,7 +53,7 @@ export const MenuContent = ({ onClose, isOpen }: MenuContentProps) => {
         {/* 4 Feature Modes Quick Access */}
         <div className="grid grid-cols-4 gap-2 px-1 mb-2 border-b border-white/5 pb-6">
           <button onClick={() => { setActiveView('chat'); router.push('/home'); onClose(); }} className="flex flex-col items-center gap-2 group">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${activeView === 'chat' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-300 border border-transparent hover:border-white/10'}`}>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${activeView === 'chat' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-300 border border-transparent hover:border-white/10'}`}>
                <MessageSquare className="w-5 h-5 group-hover:scale-110 transition-transform" />
             </div>
             <span className="text-[9px] uppercase tracking-wider font-bold text-slate-500 group-hover:text-slate-300">Whisper</span>
@@ -85,13 +85,13 @@ export const MenuContent = ({ onClose, isOpen }: MenuContentProps) => {
         <div className="flex p-1 bg-[#0a0a0a] rounded-2xl gap-1 border border-white/5">
           <button 
             onClick={() => setActiveTab('chats')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'chats' ? 'bg-indigo-600/20 text-indigo-300 shadow-sm border border-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'chats' ? 'bg-amber-600/20 text-amber-300 shadow-sm border border-amber-500/20' : 'text-slate-500 hover:text-slate-300'}`}
           >
             <MessageSquare className="w-3 h-3" /> WHISPERS
           </button>
           <button 
             onClick={() => setActiveTab('reflections')}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'reflections' ? 'bg-indigo-600/20 text-indigo-300 shadow-sm border border-indigo-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold tracking-widest transition-all ${activeTab === 'reflections' ? 'bg-amber-600/20 text-amber-300 shadow-sm border border-amber-500/20' : 'text-slate-500 hover:text-slate-300'}`}
           >
             <History className="w-3 h-3" /> MEMORIES
           </button>
@@ -102,7 +102,7 @@ export const MenuContent = ({ onClose, isOpen }: MenuContentProps) => {
           {activeTab === 'chats' ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
               <div className="flex items-center justify-between px-2 pt-2">
-                <span className="text-[9px] uppercase tracking-[0.3em] font-bold text-slate-500 text-indigo-500/40">Active Threads</span>
+                <span className="text-[9px] uppercase tracking-[0.3em] font-bold text-slate-500 text-amber-500/40">Active Threads</span>
                 <motion.button 
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
@@ -111,7 +111,7 @@ export const MenuContent = ({ onClose, isOpen }: MenuContentProps) => {
                     router.push('/home?session=new');
                     onClose();
                   }}
-                  className="p-1.5 hover:bg-indigo-500/10 rounded-full transition-colors text-indigo-400"
+                  className="p-1.5 hover:bg-amber-500/10 rounded-full transition-colors text-amber-400"
                 >
                   <Plus className="w-4 h-4" />
                 </motion.button>
@@ -126,11 +126,11 @@ export const MenuContent = ({ onClose, isOpen }: MenuContentProps) => {
                       router.push(`/home?session=${session.id}`);
                       onClose();
                     }}
-                    className="w-full flex flex-col gap-1 p-3.5 rounded-2xl transition-all text-left group border border-transparent hover:border-indigo-500/10"
+                    className="w-full flex flex-col gap-1 p-3.5 rounded-2xl transition-all text-left group border border-transparent hover:border-amber-500/10"
                   >
                     <div className="flex items-center gap-3">
-                       <div className="w-1.5 h-1.5 rounded-full bg-indigo-500/30 group-hover:bg-indigo-400 transition-colors shrink-0 shadow-[0_0_5px_rgba(99,102,241,0.5)]" />
-                       <span className="text-sm text-indigo-100/60 group-hover:text-indigo-100 font-serif italic line-clamp-1 flex-1 transition-colors">
+                       <div className="w-1.5 h-1.5 rounded-full bg-amber-500/30 group-hover:bg-amber-400 transition-colors shrink-0 shadow-[0_0_5px_rgba(99,102,241,0.5)]" />
+                       <span className="text-sm text-amber-100/60 group-hover:text-amber-100 font-serif italic line-clamp-1 flex-1 transition-colors">
                          {session.title || 'An untitled whisper...'}
                        </span>
                     </div>
@@ -141,7 +141,7 @@ export const MenuContent = ({ onClose, isOpen }: MenuContentProps) => {
           ) : (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
               <div className="flex items-center justify-between px-2 pt-2">
-                <span className="text-[9px] uppercase tracking-[0.3em] font-bold text-slate-500 text-indigo-500/40">Sealed Thoughts</span>
+                <span className="text-[9px] uppercase tracking-[0.3em] font-bold text-slate-500 text-amber-500/40">Sealed Thoughts</span>
                 <motion.button 
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}

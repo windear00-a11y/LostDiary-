@@ -20,8 +20,8 @@ export const AuthPromptModal = ({ isOpen, onClose }: { isOpen: boolean; onClose:
             className="bg-[#1A1A1D] border border-white/10 rounded-[32px] p-8 max-w-sm w-full shadow-2xl relative"
           >
             <button onClick={onClose} aria-label="Close" className="absolute top-6 right-6 p-2 text-gray-500 hover:text-white"><X className="w-5 h-5" /></button>
-            <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Lock className="w-8 h-8 text-indigo-400" />
+            <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Lock className="w-8 h-8 text-amber-400" />
             </div>
             <h3 className="text-xl font-serif font-bold text-white mb-2 text-center">Apne dil ki baat mehfuz rakhein</h3>
             <p className="text-sm text-gray-400 mb-8 text-center leading-relaxed">

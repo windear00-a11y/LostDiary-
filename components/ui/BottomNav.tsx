@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Compass, Fingerprint, Sparkles, MoreHorizontal, MessageSquare, Feather } from 'lucide-react';
+import { Compass, Fingerprint, Sparkles, MoreHorizontal, MessageSquare, Feather, BookOpen } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useUIStore } from '@/lib/store/use-ui-store';
 
@@ -15,10 +15,10 @@ export const BottomNav = () => {
   if (pathname === '/' || pathname?.startsWith('/bridge') || pathname?.startsWith('/onboarding') || isInputFocused) return null;
 
   const tabs = [
-    { id: 'chat', label: 'Whispers', icon: MessageSquare, path: '/home', active: pathname === '/home' && activeView === 'chat', action: () => setActiveView('chat') },
-    { id: 'journal', label: 'Journal', icon: Feather, path: '/home', active: pathname === '/home' && activeView === 'journal', action: () => setActiveView('journal') },
-    { id: 'library', label: 'Library', icon: Compass, path: '/library', active: pathname === '/library', action: null },
-    { id: 'profile', label: 'Profile', icon: Fingerprint, path: '/profile', active: pathname === '/profile', action: null },
+    { id: 'sanctuary', label: 'Sanctuary', icon: MessageSquare, path: '/home', active: pathname === '/home' && ['chat', 'journal'].includes(activeView), action: () => setActiveView('chat') },
+    { id: 'chronicles', label: 'Chronicles', icon: BookOpen, path: '/home', active: pathname === '/home' && ['story', 'reflect'].includes(activeView), action: () => setActiveView('story') },
+    { id: 'cosmos', label: 'Cosmos', icon: Compass, path: '/library', active: pathname === '/library', action: null },
+    { id: 'mirror', label: 'Mirror', icon: Fingerprint, path: '/profile', active: pathname === '/profile', action: null },
   ];
 
   const handleTabClick = (tab: any) => {

@@ -12,11 +12,11 @@ import { NarrativeMap } from '@/components/ui/NarrativeMap';
 import { useChapterEngagement } from './hooks/use-chapter-engagement';
 
 const moodBgColors: Record<string, string> = {
-  Joyful: '#FFFBEB', 
-  Tense: '#FFF1F2',  
-  Melancholic: '#EEF2FF', 
-  Serene: '#ECFDF5', 
-  Default: '#FDFCF8'
+  Joyful: '#12100A', 
+  Tense: '#1A0F11',  
+  Melancholic: '#0A0F15', 
+  Serene: '#0B1310', 
+  Default: 'var(--color-bg-dark)'
 };
 
 // Initialize Gemini
@@ -306,7 +306,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
 
   return (
     <div 
-     className="min-h-screen relative overflow-x-hidden selection:bg-indigo-500/20 selection:text-indigo-900 transition-colors duration-1000"
+     className="min-h-screen relative overflow-x-hidden selection:bg-amber-500/20 selection:text-amber-900 transition-colors duration-1000"
      style={{ backgroundColor: moodBgColors[mood] || moodBgColors.Default }}
     >
       <AnimatePresence mode="wait">
@@ -316,11 +316,11 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
-            className="fixed inset-0 z-[120] bg-[#FDFCF8] dark:bg-[#0A0A0A] flex flex-col items-center justify-center p-6 text-center"
+            className="fixed inset-0 z-[120] bg-transparent flex flex-col items-center justify-center p-6 text-center"
           >
             {/* Narrative Aura Glows for Cover */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-indigo-500/5 blur-[150px] rounded-full" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] bg-amber-500/5 blur-[150px] rounded-full" />
             </div>
 
             <motion.div
@@ -332,7 +332,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               {/* Back Button for Cover Stage */}
               <button 
                 onClick={onBack}
-                className="absolute -top-32 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-slate-400 hover:text-indigo-500 transition-all opacity-60 hover:opacity-100"
+                className="absolute -top-32 left-1/2 -translate-x-1/2 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-slate-400 hover:text-amber-500 transition-all opacity-60 hover:opacity-100"
               >
                 <ArrowLeft className="w-3 h-3" />
                 Exit Sanctuary
@@ -346,15 +346,15 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
                    </div>
                 ) : (
-                  <div className="w-12 h-12 bg-indigo-500/10 rounded-full flex items-center justify-center relative group">
+                  <div className="w-12 h-12 bg-amber-500/10 rounded-full flex items-center justify-center relative group">
                      {isGeneratingCover ? (
-                         <div className="w-6 h-6 border-2 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
+                         <div className="w-6 h-6 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
                      ) : (
                          <>
-                           <BookOpen className="w-6 h-6 text-indigo-500 transition-transform group-hover:scale-110" />
+                           <BookOpen className="w-6 h-6 text-amber-500 transition-transform group-hover:scale-110" />
                            <button 
                              onClick={generateAuraCover}
-                             className="absolute -right-32 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-500 text-white text-[10px] px-3 py-1.5 rounded-full font-bold uppercase tracking-widest whitespace-nowrap shadow-xl"
+                             className="absolute -right-32 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-amber-500 text-white text-[10px] px-3 py-1.5 rounded-full font-bold uppercase tracking-widest whitespace-nowrap shadow-xl"
                              title="Generate Aura Art via Gemini"
                            >
                               Reveal Aura
@@ -363,10 +363,10 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                      )}
                   </div>
                 )}
-                <span className="text-[10px] uppercase tracking-[1em] text-indigo-500 font-bold ml-[1em]">An Autobiography</span>
+                <span className="text-[10px] uppercase tracking-[1em] text-amber-500 font-bold ml-[1em]">An Autobiography</span>
               </div>
 
-              <h1 className="text-5xl md:text-8xl font-serif font-medium text-slate-900 dark:text-white leading-tight tracking-tight px-4">
+              <h1 className="text-5xl md:text-8xl font-serif font-medium text-[var(--color-primary-text-dark)] leading-tight tracking-tight px-4">
                 {coverData?.title || volumes?.[0]?.title || "The Unwritten Chronicles"}
               </h1>
 
@@ -376,7 +376,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               </div>
 
               {coverData?.summary && (
-                <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 font-serif italic leading-relaxed max-w-xl mx-auto px-6">
+                <p className="text-lg md:text-xl text-[var(--color-secondary-text-dark)] font-serif italic leading-relaxed max-w-xl mx-auto px-6">
                   &ldquo;{coverData.summary}&rdquo;
                 </p>
               )}
@@ -399,13 +399,13 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed inset-0 z-[110] bg-[#FDFCF8] dark:bg-[#0A0A0A] overflow-y-auto px-6 py-24 md:py-32"
+            className="fixed inset-0 z-[110] bg-transparent overflow-y-auto px-6 py-24 md:py-32"
           >
             <div className="max-w-3xl mx-auto">
               {/* Back Button for Index Stage */}
               <button 
                 onClick={onBack}
-                className="mb-8 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-slate-400 hover:text-indigo-500 transition-all group"
+                className="mb-8 flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-slate-400 hover:text-amber-500 transition-all group"
               >
                 <ArrowLeft className="w-3 h-3 transition-transform group-hover:-translate-x-1" />
                 Return to Library
@@ -417,7 +417,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${(readChapters.size / chapters.length) * 100}%` }}
-                      className="h-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
+                      className="h-full bg-amber-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
                     />
                  </div>
                  <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
@@ -427,8 +427,8 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
 
               <div className="text-center mb-20">
                 <span className="text-[10px] uppercase tracking-[0.5em] text-slate-400 font-bold ml-[0.5em] mb-4 block">Index</span>
-                <h2 className="text-4xl md:text-5xl font-serif text-slate-900 dark:text-white">Contents of the Soul</h2>
-                <div className="w-16 h-px bg-indigo-500 mx-auto mt-8" />
+                <h2 className="text-4xl md:text-5xl font-serif text-[var(--color-primary-text-dark)]">Contents of the Soul</h2>
+                <div className="w-16 h-px bg-amber-500 mx-auto mt-8" />
               </div>
 
               <div className="space-y-16">
@@ -436,8 +436,8 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                   volumes.sort((a, b) => a.volume_number - b.volume_number).map((vol, vIdx) => (
                     <div key={vol.id} className="space-y-8">
                       <div className="flex items-center gap-4">
-                        <span className="text-2xl font-serif italic text-indigo-500/50">V.{vIdx + 1}</span>
-                        <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white uppercase tracking-wider">{vol.title}</h3>
+                        <span className="text-2xl font-serif italic text-amber-500/50">V.{vIdx + 1}</span>
+                        <h3 className="text-2xl font-serif font-bold text-[var(--color-primary-text-dark)] uppercase tracking-wider">{vol.title}</h3>
                       </div>
                       
                       <div className="grid gap-4 ml-6 pl-6 relative">
@@ -449,17 +449,17 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                             onClick={() => scrollToChapter(chap.id)}
                             className="group flex items-start justify-between text-left py-3 hover:translate-x-2 transition-all relative"
                           >
-                             <div className={`absolute -left-[25px] top-[26px] w-2 h-2 rounded-full border-2 border-[#FDFCF8] dark:border-[#0A0A0A] z-10 transition-colors ${readChapters.has(chap.id) ? 'bg-slate-300 dark:bg-slate-600' : 'bg-indigo-500'}`} />
+                             <div className={`absolute -left-[25px] top-[26px] w-2 h-2 rounded-full border-2 border-[#FDFCF8] dark:border-[#0A0A0A] z-10 transition-colors ${readChapters.has(chap.id) ? 'bg-slate-300 dark:bg-slate-600' : 'bg-amber-500'}`} />
                              <div className="space-y-1">
                                <div className="flex items-center gap-3">
-                                 <span className={`text-[10px] font-mono tracking-tighter ${readChapters.has(chap.id) ? 'text-slate-300' : 'text-slate-400'}`}>0{cIdx + 1}</span>
-                                 <h4 className={`font-serif text-lg transition-colors ${readChapters.has(chap.id) ? 'text-slate-400 dark:text-zinc-500 italic' : 'text-slate-800 dark:text-slate-200'} group-hover:text-indigo-500`}>
+                                 <span className={`text-[10px] font-mono tracking-tighter ${readChapters.has(chap.id) ? 'text-slate-500' : 'text-slate-400'}`}>0{cIdx + 1}</span>
+                                 <h4 className={`font-serif text-lg transition-colors ${readChapters.has(chap.id) ? 'text-slate-500 italic' : 'text-[var(--color-primary-text-dark)]'} group-hover:text-amber-400`}>
                                    {chap.name}
                                  </h4>
-                                 {readChapters.has(chap.id) && <Sparkles className="w-3 h-3 text-indigo-400/50" />}
+                                 {readChapters.has(chap.id) && <Sparkles className="w-3 h-3 text-amber-400/50" />}
                                </div>
                              </div>
-                             <ChevronRight className={`w-4 h-4 transition-colors ${readChapters.has(chap.id) ? 'text-slate-200 dark:text-white/5' : 'text-slate-300 group-hover:text-indigo-500'}`} />
+                             <ChevronRight className={`w-4 h-4 transition-colors ${readChapters.has(chap.id) ? 'text-slate-200 dark:text-white/5' : 'text-slate-300 group-hover:text-amber-500'}`} />
                           </button>
                         ))}
                       </div>
@@ -471,7 +471,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                         <BookMarked className="w-10 h-10 text-slate-300" />
                      </div>
                      <h3 className="text-2xl font-serif text-slate-400 italic">This manuscript is still awaiting its first breath...</h3>
-                     <button onClick={onBack} className="mt-12 text-[10px] uppercase tracking-[0.4em] text-indigo-500 font-bold hover:underline">Return to Sanctuary</button>
+                     <button onClick={onBack} className="mt-12 text-[10px] uppercase tracking-[0.4em] text-amber-500 font-bold hover:underline">Return to Sanctuary</button>
                   </div>
                 )}
               </div>
@@ -480,7 +480,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                  {lastBookmark && (
                    <button 
                     onClick={() => scrollToChapter(lastBookmark)}
-                    className="flex items-center gap-2 px-8 py-4 bg-indigo-500 text-white rounded-full font-bold text-xs uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
+                    className="flex items-center gap-2 px-8 py-4 bg-amber-500 text-white rounded-full font-bold text-xs uppercase tracking-widest shadow-xl hover:scale-105 transition-all"
                    >
                      <Anchor className="w-3.5 h-3.5" /> Resume From Bookmark
                    </button>
@@ -499,7 +499,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
 
       {/* Narrative Aura Glows */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-indigo-500/5 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-amber-500/5 blur-[120px] rounded-full animate-pulse" />
         <div className="absolute top-[20%] -right-[10%] w-[35%] h-[35%] bg-purple-500/5 blur-[100px] rounded-full animate-pulse delay-1000" />
         <div className="absolute bottom-[10%] left-[5%] w-[30%] h-[30%] bg-emerald-500/5 blur-[120px] rounded-full animate-pulse delay-700" />
       </div>
@@ -523,7 +523,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => setIsTOCOpen(true)}
-          className="p-3 bg-white dark:bg-[#1A1A1A] text-slate-900 dark:text-white rounded-full shadow-lg border border-slate-100 dark:border-white/5"
+          className="p-3 bg-[var(--color-bg-dark)] text-[var(--color-primary-text-dark)] rounded-full shadow-lg border border-white/10"
         >
           <List className="w-5 h-5" />
         </motion.button>
@@ -538,14 +538,14 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsTOCOpen(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+              className="fixed inset-0 bg-black/80 backdrop-blur-md z-[60]"
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed top-0 right-0 h-full w-[300px] bg-white dark:bg-[#0D0D0D] z-[70] shadow-2xl border-l border-slate-100 dark:border-white/5 p-8"
+              className="fixed top-0 right-0 h-full w-[300px] bg-[var(--color-bg-dark)] z-[70] shadow-2xl border-l border-white/5 p-8"
             >
               <div className="flex items-center justify-between mb-12">
                 <h3 className="text-[10px] uppercase tracking-[0.5em] text-slate-400 font-bold">Contents</h3>
@@ -560,7 +560,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                     const volChapters = chapters.filter(c => c.volume_id === volume.id);
                     return (
                       <div key={volume.id} className="space-y-4">
-                        <div className="text-[10px] uppercase tracking-[0.3em] text-indigo-500/60 font-bold border-b border-indigo-500/10 pb-2">
+                        <div className="text-[10px] uppercase tracking-[0.3em] text-amber-500/60 font-bold border-b border-amber-500/10 pb-2">
                           Vol. {volume.volume_number} — {volume.title}
                         </div>
                         <div className="space-y-3 pl-2">
@@ -570,7 +570,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                               onClick={() => scrollToChapter(chapter.id)}
                               className="w-full text-left group"
                             >
-                              <div className="text-[11px] font-serif text-slate-500 dark:text-zinc-400 group-hover:text-indigo-400 transition-colors line-clamp-1">
+                              <div className="text-[11px] font-serif text-slate-500 dark:text-zinc-400 group-hover:text-amber-400 transition-colors line-clamp-1">
                                 {idx + 1}. {chapter.name}
                               </div>
                             </button>
@@ -587,7 +587,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                       className="w-full text-left group"
                     >
                       <div className="text-[9px] uppercase tracking-widest text-slate-500 mb-1">Entry {idx + 1}</div>
-                      <div className="text-sm font-serif text-slate-900 dark:text-white group-hover:text-indigo-500 transition-colors line-clamp-2 leading-relaxed">
+                      <div className="text-sm font-serif text-[var(--color-primary-text-dark)] group-hover:text-amber-500 transition-colors line-clamp-2 leading-relaxed">
                         {chapter.name}
                       </div>
                     </button>
@@ -607,7 +607,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
           pointerEvents: readingStage === 'reading' ? 'auto' : 'none',
           y: readingStage === 'reading' ? 0 : 40
         }}
-        className="fixed inset-0 z-[80] overflow-y-auto scrollbar-hide selection:bg-indigo-500/30 font-serif"
+        className="fixed inset-0 z-[80] overflow-y-auto scrollbar-hide selection:bg-amber-500/30 font-serif"
       >
         {readingStage === 'map' && (
           <NarrativeMap chapters={chapters} onChapterSelect={(id) => scrollToChapter(id)} />
@@ -627,7 +627,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
             <div className="mb-20 flex items-center justify-between sticky top-0 z-[100] py-4 px-2">
               <button 
                 onClick={() => setReadingStage('index')}
-                className="group flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 hover:text-indigo-500 transition-all font-sans"
+                className="group flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 hover:text-amber-500 transition-all font-sans"
               >
                 <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-1" />
                 The Book Index
@@ -635,7 +635,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               
               <button
                 onClick={() => setReadingStage(readingStage === 'map' ? 'reading' : 'map')}
-                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-indigo-500 hover:text-indigo-600 transition-all font-sans"
+                className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.3em] text-amber-500 hover:text-amber-600 transition-all font-sans"
               >
                 <Globe className="w-3.5 h-3.5" />
                 {readingStage === 'map' ? 'Read' : 'Explore'}
@@ -647,8 +647,8 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                    onClick={handleToggleAudiobook}
                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
                        isPlayingAudio 
-                       ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-500/30' 
-                       : 'bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:text-indigo-500 hover:border-indigo-500/50'
+                       ? 'bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-500/30' 
+                       : 'bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 hover:text-amber-500 hover:border-amber-500/50'
                    }`}
                    title="Whispering Audiobook"
                 >
@@ -660,9 +660,9 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                    <span className="text-[9px] font-bold uppercase tracking-widest hidden sm:inline-block">Listen</span>
                 </button>
 
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/5 rounded-full border border-indigo-500/10">
-                   <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                   <span className="text-[9px] font-bold text-indigo-500/80 uppercase tracking-widest">Atmosphere: {coverData?.aura || "Resonance"}</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/5 rounded-full border border-amber-500/10">
+                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                   <span className="text-[9px] font-bold text-amber-500/80 uppercase tracking-widest">Atmosphere: {coverData?.aura || "Resonance"}</span>
                 </div>
                 <button 
                   onClick={onBack}
@@ -684,16 +684,16 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                 <div key={volume.id} className="space-y-48">
                   <h2 className="text-4xl text-center font-serif">{volume.title}</h2>
                   {chapters.filter(c => c.volume_id === volume.id).map((chapter, index) => (
-                    <article id={`chapter-${chapter.id}`} key={chapter.id} className="space-y-12 relative group/chapter border-b border-indigo-500/5 pb-32">
+                    <article id={`chapter-${chapter.id}`} key={chapter.id} className="space-y-12 relative group/chapter border-b border-amber-500/5 pb-32">
                       <h3 className="text-3xl font-serif text-center">{chapter.name}</h3>
                       <div className="space-y-8 relative">
                         
                         {/* Ghost Layer Sidebar */}
                         <div className="absolute -left-12 top-0 bottom-0 w-8 pointer-events-none hidden md:flex flex-col items-center gap-4 opacity-0 group-hover/chapter:opacity-100 transition-opacity">
                           {activeGhosts > 0 && currentChapterId === chapter.id && (
-                             <div className="p-2 bg-indigo-50/50 rounded-full border border-indigo-100/50 flex flex-col items-center gap-1 shadow-sm backdrop-blur-sm" title={`${activeGhosts} souls resonance in this chapter`}>
-                                <Sparkles className="w-3 h-3 text-indigo-400 animate-pulse" />
-                                <span className="text-[9px] font-bold text-indigo-500">{activeGhosts}</span>
+                             <div className="p-2 bg-amber-50/50 rounded-full border border-amber-100/50 flex flex-col items-center gap-1 shadow-sm backdrop-blur-sm" title={`${activeGhosts} souls resonance in this chapter`}>
+                                <Sparkles className="w-3 h-3 text-amber-400 animate-pulse" />
+                                <span className="text-[9px] font-bold text-amber-500">{activeGhosts}</span>
                              </div>
                           )}
                         </div>
@@ -701,7 +701,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                         {chapter.narrative.split('\n').filter((p: string)=>p.trim()).map((para: string, pIdx: number) => (
                           <p 
                             key={pIdx} 
-                            className={`text-xl font-serif leading-relaxed cursor-pointer transition-colors duration-500 ${resonatingParagraphs.has(pIdx) ? 'bg-indigo-500/20 rounded-md ring-4 ring-indigo-500/10' : 'hover:text-indigo-600'}`}
+                            className={`text-xl font-serif leading-relaxed cursor-pointer transition-colors duration-500 ${resonatingParagraphs.has(pIdx) ? 'bg-amber-500/20 rounded-md ring-4 ring-amber-500/10' : 'hover:text-amber-600'}`}
                             onClick={() => {
                               sendResonance('sparkle', { paraIndex: pIdx });
                               // Optimistically add to resonance set locally
@@ -730,7 +730,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                          <div className="flex gap-4">
                            <button 
                             onClick={() => handleSetBookmark(chapter.id)}
-                            className="px-6 py-2 rounded-full border border-slate-200 text-xs font-sans uppercase tracking-widest text-slate-500 hover:text-indigo-500 hover:border-indigo-200 transition-colors"
+                            className="px-6 py-2 rounded-full border border-slate-200 text-xs font-sans uppercase tracking-widest text-slate-500 hover:text-amber-500 hover:border-amber-200 transition-colors"
                            >
                               Bookmark Memory
                            </button>
@@ -785,16 +785,16 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               initial={{ y: 20, opacity: 0, scale: 0.95 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: 20, opacity: 0, scale: 0.95 }}
-              className="w-full max-w-2xl bg-white dark:bg-zinc-950 border border-indigo-500/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
+              className="w-full max-w-2xl bg-white dark:bg-zinc-950 border border-amber-500/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh]"
             >
               {/* Header */}
-              <div className="p-6 border-b border-indigo-500/10 flex items-center justify-between bg-indigo-50/50 dark:bg-indigo-950/20">
+              <div className="p-6 border-b border-amber-500/10 flex items-center justify-between bg-amber-50/50 dark:bg-amber-950/20">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                  <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
                     <ShieldCheck className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="font-serif text-lg font-medium text-slate-900 dark:text-white">Privacy Seal Protocol</h3>
+                    <h3 className="font-serif text-lg font-medium text-[var(--color-primary-text-dark)]">Privacy Seal Protocol</h3>
                     <p className="text-xs font-sans text-slate-500 dark:text-zinc-400">Review the AI&apos;s redactions to protect your identity.</p>
                   </div>
                 </div>
@@ -810,15 +810,15 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               <div className="flex-1 overflow-y-auto p-6 space-y-8 font-serif">
                 {/* Alterations Report */}
                 {sealPreview.result.alterations.length > 0 ? (
-                  <div className="bg-indigo-50/50 dark:bg-indigo-900/10 rounded-xl p-4 border border-indigo-500/10">
-                    <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 mb-3 flex items-center gap-2">
+                  <div className="bg-amber-50/50 dark:bg-amber-900/10 rounded-xl p-4 border border-amber-500/10">
+                    <h4 className="text-xs font-sans font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-2">
                       <Sparkles className="w-3 h-3" />
                       Alterations Made
                     </h4>
                     <ul className="space-y-2">
                       {sealPreview.result.alterations.map((alt, idx) => (
                         <li key={idx} className="text-sm font-sans flex items-start gap-2 text-slate-700 dark:text-zinc-300">
-                          <span className="text-indigo-500 mt-0.5">•</span>
+                          <span className="text-amber-500 mt-0.5">•</span>
                           {alt}
                         </li>
                       ))}
@@ -835,7 +835,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                   <h4 className="text-[10px] font-sans font-bold uppercase tracking-widest text-slate-400 border-b border-slate-200 dark:border-zinc-800 pb-2">
                     Sealed Output Preview
                   </h4>
-                  <h2 className="text-2xl text-slate-900 dark:text-white">{sealPreview.result.title}</h2>
+                  <h2 className="text-2xl text-[var(--color-primary-text-dark)]">{sealPreview.result.title}</h2>
                   <div className="space-y-4 text-slate-700 dark:text-zinc-300 leading-relaxed text-sm">
                     {sealPreview.result.content.split('\n').filter(p=>p.trim()).map((para, i) => (
                       <p key={i}>{para}</p>
@@ -845,7 +845,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               </div>
 
               {/* Action Footer */}
-              <div className="p-6 border-t border-indigo-500/10 bg-slate-50 dark:bg-zinc-900 flex justify-end gap-3 font-sans">
+              <div className="p-6 border-t border-amber-500/10 bg-slate-50 dark:bg-zinc-900 flex justify-end gap-3 font-sans">
                 <button 
                   onClick={() => setSealPreview(null)}
                   className="px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -859,7 +859,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                      sealedContent: sealPreview.result.content
                   })}
                   disabled={publishingId === sealPreview.chapter.id}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-2 px-6 py-2.5 bg-amber-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {publishingId === sealPreview.chapter.id ? (
                     <>

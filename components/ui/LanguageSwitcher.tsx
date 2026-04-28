@@ -75,8 +75,8 @@ export const LanguageSwitcher = () => {
         onClick={() => setIsOpen(true)}
         className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors flex flex-col items-center justify-center group relative"
       >
-        <Languages className="w-5 h-5 text-slate-400 group-hover:text-indigo-500 transition-colors" />
-        <span className="absolute -bottom-1 right-0 text-[6px] font-bold uppercase text-indigo-500/80 bg-neutral-900 px-0.5 rounded leading-none">{language}</span>
+        <Languages className="w-5 h-5 text-slate-400 group-hover:text-amber-500 transition-colors" />
+        <span className="absolute -bottom-1 right-0 text-[6px] font-bold uppercase text-amber-500/80 bg-neutral-900 px-0.5 rounded leading-none">{language}</span>
       </motion.button>
 
       <AnimatePresence>
@@ -103,7 +103,7 @@ export const LanguageSwitcher = () => {
               <div className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Globe className="w-5 h-5 text-indigo-500" />
+                    <Globe className="w-5 h-5 text-amber-500" />
                     <h3 className="font-serif italic text-lg font-bold">Choose Language</h3>
                   </div>
                   <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-white/5 rounded-full transition-colors">
@@ -118,7 +118,7 @@ export const LanguageSwitcher = () => {
                     placeholder="Search language..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+                    className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-white/5 border border-gray-100 dark:border-white/5 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-amber-500/20 transition-all"
                   />
                 </div>
 
@@ -129,8 +129,8 @@ export const LanguageSwitcher = () => {
                       onClick={() => handleLanguageSelect(lang.code)}
                       className={`w-full flex items-center justify-between p-4 rounded-2xl transition-all ${
                         language === lang.code 
-                          ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' 
-                          : 'hover:bg-gray-50 dark:hover:bg-white/5 text-slate-600 dark:text-slate-400'
+                          ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400' 
+                          : 'hover:bg-gray-50 dark:hover:bg-white/5 text-[var(--color-secondary-text-dark)]'
                       }`}
                     >
                       <div className="flex flex-col items-start">

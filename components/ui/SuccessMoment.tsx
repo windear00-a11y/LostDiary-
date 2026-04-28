@@ -44,7 +44,7 @@ export const SuccessMoment = ({ isOpen, onClose, title, subtitle, type = 'save' 
                 transition={{ delay: 0.2, type: 'spring' }}
                 className={`w-20 h-20 rounded-full flex items-center justify-center ${
                   type === 'save' ? 'bg-amber-500/20 text-amber-500' :
-                  type === 'publish' ? 'bg-indigo-500/20 text-indigo-500' :
+                  type === 'publish' ? 'bg-amber-500/20 text-amber-500' :
                   'bg-emerald-500/20 text-emerald-500'
                 }`}
               >

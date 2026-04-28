@@ -17,7 +17,7 @@ interface LifeBookCoverProps {
 export const LifeBookCover = ({ data, userName, onOpen }: LifeBookCoverProps) => {
   // Map aura to colors
   const auraColors: Record<string, string> = {
-    'Midnight Indigo': 'from-indigo-950 via-slate-900 to-black',
+    'Midnight Indigo': 'from-amber-950 via-slate-900 to-black',
     'Warm Amber': 'from-amber-950 via-stone-900 to-black',
     'Emerald Growth': 'from-emerald-950 via-teal-900 to-black',
     'Crimson Passion': 'from-rose-950 via-neutral-900 to-black',

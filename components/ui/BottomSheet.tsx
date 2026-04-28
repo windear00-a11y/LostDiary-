@@ -44,7 +44,7 @@ export const BottomSheet = ({ isOpen, onClose, title, subtitle, children }: Bott
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed bottom-0 left-0 right-0 z-[130] bg-white dark:bg-[#0a0a0a] rounded-t-[32px] border-t border-slate-100 dark:border-white/5 shadow-2xl max-h-[90vh] flex flex-col"
+            className="fixed bottom-0 left-0 right-0 z-[130] glass-surface rounded-t-[32px] border-t border-slate-100 dark:border-white/5 shadow-2xl max-h-[90vh] flex flex-col"
           >
             {/* Drag Handle Bar */}
             <div className="w-full flex justify-center p-3 cursor-grab active:cursor-grabbing" onClick={onClose}>
@@ -53,7 +53,7 @@ export const BottomSheet = ({ isOpen, onClose, title, subtitle, children }: Bott
 
             <div className="px-6 pb-4 flex items-center justify-between border-b border-slate-50 dark:border-white/5">
               <div>
-                {title && <h3 className="text-xl font-serif font-bold text-slate-900 dark:text-white leading-none">{title}</h3>}
+                {title && <h3 className="text-xl font-serif font-bold text-[var(--color-primary-text-dark)] leading-none">{title}</h3>}
                 {subtitle && <p className="text-xs font-serif italic text-slate-500 mt-2">{subtitle}</p>}
               </div>
               <button 

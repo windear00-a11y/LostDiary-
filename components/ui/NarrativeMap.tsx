@@ -29,9 +29,9 @@ export const NarrativeMap = ({ chapters, onChapterSelect }: NarrativeMapProps) =
               animate={{ scale: 1, x, y }}
               whileHover={{ scale: 1.2, zIndex: 10 }}
               onClick={() => onChapterSelect(chapter.id)}
-              className="absolute p-6 bg-white border border-indigo-100 rounded-full shadow-lg flex flex-col items-center justify-center text-center cursor-pointer"
+              className="absolute p-6 bg-white border border-amber-100 rounded-full shadow-lg flex flex-col items-center justify-center text-center cursor-pointer"
             >
-              <span className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Ch. {index + 1}</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">Ch. {index + 1}</span>
               <span className="font-serif text-sm text-slate-800">{chapter.name.substring(0, 15)}...</span>
             </motion.button>
           );

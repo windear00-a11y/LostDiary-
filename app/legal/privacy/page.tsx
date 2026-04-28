@@ -9,7 +9,7 @@ export default function PrivacyPolicyPage() {
   const router = useRouter();
 
   return (
-    <main className="min-h-screen bg-[#0d0d0d] text-slate-300 font-sans selection:bg-indigo-500/20 px-6 py-20">
+    <main className="min-h-screen bg-[var(--color-bg-dark)] text-slate-300 font-sans selection:bg-amber-500/20 px-6 py-20">
       <div className="max-w-3xl mx-auto space-y-12">
         {/* Header */}
         <header className="space-y-6">
@@ -22,8 +22,8 @@ export default function PrivacyPolicyPage() {
           </button>
           
           <div className="flex items-center gap-4">
-             <div className="p-3 bg-indigo-500/10 rounded-2xl border border-indigo-500/20">
-                <Shield className="w-6 h-6 text-indigo-500" />
+             <div className="p-3 bg-amber-500/10 rounded-2xl border border-amber-500/20">
+                <Shield className="w-6 h-6 text-amber-500" />
              </div>
              <div>
                 <h1 className="text-4xl font-serif font-bold text-white">Privacy Policy</h1>
@@ -35,9 +35,9 @@ export default function PrivacyPolicyPage() {
         {/* Content */}
         <div className="prose prose-invert prose-slate max-w-none space-y-8 leading-relaxed">
           {/* Oath */}
-          <section className="bg-indigo-950/20 p-8 rounded-[32px] border border-indigo-500/20">
+          <section className="bg-amber-950/20 p-8 rounded-[32px] border border-amber-500/20">
             <h2 className="text-2xl font-serif font-bold text-white text-center mb-6">The WinDear Oath</h2>
-            <ul className="space-y-4 text-sm text-indigo-100/80">
+            <ul className="space-y-4 text-sm text-amber-100/80">
               <li><strong>1. We don&apos;t listen:</strong> We do not have personal access to read your private reflections.</li>
               <li><strong>2. AI is transient:</strong> AI processes your text in the moment to provide insights, but it does not &apos;remember&apos; you in any permanent database.</li>
               <li><strong>3. Your Vault is yours:</strong> No data analytics, no third-party selling, no advertisements. Your data is your property alone.</li>
@@ -46,7 +46,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="space-y-4">
             <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-              <Lock className="w-5 h-5 text-indigo-400" />
+              <Lock className="w-5 h-5 text-amber-400" />
               1. Our Philosophy
             </h2>
             <p>
@@ -56,7 +56,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="space-y-4">
             <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-              <Eye className="w-5 h-5 text-indigo-400" />
+              <Eye className="w-5 h-5 text-amber-400" />
               2. Data We Collect
             </h2>
             <p>
@@ -71,7 +71,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="space-y-4">
             <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-              <FileText className="w-5 h-5 text-indigo-400" />
+              <FileText className="w-5 h-5 text-amber-400" />
               3. How We Use Your Data
             </h2>
             <p>
@@ -81,7 +81,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="space-y-4">
             <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-              <Shield className="w-5 h-5 text-indigo-400" />
+              <Shield className="w-5 h-5 text-amber-400" />
               4. &quot;Neural Wash&quot; &amp; Public Data
             </h2>
             <p>
@@ -91,7 +91,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="space-y-4">
             <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-              <Scale className="w-5 h-5 text-indigo-400" />
+              <Scale className="w-5 h-5 text-amber-400" />
               5. Data Governance & Deletion
             </h2>
             <p>
@@ -105,7 +105,7 @@ export default function PrivacyPolicyPage() {
 
           <section className="space-y-4">
             <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-              <MessageSquare className="w-5 h-5 text-indigo-400" />
+              <MessageSquare className="w-5 h-5 text-amber-400" />
               6. Contact Us
             </h2>
             <p>
@@ -121,7 +121,7 @@ export default function PrivacyPolicyPage() {
       </div>
 
       {/* Decorative Glow */}
-      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-indigo-500/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
+      <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-amber-500/5 rounded-full blur-[120px] -z-10 pointer-events-none" />
     </main>
   );
 }

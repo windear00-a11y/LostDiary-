@@ -99,7 +99,7 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="h-[100dvh] bg-[#0A0A0B] flex flex-col relative overflow-hidden text-slate-200">
-      <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-indigo-900/10 to-transparent pointer-events-none" />
+      <div className="absolute top-0 inset-x-0 h-64 bg-gradient-to-b from-amber-900/10 to-transparent pointer-events-none" />
       
       <main className="flex-1 max-w-3xl w-full mx-auto flex flex-col pt-24 px-4 h-full relative z-10">
         {/* Header Section */}
@@ -109,7 +109,7 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
         {bridgeData.status === 'pending' ? (
            <div className="flex-1 flex items-center justify-center">
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="p-8 border border-white/10 rounded-3xl bg-white/[0.03] text-center max-w-sm">
-                 <Sparkles className="w-12 h-12 text-indigo-400 mx-auto mb-6" />
+                 <Sparkles className="w-12 h-12 text-amber-400 mx-auto mb-6" />
                  <h3 className="text-xl font-serif text-white mb-2">Bridge Invitation</h3>
                  <p className="text-white/60 text-sm mb-6 leading-relaxed">
                     &quot;{bridgeData.planeContent}&quot;
@@ -119,7 +119,7 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
                         await fetch(`/api/bridge/${bridgeId}`, { method: 'PATCH', body: JSON.stringify({ status: 'active' }) });
                         fetchBridge();
                     }}
-                    className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-indigo-700 transition"
+                    className="w-full py-4 bg-amber-600 text-white rounded-xl font-bold uppercase tracking-widest text-xs hover:bg-indigo-700 transition"
                  >
                     Build the Bridge
                  </button>
@@ -151,14 +151,14 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
                             onClick={() => setActiveMessageId(isActive ? null : msg.id)}
                             className={`p-5 rounded-[28px] transition-all cursor-pointer relative ${
                                isMine 
-                               ? 'bg-indigo-600/20 text-indigo-100 border border-indigo-500/20 rounded-br-sm' 
+                               ? 'bg-amber-600/20 text-amber-100 border border-amber-500/20 rounded-br-sm' 
                                : 'bg-white/5 text-white/90 border border-white/5 rounded-bl-sm'
-                            } ${isActive ? 'ring-2 ring-indigo-500/40 shadow-2xl scale-[1.02]' : 'hover:bg-white/10'}`}
+                            } ${isActive ? 'ring-2 ring-amber-500/40 shadow-2xl scale-[1.02]' : 'hover:bg-white/10'}`}
                          >
                             <p className="font-serif text-sm md:text-base leading-relaxed">{msg.content}</p>
                             <div className={`text-[9px] mt-3 opacity-30 flex items-center gap-2 ${isMine ? 'justify-end' : 'justify-start'}`}>
                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                               {!isMine && <Sparkles className="w-2 h-2 text-indigo-400" />}
+                               {!isMine && <Sparkles className="w-2 h-2 text-amber-400" />}
                             </div>
                          </div>
 
@@ -173,7 +173,7 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
                                >
                                   <button 
                                      onClick={(e) => { e.stopPropagation(); toast.success("Soul Resonated"); setActiveMessageId(null); }}
-                                     className="p-2 hover:bg-white/5 rounded-xl transition-colors text-indigo-400" 
+                                     className="p-2 hover:bg-white/5 rounded-xl transition-colors text-amber-400" 
                                      title="Resonate"
                                   >
                                      <Heart className="w-4 h-4" />
@@ -217,12 +217,12 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
                  onChange={(e) => setInputMessage(e.target.value)}
                  disabled={sending || bridgeData.status === 'broken'}
                  placeholder={bridgeData.status === 'active' ? "Write your message..." : "The bridge has fallen."}
-                 className="w-full bg-white/5 border border-white/10 rounded-full px-6 py-4 pr-16 outline-none focus:border-indigo-500/50 transition-colors text-sm font-serif disabled:opacity-50"
+                 className="w-full bg-white/5 border border-white/10 rounded-full px-6 py-4 pr-16 outline-none focus:border-amber-500/50 transition-colors text-sm font-serif disabled:opacity-50"
               />
               <button 
                  type="submit"
                  disabled={sending || !inputMessage.trim() || bridgeData.status === 'broken'}
-                 className="absolute right-2 top-2 bottom-2 w-10 bg-indigo-500 text-white rounded-full flex items-center justify-center hover:bg-indigo-600 transition-colors disabled:opacity-50"
+                 className="absolute right-2 top-2 bottom-2 w-10 bg-amber-500 text-white rounded-full flex items-center justify-center hover:bg-amber-600 transition-colors disabled:opacity-50"
               >
                  {sending ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" /> : <Send className="w-4 h-4" />}
               </button>
