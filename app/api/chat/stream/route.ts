@@ -1,4 +1,4 @@
-import { streamText } from 'ai';
+import { streamText, tool } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { getSupabaseAdmin } from "@/lib/supabase";
 import { AIOrchestrator } from "@/ai-core/ai-orchestrator";
@@ -7,6 +7,14 @@ import { PipelineController } from "@/ai-core/pipeline-controller";
 import { generateEmbedding } from "@/ai-core/ai-engine";
 import { extractIntelligenceProfile } from "@/ai-core/intelligence-engine";
 import { chatPersistence } from "@/lib/services/chat-persistence";
+import { tavily } from '@tavily/core';
+import { z } from 'zod';
+
+function getTavily() {
+  const apiKey = process.env.TAVILY_API_KEY;
+  if (!apiKey) return null;
+  return tavily({ apiKey });
+}
 
 function determineModelForInput(content: string): string {
   const wordCount = content.split(/\s+/).length;
@@ -29,7 +37,7 @@ CORE OBJECTIVE
 - Meet the user in their frequency (Hinglish/Urdu/Hindi mix).
 
 SEARCH & KNOWLEDGE PROTOCOL:
-- If asked about recent news, current events, or general knowledge you don't know, use the Google Search tool.
+- If asked about recent news, current events, or general knowledge you don't know, use the available search tool to find real-time information.
 - If asked about their past or preferences, strictly use the [RETRIEVED PAST MEMORIES].
 - GRACEFUL FALLBACK (UX First): If you legitimately do not know the answer, gracefully admit it using natural conversational language. Never abruptly end the conversation or say "I am an AI and I don't know." Instead, pivot smoothly or ask a curious follow-up to keep the discussion engaging. Do not guess or hallucinate.
 
@@ -263,8 +271,30 @@ ${memoriesContext}
       ],
     }),
     tools: {
-      google_search: googleConfig.tools.googleSearch({}),
+      search: tool({
+        description: 'Search the web for current events, news, or factual information.',
+        parameters: z.object({
+          query: z.string().describe('The search query for the web search.'),
+        }),
+        execute: async ({ query }) => {
+          const client = getTavily();
+          if (!client) {
+            return { error: 'Search is temporarily unavailable. Please ask the user to configure the TAVILY_API_KEY.' };
+          }
+          try {
+            const searchResult = await client.search(query, {
+              searchDepth: 'basic',
+              maxResults: 3,
+            });
+            return searchResult;
+          } catch (error) {
+            console.error('Tavily search error:', error);
+            return { error: 'Failed to retrieve search results.' };
+          }
+        },
+      }),
     },
+    maxSteps: 5,
     system: systemInstruction,
     messages: aiMessages,
     async onFinish({ text }) {
