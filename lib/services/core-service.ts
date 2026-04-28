@@ -216,111 +216,86 @@ export const coreService = {
 
       if (reader) {
         let buffer = '';
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine) continue;
-
-            // Handle SSE (Server-Sent Events) from UIMessage stream or AgentUI stream
-            if (trimmedLine.startsWith('data: ')) {
-              const dataStr = trimmedLine.slice(6).trim();
-              if (dataStr === '[DONE]') continue;
-
-              try {
-                const data = JSON.parse(dataStr);
-                
-                if (data.type === 'text-delta') {
-                  const delta = data.delta || data.text || data.textDelta || '';
-                  aiFullContent += delta;
-                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
-                } else if (data.type === 'reasoning-delta') {
-                  const delta = data.delta || data.text || data.textDelta || '';
-                  if (delta) {
-                    lastThinkingStep = `Thinking: ${delta.slice(0, 30)}...`;
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            buffer += chunk;
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || '';
+  
+            for (const line of lines) {
+              const trimmedLine = line.trim();
+              if (!trimmedLine) continue;
+  
+              // Handle SSE (Server-Sent Events)
+              if (trimmedLine.startsWith('data: ')) {
+                const dataStr = trimmedLine.slice(6).trim();
+                if (dataStr === '[DONE]') continue;
+  
+                try {
+                  const data = JSON.parse(dataStr);
+                  if (data.type === 'text-delta') {
+                    aiFullContent += (data.delta || data.text || data.textDelta || '');
+                    if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                  } else if (data.type === 'reasoning-delta') {
+                    const delta = data.delta || data.text || data.textDelta || '';
+                    if (delta) {
+                      lastThinkingStep = `Thinking: ${delta.slice(0, 30)}...`;
+                      if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                    }
+                  } else if (data.type === 'tool-call' || data.type === 'tool-input-start' || data.type === 'tool-input-available') {
+                    const toolName = data.toolName || 'tool';
+                    lastThinkingStep = `Using ${toolName}...`;
+                    if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                  } else if (data.type === 'error' || data.type === 'tool-input-error') {
+                    lastThinkingStep = `Error: ${data.errorText || data.error || 'Unknown stream error'}`;
                     if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
                   }
-                } else if (data.type === 'tool-call' || data.type === 'tool-input-start' || data.type === 'tool-input-available') {
-                  const toolName = data.toolName || 'tool';
-                  if (toolName === 'search') {
-                    lastThinkingStep = `Searching the web...`;
-                  } else {
-                    lastThinkingStep = `Using tool: ${toolName}...`;
-                  }
-                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
-                } else if (data.type === 'error' || data.type === 'tool-input-error') {
-                  lastThinkingStep = `Stream Error: ${data.errorText || data.error || 'Unknown error'}`;
-                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
-                }
-                continue;
-              } catch (e) {
-                // Not JSON data, continue to old protocol check
-              }
-            } else if (trimmedLine) {
-              // Raw text fallback (e.g. from toTextStreamResponse or plain chunks)
-              // But avoid adding numeric protocol lines if it's the old protocol
-              if (!/^[0-9abd-f]:/.test(trimmedLine)) {
-                aiFullContent += line; // Use original line to preserve spaces if any
-                if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
-              }
-            }
-
-            // AI SDK Data Stream Protocol: https://sdk.vercel.ai/docs/reference/ai-sdk-ui/data-stream-protocol
-            try {
-              const type = trimmedLine[0];
-              const contentStr = trimmedLine.slice(2);
-              
-              if (type === '0') {
-                // Text chunk
-                const text = JSON.parse(contentStr);
-                aiFullContent += text;
-                if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
-              } else if (type === '3') {
-                // Error part
-                try {
-                  const errMessage = JSON.parse(contentStr);
-                  lastThinkingStep = `Stream Error: ${errMessage}`;
-                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                  continue;
                 } catch (e) {}
-              } else if (type === 'd') {
-                // Data part - custom steps
-                try {
+              }
+  
+              // AI SDK Data Stream Protocol
+              try {
+                const type = trimmedLine[0];
+                const contentStr = trimmedLine.slice(2);
+                
+                if (type === '0') {
+                  const text = JSON.parse(contentStr);
+                  aiFullContent += text;
+                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                } else if (type === '3') {
+                  const errMessage = JSON.parse(contentStr);
+                  lastThinkingStep = `Server Error: ${errMessage}`;
+                  if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
+                } else if (type === 'd') {
                   const data = JSON.parse(contentStr);
                   if (data.type === 'step') {
-                    if (data.value === 'weaving_memories') lastThinkingStep = 'Sifting through your echoes...';
-                    else if (data.value === 'sensing_mood') lastThinkingStep = 'Sensing the light and shadow...';
-                    else if (data.value === 'drawing_mirror') lastThinkingStep = 'Drawing the mirror...';
-                    else lastThinkingStep = data.value;
+                    lastThinkingStep = data.value;
+                    if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
                   }
+                } else if (type === '9') {
+                  const toolCall = JSON.parse(contentStr);
+                  lastThinkingStep = `Consulting ${toolCall.toolName}...`;
                   if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
-                } catch (e) { /* ignore malformed data */ }
-              } else if (type === '9') {
-                // Tool call
-                const toolCall = JSON.parse(contentStr);
-                if (toolCall.toolName === 'search') {
-                  lastThinkingStep = `Searching the web for "${toolCall.args.query}"...`;
-                } else {
-                  lastThinkingStep = `Using tool: ${toolCall.toolName}...`;
                 }
-                if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
-              } else if (type === 'a') {
-                 // Finish or error sometimes? Protocol a is for finish details
-              } else if (type === 'e') {
-                // Tool result - can be used to say "Search finished"
-                lastThinkingStep = 'Thought complete.';
+              } catch (e) {}
+  
+              // Raw text fallback
+              if (!trimmedLine.startsWith('data: ') && !/^[0-9abd-f]:/.test(trimmedLine)) {
+                aiFullContent += line + '\n';
                 if (onUpdate) onUpdate(aiFullContent, lastThinkingStep);
               }
-            } catch (e) {
-              // Not a protocol line or malformed, skip
             }
           }
+        } catch (readError: any) {
+          console.error("Reader loop error:", readError);
+          lastThinkingStep = `Connection Lost: ${readError.message}`;
         }
+      }
         
         // Final attempt to process any remaining buffer
         if (buffer.trim()) {
@@ -342,19 +317,21 @@ export const coreService = {
             } catch (e) {}
           }
         }
-      }
 
-      if (!aiFullContent || aiFullContent.trim().length === 0) {
+        if (!aiFullContent || aiFullContent.trim().length === 0) {
         // Fallback for empty stream
+        console.error("Empty stream. lastThinkingStep:", lastThinkingStep);
         return {
           id: `diary-err-${Date.now()}`,
           user_id,
           session_id,
           role: 'diary',
           type: 'text',
-          content: "I'm holding this space for you, but my words are lost in the mist for a moment. Could you share that thought again?",
+          content: lastThinkingStep 
+            ? `WinDear is processing a heavy thought: "${lastThinkingStep}". If this persists, please share your thought again.`
+            : "I'm holding this space for you, but my words are lost in the mist for a moment. Could you share that thought again?",
           media_url: null,
-          metadata: { error: 'empty_stream' },
+          metadata: { error: 'empty_stream', lastThinkingStep },
           created_at: new Date().toISOString(),
           processing_status: 'error'
         } as ChatMessage;
