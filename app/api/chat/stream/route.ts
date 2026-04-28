@@ -272,6 +272,7 @@ ${memoriesContext}
 
     const googleConfig = createGoogleGenerativeAI({
       apiKey,
+      baseURL: 'https://generativelanguage.googleapis.com/v1',
     });
 
     // data.append removed
