@@ -123,35 +123,39 @@ export async function POST(req: Request) {
     const pipelineForAsync = new PipelineController(apiKey, profile.personality_summary || undefined);
 
     if (!session_id || session_id === 'new') {
-      const { data: newSession } = await supabase
+      const { data: newSession, error: sessionError } = await supabase
         .from('chat_sessions')
         .insert({ user_id, title: `Chapter: ${new Date().toLocaleDateString()}` })
         .select('id')
         .single();
-      session_id = newSession?.id;
+      if (sessionError) console.error("Session creation failed:", sessionError);
+      session_id = newSession?.id || null;
     }
 
-    // Pre-fetch contexts
-    const [contextChaptersData, currentVolume, recentMessagesData, firstMessage, sessionCount] = await Promise.all([
+    // Pre-fetch contexts with error handling
+    const [contextChaptersRes, currentVolumeRes, recentMessagesRes, firstMessageRes, sessionCountRes] = await Promise.all([
       supabase.from('chapters').select('narrative').eq('user_id', user_id).order('created_at', { ascending: false }).limit(3),
       supabase.from('volumes').select('*').eq('user_id', user_id).eq('status', 'ongoing').maybeSingle(),
-      supabase.from('chat_messages').select('content, role').eq('user_id', user_id).eq('session_id', session_id).order('created_at', { ascending: false }).limit(10),
+      supabase.from('chat_messages').select('content, role').eq('user_id', user_id).eq('session_id', session_id || '00000000-0000-0000-0000-000000000000').order('created_at', { ascending: false }).limit(10),
       supabase.from('chat_messages').select('created_at').eq('user_id', user_id).order('created_at', { ascending: true }).limit(1).maybeSingle(),
       supabase.from('chat_sessions').select('*', { count: 'exact', head: true }).eq('user_id', user_id)
     ]);
 
-    const recentMessages = (recentMessagesData.data || []).reverse();
+    // Log potential query errors but don't fail the whole request
+    if (contextChaptersRes.error) console.error("Chapters fetch error:", contextChaptersRes.error);
+    if (recentMessagesRes.error) console.error("Recent messages fetch error:", recentMessagesRes.error);
+
+    const recentMessages = (recentMessagesRes.data || []).reverse();
 
     // 1. Parallelize AI & Vector Processing
     data.append({ type: 'step', value: 'sensing_mood' });
 
     const [userEmbedding, pipelineOutput, updatedIntelProfile] = await Promise.all([
-      // Embedding & Vector Search (in parallel with Profile & Orchestrator)
+      // Embedding & Vector Search
       (async () => {
         if (!content || content.trim().length === 0) return null;
         try {
-          const embedding = await generateEmbedding(content);
-          return embedding;
+          return await generateEmbedding(content);
         } catch (e) {
           console.warn("Embedding generation failed:", e);
           return null;
@@ -164,47 +168,58 @@ export async function POST(req: Request) {
         contextMessages: messages.map((m: any) => m.content as string),
         apiKey: apiKey,
         language: language || 'en',
-        contextChapters: (contextChaptersData.data || []).map((c: any) => c.narrative)
+        contextChapters: (contextChaptersRes.data || []).map((c: any) => c.narrative)
+      }).catch(err => {
+        console.error("Orchestrator error:", err);
+        return { extractedEvent: null, narrativeUpdate: null, personaUpdate: null };
       }),
       // Intelligent Profiling
-      extractIntelligenceProfile('chat', content, profile.intelligence_profile || {})
+      extractIntelligenceProfile('chat', content, profile.intelligence_profile || {}).catch(err => {
+        console.error("Profile extraction error:", err);
+        return profile.intelligence_profile;
+      })
     ]);
 
     // 2. Resolve memories based on embedding
     let olderContextMessages: any[] = [];
     if (userEmbedding && userEmbedding.length > 0) {
-      const { data: relatedMessages } = await supabase.rpc('match_messages', {
-        query_embedding: userEmbedding,
-        match_threshold: 0.7,
-        match_count: 5,
-        p_user_id: user_id,
-        p_session_id: session_id || '00000000-0000-0000-0000-000000000000'
-      });
-      if (relatedMessages && relatedMessages.length > 0) olderContextMessages = relatedMessages;
+      try {
+        const { data: relatedMessages } = await supabase.rpc('match_messages', {
+          query_embedding: userEmbedding,
+          match_threshold: 0.7,
+          match_count: 5,
+          p_user_id: user_id,
+          p_session_id: session_id || '00000000-0000-0000-0000-000000000000'
+        });
+        if (relatedMessages && relatedMessages.length > 0) olderContextMessages = relatedMessages;
+      } catch (err) {
+        console.warn("Vector search failed:", err);
+      }
     }
 
-    const contextChapters = (contextChaptersData.data || []).map((c: any) => c.narrative);
-    let activeVolume = currentVolume.data;
+    const contextChapters = (contextChaptersRes.data || []).map((c: any) => c.narrative);
+    let activeVolume = currentVolumeRes.data;
 
     // Optimized state resolution
     const analyzedEvent = pipelineOutput.extractedEvent;
     const isNarrative = !!(pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative);
-    const selectedModel = 'gemini-2.0-flash';
-
+    const selectedModel = 'gemini-1.5-flash';
 
     // Persist the USER message
-    await chatPersistence.saveUserMessage(supabase, {
-        user_id, session_id: session_id!, role: 'user', type: 'text', content, media_url: null,
-        metadata: {
-          language,
-          emotion: analyzedEvent?.emotion || 'neutral',
-          importance: analyzedEvent?.score || 0,
-          category: analyzedEvent?.category || 'General'
-        },
-        event_score: analyzedEvent?.score || 0,
-        processing_status: isNarrative ? 'woven' : (analyzedEvent ? 'saved' : 'observed'),
-        embedding: userEmbedding
-    });
+    if (session_id) {
+      await chatPersistence.saveUserMessage(supabase, {
+          user_id, session_id, role: 'user', type: 'text', content, media_url: null,
+          metadata: {
+            language,
+            emotion: analyzedEvent?.emotion || 'neutral',
+            importance: analyzedEvent?.score || 0,
+            category: analyzedEvent?.category || 'General'
+          },
+          event_score: analyzedEvent?.score || 0,
+          processing_status: isNarrative ? 'woven' : (analyzedEvent ? 'saved' : 'observed'),
+          embedding: userEmbedding
+      }).catch(err => console.error("Save user message failed:", err));
+    }
 
     // Prepare system instruction
     const intelContext = updatedIntelProfile ? `
@@ -226,8 +241,8 @@ ${baseInstruction}
 
 [CONTEXTUAL BACKDROP]
 Current Time: ${new Date().toLocaleString()}
-Journey Began (First Message): ${firstMessage.data ? new Date(firstMessage.data.created_at).toLocaleString() : 'Today'}
-Total Chat Sessions: ${sessionCount.count || 1}
+Journey Began (First Message): ${firstMessageRes.data ? new Date(firstMessageRes.data.created_at).toLocaleString() : 'Today'}
+Total Chat Sessions: ${sessionCountRes.count || 1}
 Current Journey: ${profile.bio || "Starting a new journey."}
 ${intelContext}
 ${memoriesContext}
