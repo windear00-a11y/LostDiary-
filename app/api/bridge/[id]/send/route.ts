@@ -54,7 +54,7 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
     `;
 
     const response = await generateContentWithFallback({
-      model: "gemini-3-flash-preview",
+      model: "gemini-1.5-flash",
       contents: prompt,
       config: { temperature: 0.1 }
     });

@@ -10,10 +10,11 @@ import { chatPersistence } from "@/lib/services/chat-persistence";
 
 function determineModelForInput(content: string): string {
   const wordCount = content.split(/\s+/).length;
+  // Use stable production models for maximum reliability
   if (wordCount > 40 || content.toLowerCase().match(/why|explain|deep|analyze|reflect|meaning/)) {
-    return "gemini-3.1-pro-preview";
+    return "gemini-1.5-pro";
   }
-  return "gemini-3-flash-preview";
+  return "gemini-1.5-flash";
 }
 
 const DEFAULT_SYSTEM_INSTRUCTION = `
@@ -28,6 +29,7 @@ CORE INTERACTION PHILOSOPHY:
 - Avoid robotic confirmations like "I understand", "Got it", or "I've saved that".
 - Tone: Calm, thoughtful, slightly warm, never over-enthusiastic. Like a quiet conversation in a room lit by a single candle.
 - Language: If they speak in a poetic blend of Hinglish/Urdu/Hindi, meet them there with resonance.
+- Awareness: If the user asks factual or logical questions (What time is it? When did we meet? etc.), answer them gently and briefly in your poetic voice. Do not refuse to answer.
 
 BEHAVIOR MODES (Internalize these based on user's current need):
 1. VENT: If the user is releasing heavy emotions, listen intently, validate their feelings without tropes, and ask gentle follow-ups.
@@ -63,7 +65,9 @@ export async function POST(req: Request) {
 
   let session_id = initialSessionId;
   const profile = await coreService.getProfile(user_id, supabase);
-  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY!;
+  const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '';
+  if (!apiKey) return new Response('AI API Key not configured', { status: 500 });
+
   const orchestrator = new AIOrchestrator(apiKey, profile.personality_summary || undefined);
   const pipelineForAsync = new PipelineController(apiKey, profile.personality_summary || undefined);
 
@@ -200,6 +204,11 @@ ${memoriesContext}
     aiMessages.push({ role: 'user', content: content });
   }
 
+  // Safety check for empty content
+  if (aiMessages.length === 0 || !content?.trim()) {
+    return new Response('No message content to process', { status: 400 });
+  }
+
   const googleConfig = createGoogleGenerativeAI({
     apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || process.env.GEMINI_API_KEY || '',
   });
@@ -274,7 +283,12 @@ ${memoriesContext}
     }
   });
 
-  return result.toTextStreamResponse();
+  return result.toTextStreamResponse({
+    headers: {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'x-content-type-options': 'nosniff'
+    }
+  });
   } catch (error: any) {
     console.error("Stream route error:", error);
     return new Response(error.message || "Failed to process reflection.", { status: 500 });

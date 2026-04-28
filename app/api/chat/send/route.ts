@@ -12,10 +12,10 @@ function determineModelForInput(content: string): string {
   const wordCount = content.split(/\s+/).length;
   // Use Pro for long reflections or deep analytical intent
   if (wordCount > 40 || content.toLowerCase().match(/why|explain|deep|analyze|reflect|meaning/)) {
-    return "gemini-3.1-pro-preview";
+    return "gemini-1.5-pro";
   }
   // Use Flash Lite for quick, everyday chat
-  return "gemini-3-flash-preview";
+  return "gemini-1.5-flash";
 }
 
 export async function POST(req: Request) {

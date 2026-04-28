@@ -152,7 +152,7 @@ export default function ProfilePage() {
         .join('\n');
 
       const promptResponse = await generateContentWithFallback({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-1.5-pro",
         contents: `Generate a visual prompt for a professional, abstract profile avatar. 
 Use the Soul Signature and Mirror Intelligence as the primary source of truth for the persona's essence.
 

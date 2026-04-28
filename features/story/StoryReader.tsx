@@ -225,7 +225,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
     
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-1.5-pro",
         contents: `Analyze the mood of this story paragraph: "${content.substring(0, 200)}..." Return only one word: Joyful, Tense, Melancholic, or Serene.`,
       });
       const detectedMood = response.text?.trim() as string;

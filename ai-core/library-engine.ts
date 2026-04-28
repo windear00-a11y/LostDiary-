@@ -39,7 +39,7 @@ export async function sealAndGeneralizeStory(
 
   try {
     const response = await generateContentWithFallback({
-      model: "gemini-3.1-pro-preview",
+      model: "gemini-1.5-pro",
       contents: [
         {
           role: "user",

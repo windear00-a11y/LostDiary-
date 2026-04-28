@@ -209,7 +209,19 @@ export const coreService = {
       }
 
       if (!aiFullContent || aiFullContent.trim().length === 0) {
-        throw new Error('AI could not generate a reflection at this moment. Please try a different thought.');
+        // Fallback for empty stream
+        return {
+          id: `diary-err-${Date.now()}`,
+          user_id,
+          session_id,
+          role: 'diary',
+          type: 'text',
+          content: "I'm holding this space for you, but my words are lost in the mist for a moment. Could you share that thought again?",
+          media_url: null,
+          metadata: { error: 'empty_stream' },
+          created_at: new Date().toISOString(),
+          processing_status: 'error'
+        } as ChatMessage;
       }
 
       return {
@@ -372,7 +384,7 @@ export const coreService = {
   async generateTitle(content: string): Promise<string | null> {
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: [{ role: "user", parts: [{ text: `Generate a short title (max 5 words) for this chapter content: ${content.substring(0, 200)}` }] }],
         config: { temperature: 0.7 }
       });
@@ -527,7 +539,7 @@ export const coreService = {
     }
 
     const response = await generateContentWithFallback({
-      model: "gemini-3.1-pro-preview",
+      model: "gemini-1.5-pro",
       contents: `Perform a deep psychological and spiritual analysis of this digital archive. 
 Your goal is to populate a "Sanctuary Mirror" across several dimensions and provide a "Soul Signature" summary.
 

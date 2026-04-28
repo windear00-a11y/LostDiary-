@@ -133,7 +133,7 @@ Rules:
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.1, responseMimeType: "application/json" }
       });
@@ -177,7 +177,7 @@ Events: ${events.map(e => e.summary).join(', ')}
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-1.5-pro",
         contents: [{ role: "user", parts: [{ text: structuredData }] }],
         config: { systemInstruction, temperature: 0.7 }
       });
@@ -227,7 +227,7 @@ ${sortedEvents.map(e => `[Raw: "${e.raw_fragment || e.summary}" | Mood: ${e.emot
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-3.1-pro-preview",
+        model: "gemini-1.5-pro",
         contents: [{ role: "user", parts: [{ text: structuredData }] }],
         config: { systemInstruction, temperature: 0.7, responseMimeType: "application/json" }
       });
@@ -259,7 +259,7 @@ Rules:
 `;
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.1 }
       });
@@ -289,7 +289,7 @@ Output: ONLY a valid JSON object.
     const data = chapters.map(c => c.title).join(', ');
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-3.1-flash-lite-preview",
+        model: "gemini-1.5-flash",
         contents: [{ role: "user", parts: [{ text: `Chapters: ${data}` }] }],
         config: { systemInstruction, temperature: 0.8, responseMimeType: "application/json" }
       });
@@ -314,7 +314,7 @@ Rules:
     const content = messages.join('\n');
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-3.1-flash-lite-preview",
+        model: "gemini-1.5-flash",
         contents: [{ role: "user", parts: [{ text: content }] }],
         config: { systemInstruction, temperature: 0.7 }
       });
