@@ -20,9 +20,9 @@ function determineModelForInput(content: string): string {
   const wordCount = content.split(/\s+/).length;
   // Use stable production models for maximum reliability
   if (wordCount > 40 || content.toLowerCase().match(/why|explain|deep|analyze|reflect|meaning/)) {
-    return "gemini-1.5-pro-latest";
+    return "gemini-1.5-pro";
   }
-  return "gemini-1.5-flash-latest";
+  return "gemini-1.5-flash";
 }
 
 const DEFAULT_SYSTEM_INSTRUCTION = `

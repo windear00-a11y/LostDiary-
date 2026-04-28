@@ -330,15 +330,24 @@ export const coreService = {
         if (!aiFullContent || aiFullContent.trim().length === 0) {
         // Fallback for empty stream
         console.error("Empty stream. lastThinkingStep:", lastThinkingStep);
+        
+        // Structure the error more clearly for the user
+        let errorMessage = "I'm holding this space for you, but my words are lost in the mist for a moment.";
+        if (lastThinkingStep) {
+          if (lastThinkingStep.includes('Server Error') || lastThinkingStep.includes('Error:')) {
+            errorMessage = `WinDear encountered a cognitive shadow: "${lastThinkingStep}".\n\nThis usually means the AI engine is momentarily overloaded or unavailable in this region. Please try again in a moment.`;
+          } else {
+            errorMessage = `WinDear was processing a thought: "${lastThinkingStep}", but the connection was severed. Could you share that with me again?`;
+          }
+        }
+
         return {
           id: `diary-err-${Date.now()}`,
           user_id,
           session_id,
           role: 'diary',
           type: 'text',
-          content: lastThinkingStep 
-            ? `WinDear is processing a heavy thought: "${lastThinkingStep}". If this persists, please share your thought again.`
-            : "I'm holding this space for you, but my words are lost in the mist for a moment. Could you share that thought again?",
+          content: errorMessage,
           media_url: null,
           metadata: { error: 'empty_stream', lastThinkingStep },
           created_at: new Date().toISOString(),
