@@ -133,11 +133,14 @@ export const ChatInterface = () => {
     }
   };
 
+  const lastMessageContent = messages.length > 0 ? messages[messages.length - 1].content : undefined;
+
   // Scroll to bottom immediately when new messages arrive, or when thinking state changes
   useEffect(() => {
     // If thinking is true, it's starting to type or stream. Use instant to prevent jitter
     scrollToBottom(!isThinking);
-  }, [messages.length, messages[messages.length - 1]?.content, isThinking]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages.length, lastMessageContent, isThinking]);
 
   const handleSendMessage = async (input: { type: 'text'; content: string }) => {
     const trimmedContent = input.content.trim();
