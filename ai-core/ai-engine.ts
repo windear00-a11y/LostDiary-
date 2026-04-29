@@ -111,7 +111,7 @@ export async function generateStoryResponse(
   summary?: string | null,
   persona?: string | null,
   intelligenceProfile?: IntelligenceProfile | null,
-  config: StoryEngineConfig = { model: process.env.GEMINI_MODEL || "gemini-3-flash-preview", isNarrativeMode: false }
+  config: StoryEngineConfig & { timezone?: string } = { model: process.env.GEMINI_MODEL || "gemini-3-flash-preview", isNarrativeMode: false }
 ): Promise<string | undefined> {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
@@ -124,6 +124,11 @@ export async function generateStoryResponse(
 
   try {
     const isNewUser = (!history || history.length < 3) && !summary;
+    const timezone = (config as any).timezone; // Support passed timezone
+
+    const userLocalTime = timezone 
+      ? new Date().toLocaleString('en-US', { timeZone: timezone })
+      : new Date().toLocaleString();
     
     // Convert history into proper Gemini multi-turn format, ensuring strictly alternating roles
     const rawHistory = history.map((m) => ({
@@ -182,7 +187,7 @@ ${baseInstruction}
 2. NO HALLUCINATION: If the answer isn't in context, say "I don't know based on the context," or ask a follow-up.
 
 [CONTEXTUAL BACKDROP]
-Current Time: ${new Date().toLocaleString()}
+Current User Time: ${userLocalTime} (${timezone || 'UTC'})
 User Status: ${isNewUser ? "New" : "Returning"}
 Current Journey: ${summary || "Starting a new journey."}
 ${intelContext}

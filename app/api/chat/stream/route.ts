@@ -102,7 +102,7 @@ export async function POST(req: Request) {
     }
     
     const body = await req.json().catch(() => ({}));
-    const { messages, user_id, session_id: initialSessionId, language } = body;
+    const { messages, user_id, session_id: initialSessionId, language, timezone } = body;
     
     if (!user_id || !messages || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'Missing required fields (user_id/messages)', type: 'validation_error' }), { 
@@ -234,6 +234,10 @@ export async function POST(req: Request) {
     }
 
     // Prepare system instruction
+    const userLocalTime = timezone 
+      ? new Date().toLocaleString('en-US', { timeZone: timezone })
+      : new Date().toLocaleString();
+
     const intelContext = updatedIntelProfile ? `
 [SUBCONSCIOUS PROFILE]
 - Core Emotion: ${typeof updatedIntelProfile === 'object' && 'emotional_state' in updatedIntelProfile ? (updatedIntelProfile as any).emotional_state?.summary || "Neutral" : "Neutral"}
@@ -252,7 +256,7 @@ ${olderContextMessages.map((m: any) => `- [${new Date(m.created_at).toLocaleDate
 ${baseInstruction}
 
 [CONTEXTUAL BACKDROP]
-Current Time: ${new Date().toLocaleString()}
+Current User Time: ${userLocalTime} (${timezone || 'UTC'})
 Journey Began (First Message): ${firstMessageRes.data ? new Date(firstMessageRes.data.created_at).toLocaleString() : 'Today'}
 Total Chat Sessions: ${sessionCountRes.count || 1}
 Current Journey: ${profile.bio || "Starting a new journey."}

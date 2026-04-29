@@ -174,12 +174,13 @@ export const ChatInterface = () => {
     setIsThinking(true);
 
     try {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const result = await coreService.sendMessage({
         user_id: user.id,
         session_id: sessionId || undefined,
         type: 'text',
         content: trimmedContent,
-        metadata: { language },
+        metadata: { language, timezone },
         onUpdate: (streamedText, thinkingStep) => {
           setMessages(prev => prev.map(m => 
             m.id === aiTempId ? { 

@@ -186,7 +186,8 @@ export const coreService = {
           user_id,
           session_id,
           messages: [{ role: 'user', content: finalContent }],
-          language: metadata?.language || 'en'
+          language: metadata?.language || 'en',
+          timezone: metadata?.timezone
         })
       });
 

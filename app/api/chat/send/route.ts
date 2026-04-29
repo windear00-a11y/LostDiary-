@@ -28,6 +28,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const { role, type, content, media_url, metadata, user_id } = body;
+    const timezone = metadata?.timezone;
 
     // DoW / Rate Limit Payload protection
     if (type === 'text' && content && content.length > 5000) {
@@ -164,7 +165,7 @@ export async function POST(req: Request) {
         profile.bio || undefined, 
         profile.personality_summary || undefined, 
         updatedIntelProfile as any, 
-        { model: selectedModel, isNarrativeMode: isNarrative, retrievedMemories: olderContextMessages }
+        { model: selectedModel, isNarrativeMode: isNarrative, retrievedMemories: olderContextMessages, timezone }
     );
 
     const analyzedEvent = pipelineOutput.extractedEvent;
