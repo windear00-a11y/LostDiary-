@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     Tone: Empathic, NOT repetitive, NEVER use rejection words.`;
 
     const response = await generateContentWithFallback({
-      model: "gemini-1.5-flash",
+      model: "gemini-3-flash-preview",
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
     

@@ -152,7 +152,7 @@ export default function ProfilePage() {
         .join('\n');
 
       const promptResponse = await generateContentWithFallback({
-        model: "gemini-1.5-pro",
+        model: "gemini-3.1-pro-preview",
         contents: `Generate a visual prompt for a professional, abstract profile avatar. 
 Use the Soul Signature and Mirror Intelligence as the primary source of truth for the persona's essence.
 
@@ -174,7 +174,7 @@ Output ONLY the visual description for an image generation tool.`,
       const visualPrompt = promptResponse.text || "A serene and abstract representation of a thoughtful soul, soft colors, ethereal light.";
 
       const imageResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image',
+        model: 'imagen-3',
         contents: {
           parts: [
             {

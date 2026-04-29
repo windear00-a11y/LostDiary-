@@ -7,7 +7,7 @@ const google = createGoogleGenerativeAI({
 
 try {
   const result = streamText({
-    model: google('gemini-1.5-flash'),
+    model: google('gemini-3-flash-preview'),
     prompt: 'test',
   });
 

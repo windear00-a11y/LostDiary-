@@ -111,7 +111,7 @@ export async function generateStoryResponse(
   summary?: string | null,
   persona?: string | null,
   intelligenceProfile?: IntelligenceProfile | null,
-  config: StoryEngineConfig = { model: process.env.GEMINI_MODEL || "gemini-1.5-flash", isNarrativeMode: false }
+  config: StoryEngineConfig = { model: process.env.GEMINI_MODEL || "gemini-3-flash-preview", isNarrativeMode: false }
 ): Promise<string | undefined> {
   const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 

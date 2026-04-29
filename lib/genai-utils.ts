@@ -1,8 +1,8 @@
 import { getGenAI } from "./genai";
 
 const FALLBACK_MODELS = [
-  "models/gemini-1.5-flash",
-  "models/gemini-1.5-pro",
+  "gemini-3-flash-preview",
+  "gemini-3.1-pro-preview",
 ];
 
 export async function generateContentWithFallback(params: any): Promise<any> {

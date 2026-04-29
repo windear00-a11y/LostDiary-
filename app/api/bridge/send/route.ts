@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     if (bridge?.mode === 'protected') {
         // Strict Check: Toxin + PII
         const safetyCheck = await generateContentWithFallback({
-            model: "gemini-1.5-flash",
+            model: "gemini-3-flash-preview",
             contents: [{ role: "user", parts: [{ text: `Analyze this message for toxicity AND PII (personal info, real identity). Return 'SAFE' or 'UNSAFE'. Message: "${content}"` }] }]
         });
         if (safetyCheck.text?.trim() !== 'SAFE') return NextResponse.json({ error: 'Message flagged for safety.' }, { status: 400 });

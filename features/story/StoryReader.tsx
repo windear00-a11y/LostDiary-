@@ -103,7 +103,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
        const prompt = `Abstract, ethereal, minimalist book cover art representing: ${summaryContext}. The overall vibe and aura is: ${aura}. Use subtle gradients, sacred geometry, or expressive brush strokes. No text. Highly artistic, muted color palette, masterpiece.`;
        
        const response = await ai.models.generateContent({
-         model: 'gemini-3.1-flash-image-preview',
+         model: 'imagen-3',
          contents: {
            parts: [
              { text: prompt },
@@ -225,7 +225,7 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
     
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-1.5-pro",
+        model: "gemini-3.1-pro-preview",
         contents: `Analyze the mood of this story paragraph: "${content.substring(0, 200)}..." Return only one word: Joyful, Tense, Melancholic, or Serene.`,
       });
       const detectedMood = response.text?.trim() as string;

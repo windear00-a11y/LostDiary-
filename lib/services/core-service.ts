@@ -515,7 +515,7 @@ export const coreService = {
   async generateTitle(content: string): Promise<string | null> {
     try {
       const response = await generateContentWithFallback({
-        model: "gemini-1.5-flash",
+        model: "gemini-3-flash-preview",
         contents: [{ role: "user", parts: [{ text: `Generate a short title (max 5 words) for this chapter content: ${content.substring(0, 200)}` }] }],
         config: { temperature: 0.7 }
       });
@@ -670,7 +670,7 @@ export const coreService = {
     }
 
     const response = await generateContentWithFallback({
-      model: "gemini-1.5-pro",
+      model: "gemini-3.1-pro-preview",
       contents: `Perform a deep psychological and spiritual analysis of this digital archive. 
 Your goal is to populate a "Sanctuary Mirror" across several dimensions and provide a "Soul Signature" summary.
 
