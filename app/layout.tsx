@@ -8,7 +8,7 @@ import { PWARegister } from '@/components/ui/PWARegister';
 import { Toaster } from 'sonner';
 import { Header } from '@/components/ui/Header';
 import { BottomNav } from '@/components/ui/BottomNav';
-import { GlobalMenuSheet } from '@/components/ui/GlobalMenuSheet';
+import { HistoryDrawer } from '@/components/ui/HistoryDrawer';
 import { KeyboardDetection } from '@/components/ui/KeyboardDetection';
 import './globals.css';
 
@@ -68,7 +68,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
               <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
                 <Header />
                 <BottomNav />
-                <GlobalMenuSheet />
+                <HistoryDrawer />
                 <Toaster position="bottom-right" toastOptions={{
                   style: {
                     background: 'rgba(23, 23, 23, 0.8)',

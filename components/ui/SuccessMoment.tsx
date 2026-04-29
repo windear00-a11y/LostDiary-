@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Check, Send, Link, Zap } from 'lucide-react';
+import { Sparkles, Check, Send, Link, Zap, Eye } from 'lucide-react';
 
 interface SuccessMomentProps {
   isOpen: boolean;
@@ -9,25 +9,28 @@ interface SuccessMomentProps {
   title: string;
   subtitle?: string;
   type?: 'save' | 'publish' | 'connect';
+  onView?: () => void; // Optional view callback
 }
 
-export const SuccessMoment = ({ isOpen, onClose, title, subtitle, type = 'save' }: SuccessMomentProps) => {
+export const SuccessMoment = ({ isOpen, onClose, title, subtitle, type = 'save', onView }: SuccessMomentProps) => {
   useEffect(() => {
     if (isOpen) {
-      const timer = setTimeout(onClose, 3000);
+      // Give more time if there is an action button
+      const timer = setTimeout(onClose, onView ? 5000 : 3000);
       return () => clearTimeout(timer);
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, onView]);
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-auto">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-neutral-950/60 backdrop-blur-md"
+            onClick={onClose}
           />
           
           <motion.div
@@ -74,10 +77,30 @@ export const SuccessMoment = ({ isOpen, onClose, title, subtitle, type = 'save' 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-sm text-white/50 font-serif"
+                className="text-sm text-white/50 font-serif mb-6"
               >
                 {subtitle}
               </motion.p>
+            )}
+
+            {onView && (
+              <motion.button
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                onClick={() => {
+                  onView();
+                  onClose();
+                }}
+                className={`px-6 py-3 rounded-full flex items-center gap-2 text-xs font-bold uppercase tracking-widest transition-all ${
+                  type === 'save' ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30' :
+                  type === 'publish' ? 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 border border-amber-500/30' :
+                  'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/30'
+                }`}
+              >
+                <Eye className="w-4 h-4" />
+                View
+              </motion.button>
             )}
           </motion.div>
         </div>
@@ -85,3 +108,4 @@ export const SuccessMoment = ({ isOpen, onClose, title, subtitle, type = 'save' 
     </AnimatePresence>
   );
 };
+

@@ -11,8 +11,12 @@ interface UIState {
   hasSetLanguage: boolean;
   isDrawerOpen: boolean;
   isBottomSheetOpen: boolean;
+  isHistoryOpen: boolean;
+  chatPersonaMode: 'mirror' | 'guide';
+  isBrutalHonestyOn: boolean;
   setIsDrawerOpen: (isOpen: boolean) => void;
   setIsBottomSheetOpen: (isOpen: boolean) => void;
+  setIsHistoryOpen: (isOpen: boolean) => void;
   setActiveView: (view: 'chat' | 'story' | 'journal' | 'reflect') => void;
   setActiveLibraryTab: (tab: 'feed' | 'echoes') => void;
   setActiveProfileTab: (tab: 'identity' | 'mirror' | 'vault') => void;
@@ -20,6 +24,8 @@ interface UIState {
   setSelectedJournalContent: (content: string | null) => void;
   setLanguage: (lang: string) => void;
   setHasSetLanguage: (hasSet: boolean) => void;
+  setChatPersonaMode: (mode: 'mirror' | 'guide') => void;
+  setIsBrutalHonestyOn: (isOn: boolean) => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -34,8 +40,12 @@ export const useUIStore = create<UIState>()(
       hasSetLanguage: false,
       isDrawerOpen: false,
       isBottomSheetOpen: false,
+      isHistoryOpen: false,
+      chatPersonaMode: 'mirror',
+      isBrutalHonestyOn: false,
       setIsDrawerOpen: (isOpen) => set({ isDrawerOpen: isOpen }),
       setIsBottomSheetOpen: (isOpen) => set({ isBottomSheetOpen: isOpen }),
+      setIsHistoryOpen: (isOpen) => set({ isHistoryOpen: isOpen }),
       setActiveView: (view) => set({ activeView: view }),
       setActiveLibraryTab: (tab) => set({ activeLibraryTab: tab }),
       setActiveProfileTab: (tab) => set({ activeProfileTab: tab }),
@@ -43,6 +53,8 @@ export const useUIStore = create<UIState>()(
       setSelectedJournalContent: (content) => set({ selectedJournalContent: content }),
       setLanguage: (lang) => set({ language: lang }),
       setHasSetLanguage: (hasSet) => set({ hasSetLanguage: hasSet }),
+      setChatPersonaMode: (mode) => set({ chatPersonaMode: mode }),
+      setIsBrutalHonestyOn: (isOn) => set({ isBrutalHonestyOn: isOn }),
     }),
     {
       name: 'windear-ui-storage',
@@ -51,6 +63,8 @@ export const useUIStore = create<UIState>()(
         activeLibraryTab: state.activeLibraryTab,
         language: state.language,
         hasSetLanguage: state.hasSetLanguage,
+        chatPersonaMode: state.chatPersonaMode,
+        isBrutalHonestyOn: state.isBrutalHonestyOn,
       }),
     }
   )

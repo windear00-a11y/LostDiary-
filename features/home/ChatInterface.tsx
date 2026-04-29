@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChatInput } from './ChatInput';
 import { useUIStore } from '@/lib/store/use-ui-store';
+import { ThinkingIndicator } from '@/components/ui/ThinkingIndicator';
 import { User, Sparkles, X, Shield, Plus, MessageSquare } from 'lucide-react';
 import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
@@ -30,7 +31,13 @@ export const ChatInterface = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { setInputFocused, isInputFocused, language } = useUIStore();
+  const { 
+    setInputFocused, 
+    isInputFocused, 
+    language,
+    chatPersonaMode,
+    isBrutalHonestyOn
+  } = useUIStore();
   const searchParams = useSearchParams();
   const router = useRouter();
   const sessionId = searchParams.get('session');
@@ -180,7 +187,12 @@ export const ChatInterface = () => {
         session_id: sessionId || undefined,
         type: 'text',
         content: trimmedContent,
-        metadata: { language, timezone },
+        metadata: { 
+          language, 
+          timezone,
+          personaMode: chatPersonaMode,
+          brutalHonesty: isBrutalHonestyOn
+        },
         onUpdate: (streamedText, thinkingStep) => {
           setMessages(prev => prev.map(m => 
             m.id === aiTempId ? { 
@@ -233,50 +245,6 @@ export const ChatInterface = () => {
       setIsThinking(false);
     }
   };
-
-  const poetizeThinkingStep = (step?: string) => {
-    if (!step) return "Whispering to the silence...";
-    if (step.includes("Searching") || step.includes("search")) {
-      return "Gathering whispers from the collective mind...";
-    }
-    if (step.includes("Using tool") || step.includes("Consulting")) {
-      return "Consulting the infinite echoes...";
-    }
-    if (step === 'Thought complete.') return 'Almost there...';
-    return step;
-  };
-
-  const ThinkingSkeleton = () => (
-    <div className="flex flex-col gap-4 py-3 w-full min-w-[240px]">
-      <div className="flex gap-2 mb-1">
-        {[0, 1, 2].map((i) => (
-          <motion.div
-            key={i}
-            animate={{ opacity: [0.2, 0.8, 0.2], y: [0, -2, 0] }}
-            transition={{ duration: 2, repeat: Infinity, delay: i * 0.4 }}
-            className="w-1.5 h-1.5 bg-[var(--color-accent-amber)] rounded-full"
-          />
-        ))}
-      </div>
-      <div className="space-y-4">
-        <motion.div 
-          animate={{ opacity: [0.05, 0.15, 0.05] }}
-          transition={{ duration: 3, repeat: Infinity }}
-          className="h-2 w-full bg-[var(--color-primary-text-dark)] rounded-full" 
-        />
-        <motion.div 
-          animate={{ opacity: [0.05, 0.15, 0.05] }}
-          transition={{ duration: 3, repeat: Infinity, delay: 0.5 }}
-          className="h-2 w-[85%] bg-[var(--color-primary-text-dark)] rounded-full" 
-        />
-        <motion.div 
-          animate={{ opacity: [0.05, 0.15, 0.05] }}
-          transition={{ duration: 3, repeat: Infinity, delay: 1 }}
-          className="h-2 w-[60%] bg-[var(--color-primary-text-dark)] rounded-full" 
-        />
-      </div>
-    </div>
-  );
 
   return (
     <div className="flex flex-col h-full bg-transparent text-[var(--color-primary-text-dark)] relative overflow-hidden font-sans">
@@ -341,43 +309,23 @@ export const ChatInterface = () => {
         )}
       </AnimatePresence> 
 
-      {/* Header Inline */}
-      <div className="absolute top-0 left-0 right-0 z-40 bg-gradient-to-b from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/80 to-transparent pt-20 pb-12 px-6 flex items-center justify-between pointer-events-none">
-        <div className="flex items-center gap-4">
-           <div className="w-10 h-10 rounded-full glass-surface flex items-center justify-center shrink-0 shadow-sm">
-              <MessageSquare className="w-4 h-4 text-[var(--color-accent-amber)]" />
-           </div>
-           <div className="flex flex-col pointer-events-auto">
-             <span className="text-[9px] uppercase font-bold tracking-[0.2em] text-[var(--color-secondary-text-dark)]">Active Reflection</span>
-             <span className="text-sm font-serif italic text-[var(--color-primary-text-dark)] opacity-90">{activeSession?.title || 'Sanctuary'}</span>
-           </div>
-        </div>
-        <button 
-          onClick={handleStartNewSession}
-          className="pointer-events-auto w-12 h-12 rounded-full glass-surface flex items-center justify-center hover:bg-[var(--color-primary-text-dark)] hover:text-[var(--color-bg-dark)] transition-all group shadow-sm focus:outline-none"
-          title="Start a new chat"
-        >
-          <Plus className="w-5 h-5 text-[var(--color-secondary-text-dark)] group-hover:text-[var(--color-bg-dark)] transition-colors" />
-        </button>
-      </div>
-
       {/* Messages Container */}
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-32 pb-6 transition-all duration-700 relative z-10`}
+        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-20 pb-6 transition-all duration-700 relative z-10`}
       >
         <div className={`max-w-2xl mx-auto space-y-12 min-h-full flex flex-col transition-all duration-700 
           ${isInputFocused ? 'opacity-40 blur-[1px]' : 'opacity-100'} 
           ${showNudge ? 'blur-md scale-[0.98] opacity-30 pointer-events-none' : 'blur-0 scale-100 opacity-100'}`}
         >
-          {/* Privacy Trust Signal */}
-          <div className="flex flex-col items-center justify-center space-y-4 mb-12 select-none opacity-50 hover:opacity-100 transition-opacity duration-1000">
+         {/* Privacy Trust Signal */}
+         <div className="flex flex-col items-center justify-center space-y-4 mb-12 select-none opacity-50 hover:opacity-100 transition-opacity duration-1000">
              <Shield className="w-6 h-6 text-[#7a7266] drop-shadow-md" />
              <p className="text-[10px] font-sans text-center max-w-[280px] text-[#7a7266] uppercase tracking-[0.2em] leading-relaxed">
                 Your reflections remain uniquely yours.
              </p>
-          </div>
+         </div>
 
           <AnimatePresence mode="wait">
             {messages.length === 0 && !showNudge && (
@@ -438,19 +386,15 @@ export const ChatInterface = () => {
                   }`} style={{ minWidth: isThinkingMsg ? '200px' : '60px' }}>
                   {isThinkingMsg || (msg.role === 'diary' && !msg.content) ? (
                     <div className="flex flex-col gap-3">
-                      <ThinkingSkeleton />
-                      {msg.thinking_step && (
-                        <motion.p 
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="text-[10px] uppercase tracking-[0.15em] text-[var(--color-secondary-text-dark)] pt-3"
-                        >
-                          {poetizeThinkingStep(msg.thinking_step)}
-                        </motion.p>
-                      )}
+                      <ThinkingIndicator step={msg.thinking_step} />
                     </div>
                   ) : (
-                    <>
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, ease: 'easeOut' }}
+                    >
                       <div className="prose-sanctuary">
                         <ReactMarkdown>{msg.content}</ReactMarkdown>
                       </div>
@@ -471,7 +415,7 @@ export const ChatInterface = () => {
                               />
                             ))}
                           </div>
-                          <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--color-secondary-text-dark)]">{poetizeThinkingStep(msg.thinking_step)}</span>
+                          <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--color-secondary-text-dark)]">{msg.thinking_step}</span>
                         </motion.div>
                       )}
                       
@@ -489,7 +433,7 @@ export const ChatInterface = () => {
                           </span>
                         </div>
                       )}
-                    </>
+                    </motion.div>
                   )}
                 </div>
                 </motion.div>

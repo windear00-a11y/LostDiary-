@@ -217,6 +217,10 @@ export async function POST(req: Request) {
     const isNarrative = !!(pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative);
     const selectedModel = determineModelForInput(content);
 
+    const metadata = body.metadata || {};
+    const personaMode = metadata.personaMode || 'mirror';
+    const isBrutalHonestyOn = metadata.brutalHonesty || false;
+
     // Persist the USER message
     if (session_id) {
       chatPersistence.saveUserMessage(supabase, {
@@ -224,6 +228,8 @@ export async function POST(req: Request) {
           metadata: {
             language,
             emotion: analyzedEvent?.emotion || 'neutral',
+            trigger: analyzedEvent?.trigger || null,
+            tags: analyzedEvent?.tags || [],
             importance: analyzedEvent?.score || 0,
             category: analyzedEvent?.category || 'General'
           },
@@ -248,9 +254,27 @@ export async function POST(req: Request) {
 ${olderContextMessages.map((m: any) => `- [${new Date(m.created_at).toLocaleDateString()}] ${m.content}`).join('\n')}
 (Use these past memories IF they relevantly answer or contextualize the user's current thought. They show you HAVE remembered things from the past.)` : "";
 
+    let personaContext = "";
+    if (personaMode === 'guide') {
+      personaContext = `\n\n[PERSONA MODE: GUIDE]\nYou are in Guide Mode. Instead of just reflecting, actively guide the user. Offer actionable advice, constructive feedback, or practical steps they can take next. Be a mentor.`;
+    } else {
+      personaContext = `\n\n[PERSONA MODE: MIRROR]\nYou are in Mirror Mode (Default). Just reflect what the user is saying without judgement or lecturing. Help them face their thoughts by repeating emotional undercurrents back to them.`;
+    }
+
+    if (isBrutalHonestyOn) {
+      personaContext += `\n[MODIFIER: BRUTAL HONESTY]\nThe user has explicitly requested brutal honesty. Do not sugarcoat. Be direct, call out excuses, and tell them the hard truth about their situation or behavior if they are avoiding a problem.`;
+    }
+
     let baseInstruction = isNarrative 
-      ? DEFAULT_SYSTEM_INSTRUCTION + "\n\nMODE: NARRATIVE - You are weaving the user's reflection into an ongoing story. Keep it engaging but straightforward, not overly poetic."
-      : DEFAULT_SYSTEM_INSTRUCTION + "\n\nMODE: CHAT - Offer a natural reflection or follow-up question. Stay concise, direct, and human-like.";
+      ? DEFAULT_SYSTEM_INSTRUCTION + personaContext + "\n\nMODE: NARRATIVE - You are weaving the user's reflection into an ongoing story. Keep it engaging but straightforward, not overly poetic."
+      : DEFAULT_SYSTEM_INSTRUCTION + personaContext + "\n\nMODE: CHAT - Offer a natural reflection or follow-up question. Stay concise, direct, and human-like.";
+
+    const patternContext = analyzedEvent ? `
+[PATTERN DETECTED IN CURRENT MESSAGE]
+- Emotion: ${analyzedEvent.emotion || 'neutral'}
+- Trigger: ${analyzedEvent.trigger || 'unknown'}
+- Associated Tags: ${(analyzedEvent.tags || []).join(', ')}
+(If helpful, briefly point out these patterns to the user, like "I notice this is triggering your self-doubt..." or similar reflection.)` : "";
 
     const systemInstruction = `
 ${baseInstruction}
@@ -261,6 +285,7 @@ Journey Began (First Message): ${firstMessageRes.data ? new Date(firstMessageRes
 Total Chat Sessions: ${sessionCountRes.count || 1}
 Current Journey: ${profile.bio || "Starting a new journey."}
 ${intelContext}
+${patternContext}
 ${memoriesContext}
 (Note: Do not address this backdrop directly. Internalize it to guide your tone.)
 `.trim();
@@ -290,6 +315,76 @@ ${memoriesContext}
         ],
       }),
       tools: {
+        search_memory: tool({
+          description: 'Search the user\'s past entries and messages to answer questions about their history, specific days, or what they discussed before. Use this tool whenever the user asks "what did I say", "what happened on [date]", or asks about their past conversations.',
+          parameters: z.object({
+            query: z.string().describe('The topic or question to search in the user\'s past messages (e.g. "what did we talk about on 13 april", "what did I say about work").')
+          }),
+          execute: async ({ query }) => {
+            if (!content) return { error: 'No content to base search on.' };
+            try {
+              // We'll generate an embedding for the search query specifically,
+              // or use full text search if applicable. Here we'll use semantic search
+              // using the existing match_messages function but without session_id constraint,
+              // or we'll fetch recent messages and filter.
+              
+              const qEmbedding = await generateEmbedding(query);
+              
+              let searchResults = [];
+
+              // 1. First try Semantic Search
+              if (qEmbedding && qEmbedding.length > 0) {
+                 const { data, error } = await supabase.rpc('match_messages', {
+                    query_embedding: qEmbedding,
+                    match_threshold: 0.5, // lower threshold to catch more
+                    match_count: 10,
+                    p_user_id: user_id,
+                    p_session_id: '00000000-0000-0000-0000-000000000000'
+                 });
+                 if (!error && data) searchResults = data;
+              }
+
+              // 2. Also try pure text search across recent messages (last 100) and filter in memory
+              const { data: recentMessages, error: recentError } = await supabase
+                .from('chat_messages')
+                .select('content, created_at')
+                .eq('user_id', user_id)
+                .order('created_at', { ascending: false })
+                .limit(200);
+
+              if (!recentError && recentMessages) {
+                 // Try to find keyword matches for the query terms
+                 const queryTerms = query.toLowerCase().split(' ').filter(t => t.length > 3);
+                 const textMatches = recentMessages.filter(m => {
+                    const lcContent = m.content?.toLowerCase() || '';
+                    return queryTerms.some(term => lcContent.includes(term));
+                 });
+
+                 // Merge results uniquely
+                 for (const match of textMatches) {
+                    if (!searchResults.some((sm: any) => sm.content === match.content)) {
+                        searchResults.push(match);
+                    }
+                 }
+              }
+
+              if (searchResults.length === 0) {
+                  return { result: 'No specific past messages found matching this query.'};
+              }
+
+              // Return formatted results
+              return {
+                 result: 'Found past messages from the user:',
+                 messages: searchResults.map((m: any) => ({
+                    date: new Date(m.created_at).toLocaleDateString(),
+                    content: m.content
+                 }))
+              };
+            } catch (err: any) {
+              return { error: 'Memory retrieval exception', details: err.message };
+            }
+          }
+        }),
         search: tool({
           description: 'Search the web for current events, news, or factual information.',
           parameters: z.object({

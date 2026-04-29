@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+@layer base {
+  html, body {
+    scroll-padding-bottom: 20vh;
+  }
+}
+
 @theme {
   --color-bg-light: #f9f6f0;
   --color-bg-dark: #0f0a0a;
@@ -119,6 +125,12 @@
 
 
   /* Tiptap styles */
+  .ProseMirror {
+    outline: none;
+    min-height: 50vh;
+    padding-bottom: 8rem;
+  }
+  
   .ProseMirror p.is-editor-empty:first-child::before {
     color: rgba(255, 255, 255, 0.2);
     content: attr(data-placeholder);

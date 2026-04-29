@@ -109,8 +109,8 @@ export class PipelineController {
   // --- Logic moved from event-engine.ts & life-author.ts ---
   public async extractLifeEvent(content: string): Promise<any | null> {
     const systemInstruction = `
-You are a behavioral intelligence system and a minimalist observer.
-Goal: Convert chat messages/diary entries into structured life events for storytelling.
+You are a behavioral intelligence system and an AI Pattern Detector.
+Goal: Convert chat messages/diary entries into structured insights tracking emotions, triggers, and patterns.
 
 Rules for "raw_fragment":
 - Capture the EXACT core phrase or emotional anchor word the user used. 
@@ -120,7 +120,9 @@ Output:
 {
   "summary": "1-line objective description of the event",
   "raw_fragment": "The exact core phrasing used by the user",
-  "emotion": "positive | neutral | negative",
+  "emotion": "Specific emotion word (e.g. sad, anxious, confident, frustrated, joyful, neutral)",
+  "trigger": "The root cause, person, or event triggering this emotion (e.g. 'project deadline', 'argument with friend'). Null if unknown.",
+  "tags": ["array", "of", "pattern", "tags", "e.g. 'self-doubt', 'burnout', 'clarity'"],
   "category": "Love | Work | Family | Health | Social | Growth",
   "metrics": {
     "emotion_intensity": 0-5,
@@ -129,7 +131,7 @@ Output:
 }
 Rules:
 - Output ONLY a valid JSON object.
-- Be objective. No drama.
+- Be objective. No drama. Identify the root trigger and any recurring behavior tags if visible.
 `;
     try {
       const response = await generateContentWithFallback({

@@ -25,7 +25,7 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 
 export const JournalEditor = () => {
-  const { setActiveView, selectedJournalContent, setSelectedJournalContent, language, isInputFocused, setInputFocused } = useUIStore();
+  const { setActiveView, selectedJournalContent, setSelectedJournalContent, language, isInputFocused, setInputFocused, setIsDrawerOpen } = useUIStore();
   const searchParams = useSearchParams();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState(selectedJournalContent || '');
@@ -33,6 +33,7 @@ export const JournalEditor = () => {
   const [isSavingLocal, setIsSavingLocal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [showNudge, setShowNudge] = useState(false);
+  const [showPrompts, setShowPrompts] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showSuccessMoment, setShowSuccessMoment] = useState(false);
   const [isFormattingExpanded, setIsFormattingExpanded] = useState(false);
@@ -327,14 +328,12 @@ export const JournalEditor = () => {
         inspiration_author: inspirationAuthor 
       });
       setSaveStatus('success');
-      setLastSavedContent(fullContent);
       setShowSuccessMoment(true);
+      toast.success(language === 'hi' ? 'Entry Save ho gayi!' : 'Entry saved successfully!');
       
-      // Clear auto-saved draft
-      localStorage.removeItem('journalDraft_title');
-      localStorage.removeItem('journalDraft_content');
+      // Clear form
+      handleStartNewEntry();
       
-      // No more auto-redirect to chat. Stay on page for "Suqoon".
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error) {
       console.error('Failed to save diary entry:', error);
@@ -351,6 +350,7 @@ export const JournalEditor = () => {
     editor?.commands.setContent('');
     setSelectedJournalContent(null);
     setShowNudge(false);
+    setShowPrompts(false);
     
     // Clear auto-saved draft
     localStorage.removeItem('journalDraft_title');
@@ -544,7 +544,7 @@ export const JournalEditor = () => {
         </div>
 
         {/* Text Area & Overlay Container */}
-        <div className="relative w-full min-h-[60vh] pb-40">
+        <div className="relative w-full">
           <div onClick={handleEditorClick} className="w-full h-full cursor-text">
             <EditorContent editor={editor} />
           </div>
@@ -552,29 +552,46 @@ export const JournalEditor = () => {
           {editor?.isEmpty && title.length === 0 && !showNudge && (
              <div className="absolute top-0 left-0 w-full pt-16 pointer-events-none">
                <div className="w-full max-w-2xl mx-auto space-y-6 pointer-events-auto">
-                 <div className="flex items-center gap-4 mb-8">
-                   <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
-                   <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Prompts to start
-                   </p>
-                   <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
-                 </div>
-                 <div className="grid gap-3">
-                   {journalStarters.map((starter, i) => (
-                     <motion.button
-                       key={i}
-                       whileHover={{ scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
-                       whileTap={{ scale: 0.99 }}
-                       onClick={() => handleSelectStarter(starter.text)}
-                       className="w-full flex items-center gap-5 py-4 px-5 rounded-2xl text-[14px] text-white/60 hover:text-white transition-all text-left bg-white/[0.02] border border-white/5 hover:border-amber-500/30 hover:shadow-[0_0_30px_rgba(99,102,241,0.05)] group"
+                 {!showPrompts ? (
+                   <div className="flex justify-center mt-12">
+                     <button
+                       onClick={() => setShowPrompts(true)}
+                       className="px-6 py-3 rounded-full glass-surface flex items-center gap-3 text-sm font-serif italic text-white/50 hover:text-[var(--color-primary-text-dark)] hover:bg-[var(--color-primary-text-dark)]/5 transition-all focus:outline-none"
                      >
-                       <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-amber-500/10 group-hover:scale-110 transition-all border border-white/5 group-hover:border-amber-500/30">
-                         <span className="text-lg opacity-80 group-hover:opacity-100 transition-opacity">{starter.icon}</span>
-                       </div>
-                       <span className="font-serif italic leading-relaxed pt-1 group-hover:translate-x-1 transition-transform duration-300">{starter.text}</span>
-                     </motion.button>
-                   ))}
-                 </div>
+                       <Sparkles className="w-4 h-4 text-amber-500/70" />
+                       {language === 'hi' ? 'Kuchh soojh nahi raha?' : 'Need some inspiration?'}
+                     </button>
+                   </div>
+                 ) : (
+                   <>
+                     <div className="flex items-center gap-4 mb-8">
+                       <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
+                       <p className="text-[10px] uppercase tracking-[0.3em] text-white/40 font-bold flex items-center gap-2">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Prompts to start
+                       </p>
+                       <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent flex-1" />
+                     </div>
+                     <div className="grid gap-3">
+                       {journalStarters.map((starter, i) => (
+                         <motion.button
+                           key={i}
+                           whileHover={{ scale: 1.01, backgroundColor: "rgba(255,255,255,0.04)" }}
+                           whileTap={{ scale: 0.99 }}
+                           onClick={() => {
+                             handleSelectStarter(starter.text);
+                             setShowPrompts(false);
+                           }}
+                           className="w-full flex items-center gap-5 py-4 px-5 rounded-2xl text-[14px] text-white/60 hover:text-white transition-all text-left bg-white/[0.02] border border-white/5 hover:border-amber-500/30 hover:shadow-[0_0_30px_rgba(99,102,241,0.05)] group"
+                         >
+                           <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-amber-500/10 group-hover:scale-110 transition-all border border-white/5 group-hover:border-amber-500/30">
+                             <span className="text-lg opacity-80 group-hover:opacity-100 transition-opacity">{starter.icon}</span>
+                           </div>
+                           <span className="font-serif italic leading-relaxed pt-1 group-hover:translate-x-1 transition-transform duration-300">{starter.text}</span>
+                         </motion.button>
+                       ))}
+                     </div>
+                   </>
+                 )}
                  {/* Add extra padding at the bottom so it doesn't hide under the floating toolbar */}
                  <div className="h-40" />
                </div>
@@ -716,7 +733,12 @@ export const JournalEditor = () => {
         title={inspiredBy ? (language === 'hi' ? 'Ehsaas ka Dhaga Buna Gaya' : 'Thread Spun') : (language === 'hi' ? 'Ehsaas Mehfooz Hua' : 'Reflection Safe')}
         subtitle={inspiredBy ? (language === 'hi' ? 'Aapka ehsaas ab zameen-e-sanctuary ka hissa hai.' : 'Your reflection is now part of the sanctuary weave.') : (language === 'hi' ? 'Aapki yaad sanctuary mein mehfooz hai.' : 'Your thought is safe in the sanctuary.')}
         type="save"
+        onView={() => {
+          setIsDrawerOpen(true); 
+          useUIStore.getState().setActiveLibraryTab('echoes');
+        }}
       />
+
     </div>
   );
 };

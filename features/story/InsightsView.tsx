@@ -30,9 +30,12 @@ export const InsightsView = () => {
         const user = await authService.getUser();
         if (user) {
           const sessions = await coreService.fetchSessions(user.id);
-          const messages = sessions.length > 0 ? await coreService.fetchMessages(user.id, sessions[0].id) : [];
-          // Even if analyzeEntries is empty, we will stub the UI gracefully
-          const analysis = analyzeEntries(messages.map(m => m.content || ""));
+          let allMessages: any[] = [];
+          for (const s of sessions.slice(0, 3)) { // fetch messages from last 3 sessions to get a good sample
+             const msgs = await coreService.fetchMessages(user.id, s.id);
+             allMessages = [...allMessages, ...msgs];
+          }
+          const analysis = analyzeEntries(allMessages);
           setReport(analysis);
           setChartData(generateMockTrend());
         }
@@ -128,29 +131,61 @@ export const InsightsView = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Archetype Card */}
-                  <div className="glass-surface p-6 rounded-[32px] flex flex-col gap-4 relative overflow-hidden group border border-white/5">
+                  {/* Insight Card */}
+                  <div className="glass-surface p-6 rounded-[32px] flex flex-col gap-4 relative overflow-hidden group border border-white/5 md:col-span-2">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-accent-amber)]/5 rounded-full blur-2xl -mr-16 -mt-16 transition-all duration-700 group-hover:bg-[var(--color-accent-amber)]/10" />
                     <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
-                      <BookOpen className="w-5 h-5 text-[var(--color-accent-amber)]" />
+                      <Brain className="w-5 h-5 text-[var(--color-accent-amber)]" />
                     </div>
                     <div>
-                      <h3 className="text-[9px] font-sans uppercase tracking-[0.2em] text-[var(--color-secondary-text-dark)] mb-2">Narrative Archetype</h3>
-                      <p className="text-xl font-serif text-[var(--color-primary-text-dark)] capitalize">The Woven Dreamer</p>
-                      <p className="text-[10px] text-[var(--color-secondary-text-dark)] mt-2 italic">You weave complex emotions into structured peace.</p>
+                      <h3 className="text-[9px] font-sans uppercase tracking-[0.2em] text-[var(--color-secondary-text-dark)] mb-2">Core Insight</h3>
+                      <p className="text-xl font-serif text-[var(--color-primary-text-dark)] capitalize">{report?.highlighted_insight || "Analyzing recent patterns..."}</p>
                     </div>
                   </div>
 
-                  {/* Echo Velocity Card */}
+                  {/* Top Triggers */}
                   <div className="glass-surface p-6 rounded-[32px] flex flex-col gap-4 relative overflow-hidden group border border-white/5">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-accent-gold)]/5 rounded-full blur-2xl -mr-16 -mt-16 transition-all duration-700 group-hover:bg-[var(--color-accent-gold)]/10" />
                     <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
                       <Activity className="w-5 h-5 text-[var(--color-accent-gold)]" />
                     </div>
                     <div>
-                      <h3 className="text-[9px] font-sans uppercase tracking-[0.2em] text-[var(--color-secondary-text-dark)] mb-2">Echo Velocity</h3>
-                      <p className="text-xl font-serif text-[var(--color-primary-text-dark)] capitalize">High Resonance</p>
-                      <p className="text-[10px] text-[var(--color-secondary-text-dark)] mt-2 italic">Your words are echoing 40% deeper in the collective feed this week.</p>
+                      <h3 className="text-[9px] font-sans uppercase tracking-[0.2em] text-[var(--color-secondary-text-dark)] mb-2">Top Triggers</h3>
+                      {report?.top_triggers && report.top_triggers.length > 0 ? (
+                        <ul className="space-y-2 mt-3">
+                          {report.top_triggers.map((t, idx) => (
+                             <li key={idx} className="flex justify-between text-sm italic font-serif text-[var(--color-primary-text-dark)]">
+                               <span className="capitalize">{t.trigger}</span>
+                               <span className="text-slate-500">{t.count}x</span>
+                             </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[10px] text-[var(--color-secondary-text-dark)] mt-2 italic">Not enough data to find triggers yet.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Dominant Emotions */}
+                  <div className="glass-surface p-6 rounded-[32px] flex flex-col gap-4 relative overflow-hidden group border border-white/5">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--color-accent-gold)]/5 rounded-full blur-2xl -mr-16 -mt-16 transition-all duration-700 group-hover:bg-[var(--color-accent-gold)]/10" />
+                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                      <Leaf className="w-5 h-5 text-[var(--color-accent-gold)]" />
+                    </div>
+                    <div>
+                      <h3 className="text-[9px] font-sans uppercase tracking-[0.2em] text-[var(--color-secondary-text-dark)] mb-2">Dominant Emotions</h3>
+                      {report?.dominant_emotions && report.dominant_emotions.length > 0 ? (
+                        <ul className="space-y-2 mt-3">
+                          {report.dominant_emotions.map((e, idx) => (
+                             <li key={idx} className="flex justify-between text-sm italic font-serif text-[var(--color-primary-text-dark)]">
+                               <span className="capitalize">{e.emotion}</span>
+                               <span className="text-slate-500">{e.count}x</span>
+                             </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-[10px] text-[var(--color-secondary-text-dark)] mt-2 italic">Not enough emotion data yet.</p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -206,15 +241,22 @@ export const InsightsView = () => {
                   Themes of your journey
                 </h3>
                 <div className="flex flex-wrap justify-center gap-3">
-                  {['Self Discovery', 'Letting Go', 'Quiet Moments', 'Future Hopes'].map((theme, i) => (
-                    <div 
-                      key={theme} 
-                      className="px-5 py-2.5 rounded-full glass-surface text-sm font-serif italic text-[var(--color-primary-text-dark)] flex items-center gap-2 hover:bg-white/5 transition-colors cursor-default"
-                    >
-                      <Hash className="w-3 h-3 text-[var(--color-accent-amber)] opacity-60" />
-                      {theme}
+                  {report?.repeating_tags && report.repeating_tags.length > 0 ? (
+                    report.repeating_tags.map((t, i) => (
+                      <div 
+                        key={t.tag} 
+                        className="px-5 py-2.5 rounded-full glass-surface text-sm font-serif italic text-[var(--color-primary-text-dark)] flex items-center gap-2 hover:bg-white/5 transition-colors cursor-default"
+                      >
+                        <Hash className="w-3 h-3 text-[var(--color-accent-amber)] opacity-60" />
+                        <span className="capitalize">{t.tag}</span>
+                        <span className="text-xs text-slate-500 opacity-50 ml-1">{t.count}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-5 py-2.5 rounded-full glass-surface text-sm font-serif italic text-slate-500 flex items-center gap-2 cursor-default">
+                      Keep writing to discover themes
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </section>
