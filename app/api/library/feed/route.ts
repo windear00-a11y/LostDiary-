@@ -18,11 +18,17 @@ export async function GET(req: Request) {
       }
     );
 
+    const { data: { user } } = await supabase.auth.getUser();
+    
     let query = supabase
       .from('library_stories')
       .select('id, title, story_content, pen_name, pen_name_tag, dominant_emotion, likes_count, created_at, inspired_by_story_id, library_echoes(paragraph_index, user_id)')
       .order('created_at', { ascending: false })
       .limit(10);
+
+    if (user) {
+      query = query.ne('author_id', user.id);
+    }
 
     if (cursor) {
       query = query.lt('created_at', cursor);

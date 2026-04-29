@@ -103,15 +103,11 @@ export default function GlobalLibraryPage() {
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const [feedRes, chaptersData, volumesData] = await Promise.all([
-          fetch('/api/library/feed').then(r => r.json()),
-          authUser ? coreService.fetchChapters(authUser.id) : Promise.resolve([]),
-          authUser ? coreService.fetchVolumes(authUser.id) : Promise.resolve([])
+        const [feedRes] = await Promise.all([
+          fetch('/api/library/feed').then(r => r.json())
         ]);
 
         if (feedRes.stories) setStories(feedRes.stories);
-        setUserChapters(chaptersData);
-        setUserVolumes(volumesData);
         
         if (authUser) fetchBridges();
 
@@ -436,9 +432,9 @@ export default function GlobalLibraryPage() {
         <div className="flex items-center justify-between px-6 mb-4">
             <div className="flex bg-white/5 rounded-2xl p-1 border border-white/5">
               <button
-                onClick={() => { setActiveLibraryTab('feed'); setIsReadingSelf(false); }}
+                onClick={() => { setActiveLibraryTab('feed'); }}
                 className={`text-[9px] font-bold uppercase tracking-[0.2em] px-5 py-2 rounded-xl transition-all duration-500 ${
-                  !isReadingSelf && activeLibraryTab === 'feed' 
+                  activeLibraryTab === 'feed' 
                     ? 'bg-white/10 text-[var(--color-primary-text-dark)] shadow-lg' 
                     : 'text-white/40'
                 }`}
@@ -446,19 +442,19 @@ export default function GlobalLibraryPage() {
                 Global
               </button>
               <button
-                onClick={() => setIsReadingSelf(true)}
+                onClick={() => { setActiveLibraryTab('echoes'); }}
                 className={`text-[9px] font-bold uppercase tracking-[0.2em] px-5 py-2 rounded-xl transition-all duration-500 ${
-                  isReadingSelf 
+                  activeLibraryTab === 'echoes' 
                     ? 'bg-white/10 text-[var(--color-primary-text-dark)] shadow-lg' 
                     : 'text-white/40'
                 }`}
               >
-                Sanctuary
+                Echoes
               </button>
             </div>
 
             <div className="flex items-center gap-2">
-              {!isReadingSelf && activeLibraryTab === 'feed' && (
+              {activeLibraryTab === 'feed' && (
                 <button
                    onClick={() => setIsConstellationView(!isConstellationView)}
                    className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border glass-panel ${
@@ -471,12 +467,11 @@ export default function GlobalLibraryPage() {
                 </button>
               )}
               
-              <button
-                onClick={() => setActiveLibraryTab(activeLibraryTab === 'feed' ? 'echoes' : 'feed')}
+              <div
                 className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border glass-panel ${
-                  activeLibraryTab === 'echoes'
-                    ? 'bg-[var(--color-accent-amber)]/20 border-[var(--color-accent-amber)]/50 text-[var(--color-accent-amber)] shadow-[0_0_20px_rgba(255,158,94,0.3)]'
-                    : 'bg-white/5 border-white/5 text-white/40 hover:text-white/60'
+                  inboxPlanes.length > 0
+                    ? 'bg-rose-500/10 border-rose-500/20 text-rose-500'
+                    : 'bg-white/5 border-white/5 text-white/40'
                 }`}
               >
                 <div className="relative">
@@ -485,12 +480,12 @@ export default function GlobalLibraryPage() {
                     <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-rose-500 rounded-full" />
                   )}
                 </div>
-              </button>
+              </div>
             </div>
         </div>
 
         {/* Mood Filter - Simplified chips */}
-        {!isReadingSelf && activeLibraryTab === 'feed' && !isConstellationView && (
+        {activeLibraryTab === 'feed' && !isConstellationView && (
             <div className="px-6 pb-1">
                 <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
                     {moods.map((mood) => (
@@ -607,11 +602,6 @@ export default function GlobalLibraryPage() {
                 exit={{ opacity: 0, x: 10 }}
                 className="space-y-8"
               >
-                {/* Engagement Dashboard */}
-              <div className="mb-12">
-                <EngagementSoulCard />
-              </div>
-
               <header className="text-center mb-16 space-y-4">
                 <h1 className="text-4xl md:text-5xl font-serif italic text-[var(--color-primary-text-dark)]">The Global Library</h1>
                 <p className="text-[var(--color-secondary-text-dark)] font-serif italic max-w-lg mx-auto">
@@ -630,88 +620,6 @@ export default function GlobalLibraryPage() {
                  </div>
               ) : (
                 <div className="space-y-12">
-                  {/* User's Own Book Card - Enhanced Aesthetic */}
-                  {userChapters.length > 0 && (
-                    <motion.article
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="glass-surface border border-white/5 rounded-[40px] overflow-hidden shadow-2xl relative group mb-16"
-                    >
-                      {/* Decorative Background Element */}
-                      <div className="absolute top-0 right-0 -mr-12 -mt-12 w-64 h-64 bg-amber-500/5 blur-[100px] rounded-full pointer-events-none" />
-
-                      <div className="md:grid md:grid-cols-[220px_1fr] flex flex-col min-h-[300px]">
-                        <div 
-                          onClick={() => setIsReadingSelf(true)}
-                          className="relative flex flex-col items-center justify-center p-8 text-center cursor-pointer group/spine bg-amber-600 shadow-[inset_-10px_0_20px_rgba(0,0,0,0.3)]"
-                        >
-                          {/* Book Texture & Spine Depth */}
-                          <div className="absolute inset-0 opacity-30 mix-blend-overlay" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/leather.png")' }} />
-                          <div className="absolute left-0 top-0 bottom-0 w-4 bg-black/20" />
-                          <div className="absolute left-4 top-0 bottom-0 w-px bg-white/10" />
-                          
-                          <div className="relative z-10 transition-transform duration-700 group-hover/spine:scale-105 group-hover/spine:-rotate-2">
-                            <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 mb-6 mx-auto">
-                              <BookOpen className="w-8 h-8 text-white" />
-                            </div>
-                            <h3 className="font-serif font-bold text-white text-xl drop-shadow-xl leading-tight px-2">The Archive of Your Soul</h3>
-                            
-                            {/* Gold Foil Tag */}
-                            <div className="mt-6 inline-flex items-center gap-1.5 px-3 py-1 bg-gradient-to-br from-amber-200 via-yellow-400 to-amber-500 rounded-lg shadow-lg rotate-1">
-                               <Sparkles className="w-3 h-3 text-amber-900" />
-                               <span className="text-[9px] font-bold text-amber-950 uppercase tracking-widest">Master Volume</span>
-                            </div>
-                          </div>
-                          
-                          <div className="mt-12 flex flex-col items-center gap-2 opacity-0 group-hover/spine:opacity-100 transition-all duration-500 translate-y-4 group-hover/spine:translate-y-0">
-                             <span className="text-[9px] font-bold text-white/80 uppercase tracking-[0.3em]">Open Sanctuary</span>
-                             <ChevronDown className="w-4 h-4 text-white animate-bounce" />
-                          </div>
-                        </div>
-
-                        <div className="p-10 flex flex-col justify-center relative z-10 bg-black/20 backdrop-blur-md">
-                          <div className="flex items-start justify-between mb-6">
-                             <div className="space-y-2">
-                               <div className="flex items-center gap-3">
-                                  <h4 className="text-3xl font-serif font-bold text-[var(--color-primary-text-dark)] tracking-tight">Your Narrative Sanctuary</h4>
-                                  <div className="w-2 h-2 rounded-full bg-[var(--color-accent-amber)] animate-ping" />
-                               </div>
-                               <p className="text-sm text-[var(--color-secondary-text-dark)] font-serif italic flex items-center gap-2">
-                                 <PenTool className="w-3.5 h-3.5 opacity-50" /> {userChapters.length} Chapters Woven into Existence
-                               </p>
-                             </div>
-                             <div className="flex flex-col items-end gap-2">
-                                <div className="bg-white/5 text-[var(--color-secondary-text-dark)] px-4 py-1.5 rounded-2xl text-[9px] font-bold uppercase tracking-[0.2em] border border-white/10">
-                                    Private Access
-                                </div>
-                             </div>
-                          </div>
-                          
-                          <p className="text-[var(--color-secondary-text-dark)] text-lg font-serif leading-relaxed line-clamp-3 italic mb-10 border-l-2 border-[var(--color-accent-amber)]/20 pl-6">
-                             &quot;Every memory is a thread. This volume contains the raw essence of your journey—untouched by external eyes, yet ready to be shared as a gift to the world whenever you choose.&quot;
-                          </p>
-
-                          <div className="flex items-center gap-6">
-                            <button 
-                              onClick={() => setIsReadingSelf(true)}
-                              className="group relative flex items-center gap-3 px-10 py-5 bg-[var(--color-accent-amber)]/10 text-[var(--color-accent-amber)] border border-[var(--color-accent-amber)]/20 rounded-[20px] font-bold text-xs uppercase tracking-[0.2em] shadow-xl hover:bg-[var(--color-accent-amber)]/20 transition-all overflow-hidden"
-                            >
-                              <span className="relative z-10">Step Into Your World</span>
-                              <ArrowRight className="w-5 h-5 relative z-10 transition-transform group-hover:translate-x-1" />
-                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                            </button>
-                            
-                            <div className="h-10 w-px bg-slate-100 dark:bg-white/5" />
-                            
-                            <p className="text-[10px] text-slate-400 font-serif italic max-w-[120px] leading-tight">
-                              Contains thoughts from today&apos;s reflection.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.article>
-                  )}
-
                   {filteredStories.map((story, i) => {
                     const isExpanded = expandedStories.has(story.id);
                     const auraColor = 
@@ -827,6 +735,10 @@ export default function GlobalLibraryPage() {
                   <h2 className="text-3xl font-serif italic text-[var(--color-primary-text-dark)]">Soul Signals</h2>
                   <p className="text-sm text-[var(--color-secondary-text-dark)] font-serif italic mt-2">Your connections and echoes from the library.</p>
                </header>
+
+               <div className="mb-12">
+                 <EngagementSoulCard />
+               </div>
 
                <div className="mb-16">
                   <AuthorHeartbeat />
