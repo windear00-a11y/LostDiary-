@@ -73,7 +73,12 @@ export const LanguageOnboarding = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-neutral-950 overflow-hidden">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-neutral-950 overflow-hidden"
+    >
       {/* Immersive Background */}
       <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/10 blur-[140px] rounded-full animate-pulse" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-amber-600/10 blur-[140px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
@@ -185,6 +190,6 @@ export const LanguageOnboarding = () => {
            WinDear AI is Global
         </div>
       </motion.div>
-    </div>
+    </motion.div>
   );
 };
