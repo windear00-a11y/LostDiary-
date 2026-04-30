@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, ArrowLeft, X } from 'lucide-react';
+import { BookOpen, ArrowLeft, X, RefreshCw } from 'lucide-react';
 import { coreService, Chapter, Volume } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -51,51 +51,76 @@ export const BookView = () => {
   const [viewState, setViewState] = useState<'cover' | 'toc' | 'reader'>('cover');
   const [selectedChapterId, setSelectedChapterId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { setActiveView } = useUIStore();
 
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const user = await authService.getUser();
-        if (user) {
-          const [chaptersData, volumesData] = await Promise.all([
-            coreService.fetchChapters(user.id),
-            coreService.fetchVolumes(user.id)
-          ]);
-          
-          setChapters(chaptersData);
-          setVolumes(volumesData);
+  const loadData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const user = await authService.getUser();
+      if (user) {
+        const [chaptersData, volumesData] = await Promise.all([
+          coreService.fetchChapters(user.id),
+          coreService.fetchVolumes(user.id)
+        ]);
+        
+        setChapters(chaptersData);
+        setVolumes(volumesData);
 
-          // Use existing volume data for cover and opening instead of generating on the fly
-          if (volumesData && volumesData.length > 0) {
-            const currentVolume = volumesData[0];
-            setOpeningText(currentVolume.prologue || "Your story unfolds...");
-            setCoverData({
-              title: currentVolume.title || "The Story So Far",
-              summary: currentVolume.epigraph || "A journey through time, captured in memory.",
-              aura: currentVolume.aura || "Midnight Indigo"
-            });
-          } else if (chaptersData.length > 0) {
-            setOpeningText("Your story unfolds...");
-            setCoverData({
-              title: "Chapters of the Heart",
-              summary: "A journey through time, captured in memory.",
-              aura: "Midnight Indigo"
-            });
-          }
+        // Use existing volume data for cover and opening instead of generating on the fly
+        if (volumesData && volumesData.length > 0) {
+          const currentVolume = volumesData[0];
+          setOpeningText(currentVolume.prologue || "Your story unfolds...");
+          setCoverData({
+            title: currentVolume.title || "The Story So Far",
+            summary: currentVolume.epigraph || "A journey through time, captured in memory.",
+            aura: currentVolume.aura || "Midnight Indigo"
+          });
+        } else if (chaptersData.length > 0) {
+          setOpeningText("Your story unfolds...");
+          setCoverData({
+            title: "Chapters of the Heart",
+            summary: "A journey through time, captured in memory.",
+            aura: "Midnight Indigo"
+          });
         }
-      } catch (error) {
-        console.error("Failed to load data", error);
-        setError("Failed to load your LifeBook. Please check your connection.");
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error("Failed to load data", error);
+      setError("Failed to load your LifeBook. Please check your connection.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadData();
   }, []);
+
+  const handleSyncChapters = async () => {
+    if (!user) return;
+    setIsSyncing(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/chapters/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+         const data = await res.json();
+         throw new Error(data.error || "Failed to sync chapters");
+      }
+      await loadData();
+    } catch (e: any) {
+      console.error(e);
+      setError(e.message || "Failed to write chapters. Try again later.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   if (loading) {
     return <SkeletonLoader />;
@@ -109,7 +134,7 @@ export const BookView = () => {
         <div className="space-y-6 max-w-sm">
           <p className="text-rose-500 font-serif italic">{error}</p>
           <button 
-            onClick={() => window.location.reload()}
+            onClick={loadData}
             className="text-xs font-bold uppercase tracking-widest text-neutral-400 hover:underline"
           >
             Try Refreshing
@@ -140,9 +165,17 @@ export const BookView = () => {
           <h2 className="text-4xl font-serif italic text-white/30 tracking-tight">
             Your story is waiting to be written...
           </h2>
-          <p className="text-white/20 max-w-sm mx-auto leading-relaxed font-serif italic">
+          <p className="text-white/20 max-w-sm mx-auto leading-relaxed font-serif italic mb-8">
             जैसे-जैसे आप यादें साझा करेंगे, आपकी कहानी के पन्ने यहाँ खुद-ब-खुद जुड़ते जाएंगे।
           </p>
+          
+          <button
+            onClick={handleSyncChapters}
+            disabled={isSyncing}
+            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-serif italic transition-all disabled:opacity-50 flex items-center justify-center mx-auto gap-2"
+          >
+            {isSyncing ? <><RefreshCw className="w-4 h-4 animate-spin" /> Weaving the threads of your memory...</> : "Translate Memories into Chapters"}
+          </button>
         </div>
         
         <motion.div
@@ -158,7 +191,17 @@ export const BookView = () => {
   }
 
   return (
-    <div className="bg-transparent min-h-screen">
+    <div className="bg-transparent min-h-screen relative">
+      <div className="absolute top-4 right-4 z-50">
+        <button
+            onClick={handleSyncChapters}
+            disabled={isSyncing}
+            className="p-2 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-full transition-colors disabled:opacity-50"
+            title="Sync Latest Chapters"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
       <StoryReader 
         chapters={chapters} 
         volumes={volumes}
@@ -170,3 +213,4 @@ export const BookView = () => {
     </div>
   );
 };
+

@@ -53,29 +53,40 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Extract Life Events for unprocessed messages
-    const extractedEvents = [];
-    for (const msg of unprocessedMessages) {
-      const contentToProcess = msg.content;
-      if (!contentToProcess) continue;
+    // 2. Extract Life Events for unprocessed messages in batches
+    // Filter important messages first
+    const importantMessages = unprocessedMessages.filter(msg => msg.content && isImportantMessage(msg));
+    
+    if (importantMessages.length === 0) {
+      return new Response(JSON.stringify({ message: "No meaningful messages to sync yet." }), { status: 200 });
+    }
 
-      if (isImportantMessage(msg)) {
-        const eventData = await pipeline.extractLifeEvent(contentToProcess);
-        if (eventData) {
-          extractedEvents.push({
-            user_id: userId,
-            message_id: msg.id,
-            summary: eventData.summary,
-            emotion: eventData.emotion,
-            event_score: eventData.score || 5,
-            created_at: msg.created_at,
-            // Temporary field for grouping, will be removed or ignored by DB if not in schema
-            // We need to map it to chapter_id later
-            _temp_category: eventData.category,
-          });
-        }
-      } else {
-        // skip processing
+    const extractedEvents = [];
+    const BATCH_SIZE = 20; // Process 20 messages at a time to stay within token limits safely
+    
+    for (let i = 0; i < importantMessages.length; i += BATCH_SIZE) {
+      const batch = importantMessages.slice(i, i + BATCH_SIZE);
+      const batchPayload = batch.map(m => ({ id: m.id, content: m.content }));
+      
+      const batchResults = await pipeline.extractMultipleLifeEvents(batchPayload);
+      
+      for (const eventData of batchResults) {
+        if (!eventData || !eventData.message_id) continue;
+        
+        // Find the original message to get created_at
+        const originalMsg = batch.find(m => m.id === eventData.message_id);
+        if (!originalMsg) continue;
+
+        extractedEvents.push({
+          user_id: userId,
+          message_id: originalMsg.id,
+          summary: eventData.summary,
+          emotion: eventData.emotion,
+          event_score: eventData.score || 5,
+          created_at: originalMsg.created_at,
+          // Temporary field for grouping, will be removed or ignored by DB if not in schema
+          _temp_category: eventData.category,
+        });
       }
     }
 
@@ -133,18 +144,31 @@ export async function POST(req: Request) {
       if (insertEventsError) throw insertEventsError;
     }
 
-    // 3. Group all life events by chapter_id
+    // 3. Find which chapters actually had new events added in this run to save costs
+    const chaptersToUpdate = new Set(extractedEvents.map(e => e.chapter_id));
+
+    if (chaptersToUpdate.size === 0) {
+      return new Response(
+        JSON.stringify({
+          message: "Events processed, but no new narratives needed.",
+        }),
+        { status: 200 },
+      );
+    }
+
+    // Group all life events by chapter_id, but only for the chapters we are updating
     const { data: allEvents, error: allEventsError } = await supabase
       .from("life_events")
       .select("*, chapters(name)")
       .eq("user_id", userId)
+      .in("chapter_id", Array.from(chaptersToUpdate))
       .order("created_at", { ascending: true });
 
     if (allEventsError) throw allEventsError;
     if (!allEvents || allEvents.length === 0) {
       return new Response(
         JSON.stringify({
-          message: "Events extracted, but no new chapters needed yet.",
+          message: "Events extracted, but no events found for narrative update.",
         }),
         { status: 200 },
       );

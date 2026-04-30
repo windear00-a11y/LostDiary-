@@ -107,6 +107,70 @@ export class PipelineController {
   }
 
   // --- Logic moved from event-engine.ts & life-author.ts ---
+  public async extractMultipleLifeEvents(messages: { id: string, content: string }[]): Promise<any[]> {
+    if (!messages || messages.length === 0) return [];
+
+    const systemInstruction = `
+You are a behavioral intelligence system and an AI Pattern Detector.
+Goal: Convert an array of chat messages/diary entries into an array of structured insights tracking emotions, triggers, and patterns.
+
+Output format:
+{
+  "events": [
+    {
+      "message_id": "the original string id",
+      "summary": "1-line objective description of the event",
+      "raw_fragment": "The exact core phrasing used by the user",
+      "emotion": "Specific emotion word (e.g. sad, anxious, neutral)",
+      "trigger": "The root cause, person, or event. Null if unknown.",
+      "tags": ["array", "of", "pattern", "tags"],
+      "category": "Love | Work | Family | Health | Social | Growth",
+      "metrics": {
+        "emotion_intensity": 0-5,
+        "personal_relevance": 0-5
+      }
+    }
+  ]
+}
+Rules:
+- Output ONLY a valid JSON object with the "events" array.
+- Process EACH message provided. If a message is truly insignificant, you may omit it or score it 0.
+- Capture EXACT phrases in "raw_fragment".
+`;
+
+    try {
+      const payload = JSON.stringify(messages.map(m => ({ id: m.id, content: m.content })));
+      const response = await generateContentWithFallback({
+        model: "gemini-3-flash-preview",
+        contents: [{ role: "user", parts: [{ text: payload }] }],
+        config: { systemInstruction, temperature: 0.1, responseMimeType: "application/json" }
+      });
+      const text = response.text?.trim();
+      if (!text) return [];
+      
+      const parsed = JSON.parse(text);
+      const events = parsed.events || [];
+
+      return events.map((event: any) => {
+        event.category = mapToChapter(event.category || "");
+        
+        if (event.metrics) {
+          const scored = calculateEventScore(event.metrics);
+          event.score = scored.score;
+          event.eventType = scored.eventType;
+        } else {
+          event.score = 5;
+          event.eventType = 'minor';
+        }
+        return event;
+      });
+
+    } catch (error) {
+      console.error("Error extracting multiple life events:", error);
+      return [];
+    }
+  }
+
   public async extractLifeEvent(content: string): Promise<any | null> {
     const systemInstruction = `
 You are a behavioral intelligence system and an AI Pattern Detector.
