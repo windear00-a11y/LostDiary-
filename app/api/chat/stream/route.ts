@@ -524,8 +524,12 @@ ${memoriesContext}
                   ) {
                     searchResults.push(match);
                   }
+                  if (searchResults.length >= 10) break;
                 }
               }
+
+              // Ensure at most 10 overall search results to avoid token limits
+              searchResults = searchResults.slice(0, 10);
 
               if (searchResults.length === 0) {
                 return {
@@ -539,7 +543,7 @@ ${memoriesContext}
                 result: "Found past messages from the user:",
                 messages: searchResults.map((m: any) => ({
                   date: new Date(m.created_at).toLocaleDateString(),
-                  content: m.content,
+                  content: m.content?.slice(0, 500) + (m.content?.length > 500 ? "..." : ""),
                 })),
               };
             } catch (err: any) {

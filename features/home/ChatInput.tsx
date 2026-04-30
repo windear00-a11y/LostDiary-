@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
-import { Send, Brain, Flame } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Send, Brain, Flame, Compass, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useUIStore } from '@/lib/store/use-ui-store';
 
@@ -13,10 +13,22 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
   const [text, setText] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [isSpeedDialOpen, setIsSpeedDialOpen] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const speedDialRef = useRef<HTMLDivElement>(null);
   
   const { chatPersonaMode, setChatPersonaMode, isBrutalHonestyOn, setIsBrutalHonestyOn } = useUIStore();
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (speedDialRef.current && !speedDialRef.current.contains(event.target as Node)) {
+        setIsSpeedDialOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleScroll = () => {
     setIsScrolling(true);
@@ -80,23 +92,57 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
           onScroll={handleScroll}
           placeholder={disabled ? "Listening..." : "Whisper your thoughts..."}
           style={{ height: '48px' }}
-          className={`w-full px-6 py-3 min-h-[48px] max-h-[160px] bg-transparent border-none focus:ring-0 resize-none text-[15px] sm:text-base leading-relaxed outline-none overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} text-[var(--color-primary-text-dark)] placeholder:text-[var(--color-secondary-text-dark)] placeholder:italic transition-[height,opacity] duration-200 disabled:opacity-50 pl-24 pr-14`}
+          className={`w-full px-6 py-3 min-h-[48px] max-h-[160px] bg-transparent border-none focus:ring-0 resize-none text-[15px] sm:text-base leading-relaxed outline-none overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} text-[var(--color-primary-text-dark)] placeholder:text-[var(--color-secondary-text-dark)] placeholder:italic transition-[height,opacity] duration-200 disabled:opacity-50 pl-[3.25rem] pr-14`}
         />
 
-        <div className="absolute left-2 bottom-1.5 z-10 flex gap-0.5">
-          <button 
-             onClick={() => setChatPersonaMode(chatPersonaMode === 'mirror' ? 'guide' : 'mirror')}
-             title={`Persona: ${chatPersonaMode}`}
-             className={`p-2 rounded-full transition-colors ${chatPersonaMode === 'mirror' ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'}`}
+        <div className="absolute left-2 bottom-2 z-20" ref={speedDialRef}>
+          <AnimatePresence>
+            {isSpeedDialOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                transition={{ duration: 0.2 }}
+                className="absolute bottom-12 left-0 flex flex-col gap-2 mb-2 p-2 rounded-2xl bg-[#1c1c1e]/90 backdrop-blur-md border border-white/10 shadow-xl"
+              >
+                <div className="flex items-center gap-3 px-2 py-1">
+                  <button 
+                    onClick={() => {
+                      setChatPersonaMode(chatPersonaMode === 'mirror' ? 'guide' : 'mirror');
+                      setIsSpeedDialOpen(false);
+                    }}
+                    title={`Switch Persona`}
+                    className={`p-2.5 rounded-full transition-colors flex items-center gap-3 w-full hover:bg-white/5 whitespace-nowrap ${chatPersonaMode === 'mirror' ? 'text-emerald-500' : 'text-amber-500'}`}
+                  >
+                    {chatPersonaMode === 'mirror' ? <Compass size={18} /> : <Brain size={18} />}
+                    <span className="text-sm font-medium text-white/80">Switch to {chatPersonaMode === 'mirror' ? 'Guide' : 'Mirror'}</span>
+                  </button>
+                </div>
+                <div className="w-full h-[1px] bg-white/5" />
+                <div className="flex items-center gap-3 px-2 py-1">
+                  <button 
+                    onClick={() => {
+                      setIsBrutalHonestyOn(!isBrutalHonestyOn);
+                      setIsSpeedDialOpen(false);
+                    }}
+                    title={`Brutal Honesty: ${isBrutalHonestyOn ? 'On' : 'Off'}`}
+                    className={`p-2.5 rounded-full transition-colors flex items-center gap-3 w-full hover:bg-white/5 whitespace-nowrap ${isBrutalHonestyOn ? 'text-slate-400' : 'text-red-500'}`}
+                  >
+                    <Flame size={18} />
+                    <span className="text-sm font-medium text-white/80">{isBrutalHonestyOn ? 'Turn Off Brutal Honesty' : 'Turn On Brutal Honesty'}</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <button
+            onClick={() => setIsSpeedDialOpen(!isSpeedDialOpen)}
+            className={`w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300 ${isSpeedDialOpen ? 'bg-white/10 text-white' : `bg-transparent hover:bg-white/5 disabled:opacity-50 ${chatPersonaMode === 'mirror' ? 'text-amber-500/80 hover:text-amber-500' : 'text-emerald-500/80 hover:text-emerald-500'}`}`}
+            type="button"
+            disabled={disabled}
           >
-            <Brain size={16} />
-          </button>
-          <button 
-             onClick={() => setIsBrutalHonestyOn(!isBrutalHonestyOn)}
-             title={`Brutal Honesty: ${isBrutalHonestyOn ? 'On' : 'Off'}`}
-             className={`p-2 rounded-full transition-colors ${isBrutalHonestyOn ? 'text-red-500 hover:bg-red-500/10' : 'text-slate-600 hover:text-slate-400'}`}
-          >
-            <Flame size={16} />
+            {isSpeedDialOpen ? <X size={20} /> : (chatPersonaMode === 'mirror' ? <Brain size={20} /> : <Compass size={20} />)}
           </button>
         </div>
 
