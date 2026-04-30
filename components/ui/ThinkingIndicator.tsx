@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface ThinkingIndicatorProps {
@@ -7,9 +7,30 @@ interface ThinkingIndicatorProps {
   layout?: 'vertical' | 'horizontal';
 }
 
+const BACKGROUND_PROCESSES = [
+  "Understanding your thoughts...",
+  "Tuning into emotions...",
+  "Reflecting on the past...",
+  "Sensing the undertone...",
+  "Formulating a response..."
+];
+
 export const ThinkingIndicator = ({ step, layout = 'vertical' }: ThinkingIndicatorProps) => {
   const isHorizontal = layout === 'horizontal';
-  const displayedStep = step || 'Processing...';
+  const [localStepIndex, setLocalStepIndex] = useState(0);
+
+  useEffect(() => {
+    if (step && step !== 'Processing...') return;
+    
+    // Cycle every 2 seconds for a smooth fade-in fade-out wait experience
+    const interval = setInterval(() => {
+      setLocalStepIndex((prev) => (prev + 1) % BACKGROUND_PROCESSES.length);
+    }, 2000);
+    
+    return () => clearInterval(interval);
+  }, [step]);
+
+  const displayedStep = step && step !== 'Processing...' ? step : BACKGROUND_PROCESSES[localStepIndex];
 
   return (
     <div className={`flex ${isHorizontal ? 'flex-row items-center gap-3' : 'flex-col gap-2 py-4 px-2'}`}>
@@ -35,10 +56,10 @@ export const ThinkingIndicator = ({ step, layout = 'vertical' }: ThinkingIndicat
         <AnimatePresence mode="popLayout">
           <motion.p 
             key={displayedStep}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            transition={{ duration: 0.4, ease: 'easeInOut' }}
+            initial={{ opacity: 0, scale: 0.98, filter: "blur(2px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            exit={{ opacity: 0, scale: 1.02, filter: "blur(2px)" }}
+            transition={{ duration: 0.6, ease: 'easeInOut' }}
             className={`text-[10px] font-serif italic uppercase tracking-[0.2em] text-slate-500 absolute w-full ${isHorizontal ? 'truncate whitespace-nowrap' : ''}`}
           >
             {displayedStep}

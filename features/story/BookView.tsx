@@ -18,30 +18,6 @@ const SkeletonLoader = () => (
   </div>
 );
 
-const GhostBook = () => (
-  <div className="max-w-[650px] mx-auto font-serif opacity-40 select-none pointer-events-none">
-    <div className="text-center mb-16 space-y-4">
-      <div className="text-[10px] uppercase tracking-[0.5em] text-gray-300">Chapter I</div>
-      <div className="h-8 bg-white/5 rounded-lg w-48 mx-auto blur-[2px]" />
-      <div className="w-8 h-px bg-white/10 mx-auto mt-6" />
-    </div>
-    
-    <div className="space-y-10">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="space-y-4">
-          <div className="h-4 bg-white/5 rounded w-full blur-[3px]" />
-          <div className="h-4 bg-white/5 rounded w-full blur-[2px]" />
-          <div className="h-4 bg-white/5 rounded w-5/6 blur-[4px]" />
-        </div>
-      ))}
-    </div>
-
-    <div className="mt-32 text-center">
-      <div className="text-2xl tracking-[1em] text-gray-200">***</div>
-    </div>
-  </div>
-);
-
 export const BookView = () => {
   const { user } = useAuth();
   const [chapters, setChapters] = useState<Chapter[]>([]);
@@ -177,15 +153,6 @@ export const BookView = () => {
             {isSyncing ? <><RefreshCw className="w-4 h-4 animate-spin" /> Weaving the threads of your memory...</> : "Translate Memories into Chapters"}
           </button>
         </div>
-        
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-          className="mt-20"
-        >
-          <GhostBook />
-        </motion.div>
       </div>
     );
   }
