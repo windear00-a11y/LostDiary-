@@ -8,12 +8,9 @@ import { authService } from '@/lib/services/auth-service';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { StoryReader } from './StoryReader';
 // import { InsightsView } from './InsightsView';
-import { PipelineController } from '@/ai-core/pipeline-controller';
-import { analyzeEntries } from '@/ai-core/pattern-detector';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { LifeBookCover } from './LifeBookCover';
-import { TableOfContents } from './TableOfContents';
 
 const SkeletonLoader = () => (
   <div className="max-w-[700px] mx-auto pt-40 px-6">
@@ -64,28 +61,30 @@ export const BookView = () => {
       try {
         const user = await authService.getUser();
         if (user) {
-          const [chaptersData, volumesData, messagesData] = await Promise.all([
+          const [chaptersData, volumesData] = await Promise.all([
             coreService.fetchChapters(user.id),
-            coreService.fetchVolumes(user.id),
-            coreService.fetchMessages(user.id)
+            coreService.fetchVolumes(user.id)
           ]);
           
           setChapters(chaptersData);
           setVolumes(volumesData);
 
-          // Generate dynamic opening
-          if (chaptersData.length > 0) {
-            const pipeline = new PipelineController(process.env.NEXT_PUBLIC_GEMINI_API_KEY!);
-            const patterns = analyzeEntries(messagesData.map(m => m.content || ""));
-            const allEvents = chaptersData.flatMap(c => (c as any)?.events || []);
-            
-            const [opening, cover] = await Promise.all([
-              pipeline.generateOpening(allEvents),
-              pipeline.generateBookCoverData(chaptersData)
-            ]);
-            
-            setOpeningText(opening);
-            setCoverData(cover);
+          // Use existing volume data for cover and opening instead of generating on the fly
+          if (volumesData && volumesData.length > 0) {
+            const currentVolume = volumesData[0];
+            setOpeningText(currentVolume.prologue || "Your story unfolds...");
+            setCoverData({
+              title: currentVolume.title || "The Story So Far",
+              summary: currentVolume.epigraph || "A journey through time, captured in memory.",
+              aura: currentVolume.aura || "Midnight Indigo"
+            });
+          } else if (chaptersData.length > 0) {
+            setOpeningText("Your story unfolds...");
+            setCoverData({
+              title: "Chapters of the Heart",
+              summary: "A journey through time, captured in memory.",
+              aura: "Midnight Indigo"
+            });
           }
         }
       } catch (error) {

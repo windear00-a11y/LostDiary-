@@ -7,7 +7,6 @@ import { useRouter } from 'next/navigation';
 import { Chapter, Volume } from '@/lib/services/core-service';
 import { libraryService, SealingResult } from '@/lib/services/library-service';
 import { GoogleGenAI } from "@google/genai";
-import { generateContentWithFallback } from '@/lib/genai-utils';
 import { NarrativeMap } from '@/components/ui/NarrativeMap';
 import { useChapterEngagement } from './hooks/use-chapter-engagement';
 
@@ -217,24 +216,30 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
     setTimeout(() => setToastMessage(null), 5000);
   };
 
-  const analyzeMood = useCallback(async (content: string) => {
-    if (moodCache[content.substring(0, 50)]) {
-      setMood(moodCache[content.substring(0, 50)]);
+  const analyzeMood = useCallback((content: string) => {
+    const key = content.substring(0, 50);
+    if (moodCache[key]) {
+      setMood(moodCache[key]);
       return;
     }
     
-    try {
-      const response = await generateContentWithFallback({
-        model: "gemini-3.1-pro-preview",
-        contents: `Analyze the mood of this story paragraph: "${content.substring(0, 200)}..." Return only one word: Joyful, Tense, Melancholic, or Serene.`,
-      });
-      const detectedMood = response.text?.trim() as string;
-      if (moodBgColors[detectedMood]) {
-        setMood(detectedMood);
-        setMoodCache(prev => ({ ...prev, [content.substring(0, 50)]: detectedMood }));
-      }
-    } catch (error) {
-      console.error("Mood analysis error", error);
+    // Simple heuristic to replace expensive AI call
+    const lowerContent = content.toLowerCase();
+    let detectedMood = 'Default';
+    
+    if (lowerContent.match(/\b(happy|joy|light|laugh|smile|excited|wonderful|beautiful|glad)\b/)) {
+      detectedMood = 'Joyful';
+    } else if (lowerContent.match(/\b(tense|fear|afraid|scared|nervous|worry|anxious|sudden|dark)\b/)) {
+      detectedMood = 'Tense';
+    } else if (lowerContent.match(/\b(sad|cry|tears|lost|alone|lonely|hurt|pain|grief|sorrow)\b/)) {
+      detectedMood = 'Melancholic';
+    } else if (lowerContent.match(/\b(calm|peace|quiet|breathe|serene|still|soft|gentle|relax)\b/)) {
+      detectedMood = 'Serene';
+    }
+    
+    if (moodBgColors[detectedMood]) {
+      setMood(detectedMood);
+      setMoodCache(prev => ({ ...prev, [key]: detectedMood }));
     }
   }, [moodCache]);
 

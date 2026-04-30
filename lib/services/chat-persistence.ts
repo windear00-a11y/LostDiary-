@@ -28,6 +28,7 @@ export const chatPersistence = {
       role: 'diary';
       type: 'text';
       content: string;
+      metadata?: Record<string, any>;
     }
   ) => {
     return await supabase.from('chat_messages').insert(data);

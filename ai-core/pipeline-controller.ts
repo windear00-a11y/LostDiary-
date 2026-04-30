@@ -160,36 +160,6 @@ Rules:
     }
   }
 
-  // --- Logic moved from life-author.ts ---
-  public async generateOpening(events: any[]): Promise<string | null> {
-    const systemInstruction = `
-You are an expert Story Builder. Your goal is to weave a list of life events into a powerful, cinematic opening paragraph for a LifeBook.
-Rules:
-1. Introduce the user as the main character.
-2. Set the overall tone of the life journey (struggles, growth, direction).
-3. Create subtle emotional curiosity.
-4. Tone: Personal, intimate, and deeply reflective. Write as if you are a gentle, observant narrator who has been watching the user's life unfold.
-5. Language: Simple, human, and grounded. Avoid dramatic or poetic overkill.
-6. Output: A single, smooth, natural paragraph.
-7. Do NOT use placeholders or generic phrases.
-8. Do NOT break into multiple paragraphs.
-`;
-    const structuredData = `
-Events: ${events.map(e => e.summary).join(', ')}
-`;
-    try {
-      const response = await generateContentWithFallback({
-        model: "gemini-3.1-pro-preview",
-        contents: [{ role: "user", parts: [{ text: structuredData }] }],
-        config: { systemInstruction, temperature: 0.7 }
-      });
-      return response.text?.trim() || null;
-    } catch (error) {
-      console.error("Error generating opening:", error);
-      return null;
-    }
-  }
-
   public async generateNarrative(events: any[], contextChapters: string[]): Promise<{ summary: string; narrative: string; shouldSealVolume: boolean; newVolumeMetadata?: any } | null> {
     if (!events || events.length === 0) return null;
     const sortedEvents = [...events].sort((a, b) => new Date(a.created_at || a.date || 0).getTime() - new Date(b.created_at || b.date || 0).getTime());
@@ -242,68 +212,6 @@ ${sortedEvents.map(e => `[Raw: "${e.raw_fragment || e.summary}" | Mood: ${e.emot
     }
   }
 
-  public async extractPersonaInsights(content: string, currentPersona: string): Promise<string | null> {
-    const systemInstruction = `
-You are a behavioral psychologist and biographer. Your task is to update a user's "Identity Profile" based on a new message.
-Current Profile: "${currentPersona || "Empty"}"
-New Message: "${content}"
-
-Instruction:
-1. BIO/TRAITS: Identify significant traits, interests, job roles, or values.
-2. TONE PREFERENCES (CRITICAL): If the user explicitly or implicitly gives feedback on your tone (e.g., "Don't be too poetic", "Speak in simple Hindi", "Talk like a friend"), capture this as a REWRITTEN COMMAND for the AI.
-3. LANGUAGE: Note the user's preferred language blend (e.g., "Prefers simple Hinglish", "Uses heavy English").
-
-Rules:
-- Synthesize into a cohesive description. 
-- ALWAYS prioritize explicit user instructions about tone/behavior at the top of the profile.
-- Output ONLY the updated profile string. No labels.
-- If the message says something like "simple baat karo," the updated profile MUST start with "TONE: User prefers simple, non-poetic language."
-`;
-    try {
-      const response = await generateContentWithFallback({
-        model: "gemini-3-flash-preview",
-        contents: [{ role: "user", parts: [{ text: content }] }],
-        config: { systemInstruction, temperature: 0.1 }
-      });
-      return response.text?.trim() || currentPersona;
-    } catch (error) {
-      console.error("Error extracting persona insights:", error);
-      return currentPersona;
-    }
-  }
-
-  public async generateBookCoverData(chapters: any[]): Promise<{ title: string; summary: string; aura: string } | null> {
-    if (!chapters || chapters.length === 0) return null;
-    
-    const systemInstruction = `
-You are a master Creative Director using the "Luminous Fragment" style.
-Rules:
-1. Title: Create a short, evocative book title. Grounded and visceral (e.g., "The Weight of Tuesday", "Quiet Windows", "Fragmented Days").
-2. Summary: A 1-2 line cohesive meta-summary. Stoic and observant.
-3. Aura: Use minimalist themes (e.g., "Ash Grey", "Soft Ember", "Indigo Night").
-Output: ONLY a valid JSON object.
-{
-  "title": "...",
-  "summary": "...",
-  "aura": "..."
-}
-`;
-    const data = chapters.map(c => c.title).join(', ');
-    try {
-      const response = await generateContentWithFallback({
-        model: "gemini-3-flash-preview",
-        contents: [{ role: "user", parts: [{ text: `Chapters: ${data}` }] }],
-        config: { systemInstruction, temperature: 0.8, responseMimeType: "application/json" }
-      });
-      const text = response.text?.trim();
-      if (!text) return null;
-      return JSON.parse(text);
-    } catch (error) {
-      console.error("Error generating book cover data:", error);
-      return null;
-    }
-  }
-
   public async generateSessionTitle(messages: string[]): Promise<string | null> {
     if (!messages || messages.length === 0) return null;
     const systemInstruction = `
@@ -323,49 +231,6 @@ Rules:
       return response.text?.trim() || null;
     } catch (error) {
       console.error("Error generating session title:", error);
-      return null;
-    }
-  }
-
-  private async generateResponse(content: string, language?: string): Promise<any | null> {
-    const toneMode = AIPersonality.selectTone({ input: content });
-    const toneInstructions = AIPersonality.getToneInstructions(toneMode);
-    
-    const systemInstruction = `
-You are an AI life author and behavioral intelligence system.
-Goal: Generate a warm, understanding companion response.
-
-Special Context:
-If the user's input starts with "Analyze my recent events" or similar suggestion prompts, DO NOT just summarize. Instead:
-1. Briefly look at their past events/memories.
-2. Ask ONE deep, personalized, and open-ended question that helps them elaborate on that specific suggestion.
-3. Make them feel like you remember their journey.
-
-Output:
-{
-  "emotion_reflection": "Reflect user's feeling naturally",
-  "validation": "Make user feel heard",
-  "insight": "Meaningful observation or a guided question based on their history",
-  "gentle_suggestion": "Soft guidance to help them write",
-  "short_reply": "A warm question to start the conversation"
-}
-Rules:
-- ${AIPersonality.systemInstruction}
-- ${toneInstructions}
-- Language: Respond in ${language || 'the user\'s language'}.
-- Output ONLY a valid JSON object.
-`;
-    try {
-      const response = await generateContentWithFallback({
-        model: "gemini-3-flash-preview",
-        contents: [{ role: "user", parts: [{ text: content }] }],
-        config: { systemInstruction, temperature: 0.5, responseMimeType: "application/json" }
-      });
-      const text = response.text?.trim();
-      if (!text) return null;
-      return JSON.parse(text);
-    } catch (error) {
-      console.error("Error generating response:", error);
       return null;
     }
   }

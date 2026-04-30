@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { coreService, UserProfile, IntelligenceProfile } from '@/lib/services/core-service';
 import { getGenAI } from '@/lib/genai';
-import { generateContentWithFallback } from '@/lib/genai-utils';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Camera, Sparkles, LogOut, Save, Edit2, Shield, Send, Book, Handshake, ChevronRight, MessageSquare, Heart, ChevronDown, ChevronUp, MoreVertical, Trash2, ExternalLink, BookOpen } from 'lucide-react';
@@ -151,34 +150,14 @@ export default function ProfilePage() {
         .map(m => m.content)
         .join('\n');
 
-      const promptResponse = await generateContentWithFallback({
-        model: "gemini-3.1-pro-preview",
-        contents: `Generate a visual prompt for a professional, abstract profile avatar. 
-Use the Soul Signature and Mirror Intelligence as the primary source of truth for the persona's essence.
-
-PRIMARY SOURCE - Soul Signature:
-${personalitySummary || "A deep, unfolding mystery."}
-
-SECONDARY SOURCE - Mirror Intelligence:
-${mirrorInsights || "Patterns still forming."}
-
-SUPPORTING CONTEXT - Recent Thoughts:
-${recentContext}
-
-The avatar must be highly SYMBOLIC and ABSTRACT. It should represent their unique spiritual or psychological signature using geometric patterns, ethereal structures, cosmic phenomena, or organic textures. 
-IMPORTANT: DO NOT describe a literal portrait of a person.
-
-Output ONLY the visual description for an image generation tool.`,
-      });
-
-      const visualPrompt = promptResponse.text || "A serene and abstract representation of a thoughtful soul, soft colors, ethereal light.";
+      const visualPrompt = personalitySummary ? personalitySummary.slice(0, 200) : "A serene and abstract representation of a thoughtful soul, soft colors, ethereal light.";
 
       const imageResponse = await ai.models.generateContent({
         model: 'imagen-3',
         contents: {
           parts: [
             {
-              text: `Artistic minimalist avatar: ${visualPrompt}. High precision, ethereal glow, dark sophisticated background, masterpiece quality, clean lines.`,
+              text: `Artistic minimalist abstract avatar: ${visualPrompt}. High precision, ethereal glow, dark sophisticated background, masterpiece quality, clean lines.`,
             },
           ],
         },

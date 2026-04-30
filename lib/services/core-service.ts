@@ -177,19 +177,23 @@ export const coreService = {
       mediaUrl = finalContent;
     }
 
-    if (onUpdate) {
-      // Stream path
-      const response = await fetch('/api/chat/stream', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id,
-          session_id,
-          messages: [{ role: 'user', content: finalContent }],
-          language: metadata?.language || 'en',
-          timezone: metadata?.timezone
-        })
-      });
+    if (!onUpdate) {
+       console.warn("coreService.sendMessage called without onUpdate. Streaming is REQUIRED. Providing a dummy function.");
+       onUpdate = () => {};
+    }
+
+    // Stream path
+    const response = await fetch('/api/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id,
+        session_id,
+        messages: [{ role: 'user', content: finalContent }],
+        language: metadata?.language || 'en',
+        timezone: metadata?.timezone
+      })
+    });
 
       if (!response.ok) {
         let text = '';
@@ -369,29 +373,6 @@ export const coreService = {
         processing_status: 'saved' // fallback
       } as ChatMessage;
 
-    } else {
-      // Legacy path
-      const response = await fetch('/api/chat/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id,
-          session_id,
-          role: 'user',
-          type,
-          content: finalContent,
-          media_url: mediaUrl,
-          metadata: metadata || {}
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to send message');
-      }
-
-      return response.json();
-    }
   },
 
   async uploadMedia(file: File, userId: string): Promise<string> {
