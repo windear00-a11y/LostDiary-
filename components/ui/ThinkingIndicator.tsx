@@ -1,15 +1,19 @@
 'use client';
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface ThinkingIndicatorProps {
   step?: string;
+  layout?: 'vertical' | 'horizontal';
 }
 
-export const ThinkingIndicator = ({ step }: ThinkingIndicatorProps) => {
+export const ThinkingIndicator = ({ step, layout = 'vertical' }: ThinkingIndicatorProps) => {
+  const isHorizontal = layout === 'horizontal';
+  const displayedStep = step || 'Processing...';
+
   return (
-    <div className="flex flex-col gap-2 py-4 px-2">
-      <div className="flex gap-1.5 items-center">
+    <div className={`flex ${isHorizontal ? 'flex-row items-center gap-3' : 'flex-col gap-2 py-4 px-2'}`}>
+      <div className="flex gap-1.5 items-center shrink-0">
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
@@ -23,19 +27,27 @@ export const ThinkingIndicator = ({ step }: ThinkingIndicatorProps) => {
               delay: i * 0.2,
               ease: "easeInOut"
             }}
-            className="w-2 h-2 bg-amber-500/50 rounded-full"
+            className={`${isHorizontal ? 'w-1.5 h-1.5' : 'w-2 h-2'} bg-amber-500/50 rounded-full`}
           />
         ))}
       </div>
-      {step && (
-        <motion.p 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-[10px] font-serif italic uppercase tracking-[0.2em] text-slate-500"
-        >
-          {step}
-        </motion.p>
-      )}
+      <div className={`relative ${isHorizontal ? 'flex-1 overflow-hidden h-4' : 'h-4 w-full overflow-hidden'}`}>
+        <AnimatePresence mode="popLayout">
+          <motion.p 
+            key={displayedStep}
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -5 }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+            className={`text-[10px] font-serif italic uppercase tracking-[0.2em] text-slate-500 absolute w-full ${isHorizontal ? 'truncate whitespace-nowrap' : ''}`}
+          >
+            {displayedStep}
+          </motion.p>
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
+
+
+

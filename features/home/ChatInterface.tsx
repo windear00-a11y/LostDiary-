@@ -403,19 +403,9 @@ export const ChatInterface = () => {
                         <motion.div 
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
-                          className="mt-4 pt-4 border-t border-white/5 flex items-center gap-3"
+                          className="mt-4 pt-4 border-t border-white/5"
                         >
-                          <div className="flex gap-1.5">
-                            {[0, 1, 2].map((i) => (
-                              <motion.div
-                                key={i}
-                                animate={{ opacity: [0.3, 1, 0.3] }}
-                                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
-                                className="w-1.5 h-1.5 bg-[var(--color-accent-amber)] rounded-full"
-                              />
-                            ))}
-                          </div>
-                          <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--color-secondary-text-dark)]">{msg.thinking_step}</span>
+                          <ThinkingIndicator step={msg.thinking_step} layout="horizontal" />
                         </motion.div>
                       )}
                       
