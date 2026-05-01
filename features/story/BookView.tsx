@@ -2,15 +2,16 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { BookOpen, ArrowLeft, X, RefreshCw } from 'lucide-react';
+import { BookOpen, ArrowLeft, X, RefreshCw, AlertTriangle, Send } from 'lucide-react';
 import { coreService, Chapter, Volume } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { StoryReader } from './StoryReader';
-// import { InsightsView } from './InsightsView';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { LifeBookCover } from './LifeBookCover';
+import { toast } from 'sonner';
+import { reportIncident } from '@/lib/utils/telemetry';
 
 const SkeletonLoader = () => (
   <div className="max-w-[700px] mx-auto pt-40 px-6">
@@ -29,6 +30,7 @@ export const BookView = () => {
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isReporting, setIsReporting] = useState(false);
   const { setActiveView } = useUIStore();
 
   const loadData = async () => {
@@ -79,22 +81,70 @@ export const BookView = () => {
     if (!user) return;
     setIsSyncing(true);
     setError(null);
-    try {
-      const res = await fetch('/api/chapters/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      if (!res.ok) {
-         const data = await res.json();
-         throw new Error(data.error || "Failed to sync chapters");
+    
+    // We'll use a promise toast to show progress
+    const syncPromise = new Promise(async (resolve, reject) => {
+      try {
+        const res = await fetch('/api/chapters/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id }),
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+           throw new Error(data.error || "Failed to sync chapters");
+        }
+        
+        // Check if there was actually anything to sync
+        if (data.message && (data.message.includes("already processed") || data.message.includes("No meaningful messages"))) {
+           toast.info(data.message);
+        }
+        
+        await loadData();
+        resolve(data);
+      } catch (e: any) {
+        console.error(e);
+        setError(e.message || "Something went wrong while weaving your story.");
+        reject(e);
       }
-      await loadData();
-    } catch (e: any) {
-      console.error(e);
-      setError(e.message || "Failed to write chapters. Try again later.");
+    });
+
+    toast.promise(syncPromise, {
+      loading: 'Conversing with memories...',
+      success: 'Your story has been expanded.',
+      error: (err) => `Failed: ${err.message}`,
+    });
+
+    try {
+      await syncPromise;
+    } catch (e) {
+      // Error handled by catch in syncPromise and toast.promise
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleReportIssue = async () => {
+    if (!error) return;
+    setIsReporting(true);
+    try {
+      const success = await reportIncident({
+        message: error,
+        category: 'error',
+        metadata: {
+          context: 'Chapter Sync Failure',
+          chaptersCount: chapters.length
+        }
+      });
+      if (success) {
+        toast.success("Log sent to developers. We'll fix this.");
+      } else {
+        toast.error("Cloud connection failed.");
+      }
+    } finally {
+      setIsReporting(false);
     }
   };
 
@@ -107,14 +157,31 @@ export const BookView = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-10 text-center">
-        <div className="space-y-6 max-w-sm">
-          <p className="text-rose-500 font-serif italic">{error}</p>
-          <button 
-            onClick={loadData}
-            className="text-xs font-bold uppercase tracking-widest text-neutral-400 hover:underline"
-          >
-            Try Refreshing
-          </button>
+        <div className="space-y-8 max-w-sm">
+          <div className="mx-auto w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center">
+            <AlertTriangle className="w-8 h-8 text-rose-500" />
+          </div>
+          <div>
+            <p className="text-rose-500 font-serif italic text-lg mb-2">{error}</p>
+            <p className="text-white/30 text-xs leading-relaxed">
+              We encountered a glitch while gathering your memories. You can try again or let the developers know.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={() => { setError(null); loadData(); }}
+              className="px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-serif italic transition-all border border-white/5"
+            >
+              Try Again
+            </button>
+            <button 
+              disabled={isReporting}
+              onClick={handleReportIssue}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-2xl text-[10px] uppercase font-bold tracking-widest transition-all disabled:opacity-50"
+            >
+              {isReporting ? "Sending log..." : "Report to Developer"} <Send className="w-3 h-3" />
+            </button>
+          </div>
         </div>
       </div>
     );

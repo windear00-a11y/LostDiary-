@@ -3,9 +3,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BridgeHeader } from '@/components/bridge/BridgeHeader';
-import { Send, Handshake, AlertTriangle, ArrowLeft, Sparkles, MessageSquare, Heart, Shield, MoreHorizontal, Compass } from 'lucide-react';
+import { Send, Handshake, AlertTriangle, ArrowLeft, Sparkles, MessageSquare, Heart, Shield, MoreHorizontal, Compass, RefreshCw, Send as SendIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { reportIncident } from '@/lib/utils/telemetry';
 
 export default function BridgePage({ params }: { params: Promise<{ id: string }> }) {
   const { id: bridgeId } = React.use(params);
@@ -18,6 +19,7 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
   const [error, setError] = useState<string|null>(null);
   const [resonanceMsg, setResonanceMsg] = useState<string|null>(null);
   const [activeMessageId, setActiveMessageId] = useState<string | null>(null);
+  const [isReporting, setIsReporting] = useState(false);
   
   const endOfMessagesRef = useRef<HTMLDivElement>(null);
 
@@ -60,7 +62,26 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
         setResonanceMsg(data.message);
         setTimeout(() => setResonanceMsg(null), 10000);
     } catch (e) {
-        alert("Couldn't feel the resonance.");
+        toast.error("Couldn't feel the resonance right now.");
+    }
+  };
+
+  const handleReportIssue = async () => {
+    if (!error) return;
+    setIsReporting(true);
+    try {
+      const success = await reportIncident({
+        message: error,
+        category: 'bug',
+        metadata: { bridgeId, messagesCount: messages.length }
+      });
+      if (success) {
+        toast.success("Log sent. We'll look into this bridge failure.");
+      } else {
+        toast.error("Failed to connect to error logs.");
+      }
+    } finally {
+      setIsReporting(false);
     }
   };
 
@@ -81,21 +102,43 @@ export default function BridgePage({ params }: { params: Promise<{ id: string }>
              setBridgeData((prev: any) => ({...prev, status: 'broken'}));
              setError(data.message);
          } else {
-             alert(data.error || 'Failed to send message');
+             toast.error(data.error || 'Failed to send message');
          }
       } else {
          setInputMessage('');
          fetchBridge();
       }
     } catch (e) {
-       alert("Network Error");
+       toast.error("Network Error: Connection to the bridge is unstable.");
     } finally {
        setSending(false);
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white">Connecting to the bridge...</div>;
-  if (!bridgeData && error) return <div className="min-h-screen bg-black flex items-center justify-center text-rose-500">{error}</div>;
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center text-white/50 font-serif italic">Connecting to the bridge...</div>;
+  if (!bridgeData && error) return (
+     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 text-center bg-[#0A0A0B]">
+        <div className="max-w-xs space-y-6">
+           <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto mb-4" />
+           <p className="text-rose-500 font-serif italic text-lg">{error}</p>
+           <div className="flex flex-col gap-3 pt-4">
+              <button 
+                onClick={() => window.location.reload()}
+                className="w-full py-4 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all border border-white/10"
+              >
+                Retry Connection
+              </button>
+              <button 
+                disabled={isReporting}
+                onClick={handleReportIssue}
+                className="w-full py-4 bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 rounded-xl text-[10px] uppercase font-bold tracking-widest transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isReporting ? "Sending log..." : "Report Bridge Error"} <SendIcon className="w-3 h-3" />
+              </button>
+           </div>
+        </div>
+     </div>
+  );
 
   return (
     <div className="h-[100dvh] bg-[#0A0A0B] flex flex-col relative overflow-hidden text-slate-200">

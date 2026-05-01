@@ -65,7 +65,7 @@ class ErrorBoundaryInner extends Component<Props, State> {
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-gray-900">Something went wrong</h1>
               <p className="mt-2 text-sm text-gray-500">
-                We've automatically logged this issue and our team will look into it. 
+                We&apos;ve automatically logged this issue and our team will look into it. 
                 Please try reloading the page.
               </p>
             </div>
