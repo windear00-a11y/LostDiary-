@@ -25,6 +25,32 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    
+    // Send to telemetry endpoint
+    try {
+      const errorData = {
+        error_message: error.message || String(error),
+        error_stack: error.stack,
+        route: window.location.pathname,
+        user_agent: navigator.userAgent,
+        metadata: {
+          componentStack: errorInfo.componentStack,
+          screen: `${window.innerWidth}x${window.innerHeight}`,
+          language: navigator.language,
+        }
+      };
+
+      fetch("/api/telemetry/errors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(errorData),
+      }).catch(err => {
+        // Silently fail if telemetry fails
+        console.error("Failed to send error telemetry");
+      });
+    } catch (e) {
+      // Ignore
+    }
   }
 
   private handleRetry = () => {
