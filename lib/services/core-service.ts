@@ -214,6 +214,8 @@ export const coreService = {
         }));
       }
 
+      const responseSessionId = response.headers.get('x-session-id') || session_id;
+
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let aiFullContent = '';
@@ -349,7 +351,7 @@ export const coreService = {
         return {
           id: `diary-err-${Date.now()}`,
           user_id,
-          session_id,
+          session_id: responseSessionId,
           role: 'diary',
           type: 'text',
           content: errorMessage,
@@ -363,14 +365,14 @@ export const coreService = {
       return {
         id: `diary-${Date.now()}`,
         user_id,
-        session_id,
+        session_id: responseSessionId,
         role: 'diary',
         type: 'text',
         content: aiFullContent,
         media_url: null,
         metadata: {},
         created_at: new Date().toISOString(),
-        processing_status: 'saved' // fallback
+        processing_status: 'saved' // fallback, will be accurately fetched by frontend
       } as ChatMessage;
 
   },
@@ -509,7 +511,7 @@ export const coreService = {
   },
 
   // Diary Entries (Raw Writing)
-  async saveDiaryEntry(userId: string, content: string, metadata?: any): Promise<DiaryEntry> {
+  async saveDiaryEntry(userId: string, content: string, metadata?: any): Promise<{entry: DiaryEntry, processingStatus?: string}> {
     const response = await fetch('/api/journal/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -521,8 +523,8 @@ export const coreService = {
       throw new Error(err.error || 'Failed to save diary entry');
     }
 
-    const { entry } = await response.json();
-    return entry;
+    const { entry, processingStatus } = await response.json();
+    return { entry, processingStatus };
   },
 
   async fetchDiaryEntries(userId: string): Promise<DiaryEntry[]> {

@@ -209,7 +209,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, entry });
+    return NextResponse.json({ success: true, entry, processingStatus });
   } catch (error: any) {
     console.error("Error in journal save route:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

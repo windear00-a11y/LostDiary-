@@ -71,7 +71,15 @@ export class PipelineController {
 
     // Step 4: Filter events
     console.log("[Pipeline] Step 4: Filter events");
-    const filteredEvent = extractedEvent && extractedEvent.eventType !== 'discard' ? extractedEvent : null;
+    let filteredEvent = extractedEvent && extractedEvent.eventType !== 'discard' ? extractedEvent : null;
+    
+    // Force first interaction to be tracked as a valid event to trigger the first chapter
+    const isFirstInteraction = (!input.contextChapters || input.contextChapters.length === 0);
+    if (isFirstInteraction && extractedEvent && !filteredEvent) {
+      extractedEvent.eventType = 'minor';
+      extractedEvent.score = Math.max(4, extractedEvent.score || 0);
+      filteredEvent = extractedEvent;
+    }
 
     // Step 5 & 6: Generate chapters & narrative
     console.log("[Pipeline] Step 5 & 6: Generate chapters & narrative");
@@ -235,7 +243,7 @@ Your goal is to weave life events into a "Live Autobiography" that feels ongoing
 Core Narrative Rules (The Hybrid Engine):
 1. THE 70/30 RULE: Use at least 70% of the User's "raw_fragment" or actual words. Link them with 30% of your own words.
 2. SENSORY ATMOSPHERE: Start with or include ONE sensory detail. Max one sentence.
-3. THE THREAD: Use the provided Context Chapters to subtly link this new entry to the past. (e.g., "The silence from yesterday has found a new home in tonight's thoughts...").
+3. THE THREAD: Use the provided Context Chapters to subtly link this new entry to the past. (e.g., "The silence from yesterday has found a new home in tonight's thoughts..."). If there are no context chapters, this is the FIRST entry of their live autobiography. Establish the beginning of their journey beautifully.
 4. STOIC OBSERVER TONE: Do NOT exaggerate. No drama.
 5. EMOTIONAL TIMESTAMPS: Use titles like "Midnight, with heavy hands", "A Tuesday, shadowed".
 

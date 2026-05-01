@@ -9,6 +9,7 @@ import { ThinkingIndicator } from '@/components/ui/ThinkingIndicator';
 import { User, Sparkles, X, Shield, Plus, MessageSquare } from 'lucide-react';
 import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
+import { getSupabase } from '@/lib/supabase';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
 import { NudgeService } from '@/lib/services/nudge-service';
@@ -214,6 +215,39 @@ export const ChatInterface = () => {
             processing_status: result.processing_status
           } : m
         ));
+        
+        // Wait for the background AI extraction Pipeline to finish!
+        // We poll the 'chat_sessions' table up to 6 times to accurately trigger 
+        // the Memory Wave portal animation ONLY when an Event or Chapter is created!
+        const currentSessionId = result.session_id || sessionId;
+        if (currentSessionId && currentSessionId !== 'new') {
+          setSessionId(currentSessionId);
+          const supabase = getSupabase();
+          if (supabase) {
+            let attempts = 0;
+            const checkStatus = async () => {
+              if (attempts > 6) return; // give up after ~12s
+              attempts++;
+              const { data } = await supabase.from('chat_sessions')
+                .select('processing_status').eq('id', currentSessionId).single();
+              
+              if (data && (data.processing_status === 'woven' || data.processing_status === 'saved')) {
+                // Update final UI message state
+                setMessages(prev => prev.map(m => 
+                  m.id === aiTempId ? { ...m, processing_status: data.processing_status } : m
+                ));
+                // Fire the portal integration animation!
+                useUIStore.getState().triggerMemorySync();
+              } else if (data && data.processing_status === 'observed') {
+                // Just an observation, no visual wave needed!
+                return;
+              } else {
+                setTimeout(checkStatus, 2000);
+              }
+            };
+            setTimeout(checkStatus, 2000);
+          }
+        }
       }
     } catch (error: any) {
       console.error("Failed to sync message with backend:", error);
@@ -246,9 +280,41 @@ export const ChatInterface = () => {
     }
   };
 
+  const getThemeBackground = () => {
+    if (isBrutalHonestyOn) {
+      return 'radial-gradient(circle at 50% 0%, rgba(225, 29, 72, 0.15) 0%, transparent 60%), radial-gradient(circle at 10% 80%, rgba(225, 29, 72, 0.05) 0%, transparent 50%)';
+    }
+    return chatPersonaMode === 'mirror' 
+      ? 'radial-gradient(circle at 50% 0%, var(--color-accent-glow) 0%, transparent 60%), radial-gradient(circle at 10% 80%, rgba(255, 158, 94, 0.05) 0%, transparent 50%)' 
+      : 'radial-gradient(circle at 50% 0%, rgba(16, 185, 129, 0.15) 0%, transparent 60%), radial-gradient(circle at 10% 80%, rgba(16, 185, 129, 0.05) 0%, transparent 50%)';
+  };
+
+  const getThemeColorClass = () => {
+    if (isBrutalHonestyOn) return 'text-rose-500';
+    return chatPersonaMode === 'mirror' ? 'text-[var(--color-accent-amber)]' : 'text-emerald-500';
+  };
+
+  const getThemeBgClass10 = () => {
+    if (isBrutalHonestyOn) return 'bg-rose-500/10';
+    return chatPersonaMode === 'mirror' ? 'bg-[var(--color-accent-amber)]/10' : 'bg-emerald-500/10';
+  };
+
+  const getThemeBgClass20 = () => {
+    if (isBrutalHonestyOn) return 'bg-rose-500/20';
+    return chatPersonaMode === 'mirror' ? 'bg-[var(--color-accent-amber)]/20' : 'bg-emerald-500/20';
+  };
+  
+  const getThemeShadowClass = () => {
+     if (isBrutalHonestyOn) return 'shadow-[0_0_40px_rgba(225,29,72,0.05)]';
+     return chatPersonaMode === 'mirror' ? 'shadow-[0_0_40px_rgba(255,158,94,0.05)]' : 'shadow-[0_0_40px_rgba(16,185,129,0.05)]';
+  };
+
   return (
     <div className="flex flex-col h-full bg-transparent text-[var(--color-primary-text-dark)] relative overflow-hidden font-sans">
-      <div className="atmosphere pointer-events-none" />
+      <div 
+        className="absolute inset-0 pointer-events-none transition-all duration-1000 ease-in-out opacity-70 blur-[80px]"
+        style={{ background: getThemeBackground() }}
+      />
       <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       
       {/* Nudge / Motivation UI - Emotional Decision Point */}
@@ -262,11 +328,11 @@ export const ChatInterface = () => {
               transition={{ duration: 0.8, ease: "easeOut" }}
               className="glass-surface border border-white/5 rounded-[40px] p-10 text-center max-w-sm w-full shadow-[0_30px_60px_rgba(0,0,0,0.8)] relative overflow-hidden"
             >
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-[var(--color-accent-amber)]/10 blur-[60px] rounded-full pointer-events-none" />
+              <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 blur-[60px] rounded-full pointer-events-none transition-colors duration-1000 ${getThemeBgClass10()}`} />
               
               <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8 relative">
-                <div className="absolute inset-0 bg-[var(--color-accent-amber)]/20 blur-md rounded-full" />
-                <Sparkles className="w-8 h-8 text-[var(--color-accent-amber)] relative z-10" />
+                <div className={`absolute inset-0 blur-md rounded-full transition-colors duration-1000 ${getThemeBgClass20()}`} />
+                <Sparkles className={`w-8 h-8 relative z-10 transition-colors duration-1000 ${getThemeColorClass()}`} />
               </div>
 
               <div className="space-y-4 mb-10">
@@ -341,9 +407,9 @@ export const ChatInterface = () => {
                   <motion.div 
                     animate={{ y: [0, -8, 0] }}
                     transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center border border-white/5 shadow-[0_0_40px_rgba(255,158,94,0.05)]"
+                    className={`w-20 h-20 bg-white/5 rounded-full flex items-center justify-center border border-white/5 transition-shadow duration-1000 ${getThemeShadowClass()}`}
                   >
-                     <Sparkles className="w-8 h-8 text-[var(--color-accent-amber)] opacity-80" />
+                     <Sparkles className={`w-8 h-8 opacity-80 transition-colors duration-1000 ${getThemeColorClass()}`} />
                   </motion.div>
                   <h2 className="text-3xl font-serif text-[var(--color-primary-text-dark)] tracking-wide">What is on your mind?</h2>
                 </div>

@@ -335,7 +335,6 @@ export async function POST(req: Request) {
             importance: analyzedEvent?.score || 0,
             category: analyzedEvent?.category || "General",
           },
-          event_score: analyzedEvent?.score || 0,
           processing_status: isNarrative
             ? "woven"
             : analyzedEvent
@@ -631,11 +630,11 @@ ${memoriesContext}
                   await chatPersistence.saveChapter(supabase, {
                     user_id,
                     volume_id: activeVolume?.id,
-                    title: pipelineOutput.narrativeUpdate!.summary.substring(
+                    name: pipelineOutput.narrativeUpdate!.summary.substring(
                       0,
                       50,
                     ),
-                    content: pipelineOutput.narrativeUpdate!.narrative,
+                    narrative: pipelineOutput.narrativeUpdate!.narrative,
                     created_at: new Date().toISOString(),
                   });
                 })()
@@ -648,11 +647,19 @@ ${memoriesContext}
     });
 
     if (typeof (result as any).toDataStreamResponse === "function") {
-      return (result as any).toDataStreamResponse();
+      return (result as any).toDataStreamResponse({
+        headers: {
+          "x-session-id": session_id || "",
+        },
+      });
     }
 
     if (typeof (result as any).toUIMessageStreamResponse === "function") {
-      return (result as any).toUIMessageStreamResponse();
+      return (result as any).toUIMessageStreamResponse({
+        headers: {
+          "x-session-id": session_id || "",
+        },
+      });
     }
 
     if (typeof (result as any).toTextStreamResponse === "function") {

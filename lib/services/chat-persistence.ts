@@ -12,7 +12,6 @@ export const chatPersistence = {
       content: string | null;
       media_url: string | null;
       metadata: Record<string, any>;
-      event_score: number;
       processing_status: 'woven' | 'saved' | 'observed';
       embedding?: number[] | null;
     }
@@ -62,8 +61,8 @@ export const chatPersistence = {
     data: {
       user_id: string;
       volume_id: string | undefined;
-      title: string;
-      content: string;
+      name: string;
+      narrative: string;
       created_at: string;
     }
   ) => {

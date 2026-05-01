@@ -14,6 +14,7 @@ interface UIState {
   isHistoryOpen: boolean;
   chatPersonaMode: 'mirror' | 'guide';
   isBrutalHonestyOn: boolean;
+  memorySyncTrigger: number;
   setIsDrawerOpen: (isOpen: boolean) => void;
   setIsBottomSheetOpen: (isOpen: boolean) => void;
   setIsHistoryOpen: (isOpen: boolean) => void;
@@ -26,6 +27,7 @@ interface UIState {
   setHasSetLanguage: (hasSet: boolean) => void;
   setChatPersonaMode: (mode: 'mirror' | 'guide') => void;
   setIsBrutalHonestyOn: (isOn: boolean) => void;
+  triggerMemorySync: () => void;
 }
 
 export const useUIStore = create<UIState>()(
@@ -43,6 +45,7 @@ export const useUIStore = create<UIState>()(
       isHistoryOpen: false,
       chatPersonaMode: 'mirror',
       isBrutalHonestyOn: false,
+      memorySyncTrigger: 0,
       setIsDrawerOpen: (isOpen) => set({ isDrawerOpen: isOpen }),
       setIsBottomSheetOpen: (isOpen) => set({ isBottomSheetOpen: isOpen }),
       setIsHistoryOpen: (isOpen) => set({ isHistoryOpen: isOpen }),
@@ -55,6 +58,7 @@ export const useUIStore = create<UIState>()(
       setHasSetLanguage: (hasSet) => set({ hasSetLanguage: hasSet }),
       setChatPersonaMode: (mode) => set({ chatPersonaMode: mode }),
       setIsBrutalHonestyOn: (isOn) => set({ isBrutalHonestyOn: isOn }),
+      triggerMemorySync: () => set((state) => ({ memorySyncTrigger: state.memorySyncTrigger + 1 })),
     }),
     {
       name: 'windear-ui-storage',

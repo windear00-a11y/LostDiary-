@@ -157,7 +157,10 @@ export const JournalEditor = () => {
                 toast.loading('Syncing offline entries...', { id: 'offline-sync' });
                 try {
                     for (const entry of offlineEntries) {
-                        await coreService.saveDiaryEntry(user.id, entry.content, entry.metadata);
+                        const { processingStatus } = await coreService.saveDiaryEntry(user.id, entry.content, entry.metadata);
+                        if (processingStatus === 'woven' || processingStatus === 'saved') {
+                           useUIStore.getState().triggerMemorySync();
+                        }
                     }
                     localStorage.removeItem('journalOfflineQueue');
                     toast.dismiss('offline-sync');
@@ -322,11 +325,16 @@ export const JournalEditor = () => {
         return;
       }
 
-      await coreService.saveDiaryEntry(user.id, fullContent, { 
+      const { processingStatus } = await coreService.saveDiaryEntry(user.id, fullContent, { 
         language, 
         inspired_by: inspiredBy,
         inspiration_author: inspirationAuthor 
       });
+      
+      if (processingStatus === 'woven' || processingStatus === 'saved') {
+         useUIStore.getState().triggerMemorySync();
+      }
+      
       setSaveStatus('success');
       setShowSuccessMoment(true);
       toast.success(language === 'hi' ? 'Entry Save ho gayi!' : 'Entry saved successfully!');
