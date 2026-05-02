@@ -221,8 +221,15 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-transparent pb-32">
-      <SuccessMoment 
+    <div className="min-h-screen bg-neutral-950 pb-32 relative overflow-x-hidden">
+      {/* Background Atmosphere */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-rose-900/10 blur-[120px] rounded-full opacity-30" />
+        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-amber-900/10 blur-[100px] rounded-full opacity-50" />
+      </div>
+
+      <div className="relative z-10">
+        <SuccessMoment 
         isOpen={showSuccessMoment} 
         onClose={() => setShowSuccessMoment(false)}
         title="Identity Refined"
@@ -472,6 +479,7 @@ export default function ProfilePage() {
           Your deep data never leaves the Mirror.
         </p>
       </main>
+      </div>
     </div>
   );
 }

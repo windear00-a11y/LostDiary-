@@ -12,7 +12,7 @@ interface AboutTheAuthorProps {
   onUpdate: (updatedProfile: UserProfile) => void;
 }
 
-export const AboutTheAuthor = ({ profile, onUpdate }: AboutTheAuthorProps) => {
+export function AboutTheAuthor({ profile, onUpdate }: AboutTheAuthorProps) {
   const handleMirrorUpdate = async (intel: any) => {
     try {
       const updated = await coreService.updateProfile(profile.id, { intelligence_profile: intel });

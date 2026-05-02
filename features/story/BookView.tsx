@@ -69,15 +69,15 @@ function BookContent({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-10 text-center">
-        <div className="space-y-8 max-w-sm">
+      <div className="fixed inset-0 bg-[#0A0A0A] flex flex-col items-center justify-center p-10 text-center z-[70]">
+        <div className="space-y-8 max-w-sm relative z-10">
           <div className="mx-auto w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center">
             <AlertTriangle className="w-8 h-8 text-rose-500" />
           </div>
           <div>
             <p className="text-rose-500 font-serif italic text-lg mb-2">{error}</p>
             <p className="text-white/30 text-xs leading-relaxed">
-              We encountered a glitch while gathering your memories. You can try again or let the developers know.
+              We encountered a glitch while gathering your memories.
             </p>
           </div>
           <div className="flex flex-col gap-3">
@@ -100,92 +100,86 @@ function BookContent({
     );
   }
 
-  if (chapters.length === 0) {
-    return (
-      <div className="max-w-[800px] mx-auto pt-32 pb-48 px-10 relative">
-        <button 
-          onClick={() => setActiveView('chat')}
-          className="absolute top-8 left-10 p-2 hover:bg-white/5 rounded-full transition-colors text-neutral-400 hover:text-white"
-        >
-          <X className="w-6 h-6" />
-        </button>
-        <div className="text-center space-y-12">
-          <motion.div
-            animate={{ 
-              scale: [1, 1.05, 1],
-              opacity: [0.2, 0.4, 0.2] 
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="w-24 h-24 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-8 glass-surface"
+  return (
+    <div className="fixed inset-0 bg-[#0A0A0A] flex flex-col z-[60] overflow-hidden">
+      <AnimatePresence mode="wait">
+        {chapters.length === 0 ? (
+          <motion.div 
+            key="empty-state"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-1 flex flex-col items-center justify-center p-10 text-center relative"
           >
-            <BookOpen className="w-8 h-8 text-white/20" />
-          </motion.div>
-          
-          <div className="space-y-4">
-            <h2 className="text-3xl font-serif italic text-white/40 tracking-tight">
-              {isSyncing ? "Weaving your memories..." : "Your story is waiting to be written."}
-            </h2>
-            <p className="text-white/20 max-w-xs mx-auto leading-relaxed font-serif italic text-sm">
-              {isSyncing 
-                ? "WinDear is currently translating your thoughts into chapters." 
-                : "Just share your thoughts in the sanctuary, and your book will write itself."}
-            </p>
-          </div>
+            {/* Soft Aura Background */}
+            <div className="absolute inset-0 pointer-events-none">
+              <motion.div 
+                animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.15, 0.1] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-amber-500/20 blur-[120px] rounded-full"
+              />
+            </div>
 
-          {!isSyncing && (
-            <div className="flex flex-col gap-8 items-center pt-8">
-              <button
-                onClick={handleSyncChapters}
-                className="text-[10px] uppercase tracking-[0.4em] text-white/30 hover:text-white/60 transition-colors border-b border-white/10 pb-1"
+            <div className="relative z-10 max-w-lg space-y-12">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1 }}
               >
-                Manual Sync
-              </button>
+                <div className="w-px h-16 bg-gradient-to-b from-transparent via-white/10 to-transparent mx-auto mb-12" />
+                <h2 className="text-3xl md:text-5xl font-serif italic text-white/40 tracking-tight leading-tight">
+                  {isSyncing ? "Weaving your memories..." : "Your story is waiting to be written."}
+                </h2>
+                <p className="mt-6 text-white/20 leading-relaxed font-serif italic text-lg max-w-sm mx-auto">
+                  {isSyncing 
+                    ? "WinDear is currently translating your heartbeat into chapters." 
+                    : "Speak your mind in the sanctuary, and your book will write itself."}
+                </p>
+              </motion.div>
 
-              {profile && (
-                <button 
-                  onClick={() => {
-                    setViewState('reader');
-                    setSelectedChapterId('mirror');
-                  }}
-                  className="flex items-center justify-center gap-2 text-white/10 hover:text-white/30 text-[10px] uppercase tracking-widest transition-colors mx-auto"
+              {!isSyncing && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1, duration: 1 }}
+                  className="flex flex-col gap-10 items-center pt-8"
                 >
-                  Enter the Sanctuary Mirror
-                </button>
+                  <button
+                    onClick={handleSyncChapters}
+                    className="group relative px-8 py-3"
+                  >
+                    <span className="relative z-10 text-[10px] uppercase tracking-[0.5em] text-white/30 group-hover:text-white/60 transition-colors">
+                      Manual Sync
+                    </span>
+                    <div className="absolute bottom-0 left-0 w-full h-px bg-white/10" />
+                  </button>
+
+                  <button 
+                    onClick={() => {
+                      setViewState('reader');
+                      setSelectedChapterId('mirror');
+                    }}
+                    className="text-white/10 hover:text-white/30 text-[10px] uppercase tracking-widest transition-all"
+                  >
+                    Enter the Sanctuary Mirror
+                  </button>
+                </motion.div>
               )}
             </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="fixed inset-x-0 bottom-0 top-0 h-[100dvh] bg-[#FDFCF8] dark:bg-[#0A0A0A] z-[60] flex flex-col overflow-hidden text-slate-900 dark:text-zinc-100">
-      <AnimatePresence mode="wait">
-        {viewState === 'cover' && coverData ? (
+          </motion.div>
+        ) : viewState === 'cover' && coverData ? (
           <motion.div 
             key="cover"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="max-w-[1200px] mx-auto py-20 px-6 flex-1 overflow-y-auto"
+            className="max-w-[1200px] mx-auto pt-32 pb-24 px-6 flex-1 overflow-y-auto w-full"
           >
             <LifeBookCover 
               data={coverData} 
               userName={userDisplayName} 
               onOpen={() => setViewState('reader')} 
             />
-            <div className="mt-12 flex justify-center pb-12">
-                <button 
-                onClick={() => setActiveView('chat')}
-                className="group flex flex-col items-center gap-4 text-white/20 hover:text-white/40 transition-colors"
-                >
-                  <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/20 transition-colors">
-                    <X className="w-4 h-4" />
-                  </div>
-                  <span className="text-[9px] uppercase tracking-[0.4em] font-medium">Return to Sanctuary</span>
-                </button>
-            </div>
           </motion.div>
         ) : (
           <motion.div 
@@ -200,7 +194,6 @@ function BookContent({
                   onClick={handleSyncChapters}
                   disabled={isSyncing}
                   className="p-2 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-full transition-colors disabled:opacity-50"
-                  title="Sync Latest Chapters"
                 >
                   <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
               </button>
@@ -228,7 +221,6 @@ export function BookView() {
   const { user } = useAuth();
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [volumes, setVolumes] = useState<Volume[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [openingText, setOpeningText] = useState<string | null>(null);
   const [coverData, setCoverData] = useState<{ title: string; summary: string; aura: string } | null>(null);
   const [viewState, setViewState] = useState<'cover' | 'toc' | 'reader'>('cover');

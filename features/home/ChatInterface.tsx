@@ -377,11 +377,14 @@ export const ChatInterface = () => {
         )}
       </AnimatePresence> 
 
+      {/* Top padding to accommodate global header */}
+      <div className="h-20 shrink-0" />
+
       {/* Messages Container */}
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-20 pb-6 transition-all duration-700 relative z-10`}
+        className={`flex-1 overflow-y-auto scrollbar-whatsapp ${isScrolling ? 'is-scrolling' : ''} px-4 pt-4 pb-6 transition-all duration-700 relative z-10`}
       >
         <div className={`max-w-2xl mx-auto space-y-12 min-h-full flex flex-col transition-all duration-700 
           ${isInputFocused ? 'opacity-40 blur-[1px]' : 'opacity-100'} 

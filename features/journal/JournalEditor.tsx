@@ -444,47 +444,11 @@ export const JournalEditor = () => {
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-white/[0.02] blur-[120px] rounded-[100%] pointer-events-none" />
       </div>
 
-      {/* Top Header - Pattern 1 (Fades out for Focus) */}
-      <motion.div 
-        animate={{ 
-          opacity: showUI ? 1 : 0, 
-          y: showUI ? 0 : -20,
-          pointerEvents: showUI ? 'auto' : 'none'
-        }}
-        className="flex items-center justify-between px-6 pt-20 pb-2 z-20 bg-transparent"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex flex-col select-none opacity-50">
-            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-[var(--color-primary-text-dark)] opacity-40">Write</span>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={handleStartNewEntry}
-            className="w-10 h-10 rounded-full glass-surface flex items-center justify-center text-[var(--color-secondary-text-dark)] hover:bg-[var(--color-primary-text-dark)] hover:text-[var(--color-bg-dark)] transition-colors focus:outline-none"
-            title="New Journal"
-          >
-            <Plus className="w-4 h-4" />
-          </button>
-          <button 
-            onClick={handleSave}
-            disabled={isSaving || (!title.trim() && !content.trim()) || isContentUnchanged}
-            className={`px-5 py-2.5 flex items-center gap-2 rounded-full font-bold text-[10px] uppercase tracking-widest transition-all focus:outline-none ${saveStatus === 'success' ? 'bg-[var(--color-accent-amber)]/20 text-[var(--color-accent-amber)]' : 'bg-white/5 text-[var(--color-primary-text-dark)] hover:bg-white/10 disabled:opacity-30'}`}
-          >
-            {isSaving ? (
-              <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : saveStatus === 'success' ? (
-              <>Saved</>
-            ) : (
-              <>Save</>
-            )}
-          </button>
-        </div>
-      </motion.div>
+      {/* Top padding to accommodate global header */}
+      <div className="h-20 shrink-0" />
 
       {/* Editor Area */}
-      <div className={`flex-1 px-6 pt-8 max-w-3xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-40 relative z-10 transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
+      <div className={`flex-1 px-6 pt-4 max-w-3xl mx-auto w-full overflow-y-auto scrollbar-whatsapp pb-40 relative z-10 transition-all duration-700 ${showNudge ? 'blur-sm opacity-20 scale-[0.98]' : 'blur-0 opacity-100 scale-100'}`}>
         
         {/* Metadata Stats & Title (Moved inside scroll container) */}
         <div className="flex flex-col gap-4 mb-6 pt-2">
@@ -702,6 +666,21 @@ export const JournalEditor = () => {
                 <List className="w-4 h-4" />
               </button>
               <div className="w-[1px] h-4 bg-white/10 mx-1 shrink-0" />
+              <button 
+                onClick={handleSave}
+                disabled={isSaving || (!title.trim() && !content.trim()) || isContentUnchanged}
+                className={`p-3 rounded-full transition-all shrink-0 ${saveStatus === 'success' ? 'text-emerald-400 bg-emerald-400/10' : 'text-amber-400 hover:bg-amber-400/10 disabled:opacity-30'}`}
+                title="Save Reflection"
+              >
+                {isSaving ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : saveStatus === 'success' ? (
+                  <Check className="w-4 h-4 text-emerald-400" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+              </button>
+              <div className="w-[1px] h-4 bg-white/10 mx-1 shrink-0" />
               <button onClick={() => { setIsFormattingExpanded(false); }} className="p-2.5 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0">
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -726,6 +705,21 @@ export const JournalEditor = () => {
               </button>
               <div className="w-[1px] h-4 bg-white/10 mx-1 shrink-0" />
               <button 
+                onClick={handleSave}
+                disabled={isSaving || (!title.trim() && !content.trim()) || isContentUnchanged}
+                className={`p-3 rounded-full transition-all shrink-0 ${saveStatus === 'success' ? 'text-emerald-400 bg-emerald-400/10' : 'text-amber-400 hover:bg-amber-400/10 disabled:opacity-30'}`}
+                title="Save Reflection"
+              >
+                {isSaving ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : saveStatus === 'success' ? (
+                  <Check className="w-4 h-4 text-emerald-400" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+              </button>
+              <div className="w-[1px] h-4 bg-white/10 mx-1 shrink-0" />
+              <button 
                 onClick={() => setIsFormattingExpanded(true)}
                 className="p-3 text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors shrink-0"
               >
@@ -738,8 +732,8 @@ export const JournalEditor = () => {
       <SuccessMoment 
         isOpen={showSuccessMoment} 
         onClose={() => setShowSuccessMoment(false)}
-        title={inspiredBy ? (language === 'hi' ? 'Ehsaas ka Dhaga Buna Gaya' : 'Thread Spun') : (language === 'hi' ? 'Ehsaas Mehfooz Hua' : 'Reflection Safe')}
-        subtitle={inspiredBy ? (language === 'hi' ? 'Aapka ehsaas ab zameen-e-sanctuary ka hissa hai.' : 'Your reflection is now part of the sanctuary weave.') : (language === 'hi' ? 'Aapki yaad sanctuary mein mehfooz hai.' : 'Your thought is safe in the sanctuary.')}
+        title={inspiredBy ? (language === 'hi' ? 'Ehsaas ka Dhaga Buna Gaya' : 'Soul Thread Spun') : (language === 'hi' ? 'Rooh Mehfooz Hui' : 'Soul Safe')}
+        subtitle={inspiredBy ? (language === 'hi' ? 'Aapka ehsaas ab zameen-e-sanctuary ka hissa hai.' : 'Your soul thread is now part of the sanctuary weave.') : (language === 'hi' ? 'Aapki yaad sanctuary mein mehfooz hai.' : 'Your fragment is safe in the sanctuary.')}
         type="save"
         onView={() => {
           setIsDrawerOpen(true); 

@@ -2,12 +2,10 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Globe, Heart, BookOpen, User, Droplets, Leaf, Send, Sparkles, Handshake, Anchor, BookMarked, ChevronDown, ChevronUp, MoreHorizontal, Bookmark, ArrowRight, Clock, MessageSquare, Shield, PenTool, ChevronRight } from 'lucide-react';
+import { Globe, Heart, BookOpen, User, Droplets, Leaf, Send, Sparkles, Handshake, Anchor, BookMarked, ChevronDown, ChevronUp, MoreHorizontal, Bookmark, ArrowRight, Clock, MessageSquare, Shield, PenTool, ChevronRight, Filter } from 'lucide-react';
 import { LoadingSpace } from '@/components/ui/LoadingSpace';
 import { SuccessMoment } from '@/components/ui/SuccessMoment';
 import { BottomSheet } from '@/components/ui/BottomSheet';
-import { EngagementSoulCard } from '@/components/library/EngagementSoulCard';
-import { AuthorHeartbeat } from '@/components/profile/AuthorHeartbeat';
 import { StoryReader } from '@/features/story/StoryReader';
 import { coreService, Chapter, Volume } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
@@ -62,9 +60,7 @@ export default function GlobalLibraryPage() {
   const [activeBridges, setActiveBridges] = useState<any[]>([]);
   const [expandedPlanes, setExpandedPlanes] = useState<Set<string>>(new Set());
   const [bridgeConfirmSheet, setBridgeConfirmSheet] = useState<{ open: boolean, plane: any | null }>({ open: false, plane: null });
-
-  // CONSTELLATION VIEW STATE
-  const [isConstellationView, setIsConstellationView] = useState(false);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const moods = [
     { id: 'all', label: 'All Whispers', color: 'bg-amber-500' },
@@ -355,9 +351,15 @@ export default function GlobalLibraryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-transparent pb-32">
+    <div className="min-h-screen bg-neutral-950 pb-32 relative overflow-x-hidden">
+      {/* Background Atmosphere */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-amber-900/10 blur-[120px] rounded-full opacity-50" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-indigo-900/10 blur-[100px] rounded-full opacity-30" />
+      </div>
       
-      <SuccessMoment 
+      <div className="relative z-10">
+        <SuccessMoment 
         isOpen={showSuccessMoment}
         onClose={() => setShowSuccessMoment(false)}
         title={successData.title}
@@ -425,176 +427,50 @@ export default function GlobalLibraryPage() {
         </div>
       </BottomSheet>
       
-      {/* Mood Navigator & Tab Switcher */}
-      <div className="sticky top-20 z-30 bg-[var(--color-bg-dark)]/90 backdrop-blur-xl pt-4 pb-2 border-b border-white/5 transition-all duration-500 glass-surface">
-        
-        {/* Top Integration: Tab Switcher & Constellation Toggle */}
-        <div className="flex items-center justify-between px-6 mb-4">
-            <div className="flex bg-white/5 rounded-2xl p-1 border border-white/5">
-              <button
-                onClick={() => { setActiveLibraryTab('feed'); }}
-                className={`text-[9px] font-bold uppercase tracking-[0.2em] px-5 py-2 rounded-xl transition-all duration-500 ${
-                  activeLibraryTab === 'feed' 
-                    ? 'bg-white/10 text-[var(--color-primary-text-dark)] shadow-lg' 
-                    : 'text-white/40'
-                }`}
+      {/* Filter Floating Action */}
+      {activeLibraryTab === 'feed' && (
+        <div className="fixed bottom-24 right-8 z-50 flex flex-col items-end gap-3">
+          <AnimatePresence>
+            {isFilterOpen && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.9 }}
+                className="glass-surface border border-white/10 p-2 rounded-[24px] shadow-2xl flex flex-col gap-1 min-w-[140px]"
               >
-                Global
-              </button>
-              <button
-                onClick={() => { setActiveLibraryTab('echoes'); }}
-                className={`text-[9px] font-bold uppercase tracking-[0.2em] px-5 py-2 rounded-xl transition-all duration-500 ${
-                  activeLibraryTab === 'echoes' 
-                    ? 'bg-white/10 text-[var(--color-primary-text-dark)] shadow-lg' 
-                    : 'text-white/40'
-                }`}
-              >
-                Echoes
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {activeLibraryTab === 'feed' && (
-                <button
-                   onClick={() => setIsConstellationView(!isConstellationView)}
-                   className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border glass-panel ${
-                     isConstellationView 
-                      ? 'bg-[var(--color-accent-amber)]/20 border-[var(--color-accent-amber)]/50 text-[var(--color-accent-amber)] shadow-[0_0_20px_rgba(255,158,94,0.3)]' 
-                      : 'bg-white/5 border-white/5 text-white/40 hover:text-white/60'
-                   }`}
-                >
-                   <Sparkles className={`w-4 h-4 ${isConstellationView ? 'animate-pulse' : ''}`} />
-                </button>
-              )}
-              
-              <div
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all duration-500 border glass-panel ${
-                  inboxPlanes.length > 0
-                    ? 'bg-rose-500/10 border-rose-500/20 text-rose-500'
-                    : 'bg-white/5 border-white/5 text-white/40'
-                }`}
-              >
-                <div className="relative">
-                  <Send className="w-4 h-4" />
-                  {inboxPlanes.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-rose-500 rounded-full" />
-                  )}
-                </div>
-              </div>
-            </div>
+                {moods.map((mood) => (
+                  <button
+                    key={mood.id}
+                    onClick={() => { setActiveMood(mood.id); setIsFilterOpen(false); }}
+                    className={`px-4 py-2.5 rounded-2xl text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-3 ${
+                      activeMood === mood.id 
+                        ? 'bg-amber-500/80 text-white shadow-lg shadow-amber-500/20' 
+                        : 'text-white/40 hover:text-white/80 hover:bg-white/5'
+                    }`}
+                  >
+                    <div className={`w-1.5 h-1.5 rounded-full ${mood.color}`} />
+                    {mood.label}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <button
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all shadow-xl backdrop-blur-xl border ${
+              isFilterOpen 
+                ? 'bg-white text-black border-white' 
+                : 'bg-[var(--color-bg-dark)]/80 text-amber-400 border-white/10 group-hover:scale-110'
+            }`}
+          >
+            <Filter className={`w-5 h-5 transition-transform duration-500 ${isFilterOpen ? 'rotate-90' : 'rotate-0'}`} />
+          </button>
         </div>
+      )}
 
-        {/* Mood Filter - Simplified chips */}
-        {activeLibraryTab === 'feed' && !isConstellationView && (
-            <div className="px-6 pb-1">
-                <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1">
-                    {moods.map((mood) => (
-                        <button
-                            key={mood.id}
-                            onClick={() => setActiveMood(mood.id)}
-                            className={`px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-[0.1em] transition-all duration-500 whitespace-nowrap border flex items-center gap-2 ${
-                                activeMood === mood.id 
-                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
-                                : 'bg-transparent border-transparent text-slate-500 hover:text-slate-400'
-                            }`}
-                        >
-                            <div className={`w-1 h-1 rounded-full ${mood.color} ${activeMood === mood.id ? 'animate-pulse' : 'opacity-40'}`} />
-                            {mood.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-        )}
-      </div>
-
-      <main className={`mx-auto ${isConstellationView ? 'max-w-none px-0 pt-0 border-t border-slate-100 dark:border-white/5 relative h-[60vh] overflow-hidden' : 'max-w-3xl px-6 pt-10'}`}>
+      <main className="max-w-3xl mx-auto px-6 pt-24 min-h-screen">
         <AnimatePresence mode="wait">
           {activeLibraryTab === 'feed' ? (
-            isConstellationView ? (
-              <motion.div
-                key="lib-constellation"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="w-full h-full bg-[#050505] relative overflow-hidden flex items-center justify-center z-0 cursor-crosshair min-h-[600px] rounded-[40px] border border-white/5 mx-6"
-              >
-                 {/* Depth Layers */}
-                 <div className="absolute inset-0 pointer-events-none opacity-40 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-900/30 via-black to-black" />
-                 
-                 {/* Cosmic Dust / Background Stars */}
-                 <div className="absolute inset-0 pointer-events-none">
-                    {[...Array(100)].map((_, i) => (
-                      <div 
-                        key={`bg-star-${i}`}
-                        className="absolute w-px h-px bg-white rounded-full opacity-20"
-                        style={{ 
-                          left: `${Math.random() * 100}%`, 
-                          top: `${Math.random() * 100}%`,
-                          animation: `pulse ${2 + Math.random() * 4}s infinite ease-in-out ${Math.random() * 5}s`
-                        }}
-                      />
-                    ))}
-                 </div>
-
-                 {filteredStories.map((story, idx) => {
-                    const seed = story.id.length * (idx + 1);
-                    const top = 15 + (Math.abs(Math.sin(seed * 1.3)) * 70);
-                    const left = 10 + (Math.abs(Math.cos(seed * 2.7)) * 80);
-                    
-                    const auraColor = 
-                        story.dominant_emotion === 'hope' ? 'text-emerald-400' :
-                        story.dominant_emotion === 'tear' ? 'text-blue-400' :
-                        story.dominant_emotion === 'resonance' ? 'text-amber-400' :
-                        story.dominant_emotion === 'reflective' ? 'text-slate-300' :
-                        story.dominant_emotion === 'courage' ? 'text-rose-400' :
-                        'text-violet-400';
-                    
-                    const starBg = 
-                        story.dominant_emotion === 'hope' ? 'bg-emerald-400' :
-                        story.dominant_emotion === 'tear' ? 'bg-blue-400' :
-                        story.dominant_emotion === 'resonance' ? 'bg-amber-400' :
-                        story.dominant_emotion === 'reflective' ? 'bg-slate-300' :
-                        story.dominant_emotion === 'courage' ? 'bg-rose-400' :
-                        'bg-violet-400';
-
-                    return (
-                        <motion.div
-                          key={`star-${story.id}`}
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: idx * 0.05, duration: 1.5, ease: "easeOut" }}
-                          className="absolute group z-10"
-                          style={{ top: `${top}%`, left: `${left}%` }}
-                        >
-                            <div className="relative">
-                                {/* Aura Ring */}
-                                <div className={`absolute inset-0 rounded-full blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-700 ${starBg}`} />
-                                
-                                <button
-                                   onClick={() => setReadingStory(story)}
-                                   className={`w-4 h-4 rounded-full ${starBg} shadow-[0_0_20px_rgba(255,255,255,0.2)] group-hover:shadow-[0_0_30px_rgba(255,255,255,0.5)] group-hover:scale-150 transition-all duration-700 relative z-10`}
-                                />
-                                
-                                <div className="absolute top-1/2 left-full ml-4 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-2 group-hover:translate-x-0 pointer-events-none">
-                                    <div className="bg-black/80 backdrop-blur-md border border-white/10 p-3 rounded-2xl shadow-2xl">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <div className={`w-1.5 h-1.5 rounded-full ${starBg}`} />
-                                            <span className="text-[8px] font-bold uppercase tracking-widest text-white/40">{story.pen_name}</span>
-                                        </div>
-                                        <h4 className="font-serif text-white text-sm max-w-[120px] leading-tight">{story.title}</h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-                    );
-                 })}
-                 
-                 <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none">
-                     <div className="h-10 w-px bg-gradient-to-t from-white/20 to-transparent" />
-                     <span className="text-[10px] uppercase tracking-[0.4em] text-white/40 font-bold">The Constellation of Collective Soul</span>
-                 </div>
-              </motion.div>
-            ) : (
               <motion.div
                 key="lib-feed"
                 initial={{ opacity: 0, x: -10 }}
@@ -602,13 +478,6 @@ export default function GlobalLibraryPage() {
                 exit={{ opacity: 0, x: 10 }}
                 className="space-y-8"
               >
-              <header className="text-center mb-16 space-y-4">
-                <h1 className="text-4xl md:text-5xl font-serif italic text-[var(--color-primary-text-dark)]">The Global Library</h1>
-                <p className="text-[var(--color-secondary-text-dark)] font-serif italic max-w-lg mx-auto">
-                  A living archive of souls. Click a story for an immersive reading experience.
-                </p>
-              </header>
-
               {loading ? (
                  <div className="flex justify-center mt-20">
                     <LoadingSpace message="Consulting the ancient scrolls..." />
@@ -722,7 +591,6 @@ export default function GlobalLibraryPage() {
                 </div>
               )}
             </motion.div>
-            )
           ) : (
             <motion.div
               key="lib-echoes"
@@ -731,23 +599,8 @@ export default function GlobalLibraryPage() {
               exit={{ opacity: 0, x: -10 }}
               className="space-y-12 pb-20"
             >
-               <header className="text-center mb-16">
-                  <h2 className="text-3xl font-serif italic text-[var(--color-primary-text-dark)]">Soul Signals</h2>
-                  <p className="text-sm text-[var(--color-secondary-text-dark)] font-serif italic mt-2">Your connections and echoes from the library.</p>
-               </header>
-
-               <div className="mb-12">
-                 <EngagementSoulCard />
-               </div>
-
-               <div className="mb-16">
-                  <AuthorHeartbeat />
-               </div>
-
-               {/* Bridges & Planes Sections */}
-               <div className="space-y-16">
-                  {/* Paper Planes (Inbox) */}
-                  <div className="space-y-6">
+               {/* Paper Planes (Inbox) */}
+               <div className="space-y-6">
                     <div className="flex items-center gap-2 border-b border-gray-100 dark:border-white/5 pb-2">
                        <Send className="w-4 h-4 text-amber-500" />
                        <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">Received Planes</h3>
@@ -843,11 +696,11 @@ export default function GlobalLibraryPage() {
                        </div>
                     )}
                   </div>
-               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </main>
+      </div>
     </div>
   );
 }
