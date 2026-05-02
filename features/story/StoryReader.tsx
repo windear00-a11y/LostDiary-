@@ -116,15 +116,15 @@ export function StoryReader({
        const aura = coverData.aura || "mystical and serene";
        const prompt = `Abstract, ethereal, minimalist book cover art representing: ${summaryContext}. The overall vibe and aura is: ${aura}. Use subtle gradients, sacred geometry, or expressive brush strokes. No text. Highly artistic, muted color palette, masterpiece.`;
        
-       const model = genAI.getGenerativeModel({ 
-         model: 'imagen-3',
-         // @ts-ignore
-         generationConfig: { 
-           // @ts-ignore
-           imageConfig: { aspectRatio: "3:4", imageSize: "1K" } 
+       const response = await genAI.models.generateContent({ 
+         model: 'gemini-2.5-flash-image',
+         contents: {
+           parts: [{ text: prompt }]
+         },
+         config: {
+           imageConfig: { aspectRatio: "3:4" } 
          } 
        });
-       const response = await model.generateContent(prompt);
 
        let newImageUrl = null;
        for (const part of response.candidates?.[0]?.content?.parts || []) {

@@ -153,7 +153,7 @@ export default function ProfilePage() {
       const visualPrompt = personalitySummary ? personalitySummary.slice(0, 200) : "A serene and abstract representation of a thoughtful soul, soft colors, ethereal light.";
 
       const imageResponse = await ai.models.generateContent({
-        model: 'imagen-3',
+        model: 'gemini-2.5-flash-image',
         contents: {
           parts: [
             {
