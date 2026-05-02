@@ -37,7 +37,8 @@ export async function POST(req: Request) {
     if (!profile) {
       console.log(`[JournalSave] Profile not found for ${final_user_id}, creating default...`);
       // Create a default profile if it doesn't exist yet
-      const defaultProfile = {
+      // We only include core fields to avoid failures due to potentially missing schema updates
+      const defaultProfile: any = {
         id: final_user_id,
         personality_summary: "A new soul embarking on a journey of self-reflection.",
         intelligence_profile: {
@@ -50,9 +51,13 @@ export async function POST(req: Request) {
           sensitive_insights: {},
           source_weights: { chat: 0.3, diary: 0.7 }
         },
-        preferred_language: metadata?.language || 'en',
         updated_at: new Date().toISOString(),
       };
+
+      // Add preferred_language if it exists in metadata, but be careful
+      if (metadata?.language) {
+        defaultProfile.preferred_language = metadata.language;
+      }
       
       const { data: newProfile, error: creationError } = await supabase
         .from("users")
@@ -62,6 +67,24 @@ export async function POST(req: Request) {
         
       if (creationError) {
         console.error("[JournalSave] Critical: Failed to create user profile on-the-fly:", creationError);
+        // If it failed because of preferred_language, try one more time without it
+        if (creationError.message.includes('preferred_language')) {
+           delete defaultProfile.preferred_language;
+           const { data: retryProfile, error: retryError } = await supabase
+             .from("users")
+             .insert(defaultProfile)
+             .select("personality_summary, intelligence_profile")
+             .single();
+           
+           if (retryError) {
+             console.error("[JournalSave] Retry failed:", retryError);
+             throw new Error(`Profile creation failed: ${retryError.message}`);
+           } else {
+             profile = retryProfile;
+           }
+        } else {
+          throw new Error(`Profile creation failed: ${creationError.message}`);
+        }
       } else {
         profile = newProfile;
       }

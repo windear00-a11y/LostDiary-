@@ -358,7 +358,13 @@ export const JournalEditor = () => {
     } catch (error: any) {
       console.error('Failed to save diary entry:', error);
       setSaveStatus('error');
-      toast.error(language === 'hi' ? 'Maaf kijiye, save nahi ho paya.' : 'Failed to save reflection. Please try again.');
+      
+      const technicalError = error.message || 'Unknown error';
+      toast.error(
+        language === 'hi' 
+          ? `Maaf kijiye, save nahi ho paya. (Error: ${technicalError})` 
+          : `Failed to save reflection: ${technicalError}`
+      );
     } finally {
       setIsSaving(false);
     }
