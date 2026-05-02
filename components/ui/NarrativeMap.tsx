@@ -9,7 +9,7 @@ interface NarrativeMapProps {
   onChapterSelect: (id: string) => void;
 }
 
-export const NarrativeMap = ({ chapters, onChapterSelect }: NarrativeMapProps) => {
+export function NarrativeMap({ chapters, onChapterSelect }: NarrativeMapProps) {
   const containerRef = useRef(null);
 
   // Simple spatial layout for demonstration

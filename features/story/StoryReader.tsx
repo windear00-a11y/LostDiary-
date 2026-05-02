@@ -35,7 +35,7 @@ interface StoryReaderProps {
   initialStage?: 'cover' | 'index' | 'reading' | 'map';
 }
 
-export const StoryReader = ({ 
+export function StoryReader({ 
   chapters, 
   volumes = [], 
   onBack, 
@@ -46,7 +46,7 @@ export const StoryReader = ({
   profile,
   onProfileUpdate,
   initialStage = 'cover'
-}: StoryReaderProps) => {
+}: StoryReaderProps) {
   const router = useRouter();
   const [readingStage, setReadingStage] = useState<'cover' | 'index' | 'reading' | 'map'>(initialStage);
   const [currentChapterId, setCurrentChapterId] = useState<string | null>(initialChapterId || null);

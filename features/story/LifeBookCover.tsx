@@ -14,7 +14,7 @@ interface LifeBookCoverProps {
   onOpen: () => void;
 }
 
-export const LifeBookCover = ({ data, userName, onOpen }: LifeBookCoverProps) => {
+export function LifeBookCover({ data, userName, onOpen }: LifeBookCoverProps) {
   // Use stable random values for hydration consistency
   const [particles, setParticles] = React.useState<{ top: string; left: string; width: number; height: number }[]>([]);
 
