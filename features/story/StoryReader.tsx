@@ -6,7 +6,7 @@ import { ArrowLeft, Sparkles, ScrollText, Heart, List, X, Globe, Check, ShieldCh
 import { useRouter } from 'next/navigation';
 import { Chapter, Volume, UserProfile } from '@/lib/services/core-service';
 import { libraryService, SealingResult } from '@/lib/services/library-service';
-import { GoogleGenAI } from "@google/genai";
+import { getGenAI } from "@/lib/genai";
 import { NarrativeMap } from '@/components/ui/NarrativeMap';
 import { useChapterEngagement } from './hooks/use-chapter-engagement';
 import { AboutTheAuthor } from '@/components/story/AboutTheAuthor';
@@ -20,7 +20,7 @@ const moodBgColors: Record<string, string> = {
 };
 
 // Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY! });
+const genAI = getGenAI();
 
 interface StoryReaderProps {
   chapters: Chapter[];
@@ -116,20 +116,15 @@ export const StoryReader = ({
        const aura = coverData.aura || "mystical and serene";
        const prompt = `Abstract, ethereal, minimalist book cover art representing: ${summaryContext}. The overall vibe and aura is: ${aura}. Use subtle gradients, sacred geometry, or expressive brush strokes. No text. Highly artistic, muted color palette, masterpiece.`;
        
-       const response = await ai.models.generateContent({
+       const model = genAI.getGenerativeModel({ 
          model: 'imagen-3',
-         contents: {
-           parts: [
-             { text: prompt },
-           ],
-         },
-         config: {
-           imageConfig: {
-                 aspectRatio: "3:4",
-                 imageSize: "1K"
-             }
-         },
+         // @ts-ignore
+         generationConfig: { 
+           // @ts-ignore
+           imageConfig: { aspectRatio: "3:4", imageSize: "1K" } 
+         } 
        });
+       const response = await model.generateContent(prompt);
 
        let newImageUrl = null;
        for (const part of response.candidates?.[0]?.content?.parts || []) {
@@ -437,7 +432,7 @@ export const StoryReader = ({
                  <div className="w-full max-w-xs h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
-                      animate={{ width: `${(readChapters.size / chapters.length) * 100}%` }}
+                      animate={{ width: `${chapters.length > 0 ? (readChapters.size / chapters.length) * 100 : 0}%` }}
                       className="h-full bg-amber-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
                     />
                  </div>
@@ -792,12 +787,11 @@ export const StoryReader = ({
                            {publishedIds.has(chapter.id) && (
                              <div className="px-6 py-2 rounded-full bg-emerald-50 text-emerald-600 text-xs font-sans uppercase tracking-widest border border-emerald-100 flex items-center gap-2 cursor-default">
                                <Check className="w-3.5 h-3.5" />
-                               Gifted to Library
+                                Gifted to Library
                              </div>
                            )}
                          </div>
                       </div>
-
                     </article>
                   ))}
                 </div>

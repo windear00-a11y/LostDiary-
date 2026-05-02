@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, ArrowLeft, X, RefreshCw, AlertTriangle, Send } from 'lucide-react';
-import { coreService, Chapter, Volume } from '@/lib/services/core-service';
+import { coreService, Chapter, Volume, UserProfile } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { StoryReader } from './StoryReader';
@@ -12,6 +12,7 @@ import { useUIStore } from '@/lib/store/use-ui-store';
 import { LifeBookCover } from './LifeBookCover';
 import { toast } from 'sonner';
 import { reportIncident } from '@/lib/utils/telemetry';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const SkeletonLoader = () => (
   <div className="max-w-[700px] mx-auto pt-40 px-6">
@@ -38,19 +39,18 @@ export const BookView = () => {
     setLoading(true);
     setError(null);
     try {
-      const user = await authService.getUser();
-      if (user) {
+      const currentUser = await authService.getUser();
+      if (currentUser) {
         const [chaptersData, volumesData, profileData] = await Promise.all([
-          coreService.fetchChapters(user.id),
-          coreService.fetchVolumes(user.id),
-          coreService.getProfile(user.id)
+          coreService.fetchChapters(currentUser.id),
+          coreService.fetchVolumes(currentUser.id),
+          coreService.getProfile(currentUser.id)
         ]);
         
-        setChapters(chaptersData);
-        setVolumes(volumesData);
-        setProfile(profileData);
+        setChapters(chaptersData || []);
+        setVolumes(volumesData || []);
+        setProfile(profileData || null);
 
-        // Use existing volume data for cover and opening instead of generating on the fly
         if (volumesData && volumesData.length > 0) {
           const currentVolume = volumesData[0];
           setOpeningText(currentVolume.prologue || "Your story unfolds...");
@@ -59,7 +59,7 @@ export const BookView = () => {
             summary: currentVolume.epigraph || "A journey through time, captured in memory.",
             aura: currentVolume.aura || "Midnight Indigo"
           });
-        } else if (chaptersData.length > 0) {
+        } else if (chaptersData && chaptersData.length > 0) {
           setOpeningText("Your story unfolds...");
           setCoverData({
             title: "Chapters of the Heart",
@@ -68,8 +68,8 @@ export const BookView = () => {
           });
         }
       }
-    } catch (error) {
-      console.error("Failed to load data", error);
+    } catch (err) {
+      console.error("BookView: Failed to load data", err);
       setError("Failed to load your LifeBook. Please check your connection.");
     } finally {
       setLoading(false);
@@ -80,19 +80,17 @@ export const BookView = () => {
     loadData();
   }, [loadData]);
 
-  // Auto-sync once if the book is empty
   useEffect(() => {
     if (!loading && chapters.length === 0 && !isSyncing && !error && user) {
       handleSyncChapters();
     }
-  }, [loading, chapters.length, isSyncing, error, user, handleSyncChapters]);
+  }, [loading, chapters.length, isSyncing, error, user, loadData]);
 
   const handleSyncChapters = React.useCallback(async () => {
     if (!user) return;
     setIsSyncing(true);
     setError(null);
     
-    // We'll use a promise toast to show progress
     const syncPromise = new Promise(async (resolve, reject) => {
       try {
         const res = await fetch('/api/chapters/sync', {
@@ -107,7 +105,6 @@ export const BookView = () => {
            throw new Error(data.error || "Failed to sync chapters");
         }
         
-        // Check if there was actually anything to sync
         if (data.message && (data.message.includes("already processed") || data.message.includes("No meaningful messages"))) {
            toast.info(data.message);
         }
@@ -130,7 +127,6 @@ export const BookView = () => {
     try {
       await syncPromise;
     } catch (e) {
-      // Error handled by catch in syncPromise and toast.promise
     } finally {
       setIsSyncing(false);
     }
@@ -256,53 +252,80 @@ export const BookView = () => {
     );
   }
 
-  if (viewState === 'cover' && coverData) {
-    return (
-      <div className="max-w-[1200px] mx-auto py-20 px-6">
-        <LifeBookCover 
-          data={coverData} 
-          userName={userDisplayName} 
-          onOpen={() => setViewState('reader')} 
-        />
-        <div className="mt-12 flex justify-center">
-           <button 
-            onClick={() => setActiveView('chat')}
-            className="group flex flex-col items-center gap-4 text-white/20 hover:text-white/40 transition-colors"
-           >
-             <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/20 transition-colors">
-               <X className="w-4 h-4" />
-             </div>
-             <span className="text-[9px] uppercase tracking-[0.4em] font-medium">Return to Sanctuary</span>
-           </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="bg-transparent min-h-screen relative">
-      <div className="absolute top-4 right-4 z-50">
-        <button
-            onClick={handleSyncChapters}
-            disabled={isSyncing}
-            className="p-2 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-full transition-colors disabled:opacity-50"
-            title="Sync Latest Chapters"
-          >
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+    <ErrorBoundary fallback={
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-8 text-center bg-[#FDFCF8] dark:bg-[#0A0A0A]">
+        <AlertTriangle className="w-12 h-12 text-amber-500 mb-6" />
+        <h2 className="text-2xl font-serif italic text-slate-800 dark:text-zinc-100 mb-4">A shadow crossed the page...</h2>
+        <p className="text-sm text-slate-500 max-w-sm mb-8 italic">Even the most beautiful manuscripts have smudges. We&apos;ve logged the issue and are ready to try again.</p>
+        <button 
+          onClick={() => { window.location.reload(); }}
+          className="px-8 py-4 bg-amber-500 text-white rounded-full font-bold text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+        >
+          Refresh Sanctuary
         </button>
       </div>
-      <StoryReader 
-        chapters={chapters} 
-        volumes={volumes}
-        onBack={() => setViewState('cover')} 
-        initialChapterId={selectedChapterId}
-        coverData={coverData}
-        userName={userDisplayName}
-        profile={profile}
-        onProfileUpdate={setProfile}
-        initialStage="index"
-      />
-    </div>
+    }>
+      <div className="fixed inset-x-0 bottom-0 top-0 h-[100dvh] bg-[#FDFCF8] dark:bg-[#0A0A0A] z-[60] flex flex-col overflow-hidden text-slate-900 dark:text-zinc-100">
+        <AnimatePresence mode="wait">
+          {viewState === 'cover' && coverData ? (
+            <motion.div 
+              key="cover"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="max-w-[1200px] mx-auto py-20 px-6 flex-1 overflow-y-auto"
+            >
+              <LifeBookCover 
+                data={coverData} 
+                userName={userDisplayName} 
+                onOpen={() => setViewState('reader')} 
+              />
+              <div className="mt-12 flex justify-center pb-12">
+                 <button 
+                  onClick={() => setActiveView('chat')}
+                  className="group flex flex-col items-center gap-4 text-white/20 hover:text-white/40 transition-colors"
+                 >
+                   <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/20 transition-colors">
+                     <X className="w-4 h-4" />
+                   </div>
+                   <span className="text-[9px] uppercase tracking-[0.4em] font-medium">Return to Sanctuary</span>
+                 </button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="reader"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="flex-1 relative"
+            >
+              <div className="absolute top-4 right-4 z-50">
+                <button
+                    onClick={handleSyncChapters}
+                    disabled={isSyncing}
+                    className="p-2 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-full transition-colors disabled:opacity-50"
+                    title="Sync Latest Chapters"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+              <StoryReader 
+                chapters={chapters} 
+                volumes={volumes}
+                onBack={() => setViewState('cover')} 
+                initialChapterId={selectedChapterId}
+                coverData={coverData}
+                userName={userDisplayName}
+                profile={profile}
+                onProfileUpdate={setProfile}
+                initialStage="index"
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </ErrorBoundary>
   );
 };
-
