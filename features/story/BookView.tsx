@@ -31,6 +31,7 @@ export const BookView = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isReporting, setIsReporting] = useState(false);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const { setActiveView } = useUIStore();
 
   const loadData = async () => {
@@ -39,13 +40,15 @@ export const BookView = () => {
     try {
       const user = await authService.getUser();
       if (user) {
-        const [chaptersData, volumesData] = await Promise.all([
+        const [chaptersData, volumesData, profileData] = await Promise.all([
           coreService.fetchChapters(user.id),
-          coreService.fetchVolumes(user.id)
+          coreService.fetchVolumes(user.id),
+          coreService.getProfile(user.id)
         ]);
         
         setChapters(chaptersData);
         setVolumes(volumesData);
+        setProfile(profileData);
 
         // Use existing volume data for cover and opening instead of generating on the fly
         if (volumesData && volumesData.length > 0) {
@@ -208,17 +211,38 @@ export const BookView = () => {
           <h2 className="text-4xl font-serif italic text-white/30 tracking-tight">
             Your story is waiting to be written...
           </h2>
-          <p className="text-white/20 max-w-sm mx-auto leading-relaxed font-serif italic mb-8">
+          <p className="text-white/20 max-w-sm mx-auto leading-relaxed font-serif italic mb-12">
             जैसे-जैसे आप यादें साझा करेंगे, आपकी कहानी के पन्ने यहाँ खुद-ब-खुद जुड़ते जाएंगे।
           </p>
           
-          <button
-            onClick={handleSyncChapters}
-            disabled={isSyncing}
-            className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white rounded-full font-serif italic transition-all disabled:opacity-50 flex items-center justify-center mx-auto gap-2"
-          >
-            {isSyncing ? <><RefreshCw className="w-4 h-4 animate-spin" /> Weaving the threads of your memory...</> : "Translate Memories into Chapters"}
-          </button>
+          <div className="flex flex-col gap-6 items-center">
+            <button
+              onClick={handleSyncChapters}
+              disabled={isSyncing}
+              className="px-10 py-5 bg-white text-black hover:bg-neutral-200 rounded-full font-serif italic transition-all disabled:opacity-50 flex items-center justify-center mx-auto gap-3 shadow-2xl shadow-white/5"
+            >
+              {isSyncing ? <><RefreshCw className="w-5 h-5 animate-spin" /> Weaving the threads of your memory...</> : "Translate Memories into Chapters"}
+            </button>
+
+            {profile && (
+              <div className="pt-8 border-t border-white/5 w-full max-w-xs transition-opacity duration-1000">
+                <p className="text-[10px] uppercase tracking-widest text-white/20 font-bold mb-4">While you wait</p>
+                <button 
+                  onClick={() => {
+                    // Manually inject a dummy chapter or switch to mirror view
+                    // For now let's just show the mirror in StoryReader with 0 chapters if possible
+                    // Or add a temporary "Mirror" stage in BookView
+                    setViewState('reader');
+                    setSelectedChapterId('mirror'); // Special ID for mirror
+                  }}
+                  className="flex items-center justify-center gap-2 text-amber-500/60 hover:text-amber-500 text-xs font-serif italic transition-colors"
+                >
+                  Explore the Sanctuary Mirror
+                  <ArrowLeft className="w-3 h-3 rotate-180" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -243,6 +267,8 @@ export const BookView = () => {
         initialChapterId={selectedChapterId}
         coverData={coverData}
         userName={userDisplayName}
+        profile={profile}
+        onProfileUpdate={setProfile}
       />
     </div>
   );

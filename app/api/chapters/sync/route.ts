@@ -237,7 +237,7 @@ export async function POST(req: Request) {
           {
             user_id: userId,
             name: chap.title,
-            summary: chapterData.summary,
+            // summary: chapterData.summary, // Removing if not in Chapter interface to avoid confusion
             narrative: chapterData.narrative,
             start_date: chapterEvents[0].created_at,
             end_date: chapterEvents[chapterEvents.length - 1].created_at,

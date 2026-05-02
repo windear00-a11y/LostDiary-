@@ -4,11 +4,12 @@ import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Sparkles, ScrollText, Heart, List, X, Globe, Check, ShieldCheck, Info, BookOpen, Send, Fingerprint, Anchor, BookMarked, ChevronRight, PenTool, MoreHorizontal, ChevronDown, Headphones, Square } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { Chapter, Volume } from '@/lib/services/core-service';
+import { Chapter, Volume, UserProfile } from '@/lib/services/core-service';
 import { libraryService, SealingResult } from '@/lib/services/library-service';
 import { GoogleGenAI } from "@google/genai";
 import { NarrativeMap } from '@/components/ui/NarrativeMap';
 import { useChapterEngagement } from './hooks/use-chapter-engagement';
+import { AboutTheAuthor } from '@/components/story/AboutTheAuthor';
 
 const moodBgColors: Record<string, string> = {
   Joyful: '#12100A', 
@@ -29,9 +30,21 @@ interface StoryReaderProps {
   coverData?: { title: string; summary: string; aura: string } | null;
   userName?: string;
   isLibraryView?: boolean;
+  profile?: UserProfile | null;
+  onProfileUpdate?: (profile: UserProfile) => void;
 }
 
-export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, coverData, userName = 'anonymous', isLibraryView = false }: StoryReaderProps) => {
+export const StoryReader = ({ 
+  chapters, 
+  volumes = [], 
+  onBack, 
+  initialChapterId, 
+  coverData, 
+  userName = 'anonymous', 
+  isLibraryView = false,
+  profile,
+  onProfileUpdate
+}: StoryReaderProps) => {
   const router = useRouter();
   const [readingStage, setReadingStage] = useState<'cover' | 'index' | 'reading' | 'map'>('cover');
   const [currentChapterId, setCurrentChapterId] = useState<string | null>(initialChapterId || null);
@@ -171,8 +184,10 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
 
   const scrollToChapter = React.useCallback((id: string) => {
     setReadingStage('reading');
-    handleMarkAsRead(id);
-    const el = document.getElementById(`chapter-${id}`);
+    if (id !== 'mirror') {
+      handleMarkAsRead(id);
+    }
+    const el = document.getElementById(id === 'mirror' ? 'author-section' : `chapter-${id}`);
     if (el) {
       setTimeout(() => {
         el.scrollIntoView({ behavior: 'smooth' });
@@ -598,6 +613,25 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
                     </button>
                   ))
                 )}
+                
+                {profile && (
+                  <div className="pt-8 border-t border-white/5">
+                    <button
+                      onClick={() => scrollToChapter('mirror')}
+                      className="w-full text-left group flex items-start gap-3"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500 group-hover:bg-amber-500 group-hover:text-white transition-all">
+                        <Fingerprint className="w-4 h-4" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[11px] font-serif text-[var(--color-primary-text-dark)] group-hover:text-amber-500 transition-colors">
+                          About the Soul (Mirror)
+                        </div>
+                        <div className="text-[9px] text-white/30 italic">Reflection of the Author</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
               </div>
             </motion.div>
           </>
@@ -773,6 +807,12 @@ export const StoryReader = ({ chapters, volumes = [], onBack, initialChapterId, 
               <div className="text-center py-64">
                  <h3 className="text-2xl font-serif text-slate-400 italic">This manuscript is still awaiting its first breath...</h3>
               </div>
+            )}
+
+            {profile && (
+              <section id="author-section" className="pt-32">
+                <AboutTheAuthor profile={profile} onUpdate={onProfileUpdate || (() => {})} />
+              </section>
             )}
           </motion.div>
         </div>
