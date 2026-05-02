@@ -34,7 +34,7 @@ export const BookView = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const { setActiveView } = useUIStore();
 
-  const loadData = async () => {
+  const loadData = React.useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -74,13 +74,20 @@ export const BookView = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
-  const handleSyncChapters = async () => {
+  // Auto-sync once if the book is empty
+  useEffect(() => {
+    if (!loading && chapters.length === 0 && !isSyncing && !error && user) {
+      handleSyncChapters();
+    }
+  }, [loading, chapters.length, isSyncing, error, user, handleSyncChapters]);
+
+  const handleSyncChapters = React.useCallback(async () => {
     if (!user) return;
     setIsSyncing(true);
     setError(null);
@@ -127,7 +134,7 @@ export const BookView = () => {
     } finally {
       setIsSyncing(false);
     }
-  };
+  }, [user, loadData]);
 
   const handleReportIssue = async () => {
     if (!error) return;
@@ -199,50 +206,74 @@ export const BookView = () => {
         >
           <X className="w-6 h-6" />
         </button>
-        <div className="text-center space-y-6">
+        <div className="text-center space-y-12">
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="w-20 h-20 bg-[var(--color-bg-dark)] border border-white/5 rounded-full flex items-center justify-center mx-auto mb-8 opacity-40 glass-surface"
+            animate={{ 
+              scale: [1, 1.05, 1],
+              opacity: [0.2, 0.4, 0.2] 
+            }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="w-24 h-24 bg-white/5 border border-white/10 rounded-full flex items-center justify-center mx-auto mb-8 glass-surface"
           >
             <BookOpen className="w-8 h-8 text-white/20" />
           </motion.div>
-          <h2 className="text-4xl font-serif italic text-white/30 tracking-tight">
-            Your story is waiting to be written...
-          </h2>
-          <p className="text-white/20 max-w-sm mx-auto leading-relaxed font-serif italic mb-12">
-            जैसे-जैसे आप यादें साझा करेंगे, आपकी कहानी के पन्ने यहाँ खुद-ब-खुद जुड़ते जाएंगे।
-          </p>
           
-          <div className="flex flex-col gap-6 items-center">
-            <button
-              onClick={handleSyncChapters}
-              disabled={isSyncing}
-              className="px-10 py-5 bg-white text-black hover:bg-neutral-200 rounded-full font-serif italic transition-all disabled:opacity-50 flex items-center justify-center mx-auto gap-3 shadow-2xl shadow-white/5"
-            >
-              {isSyncing ? <><RefreshCw className="w-5 h-5 animate-spin" /> Weaving the threads of your memory...</> : "Translate Memories into Chapters"}
-            </button>
+          <div className="space-y-4">
+            <h2 className="text-3xl font-serif italic text-white/40 tracking-tight">
+              {isSyncing ? "Weaving your memories..." : "Your story is waiting to be written."}
+            </h2>
+            <p className="text-white/20 max-w-xs mx-auto leading-relaxed font-serif italic text-sm">
+              {isSyncing 
+                ? "WinDear is currently translating your thoughts into chapters." 
+                : "Just share your thoughts in the sanctuary, and your book will write itself."}
+            </p>
+          </div>
 
-            {profile && (
-              <div className="pt-8 border-t border-white/5 w-full max-w-xs transition-opacity duration-1000">
-                <p className="text-[10px] uppercase tracking-widest text-white/20 font-bold mb-4">While you wait</p>
+          {!isSyncing && (
+            <div className="flex flex-col gap-8 items-center pt-8">
+              <button
+                onClick={handleSyncChapters}
+                className="text-[10px] uppercase tracking-[0.4em] text-white/30 hover:text-white/60 transition-colors border-b border-white/10 pb-1"
+              >
+                Manual Sync
+              </button>
+
+              {profile && (
                 <button 
                   onClick={() => {
-                    // Manually inject a dummy chapter or switch to mirror view
-                    // For now let's just show the mirror in StoryReader with 0 chapters if possible
-                    // Or add a temporary "Mirror" stage in BookView
                     setViewState('reader');
-                    setSelectedChapterId('mirror'); // Special ID for mirror
+                    setSelectedChapterId('mirror');
                   }}
-                  className="flex items-center justify-center gap-2 text-amber-500/60 hover:text-amber-500 text-xs font-serif italic transition-colors"
+                  className="flex items-center justify-center gap-2 text-white/10 hover:text-white/30 text-[10px] uppercase tracking-widest transition-colors mx-auto"
                 >
-                  Explore the Sanctuary Mirror
-                  <ArrowLeft className="w-3 h-3 rotate-180" />
+                  Enter the Sanctuary Mirror
                 </button>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (viewState === 'cover' && coverData) {
+    return (
+      <div className="max-w-[1200px] mx-auto py-20 px-6">
+        <LifeBookCover 
+          data={coverData} 
+          userName={userDisplayName} 
+          onOpen={() => setViewState('reader')} 
+        />
+        <div className="mt-12 flex justify-center">
+           <button 
+            onClick={() => setActiveView('chat')}
+            className="group flex flex-col items-center gap-4 text-white/20 hover:text-white/40 transition-colors"
+           >
+             <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/20 transition-colors">
+               <X className="w-4 h-4" />
+             </div>
+             <span className="text-[9px] uppercase tracking-[0.4em] font-medium">Return to Sanctuary</span>
+           </button>
         </div>
       </div>
     );
@@ -263,12 +294,13 @@ export const BookView = () => {
       <StoryReader 
         chapters={chapters} 
         volumes={volumes}
-        onBack={() => setActiveView('chat')} 
+        onBack={() => setViewState('cover')} 
         initialChapterId={selectedChapterId}
         coverData={coverData}
         userName={userDisplayName}
         profile={profile}
         onProfileUpdate={setProfile}
+        initialStage="index"
       />
     </div>
   );

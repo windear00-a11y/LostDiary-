@@ -74,16 +74,12 @@ export const LifeBookCover = ({ data, userName, onOpen }: LifeBookCoverProps) =>
           </motion.div>
           
           <div className="space-y-2">
-            <span className="text-[10px] uppercase tracking-[0.8em] text-white/40 font-bold block">
-              A Personal Archive
+            <span className="text-[10px] uppercase tracking-[0.6em] text-white/30 font-medium block">
+              Memories of
             </span>
             <h1 className="text-5xl md:text-7xl font-serif font-bold text-white tracking-tight leading-tight">
               {data.title}
             </h1>
-            <div className="flex justify-center gap-4 mt-4">
-              <span className="text-[8px] uppercase tracking-widest text-white/20 border border-white/10 px-2 py-0.5 rounded">First Edition</span>
-              <span className="text-[8px] uppercase tracking-widest text-white/20 border border-white/10 px-2 py-0.5 rounded">Volume I</span>
-            </div>
           </div>
           
           <div className="w-24 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent mx-auto mt-8" />
@@ -104,22 +100,15 @@ export const LifeBookCover = ({ data, userName, onOpen }: LifeBookCoverProps) =>
           </div>
 
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={onOpen}
-            className="group relative px-10 py-4 bg-white text-black rounded-full font-bold uppercase tracking-widest text-xs overflow-hidden transition-all hover:bg-neutral-100"
+            className="group relative px-10 py-4 bg-white/10 text-white border border-white/10 rounded-full font-serif italic text-sm transition-all hover:bg-white hover:text-black"
           >
-            <span className="relative z-10 flex items-center gap-2">
-              Open My LifeBook <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </span>
+            Open the Manuscript
           </motion.button>
         </div>
       </motion.div>
-
-      {/* Footer Branding */}
-      <div className="absolute bottom-8 text-[9px] uppercase tracking-[0.5em] text-white/20 font-bold">
-        Archived by WinDear AI
-      </div>
     </div>
   );
 };

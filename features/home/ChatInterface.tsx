@@ -220,8 +220,10 @@ export const ChatInterface = () => {
         // We poll the 'chat_sessions' table up to 6 times to accurately trigger 
         // the Memory Wave portal animation ONLY when an Event or Chapter is created!
         const currentSessionId = result.session_id || sessionId;
+        if (currentSessionId && currentSessionId !== 'new' && currentSessionId !== sessionId) {
+          router.replace(`/home?session=${currentSessionId}`);
+        }
         if (currentSessionId && currentSessionId !== 'new') {
-          setSessionId(currentSessionId);
           const supabase = getSupabase();
           if (supabase) {
             let attempts = 0;

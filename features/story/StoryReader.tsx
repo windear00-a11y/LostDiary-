@@ -32,6 +32,7 @@ interface StoryReaderProps {
   isLibraryView?: boolean;
   profile?: UserProfile | null;
   onProfileUpdate?: (profile: UserProfile) => void;
+  initialStage?: 'cover' | 'index' | 'reading' | 'map';
 }
 
 export const StoryReader = ({ 
@@ -43,10 +44,11 @@ export const StoryReader = ({
   userName = 'anonymous', 
   isLibraryView = false,
   profile,
-  onProfileUpdate
+  onProfileUpdate,
+  initialStage = 'cover'
 }: StoryReaderProps) => {
   const router = useRouter();
-  const [readingStage, setReadingStage] = useState<'cover' | 'index' | 'reading' | 'map'>('cover');
+  const [readingStage, setReadingStage] = useState<'cover' | 'index' | 'reading' | 'map'>(initialStage);
   const [currentChapterId, setCurrentChapterId] = useState<string | null>(initialChapterId || null);
   const { activeGhosts, lastResonance, sendResonance } = useChapterEngagement(currentChapterId, userName);
   const [mood, setMood] = useState<string>('Default');
@@ -383,7 +385,6 @@ export const StoryReader = ({
                      )}
                   </div>
                 )}
-                <span className="text-[10px] uppercase tracking-[1em] text-amber-500 font-bold ml-[1em]">An Autobiography</span>
               </div>
 
               <h1 className="text-5xl md:text-8xl font-serif font-medium text-[var(--color-primary-text-dark)] leading-tight tracking-tight px-4">
@@ -433,16 +434,13 @@ export const StoryReader = ({
 
               {/* Progress Header */}
               <div className="mb-16 flex flex-col items-center">
-                 <div className="w-full max-w-xs h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden mb-4">
+                 <div className="w-full max-w-xs h-1 bg-slate-100 dark:bg-white/5 rounded-full overflow-hidden">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${(readChapters.size / chapters.length) * 100}%` }}
                       className="h-full bg-amber-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]"
                     />
                  </div>
-                 <p className="text-[10px] font-mono uppercase tracking-widest text-slate-400">
-                   Sojourner&apos;s Progress: {Math.round((readChapters.size / (chapters.length || 1)) * 100)}%
-                 </p>
               </div>
 
               <div className="text-center mb-20">
@@ -699,15 +697,16 @@ export const StoryReader = ({
                    <span className="text-[9px] font-bold uppercase tracking-widest hidden sm:inline-block">Listen</span>
                 </button>
 
-                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/5 rounded-full border border-amber-500/10">
-                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
-                   <span className="text-[9px] font-bold text-amber-500/80 uppercase tracking-widest">Atmosphere: {coverData?.aura || "Resonance"}</span>
+                <div className="flex items-center gap-1.5 px-3 py-1.5">
+                   <div className="w-1.5 h-1.5 rounded-full bg-amber-500/40" />
+                   <span className="text-[9px] font-medium text-white/20 uppercase tracking-[0.3em] font-sans">Manuscript</span>
                 </div>
                 <button 
                   onClick={onBack}
-                  className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-rose-500 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center rounded-full border border-white/5 text-white/20 hover:text-rose-500 transition-colors"
+                  title="Close Tome"
                 >
-                  Close Tome
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
