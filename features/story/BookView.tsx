@@ -33,10 +33,12 @@ export const BookView = () => {
   const [error, setError] = useState<string | null>(null);
   const [isReporting, setIsReporting] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [hasAttemptedSync, setHasAttemptedSync] = useState(false);
   const { setActiveView } = useUIStore();
 
   const loadData = React.useCallback(async () => {
-    setLoading(true);
+    // We'll check the current chapters state using the functional update pattern or by fetching freshly
+    // We want to avoid putting chapters in deps to keep this callback stable
     setError(null);
     try {
       const currentUser = await authService.getUser();
@@ -74,17 +76,19 @@ export const BookView = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // Stable callback
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
+  // Handle auto-sync once if the book is empty
   useEffect(() => {
-    if (!loading && chapters.length === 0 && !isSyncing && !error && user) {
+    if (!loading && chapters.length === 0 && !isSyncing && !error && user && !hasAttemptedSync) {
+      setHasAttemptedSync(true);
       handleSyncChapters();
     }
-  }, [loading, chapters.length, isSyncing, error, user, loadData]);
+  }, [loading, chapters.length, isSyncing, error, user, hasAttemptedSync, handleSyncChapters]);
 
   const handleSyncChapters = React.useCallback(async () => {
     if (!user) return;
