@@ -305,7 +305,7 @@ export const StoryReader = ({
             handleMarkAsRead(chapId);
             
             // Mood Analysis Trigger
-            const chapterContent = chapters.find(c => c.id === chapId)?.narrative;
+            const chapterContent = chapters.find(c => c.id === chapId)?.narrative || '';
             if (chapterContent) {
                analyzeMood(chapterContent);
             }
@@ -731,7 +731,7 @@ export const StoryReader = ({
                           )}
                         </div>
 
-                        {chapter.narrative.split('\n').filter((p: string)=>p.trim()).map((para: string, pIdx: number) => (
+                        {(chapter.narrative || '').split('\n').filter((p: string) => p.trim()).map((para: string, pIdx: number) => (
                           <p 
                             key={pIdx} 
                             className={`text-xl font-serif leading-relaxed cursor-pointer transition-colors duration-500 ${resonatingParagraphs.has(pIdx) ? 'bg-amber-500/20 rounded-md ring-4 ring-amber-500/10' : 'hover:text-amber-600'}`}

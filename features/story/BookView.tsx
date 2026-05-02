@@ -33,62 +33,73 @@ export const BookView = () => {
   const [error, setError] = useState<string | null>(null);
   const [isReporting, setIsReporting] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isHydrated, setIsHydrated] = useState(false);
   const syncAttemptedRef = React.useRef(false);
   const { setActiveView } = useUIStore();
 
-  const loadData = React.useCallback(async () => {
-    // We'll check the current chapters state using the functional update pattern or by fetching freshly
-    // We want to avoid putting chapters in deps to keep this callback stable
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  const loadData = React.useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true);
     setError(null);
     try {
       const currentUser = await authService.getUser();
-      if (currentUser) {
-        const [chaptersData, volumesData, profileData] = await Promise.all([
-          coreService.fetchChapters(currentUser.id),
-          coreService.fetchVolumes(currentUser.id),
-          coreService.getProfile(currentUser.id)
-        ]);
-        
-        setChapters(chaptersData || []);
-        setVolumes(volumesData || []);
-        setProfile(profileData || null);
-
-        if (volumesData && volumesData.length > 0) {
-          const currentVolume = volumesData[0];
-          setOpeningText(currentVolume.prologue || "Your story unfolds...");
-          setCoverData({
-            title: currentVolume.title || "The Story So Far",
-            summary: currentVolume.epigraph || "A journey through time, captured in memory.",
-            aura: currentVolume.aura || "Midnight Indigo"
-          });
-        } else if (chaptersData && chaptersData.length > 0) {
-          setOpeningText("Your story unfolds...");
-          setCoverData({
-            title: "Chapters of the Heart",
-            summary: "A journey through time, captured in memory.",
-            aura: "Midnight Indigo"
-          });
-        }
+      if (!currentUser) {
+        setLoading(false);
+        return;
       }
-    } catch (err) {
+
+      console.log("BookView: Loading data for user", currentUser.id);
+      const [chaptersData, volumesData, profileData] = await Promise.all([
+        coreService.fetchChapters(currentUser.id),
+        coreService.fetchVolumes(currentUser.id),
+        coreService.getProfile(currentUser.id)
+      ]);
+      
+      setChapters(chaptersData || []);
+      setVolumes(volumesData || []);
+      setProfile(profileData || null);
+
+      if (volumesData && volumesData.length > 0) {
+        const currentVolume = volumesData[0];
+        setOpeningText(currentVolume.prologue || "Your story unfolds...");
+        setCoverData({
+          title: currentVolume.title || "The Story So Far",
+          summary: currentVolume.epigraph || "A journey through time, captured in memory.",
+          aura: currentVolume.aura || "Midnight Indigo"
+        });
+      } else if (chaptersData && chaptersData.length > 0) {
+        setOpeningText("Your story unfolds...");
+        setCoverData({
+          title: "Chapters of the Heart",
+          summary: "A journey through time, captured in memory.",
+          aura: "Midnight Indigo"
+        });
+      }
+    } catch (err: any) {
       console.error("BookView: Failed to load data", err);
-      setError("Failed to load your LifeBook. Please check your connection.");
+      setError(`Failed to load your LifeBook: ${err.message || 'Check your connection'}`);
     } finally {
       setLoading(false);
     }
   }, []); // Stable callback
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    if (isHydrated) {
+      loadData(true);
+    }
+  }, [loadData, isHydrated]);
 
   // Handle auto-sync once if the book is empty
   useEffect(() => {
-    if (!loading && chapters.length === 0 && !isSyncing && !error && user && !syncAttemptedRef.current) {
+    if (isHydrated && !loading && chapters.length === 0 && !isSyncing && !error && user && !syncAttemptedRef.current) {
+      console.log("BookView: Auto-syncing chapters...");
       syncAttemptedRef.current = true;
       handleSyncChapters();
     }
-  }, [loading, chapters.length, isSyncing, error, user, handleSyncChapters]);
+  }, [isHydrated, loading, chapters.length, isSyncing, error, user, handleSyncChapters]);
 
   const handleSyncChapters = React.useCallback(async () => {
     if (!user) return;
@@ -125,7 +136,7 @@ export const BookView = () => {
     toast.promise(syncPromise, {
       loading: 'Conversing with memories...',
       success: 'Your story has been expanded.',
-      error: (err) => `Failed: ${err.message}`,
+      error: (err: any) => `Failed: ${err?.message || 'Sync failed'}`,
     });
 
     try {
@@ -158,7 +169,7 @@ export const BookView = () => {
     }
   };
 
-  if (loading) {
+  if (!isHydrated || (loading && chapters.length === 0)) {
     return <SkeletonLoader />;
   }
 
@@ -219,7 +230,7 @@ interface BookContentProps {
   setProfile: (p: UserProfile | null) => void;
 }
 
-const BookContent = ({
+function BookContent({
   user,
   chapters,
   volumes,
@@ -237,7 +248,7 @@ const BookContent = ({
   setError,
   loadData,
   setProfile
-}: BookContentProps) => {
+}: BookContentProps) {
   const { setActiveView } = useUIStore();
   const userDisplayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Soul';
 
