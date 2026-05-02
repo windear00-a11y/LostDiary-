@@ -76,7 +76,7 @@ export const Header = () => {
             )}
 
             {isHomeChronicles && (
-              <div className="flex items-center gap-2 pointer-events-auto">
+              <div className="flex items-center gap-1.5 pointer-events-auto">
                 <button 
                   onClick={() => setActiveView('chat')}
                   className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white/80 transition-all hover:bg-white/10 active:scale-95"
@@ -107,6 +107,16 @@ export const Header = () => {
                     Insights
                   </button>
                 </div>
+
+                <div className="flex items-center gap-1.5 ml-1">
+                  <button
+                    onClick={() => setIsHistoryOpen(true)}
+                    className="w-10 h-10 rounded-full bg-[var(--color-bg-dark)]/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-[var(--color-secondary-text-dark)] hover:text-amber-400 hover:border-amber-400/30 transition-all shadow-lg active:scale-95"
+                    title="Chronicles History"
+                  >
+                    <History className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             )}
 
@@ -130,7 +140,7 @@ export const Header = () => {
                       : 'text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)]'
                   }`}
                 >
-                  Signals
+                  Soul Signals
                 </button>
               </div>
             )}

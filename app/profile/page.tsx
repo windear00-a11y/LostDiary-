@@ -222,11 +222,13 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-neutral-950 pb-32 relative overflow-x-hidden">
-      {/* Background Atmosphere */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-rose-900/10 blur-[120px] rounded-full opacity-30" />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-amber-900/10 blur-[100px] rounded-full opacity-50" />
-      </div>
+      {/* Background Atmosphere - Matches Sanctuary */}
+      <div 
+        className="fixed inset-0 pointer-events-none transition-all duration-1000 ease-in-out opacity-40 blur-[100px] z-0"
+        style={{ 
+          background: 'radial-gradient(circle at 50% 0%, var(--color-accent-glow) 0%, transparent 60%), radial-gradient(circle at 10% 80%, rgba(255, 158, 94, 0.05) 0%, transparent 50%)' 
+        }}
+      />
 
       <div className="relative z-10">
         <SuccessMoment 

@@ -99,29 +99,19 @@ export const EngagementSoulCard = () => {
         </div>
       </div>
 
-      {/* 2. Luminous Lines - Constellation Mapping (Paragraph Engagement) */}
+      {/* 2. Luminous Lines - Paragraph Engagement */}
       <div className="space-y-6">
         <div className="flex flex-col gap-1 px-2 border-l-2 border-amber-500 pl-4">
           <h3 className="text-sm font-serif font-bold text-[var(--color-primary-text-dark)]">Luminous Lines</h3>
-          <p className="text-[10px] uppercase tracking-widest text-slate-400">Constellations of resonance in your paragraphs</p>
+          <p className="text-[10px] uppercase tracking-widest text-slate-400">Resonance of your stories in the library</p>
         </div>
         
         <div 
           onClick={() => setShowShiningMoments(!showShiningMoments)}
-          className="relative p-8 bg-gradient-to-br from-slate-900 to-black rounded-[40px] border border-white/5 overflow-hidden group cursor-pointer"
+          className="relative p-8 bg-black border border-white/5 rounded-[40px] overflow-hidden group cursor-pointer"
         >
-          {/* Constellation Glow Effect */}
-          <div className="absolute inset-0 opacity-20">
-             {[...Array(20)].map((_, i) => (
-               <motion.div 
-                 key={i}
-                 animate={{ opacity: [0.2, 1, 0.2], scale: [1, 1.2, 1] }}
-                 transition={{ duration: 3 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 5 }}
-                 className="absolute w-1 h-1 bg-amber-400 rounded-full"
-                 style={{ left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%` }}
-               />
-             ))}
-          </div>
+          {/* Subtle Glow Effect */}
+          <div className="absolute inset-0 bg-amber-500/5 blur-[80px] opacity-20" />
 
           <div className="relative flex flex-col items-center justify-center text-center space-y-4">
              <div className="flex items-center justify-center gap-3">

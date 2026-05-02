@@ -11,16 +11,21 @@ export const HistoryDrawer = () => {
   const { isHistoryOpen, setIsHistoryOpen, setActiveView, setSelectedJournalContent, activeView } = useUIStore();
   const { user } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'chats' | 'reflections'>(activeView === 'journal' ? 'reflections' : 'chats');
+  const [activeTab, setActiveTab] = useState<'chats' | 'reflections'>('chats');
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
 
   useEffect(() => {
-    setActiveTab(activeView === 'journal' ? 'reflections' : 'chats');
-  }, [isHistoryOpen, activeView]);
+    if (activeView === 'chat' || activeView === 'story') {
+      setActiveTab('chats');
+    } else {
+      setActiveTab('reflections');
+    }
+  }, [activeView, isHistoryOpen]);
 
   useEffect(() => {
     if (isHistoryOpen && user) {
+      // Fetch both to ensure reliability
       coreService.fetchSessions(user.id).then(setSessions).catch(console.error);
       coreService.fetchDiaryEntries(user.id).then(setDiaryEntries).catch(console.error);
     }
@@ -65,7 +70,7 @@ export const HistoryDrawer = () => {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="fixed top-12 bottom-12 inset-x-4 md:inset-x-auto md:left-[25%] md:right-[25%] z-[101] bg-[#111] border border-white/10 rounded-3xl p-6 flex flex-col shadow-2xl"
+            className="fixed top-24 bottom-24 inset-x-4 md:inset-x-auto md:left-[30%] md:right-[30%] z-[101] bg-[#111] border border-white/10 rounded-3xl p-6 flex flex-col shadow-2xl"
           >
             <div className="flex justify-between items-center mb-6 shrink-0">
               <h2 className="text-xl font-serif italic text-amber-500">History</h2>
@@ -73,14 +78,24 @@ export const HistoryDrawer = () => {
                 <X className="w-5 h-5 text-white" />
               </button>
             </div>
-            
+
             {/* Tabs */}
             <div className="flex p-1 bg-black rounded-xl mb-6 border border-white/5 shrink-0">
-                <button onClick={() => setActiveTab('chats')} className={`flex-1 py-3 text-xs font-bold uppercase rounded-lg transition-colors ${activeTab === 'chats' ? 'bg-amber-500/20 text-amber-400' : 'text-slate-500 hover:text-white'}`}>Whispers</button>
-                <button onClick={() => setActiveTab('reflections')} className={`flex-1 py-3 text-xs font-bold uppercase rounded-lg transition-colors ${activeTab === 'reflections' ? 'bg-amber-500/20 text-amber-400' : 'text-slate-500 hover:text-white'}`}>Memories</button>
+                <button 
+                  onClick={() => setActiveTab('chats')} 
+                  className={`flex-1 py-3 text-[10px] font-bold uppercase rounded-lg transition-all ${activeTab === 'chats' ? 'bg-amber-500/20 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.1)]' : 'text-slate-500 hover:text-white'}`}
+                >
+                  Whispers
+                </button>
+                <button 
+                  onClick={() => setActiveTab('reflections')} 
+                  className={`flex-1 py-3 text-[10px] font-bold uppercase rounded-lg transition-all ${activeTab === 'reflections' ? 'bg-emerald-500/20 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.1)]' : 'text-slate-500 hover:text-white'}`}
+                >
+                  Reflections
+                </button>
             </div>
             
-            <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+            <div className="flex-1 overflow-y-auto space-y-4 pr-2 scrollbar-none">
                 {activeTab === 'chats' ? (
                   sessions.length > 0 ? sessions.map(session => (
                     <button key={session.id} onClick={() => { setActiveView('chat'); router.push(`/home?session=${session.id}`); setIsHistoryOpen(false); }} className="w-full text-left p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors flex justify-between items-start">
@@ -90,17 +105,17 @@ export const HistoryDrawer = () => {
                         </div>
                         <span className="text-[10px] text-amber-500/60 font-bold uppercase">{formatStatus(session.processing_status)}</span>
                     </button>
-                  )) : <p className="text-white/30 text-center py-10 text-xs font-serif italic">No recent whispers...</p>
+                  )) : <p className="text-white/30 text-center py-10 text-xs font-serif italic">No recent whispers found...</p>
                 ) : (
                   diaryEntries.length > 0 ? diaryEntries.map(entry => (
                     <button key={entry.id} onClick={() => { setSelectedJournalContent(entry.content); setActiveView('journal'); setIsHistoryOpen(false); }} className="w-full text-left p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors flex justify-between items-start gap-4">
                         <div className="flex-1 min-w-0">
-                            <p className="text-emerald-100 font-serif italic line-clamp-2 text-sm mb-1">{entry.content}</p>
+                            <p className="text-emerald-100 font-serif italic line-clamp-2 text-sm mb-1">{entry.content.replace(/^# .*\n\n/, '')}</p>
                             <p className="text-[10px] text-white/40">{timeAgo(entry.created_at)}</p>
                         </div>
                         <span className="text-[10px] text-emerald-500/60 font-bold uppercase shrink-0">{formatStatus(entry.processing_status)}</span>
                     </button>
-                  )) : <p className="text-white/30 text-center py-10 text-xs font-serif italic">No memories found...</p>
+                  )) : <p className="text-white/30 text-center py-10 text-xs font-serif italic">No past reflections found...</p>
                 )}
             </div>
           </motion.div>

@@ -33,6 +33,11 @@
     color: var(--color-primary-text-dark);
   }
 
+  body {
+    background-color: var(--color-bg-dark);
+    color: var(--color-primary-text-dark);
+  }
+
   /* Typography Enhancements */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif);
