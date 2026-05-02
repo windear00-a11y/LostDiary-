@@ -15,6 +15,18 @@ interface LifeBookCoverProps {
 }
 
 export const LifeBookCover = ({ data, userName, onOpen }: LifeBookCoverProps) => {
+  // Use stable random values for hydration consistency
+  const [particles, setParticles] = React.useState<{ top: string; left: string; width: number; height: number }[]>([]);
+
+  React.useEffect(() => {
+    setParticles([...Array(6)].map(() => ({
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      width: Math.random() * 100 + 50,
+      height: Math.random() * 100 + 50,
+    })));
+  }, []);
+
   // Map aura to colors
   const auraColors: Record<string, string> = {
     'Midnight Indigo': 'from-amber-950 via-slate-900 to-black',
@@ -34,7 +46,7 @@ export const LifeBookCover = ({ data, userName, onOpen }: LifeBookCoverProps) =>
       
       {/* Floating Sparkles */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(6)].map((_, i) => (
+        {particles.map((p, i) => (
           <motion.div
             key={i}
             animate={{ 
@@ -48,10 +60,10 @@ export const LifeBookCover = ({ data, userName, onOpen }: LifeBookCoverProps) =>
             }}
             className="absolute bg-white rounded-full blur-xl"
             style={{ 
-              width: Math.random() * 100 + 50, 
-              height: Math.random() * 100 + 50,
-              top: `${Math.random() * 100}%`,
-              left: `${Math.random() * 100}%`
+              width: p.width, 
+              height: p.height,
+              top: p.top,
+              left: p.left
             }}
           />
         ))}

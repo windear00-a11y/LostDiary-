@@ -33,7 +33,7 @@ export const BookView = () => {
   const [error, setError] = useState<string | null>(null);
   const [isReporting, setIsReporting] = useState(false);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [hasAttemptedSync, setHasAttemptedSync] = useState(false);
+  const syncAttemptedRef = React.useRef(false);
   const { setActiveView } = useUIStore();
 
   const loadData = React.useCallback(async () => {
@@ -84,11 +84,11 @@ export const BookView = () => {
 
   // Handle auto-sync once if the book is empty
   useEffect(() => {
-    if (!loading && chapters.length === 0 && !isSyncing && !error && user && !hasAttemptedSync) {
-      setHasAttemptedSync(true);
+    if (!loading && chapters.length === 0 && !isSyncing && !error && user && !syncAttemptedRef.current) {
+      syncAttemptedRef.current = true;
       handleSyncChapters();
     }
-  }, [loading, chapters.length, isSyncing, error, user, hasAttemptedSync, handleSyncChapters]);
+  }, [loading, chapters.length, isSyncing, error, user, handleSyncChapters]);
 
   const handleSyncChapters = React.useCallback(async () => {
     if (!user) return;
@@ -162,6 +162,83 @@ export const BookView = () => {
     return <SkeletonLoader />;
   }
 
+  return (
+    <ErrorBoundary fallback={
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-8 text-center bg-[#FDFCF8] dark:bg-[#0A0A0A]">
+        <AlertTriangle className="w-12 h-12 text-amber-500 mb-6" />
+        <h2 className="text-2xl font-serif italic text-slate-800 dark:text-zinc-100 mb-4">A shadow crossed the page...</h2>
+        <p className="text-sm text-slate-500 max-w-sm mb-8 italic">Even the most beautiful manuscripts have smudges. We&apos;ve logged the issue and are ready to try again.</p>
+        <button 
+          onClick={() => { window.location.reload(); }}
+          className="px-8 py-4 bg-amber-500 text-white rounded-full font-bold text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
+        >
+          Refresh Sanctuary
+        </button>
+      </div>
+    }>
+      <BookContent 
+        user={user}
+        chapters={chapters}
+        volumes={volumes}
+        error={error}
+        profile={profile}
+        isSyncing={isSyncing}
+        isReporting={isReporting}
+        viewState={viewState}
+        coverData={coverData}
+        selectedChapterId={selectedChapterId}
+        setViewState={setViewState}
+        setSelectedChapterId={setSelectedChapterId}
+        handleSyncChapters={handleSyncChapters}
+        handleReportIssue={handleReportIssue}
+        setError={setError}
+        loadData={loadData}
+        setProfile={setProfile}
+      />
+    </ErrorBoundary>
+  );
+};
+
+interface BookContentProps {
+  user: any;
+  chapters: Chapter[];
+  volumes: Volume[];
+  error: string | null;
+  profile: UserProfile | null;
+  isSyncing: boolean;
+  isReporting: boolean;
+  viewState: 'cover' | 'toc' | 'reader';
+  coverData: any;
+  selectedChapterId: string | null;
+  setViewState: (s: 'cover' | 'toc' | 'reader') => void;
+  setSelectedChapterId: (s: string | null) => void;
+  handleSyncChapters: () => void;
+  handleReportIssue: () => void;
+  setError: (s: string | null) => void;
+  loadData: () => void;
+  setProfile: (p: UserProfile | null) => void;
+}
+
+const BookContent = ({
+  user,
+  chapters,
+  volumes,
+  error,
+  profile,
+  isSyncing,
+  isReporting,
+  viewState,
+  coverData,
+  selectedChapterId,
+  setViewState,
+  setSelectedChapterId,
+  handleSyncChapters,
+  handleReportIssue,
+  setError,
+  loadData,
+  setProfile
+}: BookContentProps) => {
+  const { setActiveView } = useUIStore();
   const userDisplayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Soul';
 
   if (error) {
@@ -257,79 +334,65 @@ export const BookView = () => {
   }
 
   return (
-    <ErrorBoundary fallback={
-      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center p-8 text-center bg-[#FDFCF8] dark:bg-[#0A0A0A]">
-        <AlertTriangle className="w-12 h-12 text-amber-500 mb-6" />
-        <h2 className="text-2xl font-serif italic text-slate-800 dark:text-zinc-100 mb-4">A shadow crossed the page...</h2>
-        <p className="text-sm text-slate-500 max-w-sm mb-8 italic">Even the most beautiful manuscripts have smudges. We&apos;ve logged the issue and are ready to try again.</p>
-        <button 
-          onClick={() => { window.location.reload(); }}
-          className="px-8 py-4 bg-amber-500 text-white rounded-full font-bold text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all"
-        >
-          Refresh Sanctuary
-        </button>
-      </div>
-    }>
-      <div className="fixed inset-x-0 bottom-0 top-0 h-[100dvh] bg-[#FDFCF8] dark:bg-[#0A0A0A] z-[60] flex flex-col overflow-hidden text-slate-900 dark:text-zinc-100">
-        <AnimatePresence mode="wait">
-          {viewState === 'cover' && coverData ? (
-            <motion.div 
-              key="cover"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="max-w-[1200px] mx-auto py-20 px-6 flex-1 overflow-y-auto"
-            >
-              <LifeBookCover 
-                data={coverData} 
-                userName={userDisplayName} 
-                onOpen={() => setViewState('reader')} 
-              />
-              <div className="mt-12 flex justify-center pb-12">
-                 <button 
-                  onClick={() => setActiveView('chat')}
-                  className="group flex flex-col items-center gap-4 text-white/20 hover:text-white/40 transition-colors"
-                 >
-                   <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/20 transition-colors">
-                     <X className="w-4 h-4" />
-                   </div>
-                   <span className="text-[9px] uppercase tracking-[0.4em] font-medium">Return to Sanctuary</span>
-                 </button>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="reader"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex-1 relative"
-            >
-              <div className="absolute top-4 right-4 z-50">
-                <button
-                    onClick={handleSyncChapters}
-                    disabled={isSyncing}
-                    className="p-2 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-full transition-colors disabled:opacity-50"
-                    title="Sync Latest Chapters"
-                  >
-                    <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+    <div className="fixed inset-x-0 bottom-0 top-0 h-[100dvh] bg-[#FDFCF8] dark:bg-[#0A0A0A] z-[60] flex flex-col overflow-hidden text-slate-900 dark:text-zinc-100">
+      <AnimatePresence mode="wait">
+        {viewState === 'cover' && coverData ? (
+          <motion.div 
+            key="cover"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="max-w-[1200px] mx-auto py-20 px-6 flex-1 overflow-y-auto"
+          >
+            <LifeBookCover 
+              data={coverData} 
+              userName={userDisplayName} 
+              onOpen={() => setViewState('reader')} 
+            />
+            <div className="mt-12 flex justify-center pb-12">
+                <button 
+                onClick={() => setActiveView('chat')}
+                className="group flex flex-col items-center gap-4 text-white/20 hover:text-white/40 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/20 transition-colors">
+                    <X className="w-4 h-4" />
+                  </div>
+                  <span className="text-[9px] uppercase tracking-[0.4em] font-medium">Return to Sanctuary</span>
                 </button>
-              </div>
-              <StoryReader 
-                chapters={chapters} 
-                volumes={volumes}
-                onBack={() => setViewState('cover')} 
-                initialChapterId={selectedChapterId}
-                coverData={coverData}
-                userName={userDisplayName}
-                profile={profile}
-                onProfileUpdate={setProfile}
-                initialStage="index"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </ErrorBoundary>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="reader"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-1 relative"
+          >
+            <div className="absolute top-4 right-4 z-50">
+              <button
+                  onClick={handleSyncChapters}
+                  disabled={isSyncing}
+                  className="p-2 bg-white/5 hover:bg-white/10 text-neutral-300 rounded-full transition-colors disabled:opacity-50"
+                  title="Sync Latest Chapters"
+                >
+                  <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
+            <StoryReader 
+              chapters={chapters} 
+              volumes={volumes}
+              onBack={() => setViewState('cover')} 
+              initialChapterId={selectedChapterId}
+              coverData={coverData}
+              userName={userDisplayName}
+              profile={profile}
+              onProfileUpdate={setProfile}
+              initialStage="index"
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
