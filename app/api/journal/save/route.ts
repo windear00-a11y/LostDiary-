@@ -219,11 +219,22 @@ export async function POST(req: Request) {
 
     // 3. Save extracted event if applicable
     if (pipelineOutput.extractedEvent) {
-      await supabase.from("life_events").insert({
+      const eventData = {
         user_id: final_user_id,
-        ...pipelineOutput.extractedEvent,
+        diary_entry_id: savedEntry.id,
+        summary: pipelineOutput.extractedEvent.summary || "Life Reflection",
+        emotion: pipelineOutput.extractedEvent.emotion || "neutral",
+        category: pipelineOutput.extractedEvent.category || "Growth",
+        impact_score: pipelineOutput.extractedEvent.score || 5,
         created_at: new Date().toISOString(),
-      });
+      };
+      
+      const { error: eventErr } = await supabase.from("life_events").insert(eventData);
+      if (eventErr) {
+        console.error("[JournalSave] Failed to save life event:", eventErr);
+      } else {
+        console.log("[JournalSave] Life event saved successfully");
+      }
     }
 
     // 4. Update Identity & Memory (Including the new Deep JSON profile)
@@ -240,14 +251,14 @@ export async function POST(req: Request) {
       .eq("id", final_user_id);
 
     // 5. Check if we should trigger a new LifeBook chapter
-    let processingStatus: "woven" | "saved" | "observed" = "observed";
+    let processingStatus: "woven" | "saved" | "observed" = "saved";
     let impactPercentage = 5 + Math.floor(Math.random() * 10);
 
     if (pipelineOutput.narrativeUpdate?.narrative) {
       processingStatus = "woven";
       impactPercentage = 90 + Math.floor(Math.random() * 10);
     } else if (pipelineOutput.extractedEvent) {
-      processingStatus = "saved";
+      processingStatus = "observed";
       impactPercentage = 50 + Math.floor(Math.random() * 30);
     }
 
