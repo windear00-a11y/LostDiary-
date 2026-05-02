@@ -289,8 +289,15 @@ export const JournalEditor = () => {
     editor?.commands.focus();
   };
 
+  const hasVisibleContent = () => {
+    if (title.trim()) return true;
+    if (!editor) return false;
+    const text = editor.getText().trim();
+    return text.length > 0;
+  };
+
   const handleSave = async () => {
-    if (!content.trim() && !title.trim() || isSaving) return;
+    if (!hasVisibleContent() || isSaving) return;
 
     setIsSaving(true);
     setSaveStatus('idle');
@@ -303,8 +310,11 @@ export const JournalEditor = () => {
         return;
       }
 
+      // Get latest content directly from editor to avoid state lag
+      const currentContent = editor?.getHTML() || content;
+      
       // Combine title and content
-      const fullContent = title ? `# ${title}\n\n${content}` : content;
+      const fullContent = title ? `# ${title}\n\n${currentContent}` : currentContent;
 
       if (!navigator.onLine) {
         const offlineEntries = JSON.parse(localStorage.getItem('journalOfflineQueue') || '[]');
@@ -331,9 +341,12 @@ export const JournalEditor = () => {
         language, 
         inspired_by: inspiredBy,
         inspiration_author: inspirationAuthor 
-        });
-        
-        setRecentEntry(entry);
+      });
+      
+      // Trigger sync for other components (like HistoryDrawer)
+      useUIStore.getState().triggerMemorySync();
+
+      setRecentEntry(entry);
         setSaveStatus('success');
         setShowSuccessMoment(true);
         toast.success(language === 'hi' ? 'Entry Save ho gayi!' : 'Entry saved successfully!');
@@ -342,9 +355,10 @@ export const JournalEditor = () => {
         // handleStartNewEntry(); 
         
         setTimeout(() => setSaveStatus('idle'), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to save diary entry:', error);
       setSaveStatus('error');
+      toast.error(language === 'hi' ? 'Maaf kijiye, save nahi ho paya.' : 'Failed to save reflection. Please try again.');
     } finally {
       setIsSaving(false);
     }

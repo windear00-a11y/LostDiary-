@@ -570,17 +570,39 @@ export const coreService = {
   async fetchDiaryEntries(userId: string): Promise<DiaryEntry[]> {
     const supabase = getSupabase();
     if (!supabase) return [];
-    const { data, error } = await supabase
-      .from('diary_entries')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+    
+    // Fetch from both tables to ensure data continuity during migration/updates
+    const [directRes, legacyRes] = await Promise.all([
+      supabase
+        .from('diary_entries')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('user_id', userId)
+        .is('session_id', null)
+        .order('created_at', { ascending: false })
+    ]);
 
-    if (error) {
-      console.error("Error fetching diary entries:", error);
-      return [];
-    }
-    return data || [];
+    if (directRes.error) console.error("Error fetching diary entries:", directRes.error);
+    if (legacyRes.error) console.error("Error fetching legacy diary entries:", legacyRes.error);
+
+    const directEntries = directRes.data || [];
+    const legacyEntries: DiaryEntry[] = (legacyRes.data || []).map(msg => ({
+      id: msg.id,
+      user_id: msg.user_id,
+      content: msg.content || '',
+      processing_status: msg.processing_status || 'saved',
+      impact_percentage: msg.event_score ? msg.event_score * 10 : 0,
+      created_at: msg.created_at,
+      updated_at: msg.created_at
+    }));
+
+    // Merge and sort by date descending
+    return [...directEntries, ...legacyEntries]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   },
 
   // Profile

@@ -18,54 +18,70 @@ export async function POST(req: Request) {
 
     const pipeline = new PipelineController(apiKey);
 
-    // 1. Fetch all chat messages that don't have a life_event yet
-    const { data: messages, error: messagesError } = await supabase
-      .from("chat_messages")
-      .select("id, content, created_at, type")
-      .eq("user_id", userId)
-      .eq("role", "user")
-      .eq("type", "text")
-      .order("created_at", { ascending: true });
+    // 1. Fetch all chat messages and diary entries that don't have a life_event yet
+    const [{ data: messages, error: messagesError }, { data: diaryEntries, error: diaryError }] = await Promise.all([
+      supabase
+        .from("chat_messages")
+        .select("id, content, created_at, type")
+        .eq("user_id", userId)
+        .eq("role", "user")
+        .eq("type", "text")
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("diary_entries")
+        .select("id, content, created_at")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: true })
+    ]);
 
     if (messagesError) throw messagesError;
-    if (!messages || messages.length === 0)
-      return new Response(JSON.stringify({ message: "No messages found" }), {
+    if (diaryError) throw diaryError;
+
+    // Combine messages and diary entries into a single pool for processing
+    const combinedContent = [
+      ...(messages || []).map(m => ({ ...m, source: 'chat' })),
+      ...(diaryEntries || []).map(d => ({ ...d, source: 'diary', type: 'text' }))
+    ].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
+    if (combinedContent.length === 0)
+      return new Response(JSON.stringify({ message: "No experiences found" }), {
         status: 200,
       });
 
     // Fetch existing life events to filter out already processed ones
     const { data: existingEvents } = await supabase
       .from("life_events")
-      .select("message_id")
+      .select("message_id, diary_entry_id")
       .eq("user_id", userId);
 
-    const existingMessageIds = new Set(
-      existingEvents?.map((e: any) => e.message_id) || [],
-    );
-    const unprocessedMessages = messages.filter(
-      (m: any) => !existingMessageIds.has(m.id),
-    );
+    const existingMessageIds = new Set(existingEvents?.map((e: any) => e.message_id) || []);
+    const existingDiaryIds = new Set(existingEvents?.map((e: any) => e.diary_entry_id) || []);
 
-    if (unprocessedMessages.length === 0) {
+    const unprocessedContent = combinedContent.filter((item: any) => {
+      if (item.source === 'chat') return !existingMessageIds.has(item.id);
+      return !existingDiaryIds.has(item.id);
+    });
+
+    if (unprocessedContent.length === 0) {
       return new Response(
-        JSON.stringify({ message: "All messages are already processed" }),
+        JSON.stringify({ message: "All reflections are already woven." }),
         { status: 200 },
       );
     }
 
-    // 2. Extract Life Events for unprocessed messages in batches
-    // Filter important messages first
-    const importantMessages = unprocessedMessages.filter(msg => msg.content && isImportantMessage(msg));
+    // 2. Extract Life Events for unprocessed content in batches
+    // Filter important content first
+    const importantContent = unprocessedContent.filter(item => item.content && isImportantMessage(item));
     
-    if (importantMessages.length === 0) {
-      return new Response(JSON.stringify({ message: "No meaningful messages to sync yet." }), { status: 200 });
+    if (importantContent.length === 0) {
+      return new Response(JSON.stringify({ message: "No meaningful reflections to sync yet." }), { status: 200 });
     }
 
     const extractedEvents = [];
-    const BATCH_SIZE = 20; // Process 20 messages at a time to stay within token limits safely
+    const BATCH_SIZE = 20; // Process 20 items at a time to stay within token limits safely
     
-    for (let i = 0; i < importantMessages.length; i += BATCH_SIZE) {
-      const batch = importantMessages.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < importantContent.length; i += BATCH_SIZE) {
+      const batch = importantContent.slice(i, i + BATCH_SIZE);
       const batchPayload = batch.map(m => ({ id: m.id, content: m.content }));
       
       const batchResults = await pipeline.extractMultipleLifeEvents(batchPayload);
@@ -73,17 +89,18 @@ export async function POST(req: Request) {
       for (const eventData of batchResults) {
         if (!eventData || !eventData.message_id) continue;
         
-        // Find the original message to get created_at
-        const originalMsg = batch.find(m => m.id === eventData.message_id);
-        if (!originalMsg) continue;
+        // Find the original item to get created_at and source
+        const originalItem = batch.find(m => m.id === eventData.message_id);
+        if (!originalItem) continue;
 
         extractedEvents.push({
           user_id: userId,
-          message_id: originalMsg.id,
+          message_id: originalItem.source === 'chat' ? originalItem.id : null,
+          diary_entry_id: originalItem.source === 'diary' ? originalItem.id : null,
           summary: eventData.summary,
           emotion: eventData.emotion,
           event_score: eventData.score || 5,
-          created_at: originalMsg.created_at,
+          created_at: originalItem.created_at,
           // Temporary field for grouping, will be removed or ignored by DB if not in schema
           _temp_category: eventData.category,
         });

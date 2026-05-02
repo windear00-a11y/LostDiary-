@@ -17,28 +17,83 @@ export async function POST(req: Request) {
       );
     }
 
+    const { content, user_id, metadata, userId: legacy_user_id } = await req.json();
+    const final_user_id = user_id || legacy_user_id;
+
+    console.log(`[JournalSave] Request for user: ${final_user_id}, content length: ${content?.length}`);
+
+    if (!content || !final_user_id) {
+      return NextResponse.json(
+        { error: "Missing content or user_id" },
+        { status: 400 },
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 0. Fetch user profile for context, including the intelligence profile seed
-    const { data: profile } = await supabase
+    // 0. Fetch user profile for context. If not exists, create it.
+    let { data: profile, error: profileErr } = await supabase
       .from("users")
       .select("personality_summary, intelligence_profile")
-      .eq("id", user_id)
+      .eq("id", final_user_id)
       .single();
+
+    if (profileErr && profileErr.code !== 'PGRST116') { // PGRST116 is 'no rows found'
+       console.error("[JournalSave] Profile fetch error:", profileErr);
+    }
+
+    if (!profile) {
+      console.log(`[JournalSave] Profile not found for ${final_user_id}, creating default...`);
+      // Create a default profile if it doesn't exist yet
+      const defaultProfile = {
+        id: final_user_id,
+        personality_summary: "A new soul embarking on a journey of self-reflection.",
+        intelligence_profile: {
+          basic_profile: {},
+          thinking_style: {},
+          emotional_state: {},
+          interests_goals: {},
+          behavior_patterns: {},
+          communication_style: {},
+          sensitive_insights: {},
+          source_weights: { chat: 0.3, diary: 0.7 }
+        },
+        preferred_language: metadata?.language || 'en',
+        updated_at: new Date().toISOString(),
+      };
+      
+      const { data: newProfile, error: creationError } = await supabase
+        .from("users")
+        .insert(defaultProfile)
+        .select("personality_summary, intelligence_profile")
+        .single();
+        
+      if (creationError) {
+        console.error("[JournalSave] Critical: Failed to create user profile on-the-fly:", creationError);
+      } else {
+        profile = newProfile;
+      }
+    }
 
     // 1. Save the raw diary entry
     const { data: entry, error: entryError } = await supabase
       .from("diary_entries")
       .insert({
-        user_id,
+        user_id: final_user_id,
         content,
+        metadata: metadata || {},
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .select()
       .single();
 
-    if (entryError) throw entryError;
+    if (entryError) {
+       console.error("[JournalSave] Entry insert error:", entryError);
+       throw entryError;
+    }
+
+    console.log(`[JournalSave] Entry saved successfully: ${entry.id}`);
 
     // 2. Trigger the AI Pipeline for LifeBook integration
     const orchestrator = new AIOrchestrator(
