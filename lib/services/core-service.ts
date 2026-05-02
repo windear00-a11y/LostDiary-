@@ -424,6 +424,46 @@ export const coreService = {
     return data.title;
   },
 
+  async endSession(userId: string, sessionId: string): Promise<void> {
+    const supabase = getSupabase();
+    if (!supabase) throw new Error("Supabase not initialized");
+    
+    // Mark as finished/ready for deep weaving
+    const { error } = await supabase
+      .from('chat_sessions')
+      .update({ processing_status: 'observed', updated_at: new Date().toISOString() })
+      .eq('id', sessionId)
+      .eq('user_id', userId);
+
+    if (error) throw error;
+  },
+
+  async weaveSessionIntoStory(userId: string, sessionId: string): Promise<void> {
+    const response = await fetch('/api/chat/weave', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, session_id: sessionId })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Failed to weave session');
+    }
+  },
+
+  async weaveDiaryIntoStory(userId: string, entryId: string): Promise<void> {
+    const response = await fetch('/api/journal/weave', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: userId, entry_id: entryId })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error || 'Failed to weave journal entry');
+    }
+  },
+
   // Chapter
   async fetchVolumes(userId: string): Promise<Volume[]> {
     const supabase = getSupabase();

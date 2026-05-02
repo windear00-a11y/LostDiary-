@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ChatInput } from './ChatInput';
 import { useUIStore } from '@/lib/store/use-ui-store';
 import { ThinkingIndicator } from '@/components/ui/ThinkingIndicator';
-import { User, Sparkles, X, Shield, Plus, MessageSquare } from 'lucide-react';
+import { User, Sparkles, X, Shield, Plus, MessageSquare, CheckCircle2, Bookmark } from 'lucide-react';
 import { coreService, ChatSession } from '@/lib/services/core-service';
 import { authService } from '@/lib/services/auth-service';
 import { getSupabase } from '@/lib/supabase';
@@ -14,6 +14,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { AuthPromptModal } from '@/components/auth/AuthPromptModal';
 import { NudgeService } from '@/lib/services/nudge-service';
 import { useChat } from '@ai-sdk/react';
+import { toast } from 'sonner';
 
 interface ChatMessage {
   id: string;
@@ -30,6 +31,8 @@ export const ChatInterface = () => {
   const [activeSession, setActiveSession] = useState<ChatSession | null>(null);
   const [showNudge, setShowNudge] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showWeaveConfirm, setShowWeaveConfirm] = useState(false);
+  const [isWeaving, setIsWeaving] = useState(false);
   const [isScrolling, setIsScrolling] = useState(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { 
@@ -107,6 +110,36 @@ export const ChatInterface = () => {
 
     initializeSession();
   }, [sessionId, router]);
+
+  const handleEndSession = async () => {
+    if (!sessionId || sessionId === 'new' || isThinking) return;
+    setShowWeaveConfirm(true);
+  };
+
+  const confirmWeave = async () => {
+    const user = await authService.getUser();
+    if (!user || !sessionId) return;
+
+    setIsWeaving(true);
+    try {
+      await coreService.endSession(user.id, sessionId);
+      toast.success(language === 'hi' ? 'Session mehfooz ho gaya.' : 'Session secured.');
+      
+      // Navigate or clear
+      router.push('/home?session=new');
+      setActiveSession(null);
+      setMessages([]);
+      setShowWeaveConfirm(false);
+      
+      // Trigger global animation
+      useUIStore.getState().triggerMemorySync();
+    } catch (e) {
+      console.error(e);
+      toast.error('Could not end session');
+    } finally {
+      setIsWeaving(false);
+    }
+  };
 
   const starters = [
     { text: "My mind feels a bit tangled, I need clarity.", icon: "💭" },
@@ -319,6 +352,64 @@ export const ChatInterface = () => {
       />
       <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       
+      {/* Narrative Weaving Confirmation Modal */}
+      <AnimatePresence>
+        {showWeaveConfirm && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-neutral-950/60 backdrop-blur-xl">
+             <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              className="glass-surface border border-white/5 rounded-[40px] p-8 text-center max-w-sm w-full shadow-2xl relative overflow-hidden"
+            >
+              <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 blur-[50px] rounded-full pointer-events-none ${getThemeBgClass10()}`} />
+              
+              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6 relative border border-white/10">
+                <Bookmark className={`w-8 h-8 relative z-10 ${getThemeColorClass()}`} />
+              </div>
+ 
+              <div className="space-y-3 mb-8">
+                <h3 className="text-xl font-serif text-white tracking-wide">
+                  {language === 'hi' ? 'Is hisse ko kahani mein buna jaye?' : 'Weave this into your story?'}
+                </h3>
+                <p className="text-sm text-white/40 leading-relaxed font-serif italic">
+                  {language === 'hi' 
+                    ? "Session khatam karne se ye aapki LifeBook ka hissa ban jayega. Kya aap tayyar hain?" 
+                    : "Ending this session signals that these whispers are ready to become part of your living narrative."}
+                </p>
+              </div>
+ 
+              <div className="grid grid-cols-2 gap-3">
+                <button 
+                  onClick={() => setShowWeaveConfirm(false)}
+                  className="py-4 text-white/40 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-all"
+                >
+                  {language === 'hi' ? 'Nahi, abhi nahi' : 'Not yet'}
+                </button>
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={confirmWeave}
+                  disabled={isWeaving}
+                  className={`py-4 rounded-2xl font-bold uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 ${
+                    isBrutalHonestyOn ? 'bg-rose-500 text-white' : 'bg-amber-500 text-white'
+                  }`}
+                >
+                  {isWeaving ? (
+                    <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3" />
+                      {language === 'hi' ? 'Bunn do' : 'Weave it'}
+                    </>
+                  )}
+                </motion.button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Nudge / Motivation UI - Emotional Decision Point */}
       <AnimatePresence>
         {showNudge && (
@@ -505,13 +596,35 @@ export const ChatInterface = () => {
       </div>
 
       {/* Sticky Bottom Input Section */}
-      <div className={`shrink-0 w-full z-50 px-4 pt-8 bg-gradient-to-t from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/95 to-transparent transition-all duration-300 ${isInputFocused ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[calc(40px+env(safe-area-inset-bottom))]'}`}>
-        <div className={`pb-6 max-w-3xl mx-auto transition-all duration-500`}>
+      <div className={`shrink-0 w-full z-50 px-4 pt-4 bg-gradient-to-t from-[var(--color-bg-dark)] via-[var(--color-bg-dark)]/95 to-transparent transition-all duration-300 ${isInputFocused ? 'pb-[env(safe-area-inset-bottom)]' : 'pb-[calc(40px+env(safe-area-inset-bottom))]'}`}>
+        <div className="max-w-3xl mx-auto flex flex-col gap-4">
+          {/* End Session Soft Action */}
+          <AnimatePresence>
+            {messages.length > 2 && !isInputFocused && !isThinking && (
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="flex justify-center"
+              >
+                <button 
+                  onClick={handleEndSession}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all text-[10px] uppercase tracking-widest text-white/40 hover:text-white/80 group"
+                >
+                  <Bookmark className="w-3 h-3 text-amber-500/50 group-hover:text-amber-500" />
+                  {language === 'hi' ? 'Baatchit khatam karein?' : 'Finish & Weave this session?'}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className={`pb-6 transition-all duration-500`}>
           <ChatInput 
             onSendMessage={handleSendMessage} 
             disabled={isThinking} 
             onFocusChange={setInputFocused}
           />
+          </div>
         </div>
       </div>
     </div>

@@ -43,6 +43,8 @@ export const JournalEditor = () => {
   
   const [lastSavedContent, setLastSavedContent] = useState<string>('');
   
+  const [isWeaving, setIsWeaving] = useState(false);
+ 
   const titleRef = useRef<HTMLTextAreaElement>(null);
   
   const [isListening, setIsListening] = useState(false);
@@ -325,29 +327,53 @@ export const JournalEditor = () => {
         return;
       }
 
-      const { processingStatus } = await coreService.saveDiaryEntry(user.id, fullContent, { 
+      const { entry, processingStatus } = await coreService.saveDiaryEntry(user.id, fullContent, { 
         language, 
         inspired_by: inspiredBy,
         inspiration_author: inspirationAuthor 
-      });
-      
-      if (processingStatus === 'woven' || processingStatus === 'saved') {
-         useUIStore.getState().triggerMemorySync();
-      }
-      
-      setSaveStatus('success');
-      setShowSuccessMoment(true);
-      toast.success(language === 'hi' ? 'Entry Save ho gayi!' : 'Entry saved successfully!');
-      
-      // Clear form
-      handleStartNewEntry();
-      
-      setTimeout(() => setSaveStatus('idle'), 3000);
+        });
+        
+        setRecentEntry(entry);
+        setSaveStatus('success');
+        setShowSuccessMoment(true);
+        toast.success(language === 'hi' ? 'Entry Save ho gayi!' : 'Entry saved successfully!');
+        
+        // We no longer auto-clear everything immediately to allow deliberate weaving
+        // handleStartNewEntry(); 
+        
+        setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error) {
       console.error('Failed to save diary entry:', error);
       setSaveStatus('error');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleWeaveToStory = async () => {
+    if (!recentEntry || isWeaving) return;
+    
+    setIsWeaving(true);
+    try {
+      const user = await authService.getUser();
+      if (!user) return;
+      
+      await coreService.weaveDiaryIntoStory(user.id, recentEntry.id);
+      toast.success(language === 'hi' ? 'Kahani buni ja rahi hai...' : 'Narrative weaving started...');
+      
+      // Trigger animation
+      useUIStore.getState().triggerMemorySync();
+      
+      // Clear after intentional weaving
+      setTimeout(() => {
+        handleStartNewEntry();
+        setShowSuccessMoment(false);
+      }, 2000);
+    } catch (e) {
+      console.error(e);
+      toast.error('Weaving failed');
+    } finally {
+      setIsWeaving(false);
     }
   };
 
@@ -732,14 +758,60 @@ export const JournalEditor = () => {
       <SuccessMoment 
         isOpen={showSuccessMoment} 
         onClose={() => setShowSuccessMoment(false)}
-        title={inspiredBy ? (language === 'hi' ? 'Ehsaas ka Dhaga Buna Gaya' : 'Soul Thread Spun') : (language === 'hi' ? 'Rooh Mehfooz Hui' : 'Soul Safe')}
-        subtitle={inspiredBy ? (language === 'hi' ? 'Aapka ehsaas ab zameen-e-sanctuary ka hissa hai.' : 'Your soul thread is now part of the sanctuary weave.') : (language === 'hi' ? 'Aapki yaad sanctuary mein mehfooz hai.' : 'Your fragment is safe in the sanctuary.')}
+        title={recentEntry?.processing_status === 'woven' ? (language === 'hi' ? 'Kahani buni gayi!' : 'Woven into LifeBook!') : (inspiredBy ? (language === 'hi' ? 'Kahani Prerit Ho Gayi!' : 'Story Inspired!') : (language === 'hi' ? 'Ehsaas Sanware Gaye!' : 'Feeling Captured!'))}
+        subtitle={inspiredBy 
+          ? (language === 'hi' ? `${inspirationAuthor} ke khayalon ne aapko nayi disha di.` : `A reflection shaped by ${inspirationAuthor}'s echoes.`)
+          : (language === 'hi' ? 'Dhire dhire ye aapki dastan ban rahi hai.' : 'Every word adds a thread to your grand tapestry.')}
         type="save"
         onView={() => {
           setIsDrawerOpen(true); 
           useUIStore.getState().setActiveLibraryTab('echoes');
         }}
       />
+
+      {/* Post-Save Actions - The Weaving Intentionality Bar */}
+      <AnimatePresence>
+        {saveStatus === 'success' && !showSuccessMoment && (
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-md"
+          >
+            <div className="glass-surface border border-white/10 rounded-3xl p-4 shadow-2xl flex items-center justify-between gap-4">
+               <div className="flex flex-col">
+                  <span className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Draft Saved</span>
+                  <span className="text-xs text-white/80 font-serif italic">What next?</span>
+               </div>
+               
+               <div className="flex items-center gap-2">
+                 <button 
+                  onClick={handleStartNewEntry}
+                  className="px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-all"
+                 >
+                   {language === 'hi' ? 'Bas' : 'Keep as Fragment'}
+                 </button>
+                 <motion.button 
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={handleWeaveToStory}
+                  disabled={isWeaving}
+                  className="px-4 py-2 rounded-xl bg-amber-500 text-white text-[10px] font-bold uppercase tracking-widest shadow-lg flex items-center gap-2"
+                 >
+                   {isWeaving ? (
+                     <div className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                   ) : (
+                     <>
+                      <Sparkles className="w-3 h-3" />
+                      {language === 'hi' ? 'Bunn do' : 'Weave to Story'}
+                     </>
+                   )}
+                 </motion.button>
+               </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
