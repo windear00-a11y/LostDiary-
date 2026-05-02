@@ -8,16 +8,8 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: Request) {
   try {
-    const { content, user_id, metadata } = await req.json();
-
-    if (!content || !user_id) {
-      return NextResponse.json(
-        { error: "Missing content or user_id" },
-        { status: 400 },
-      );
-    }
-
-    const { content, user_id, metadata, userId: legacy_user_id } = await req.json();
+    const body = await req.json();
+    const { content, user_id, metadata, userId: legacy_user_id } = body;
     const final_user_id = user_id || legacy_user_id;
 
     console.log(`[JournalSave] Request for user: ${final_user_id}, content length: ${content?.length}`);
@@ -109,19 +101,19 @@ export async function POST(req: Request) {
       supabase
         .from("life_events")
         .select("*")
-        .eq("user_id", user_id)
+        .eq("user_id", final_user_id)
         .order("created_at", { ascending: false })
         .limit(10),
       supabase
         .from("chapters")
         .select("narrative")
-        .eq("user_id", user_id)
+        .eq("user_id", final_user_id)
         .order("created_at", { ascending: false })
         .limit(3),
       supabase
         .from("volumes")
         .select("*")
-        .eq("user_id", user_id)
+        .eq("user_id", final_user_id)
         .eq("status", "ongoing")
         .maybeSingle(),
     ]);
@@ -133,7 +125,7 @@ export async function POST(req: Request) {
       const { data: lastVol } = await supabase
         .from("volumes")
         .select("volume_number")
-        .eq("user_id", user_id)
+        .eq("user_id", final_user_id)
         .order("volume_number", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -141,7 +133,7 @@ export async function POST(req: Request) {
       const { data: newVol } = await supabase
         .from("volumes")
         .insert({
-          user_id,
+          user_id: final_user_id,
           volume_number: nextNum,
           title: "The Silent Beginning",
           status: "ongoing",
@@ -166,7 +158,7 @@ export async function POST(req: Request) {
     const [pipelineOutput, updatedIntelProfile] = await Promise.all([
       orchestrator.processInteraction(
         {
-          userId: user_id,
+          userId: final_user_id,
           message: { role: "user", type: "text", content },
           contextMessages: [],
           apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY!,
@@ -181,7 +173,7 @@ export async function POST(req: Request) {
     // 3. Save extracted event if applicable
     if (pipelineOutput.extractedEvent) {
       await supabase.from("life_events").insert({
-        user_id,
+        user_id: final_user_id,
         ...pipelineOutput.extractedEvent,
         created_at: new Date().toISOString(),
       });
@@ -198,7 +190,7 @@ export async function POST(req: Request) {
           : undefined,
         intelligence_profile: updatedIntelProfile,
       })
-      .eq("id", user_id);
+      .eq("id", final_user_id);
 
     // 5. Check if we should trigger a new LifeBook chapter
     let processingStatus: "woven" | "saved" | "observed" = "observed";
@@ -227,7 +219,7 @@ export async function POST(req: Request) {
       const { data: newChapter } = await supabase
         .from("chapters")
         .insert({
-          user_id,
+          user_id: final_user_id,
           volume_id: activeVolume?.id,
           name: pipelineOutput.narrativeUpdate.summary.substring(0, 50),
           narrative: pipelineOutput.narrativeUpdate.narrative,
@@ -252,7 +244,7 @@ export async function POST(req: Request) {
         if (pipelineOutput.narrativeUpdate.newVolumeMetadata) {
           const meta = pipelineOutput.narrativeUpdate.newVolumeMetadata;
           await supabase.from("volumes").insert({
-            user_id,
+            user_id: final_user_id,
             volume_number: activeVolume.volume_number + 1,
             title: meta.title || "Next Phase",
             prologue: meta.prologue,
