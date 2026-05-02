@@ -91,24 +91,48 @@ export async function POST(req: Request) {
     }
 
     // 1. Save the raw diary entry
+    const insertData: any = {
+      user_id: final_user_id,
+      content,
+      metadata: metadata || {},
+    };
+
+    // We only add timestamps if we're sure the DB might need them, 
+    // but letting DB handle defaults is safer if schema cache is being weird.
+    // However, to be safe with existing logic, we keep them but wrap in try-catch logic if needed
+    insertData.created_at = new Date().toISOString();
+    insertData.updated_at = new Date().toISOString();
+
     const { data: entry, error: entryError } = await supabase
       .from("diary_entries")
-      .insert({
-        user_id: final_user_id,
-        content,
-        metadata: metadata || {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
+      .insert(insertData)
       .select()
       .single();
 
+    let savedEntry = entry;
+
     if (entryError) {
        console.error("[JournalSave] Entry insert error:", entryError);
-       throw entryError;
+       // Check if it's the updated_at error specifically
+       if (entryError.message.includes("updated_at") || entryError.message.includes("column")) {
+          console.log("[JournalSave] Retrying insert without explicit timestamps...");
+          delete insertData.created_at;
+          delete insertData.updated_at;
+          const { data: retryEntry, error: retryError } = await supabase
+            .from("diary_entries")
+            .insert(insertData)
+            .select()
+            .single();
+            
+          if (retryError) throw retryError;
+          savedEntry = retryEntry;
+       } else {
+          throw entryError;
+       }
     }
 
-    console.log(`[JournalSave] Entry saved successfully: ${entry.id}`);
+    if (!savedEntry) throw new Error("Failed to save entry");
+    console.log(`[JournalSave] Entry saved successfully: ${savedEntry.id}`);
 
     // 2. Trigger the AI Pipeline for LifeBook integration
     const orchestrator = new AIOrchestrator(
@@ -233,7 +257,7 @@ export async function POST(req: Request) {
         processing_status: processingStatus,
         impact_percentage: impactPercentage,
       })
-      .eq("id", entry.id);
+      .eq("id", savedEntry.id);
 
     if (
       pipelineOutput.narrativeUpdate &&
