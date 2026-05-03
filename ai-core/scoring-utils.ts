@@ -18,12 +18,13 @@ export function calculateEventScore(metrics: EventMetrics): ScoredEvent {
 
   const score = emotion + relevance + frequency + uniqueness;
 
-  let eventType: 'minor' | 'major' | 'discard' = 'discard';
+  // We are more lenient now: any score >= 2 is at least a minor event
+  let eventType: 'minor' | 'major' | 'discard' = 'minor';
   
   if (score > 7) {
     eventType = 'major';
-  } else if (score >= 4) {
-    eventType = 'minor';
+  } else if (score < 2) {
+    eventType = 'discard';
   }
 
   return { score, eventType };

@@ -7,6 +7,7 @@ interface UIState {
   activeProfileTab: 'identity' | 'mirror' | 'vault';
   isInputFocused: boolean;
   selectedJournalContent: string | null;
+  selectedJournalEntryId: string | null;
   language: string;
   hasSetLanguage: boolean;
   isDrawerOpen: boolean;
@@ -23,6 +24,7 @@ interface UIState {
   setActiveProfileTab: (tab: 'identity' | 'mirror' | 'vault') => void;
   setInputFocused: (focused: boolean) => void;
   setSelectedJournalContent: (content: string | null) => void;
+  setSelectedJournalEntryId: (id: string | null) => void;
   setLanguage: (lang: string) => void;
   setHasSetLanguage: (hasSet: boolean) => void;
   setChatPersonaMode: (mode: 'mirror' | 'guide') => void;
@@ -38,6 +40,7 @@ export const useUIStore = create<UIState>()(
       activeProfileTab: 'identity',
       isInputFocused: false,
       selectedJournalContent: null,
+      selectedJournalEntryId: null,
       language: 'en',
       hasSetLanguage: false,
       isDrawerOpen: false,
@@ -54,6 +57,7 @@ export const useUIStore = create<UIState>()(
       setActiveProfileTab: (tab) => set({ activeProfileTab: tab }),
       setInputFocused: (focused) => set({ isInputFocused: focused }),
       setSelectedJournalContent: (content) => set({ selectedJournalContent: content }),
+      setSelectedJournalEntryId: (id) => set({ selectedJournalEntryId: id }),
       setLanguage: (lang) => set({ language: lang }),
       setHasSetLanguage: (hasSet) => set({ hasSetLanguage: hasSet }),
       setChatPersonaMode: (mode) => set({ chatPersonaMode: mode }),

@@ -25,10 +25,21 @@ import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 
 export const JournalEditor = () => {
-  const { setActiveView, selectedJournalContent, setSelectedJournalContent, language, isInputFocused, setInputFocused, setIsDrawerOpen } = useUIStore();
+  const { 
+    setActiveView, 
+    selectedJournalContent, 
+    setSelectedJournalContent, 
+    selectedJournalEntryId,
+    setSelectedJournalEntryId,
+    language, 
+    isInputFocused, 
+    setInputFocused, 
+    setIsDrawerOpen 
+  } = useUIStore();
   const searchParams = useSearchParams();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState(selectedJournalContent || '');
+  const [currentEntryId, setCurrentEntryId] = useState<string | null>(selectedJournalEntryId || null);
   const [isSaving, setIsSaving] = useState(false);
   const [isSavingLocal, setIsSavingLocal] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
@@ -259,6 +270,10 @@ export const JournalEditor = () => {
 
   // Update content when selected content changes (from drawer)
   useEffect(() => {
+    if (selectedJournalEntryId) {
+      setCurrentEntryId(selectedJournalEntryId);
+    }
+    
     if (selectedJournalContent) {
       // Basic splitting for existing entries if they follow a pattern
       if (selectedJournalContent.startsWith('# ')) {
@@ -272,7 +287,7 @@ export const JournalEditor = () => {
         editor?.commands.setContent(selectedJournalContent);
       }
     }
-  }, [selectedJournalContent, editor]);
+  }, [selectedJournalContent, selectedJournalEntryId, editor]);
 
   const journalStarters = [
     { text: "Aaj mere dil ki baatein jo sirf yahan hain...", icon: "🗝️" },
@@ -341,20 +356,26 @@ export const JournalEditor = () => {
         language, 
         inspired_by: inspiredBy,
         inspiration_author: inspirationAuthor 
-      });
+      }, currentEntryId);
+      
+      if (entry?.id) {
+        setCurrentEntryId(entry.id);
+        setSelectedJournalEntryId(entry.id);
+      }
       
       // Trigger sync for other components (like HistoryDrawer)
       useUIStore.getState().triggerMemorySync();
 
       setRecentEntry(entry);
-        setSaveStatus('success');
-        setShowSuccessMoment(true);
+      setSaveStatus('success');
+      setShowSuccessMoment(true);
+      
+      // Delay toast to avoid overlapping with the bottom animation
+      setTimeout(() => {
         toast.success(language === 'hi' ? 'Entry Save ho gayi!' : 'Entry saved successfully!');
-        
-        // We no longer auto-clear everything immediately to allow deliberate weaving
-        // handleStartNewEntry(); 
-        
-        setTimeout(() => setSaveStatus('idle'), 3000);
+      }, 800);
+      
+      setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error: any) {
       console.error('Failed to save diary entry:', error);
       setSaveStatus('error');
@@ -401,6 +422,8 @@ export const JournalEditor = () => {
     setTitle('');
     setContent('');
     setLastSavedContent('');
+    setCurrentEntryId(null);
+    setSelectedJournalEntryId(null);
     editor?.commands.setContent('');
     setSelectedJournalContent(null);
     setShowNudge(false);

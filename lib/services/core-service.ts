@@ -551,11 +551,11 @@ export const coreService = {
   },
 
   // Diary Entries (Raw Writing)
-  async saveDiaryEntry(userId: string, content: string, metadata?: any): Promise<{entry: DiaryEntry, processingStatus?: string}> {
+  async saveDiaryEntry(userId: string, content: string, metadata?: any, entryId?: string | null): Promise<{entry: DiaryEntry, processingStatus?: string}> {
     const response = await fetch('/api/journal/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, user_id: userId, content, metadata: metadata || {} })
+      body: JSON.stringify({ userId, user_id: userId, content, entry_id: entryId, metadata: metadata || {} })
     });
 
     if (!response.ok) {

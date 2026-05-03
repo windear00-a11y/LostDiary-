@@ -90,49 +90,72 @@ export async function POST(req: Request) {
       }
     }
 
-    // 1. Save the raw diary entry
-    const insertData: any = {
-      user_id: final_user_id,
-      content,
-      metadata: metadata || {},
-    };
+    // 1. Save or Update the raw diary entry
+    const entry_id = body.entry_id;
+    let savedEntry: any = null;
 
-    // We only add timestamps if we're sure the DB might need them, 
-    // but letting DB handle defaults is safer if schema cache is being weird.
-    // However, to be safe with existing logic, we keep them but wrap in try-catch logic if needed
-    insertData.created_at = new Date().toISOString();
-    insertData.updated_at = new Date().toISOString();
-
-    const { data: entry, error: entryError } = await supabase
-      .from("diary_entries")
-      .insert(insertData)
-      .select()
-      .single();
-
-    let savedEntry = entry;
-
-    if (entryError) {
-       console.error("[JournalSave] Entry insert error:", entryError);
-       // Check if it's the updated_at error specifically
-       if (entryError.message.includes("updated_at") || entryError.message.includes("column")) {
-          console.log("[JournalSave] Retrying insert without explicit timestamps...");
-          delete insertData.created_at;
-          delete insertData.updated_at;
-          const { data: retryEntry, error: retryError } = await supabase
-            .from("diary_entries")
-            .insert(insertData)
-            .select()
-            .single();
-            
-          if (retryError) throw retryError;
-          savedEntry = retryEntry;
+    if (entry_id) {
+       console.log(`[JournalSave] Updating existing entry: ${entry_id}`);
+       const { data, error } = await supabase
+         .from("diary_entries")
+         .update({ 
+           content, 
+           metadata: metadata || {},
+           updated_at: new Date().toISOString()
+         })
+         .eq("id", entry_id)
+         .eq("user_id", final_user_id)
+         .select()
+         .single();
+       
+       if (error) {
+         console.error("[JournalSave] Update error:", error);
+         throw error;
+       }
+       savedEntry = data;
+    } else {
+       const insertData: any = {
+         user_id: final_user_id,
+         content,
+         metadata: metadata || {},
+       };
+   
+       // We only add timestamps if we're sure the DB might need them, 
+       // but letting DB handle defaults is safer if schema cache is being weird.
+       insertData.created_at = new Date().toISOString();
+       insertData.updated_at = new Date().toISOString();
+   
+       const { data: entry, error: entryError } = await supabase
+         .from("diary_entries")
+         .insert(insertData)
+         .select()
+         .single();
+   
+       if (entryError) {
+          console.error("[JournalSave] Entry insert error:", entryError);
+          // Check if it's the updated_at error specifically
+          if (entryError.message.includes("updated_at") || entryError.message.includes("column")) {
+             console.log("[JournalSave] Retrying insert without explicit timestamps...");
+             delete insertData.created_at;
+             delete insertData.updated_at;
+             const { data: retryEntry, error: retryError } = await supabase
+               .from("diary_entries")
+               .insert(insertData)
+               .select()
+               .single();
+               
+             if (retryError) throw retryError;
+             savedEntry = retryEntry;
+          } else {
+             throw entryError;
+          }
        } else {
-          throw entryError;
+         savedEntry = entry;
        }
     }
 
     if (!savedEntry) throw new Error("Failed to save entry");
-    console.log(`[JournalSave] Entry saved successfully: ${savedEntry.id}`);
+    console.log(`[JournalSave] Entry processed successfully: ${savedEntry.id}`);
 
     // 2. Trigger the AI Pipeline for LifeBook integration
     const orchestrator = new AIOrchestrator(
@@ -225,15 +248,22 @@ export async function POST(req: Request) {
         summary: pipelineOutput.extractedEvent.summary || "Life Reflection",
         emotion: pipelineOutput.extractedEvent.emotion || "neutral",
         category: pipelineOutput.extractedEvent.category || "Growth",
-        impact_score: pipelineOutput.extractedEvent.score || 5,
+        intensity: String(pipelineOutput.extractedEvent.score || 5),
         created_at: new Date().toISOString(),
       };
       
-      const { error: eventErr } = await supabase.from("life_events").insert(eventData);
+      const { error: eventErr } = await supabase
+        .from("life_events")
+        .upsert(eventData, { onConflict: 'diary_entry_id' });
+      
       if (eventErr) {
         console.error("[JournalSave] Failed to save life event:", eventErr);
+        // Fallback to simple insert if upsert fails due to missing constraint during migration lag
+        if (eventErr.message.includes("constraint")) {
+           await supabase.from("life_events").insert(eventData);
+        }
       } else {
-        console.log("[JournalSave] Life event saved successfully");
+        console.log("[JournalSave] Life event upserted successfully");
       }
     }
 
@@ -314,7 +344,7 @@ export async function POST(req: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, entry, processingStatus });
+    return NextResponse.json({ success: true, entry: savedEntry, processingStatus });
   } catch (error: any) {
     console.error("Error in journal save route:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -8,7 +8,7 @@ import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
 
 export const HistoryDrawer = () => {
-  const { isHistoryOpen, setIsHistoryOpen, setActiveView, setSelectedJournalContent, activeView } = useUIStore();
+  const { isHistoryOpen, setIsHistoryOpen, setActiveView, setSelectedJournalContent, setSelectedJournalEntryId, activeView } = useUIStore();
   const { user } = useAuth();
   const router = useRouter();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -165,7 +165,7 @@ export const HistoryDrawer = () => {
                   )
                 ) : (
                   diaryEntries.length > 0 ? diaryEntries.map(entry => (
-                    <button key={entry.id} onClick={() => { setSelectedJournalContent(entry.content); setActiveView('journal'); setIsHistoryOpen(false); }} className="w-full text-left p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors flex justify-between items-start gap-4">
+                    <button key={entry.id} onClick={() => { setSelectedJournalContent(entry.content); setSelectedJournalEntryId(entry.id); setActiveView('journal'); setIsHistoryOpen(false); }} className="w-full text-left p-4 rounded-xl bg-white/5 hover:bg-white/10 transition-colors flex justify-between items-start gap-4">
                         <div className="flex-1 min-w-0">
                             <p className="text-emerald-100 font-serif italic line-clamp-2 text-sm mb-1">{stripHtml(entry.content).replace(/^# .*\n\n/, '')}</p>
                             <p className="text-[10px] text-white/40">{timeAgo(entry.created_at)}</p>
