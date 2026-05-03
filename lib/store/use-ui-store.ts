@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface UIState {
-  activeView: 'chat' | 'story' | 'journal' | 'reflect';
+  activeView: 'chat' | 'story' | 'journal' | 'reflect' | 'events';
   activeLibraryTab: 'feed' | 'echoes';
   activeProfileTab: 'identity' | 'mirror' | 'vault';
   isInputFocused: boolean;
@@ -19,7 +19,7 @@ interface UIState {
   setIsDrawerOpen: (isOpen: boolean) => void;
   setIsBottomSheetOpen: (isOpen: boolean) => void;
   setIsHistoryOpen: (isOpen: boolean) => void;
-  setActiveView: (view: 'chat' | 'story' | 'journal' | 'reflect') => void;
+  setActiveView: (view: 'chat' | 'story' | 'journal' | 'reflect' | 'events') => void;
   setActiveLibraryTab: (tab: 'feed' | 'echoes') => void;
   setActiveProfileTab: (tab: 'identity' | 'mirror' | 'vault') => void;
   setInputFocused: (focused: boolean) => void;

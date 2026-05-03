@@ -44,7 +44,7 @@ export const BottomNav = () => {
 
   const tabs = [
     { id: 'sanctuary', label: 'Sanctuary', icon: MessageSquare, path: '/home', active: pathname === '/home' && ['chat', 'journal'].includes(activeView), action: () => setActiveView('chat') },
-    { id: 'chronicles', label: 'Chronicles', icon: BookOpen, path: '/home', active: pathname === '/home' && ['story', 'reflect'].includes(activeView), action: () => setActiveView('story') },
+    { id: 'chronicles', label: 'Chronicles', icon: BookOpen, path: '/home', active: pathname === '/home' && ['story', 'reflect', 'events'].includes(activeView), action: () => setActiveView('story') },
     { id: 'cosmos', label: 'Cosmos', icon: Compass, path: '/library', active: pathname === '/library', action: null },
     { id: 'mirror', label: 'Mirror', icon: Fingerprint, path: '/profile', active: pathname === '/profile', action: null },
   ];

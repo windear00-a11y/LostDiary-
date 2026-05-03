@@ -104,6 +104,18 @@ export interface UserProfile {
 }
 
 
+export interface LifeEvent {
+  id: string;
+  user_id: string;
+  chapter_id: string | null;
+  message_id: string | null;
+  diary_entry_id: string | null;
+  summary: string;
+  emotion: string;
+  event_score: number;
+  created_at: string;
+}
+
 export const coreService = {
   // Chat
   async fetchSessions(userId: string): Promise<ChatSession[]> {
@@ -579,6 +591,24 @@ export const coreService = {
 
     if (error) {
       console.error("Error fetching diary entries:", error);
+      return [];
+    }
+
+    return data || [];
+  },
+
+  async fetchLifeEvents(userId: string): Promise<LifeEvent[]> {
+    const supabase = getSupabase();
+    if (!supabase) return [];
+    
+    const { data, error } = await supabase
+      .from('life_events')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching life events:", error);
       return [];
     }
 

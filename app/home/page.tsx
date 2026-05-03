@@ -4,6 +4,7 @@ import { ChatInterface } from '@/features/home/ChatInterface';
 import { BookView } from '@/features/story/BookView';
 import { JournalEditor } from '@/features/journal/JournalEditor';
 import { InsightsView } from '@/features/story/InsightsView';
+import { LifeEventsView } from '@/features/story/LifeEventsView';
 import { LanguageOnboarding } from '@/features/onboarding/LanguageOnboarding';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
@@ -85,6 +86,19 @@ export default function HomePage() {
               className="absolute inset-0 z-[60] bg-neutral-950 overflow-y-auto w-full h-[100dvh]"
             >
               <InsightsView />
+            </motion.div>
+          )}
+
+          {activeView === 'events' && (
+            <motion.div
+              key="events-view"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-0 z-[60] bg-neutral-950 overflow-y-auto w-full h-[100dvh]"
+            >
+              <LifeEventsView />
             </motion.div>
           )}
         </AnimatePresence>

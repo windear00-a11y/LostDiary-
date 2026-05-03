@@ -15,7 +15,7 @@ export const Header = () => {
 
   const isLibrary = pathname === '/library';
   const isHomeSanctuary = pathname === '/home' && ['chat', 'journal'].includes(activeView);
-  const isHomeChronicles = pathname === '/home' && ['story', 'reflect'].includes(activeView);
+  const isHomeChronicles = pathname === '/home' && ['story', 'reflect', 'events'].includes(activeView);
 
   const handleNewChat = () => {
     router.push('/home?session=new');
@@ -88,7 +88,7 @@ export const Header = () => {
                 <div className="flex bg-[var(--color-bg-dark)]/80 backdrop-blur-md border border-white/10 rounded-full p-1 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
                   <button
                     onClick={() => setActiveView('story')}
-                    className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all focus:outline-none ${
+                    className={`px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all focus:outline-none ${
                       activeView === 'story'
                         ? 'bg-amber-500/80 text-white shadow-lg shadow-amber-500/20'
                         : 'text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)]'
@@ -97,8 +97,18 @@ export const Header = () => {
                     Journey
                   </button>
                   <button
+                    onClick={() => setActiveView('events')}
+                    className={`px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all focus:outline-none ${
+                      activeView === 'events'
+                        ? 'bg-amber-500/80 text-white shadow-lg shadow-amber-500/20'
+                        : 'text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)]'
+                    }`}
+                  >
+                    Memories
+                  </button>
+                  <button
                     onClick={() => setActiveView('reflect')}
-                    className={`px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all focus:outline-none ${
+                    className={`px-4 py-2 rounded-full text-[9px] font-bold uppercase tracking-widest transition-all focus:outline-none ${
                       activeView === 'reflect'
                         ? 'bg-amber-500/80 text-white shadow-lg shadow-amber-500/20'
                         : 'text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)]'
