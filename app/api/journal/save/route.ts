@@ -292,13 +292,29 @@ export async function POST(req: Request) {
       impactPercentage = 50 + Math.floor(Math.random() * 30);
     }
 
+    // 5.1 Update title if missing using the pipeline summary
+    const hasTitle = content.trim().startsWith("# ");
+    let finalProcessedContent = content;
+
+    if (!hasTitle && pipelineOutput.narrativeUpdate?.summary) {
+      const generatedTitle = pipelineOutput.narrativeUpdate.summary;
+      finalProcessedContent = `# ${generatedTitle}\n\n${content}`;
+      console.log(`[JournalSave] Generated title for entry: ${generatedTitle}`);
+    }
+
     await supabase
       .from("diary_entries")
       .update({
         processing_status: processingStatus,
         impact_percentage: impactPercentage,
+        content: finalProcessedContent,
       })
       .eq("id", savedEntry.id);
+    
+    // Update the local instance for response
+    savedEntry.content = finalProcessedContent;
+    savedEntry.processing_status = processingStatus;
+    savedEntry.impact_percentage = impactPercentage;
 
     if (
       pipelineOutput.narrativeUpdate &&

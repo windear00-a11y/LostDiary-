@@ -361,20 +361,35 @@ export const JournalEditor = () => {
       if (entry?.id) {
         setCurrentEntryId(entry.id);
         setSelectedJournalEntryId(entry.id);
+        setLastSavedContent(fullContent);
       }
-      
+
       // Trigger sync for other components (like HistoryDrawer)
       useUIStore.getState().triggerMemorySync();
 
       setRecentEntry(entry);
       setSaveStatus('success');
       setShowSuccessMoment(true);
-      
-      // Delay toast to avoid overlapping with the bottom animation
+
+      // Clear local draft immediately so it doesn't reappear on refresh
+      localStorage.removeItem('journalDraft_title');
+      localStorage.removeItem('journalDraft_content');
+
+      // Successfully saved, so we can clear for next entry after a short delay
+      // reflecting the user's preference to start fresh
       setTimeout(() => {
-        toast.success(language === 'hi' ? 'Entry Save ho gayi!' : 'Entry saved successfully!');
-      }, 800);
-      
+        handleStartNewEntry();
+        setShowSuccessMoment(false);
+      }, 2500);
+
+      // Delay toast and position it at the top to avoid overlapping with the bottom floating UI and animations
+      setTimeout(() => {
+        toast.success(
+          language === 'hi' ? 'Entry Save ho gayi!' : 'Entry saved successfully!',
+          { position: 'top-center' }
+        );
+      }, 500);
+
       setTimeout(() => setSaveStatus('idle'), 3000);
     } catch (error: any) {
       console.error('Failed to save diary entry:', error);
