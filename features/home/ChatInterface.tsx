@@ -492,34 +492,40 @@ export const ChatInterface = () => {
             {messages.length === 0 && !showNudge && (
               <motion.div 
                 key="empty-suggestions"
-                initial={{ opacity: 0, scale: 0.98, filter: "blur(5px)" }}
-                animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 1.2, ease: "easeOut" }}
-                className="flex-1 flex flex-col items-center justify-center space-y-12"
+                className="flex-1 flex flex-col items-center justify-center space-y-16 mt-16"
               >
-                <div className="flex flex-col items-center space-y-6">
-                  <motion.div 
-                    animate={{ y: [0, -8, 0] }}
-                    transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                    className={`w-20 h-20 bg-white/5 rounded-full flex items-center justify-center border border-white/5 transition-shadow duration-1000 ${getThemeShadowClass()}`}
-                  >
-                     <Sparkles className={`w-8 h-8 opacity-80 transition-colors duration-1000 ${getThemeColorClass()}`} />
-                  </motion.div>
-                  <h2 className="text-3xl font-serif text-[var(--color-primary-text-dark)] tracking-wide">What is on your mind?</h2>
+                <div className="flex flex-col items-center space-y-6 text-center">
+                  <div className="relative">
+                    <motion.div 
+                      animate={{ opacity: [0.3, 0.6, 0.3] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      className="absolute inset-0 blur-2xl rounded-full bg-[var(--color-accent-amber)]/20"
+                    />
+                    <div className="w-[1px] h-24 bg-gradient-to-b from-transparent via-[var(--color-primary-text-dark)] to-transparent opacity-30 mx-auto" />
+                  </div>
+                  <h2 className="font-serif text-[44px] md:text-[56px] text-[var(--color-primary-text-dark)] tracking-wide font-light leading-none">
+                    Observe.
+                  </h2>
+                  <p className="text-[var(--color-secondary-text-dark)] font-serif italic text-lg opacity-80">
+                    A safe space to untangle your mind.
+                  </p>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-lg">
                   {starters.map((starter, i) => (
                     <motion.button
                       key={i}
-                      whileHover={{ scale: 1.02, backgroundColor: "rgba(255,255,255,0.05)" }}
+                      whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => handleSendMessage({ type: 'text', content: starter.text })}
-                      className="w-full text-left p-6 glass-surface rounded-[24px] text-sm text-[var(--color-primary-text-dark)] transition-all flex flex-col gap-4 group focus:outline-none"
+                      className="w-full text-left p-6 glass-panel rounded-2xl text-[var(--color-primary-text-dark)] transition-all flex items-start gap-4 group focus:outline-none hover:bg-white/[0.05] border border-white/[0.05]"
                     >
-                      <span className="text-2xl group-hover:scale-110 transition-transform origin-bottom-left grayscale group-hover:grayscale-0 opacity-80">{starter.icon}</span>
-                      <span className="leading-relaxed font-serif italic text-lg tracking-wide opacity-90">{starter.text}</span>
+                      <span className="text-xl opacity-60 group-hover:opacity-100 transition-opacity mt-1">{starter.icon}</span>
+                      <span className="leading-relaxed font-sans font-light text-[15px] opacity-80 group-hover:opacity-100 transition-opacity">{starter.text}</span>
                     </motion.button>
                   ))}
                 </div>

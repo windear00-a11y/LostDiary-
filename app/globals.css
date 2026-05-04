@@ -7,12 +7,12 @@
 }
 
 @theme {
-  --color-bg-light: #f9f6f0;
-  --color-bg-dark: #0f0a0a;
-  --color-accent-gold: #d4af37;
+  --color-bg-light: #f5f2ed;
+  --color-bg-dark: #0a0502;
   --color-accent-amber: #ff9e5e;
   --color-accent-glow: #3a1510;
-  --color-primary-text-dark: #e8e2d9;
+  --color-accent-sage: #5A5A40;
+  --color-primary-text-dark: #f0eadd;
   --color-secondary-text-dark: #8a8275;
   --color-primary-text-light: #2c2825;
   --color-secondary-text-light: #7a7266;
@@ -28,12 +28,7 @@
     color: var(--color-primary-text-light);
   }
 
-  .dark body {
-    background-color: var(--color-bg-dark);
-    color: var(--color-primary-text-dark);
-  }
-
-  body {
+  .dark body, body {
     background-color: var(--color-bg-dark);
     color: var(--color-primary-text-dark);
   }
@@ -41,17 +36,17 @@
   /* Typography Enhancements */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-serif);
-    font-weight: 400;
+    font-weight: 300;
   }
 }
 
 @layer utilities {
   .atmosphere {
     background:
-      radial-gradient(circle at 50% 0%, var(--color-accent-glow) 0%, transparent 60%),
+      radial-gradient(circle at 50% 30%, var(--color-accent-glow) 0%, transparent 60%),
       radial-gradient(circle at 10% 80%, rgba(255, 158, 94, 0.05) 0%, transparent 50%);
     filter: blur(80px);
-    opacity: 0.7;
+    opacity: 0.85;
     position: absolute;
     inset: 0;
     pointer-events: none;
@@ -60,32 +55,27 @@
 
   .glass-surface {
     background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 200, 150, 0.05);
   }
 
   .glass-panel {
     background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-  }
-
-  .light .glass-surface, .light .glass-panel {
-    background: rgba(0, 0, 0, 0.02);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(255, 200, 150, 0.05);
   }
 
   .bubble-ai {
-    background: linear-gradient(145deg, rgba(230, 220, 200, 0.05), rgba(255, 255, 255, 0.01));
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 200, 150, 0.03);
+    border: 1px solid rgba(255, 200, 150, 0.08);
     backdrop-filter: blur(12px);
-    box-shadow: inset 0 1px 1px rgba(255,255,255,0.05);
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.02);
   }
 
   .bubble-user {
-    background: rgba(200, 180, 150, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.03);
+    background: rgba(200, 180, 150, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
   }
 
   .scrollbar-whatsapp {
@@ -102,162 +92,28 @@
     100% { transform: translateY(0px) rotate(0deg); }
   }
 
-  @keyframes shimmer-aurora {
-    0% {
-      background-position: 50% 50%, 50% 50%;
-    }
-    100% {
-      background-position: 350% 50%, 350% 50%;
-    }
-  }
-
-  .animate-aurora {
-    animation: shimmer-aurora 60s linear infinite;
-    background-image: 
-      repeating-linear-gradient(100deg, transparent 0%, rgba(200,100,50,0.03) 25%, transparent 50%),
-      repeating-linear-gradient(100deg, rgba(80,40,20,0.05) 0%, transparent 25%, rgba(100,50,30,0.02) 50%);
-    background-size: 200% 200%;
-  }
-
   /* Smooth markdown text */
   .prose-sanctuary p {
-    font-size: 16px;
+    font-size: 16.5px;
     line-height: 1.8;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.015em;
     color: var(--color-primary-text-dark);
     margin-bottom: 1em;
+    font-family: var(--font-sans);
+    font-weight: 300;
   }
 
-
-  /* Tiptap styles */
-  .ProseMirror {
-    outline: none;
-    min-height: 50vh;
-    padding-bottom: 8rem;
-  }
-  
-  .ProseMirror p.is-editor-empty:first-child::before {
-    color: rgba(255, 255, 255, 0.2);
-    content: attr(data-placeholder);
-    float: left;
-    height: 0;
-    pointer-events: none;
-  }
-  
-  ul[data-type="taskList"] {
-    list-style: none;
-    padding: 0;
-  }
-
-  ul[data-type="taskList"] p {
-    margin: 0;
-  }
-
-  ul[data-type="taskList"] li {
-    display: flex;
-  }
-
-  ul[data-type="taskList"] li > label {
-    flex: 0 0 auto;
-    margin-right: 0.75rem;
-    user-select: none;
-  }
-  
-  ul[data-type="taskList"] li > label input[type="checkbox"] {
-    appearance: none;
-    background-color: transparent;
-    margin: 0;
-    font: inherit;
-    color: currentColor;
-    width: 1.15em;
-    height: 1.15em;
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 0.15em;
-    display: grid;
-    place-content: center;
-    cursor: pointer;
-    margin-top: 0.4em;
-    transition: all 0.2s;
-  }
-
-  ul[data-type="taskList"] li > label input[type="checkbox"]::before {
-    content: "";
-    width: 0.65em;
-    height: 0.65em;
-    transform: scale(0);
-    transition: 120ms transform ease-in-out;
-    box-shadow: inset 1em 1em white;
-    background-color: CanvasText;
-    transform-origin: bottom left;
-    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-  }
-
-  ul[data-type="taskList"] li > label input[type="checkbox"]:checked::before {
-    transform: scale(1);
-  }
-
-  ul[data-type="taskList"] li > div {
-    flex: 1 1 auto;
-  }
-
-  /* Physical Book Layout Enhancements */
+  /* Book Layout Enhancements */
   .book-page-container {
-    background: linear-gradient(to right, #e8e4d9 0%, #fdfcf8 5%, #fdfcf8 95%, #e8e4d9 100%);
-    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.05);
-  }
-
-  .dark .book-page-container {
-    background: linear-gradient(to right, #050505 0%, #0d0d0d 5%, #0d0d0d 95%, #050505 100%);
-    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.4);
+    background: linear-gradient(to right, #050302 0%, #0d0a08 5%, #0d0a08 95%, #050302 100%);
+    box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.6);
   }
 
   .spine-shadow {
-    background: linear-gradient(to right, transparent, rgba(0,0,0,0.03) 45%, rgba(0,0,0,0.08) 50%, rgba(0,0,0,0.03) 55%, transparent);
-  }
-
-  .dark .spine-shadow {
     background: linear-gradient(to right, transparent, rgba(255,255,255,0.01) 45%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0.01) 55%, transparent);
   }
-
-  .justified-para {
-    text-align: justify;
-    text-justify: inter-word;
-    hyphens: auto;
-  }
-
-  .drop-cap::first-letter {
-    float: left;
-    font-size: 4.5rem;
-    line-height: 1;
-    padding-top: 4px;
-    padding-right: 12px;
-    padding-left: 2px;
-    font-weight: 700;
-    color: #6366f1; /* Indigo-500 */
-    font-family: serif;
-    text-shadow: 2px 2px 0 rgba(99, 102, 241, 0.1);
-  }
-
-  .page-number-flourish::before,
-  .page-number-flourish::after {
-    content: "";
-    display: inline-block;
-    width: 20px;
-    height: 1px;
-    background: currentColor;
-    vertical-align: middle;
-    margin: 0 10px;
-    opacity: 0.3;
-  }
 }
 
-@keyframes shimmer {
-  100% {
-    transform: translateX(100%);
-  }
-}
-
-/* Mirror Scan Animation */
 @keyframes scan {
   0% { transform: translateY(-50%); opacity: 0; }
   20% { opacity: 0.5; }

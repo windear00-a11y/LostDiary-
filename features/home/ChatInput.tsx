@@ -70,10 +70,10 @@ export const ChatInput = ({ onSendMessage, disabled, onFocusChange }: {
 
   return (
     <div className="w-full relative group font-sans">
-      <div className={`relative w-full rounded-3xl backdrop-blur-3xl transition-all duration-700 ease-out border
+      <div className={`relative w-full rounded-2xl backdrop-blur-[40px] transition-all duration-700 ease-out border
         ${isFocused 
-          ? 'bg-white/[0.05] border-white/20 shadow-[0_10px_40px_rgba(255,158,94,0.08)]' 
-          : 'bg-white/[0.02] border-white/5 shadow-sm' }`}>
+          ? 'bg-white/[0.04] border-white/20 shadow-[0_10px_40px_rgba(255,158,94,0.06)]' 
+          : 'bg-white/[0.02] border-white/[0.05] shadow-lg' }`}>
         
         <textarea
           ref={textareaRef}

@@ -24,7 +24,7 @@ export default function HomePage() {
   if (!user || !isHydrated) return null;
 
   return (
-    <div className="h-[100dvh] bg-neutral-950 overflow-hidden flex flex-col relative">
+    <div className="h-[100dvh] bg-[var(--color-bg-dark)] overflow-hidden flex flex-col relative">
       <AnimatePresence>
         {!hasSetLanguage && (
           <LanguageOnboarding />
@@ -44,7 +44,7 @@ export default function HomePage() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
-              className="absolute inset-0 z-[60] bg-neutral-950 overflow-y-auto w-full h-[100dvh]"
+              className="absolute inset-0 z-[60] bg-[var(--color-bg-dark)] overflow-y-auto w-full h-[100dvh]"
             >
               <JournalTimeline />
             </motion.div>

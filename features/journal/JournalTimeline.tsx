@@ -58,7 +58,7 @@ export function JournalTimeline() {
         </p>
       </div>
 
-      <div className="space-y-6 relative z-10">
+      <div className="space-y-12 relative z-10">
         {sessions.map((session, idx) => {
           return (
             <motion.div
@@ -70,26 +70,32 @@ export function JournalTimeline() {
               onClick={() => {
                 router.push(`/home?session=${session.id}`);
               }}
-              className="group cursor-pointer glass-surface p-6 rounded-[30px] border border-white/5 hover:border-[var(--color-accent-amber)]/30 transition-all duration-500 bg-[var(--color-bg-dark)] shadow-[0_4px_24px_rgba(0,0,0,0.2)]"
+              className="group cursor-pointer flex relative py-8 border-b border-white/[0.03]"
             >
-              <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-serif text-[var(--color-primary-text-dark)] group-hover:text-[var(--color-accent-amber)] transition-colors">
+              {/* Vertical Date */}
+              <div className="w-16 shrink-0 flex flex-col items-center border-r border-white/[0.03] mr-6 pr-6">
+                <span className="font-serif text-3xl text-[var(--color-primary-text-dark)] opacity-90 leading-none mb-2">
+                  {format(new Date(session.created_at), 'dd')}
+                </span>
+                <span className="text-[10px] uppercase font-sans tracking-[0.2em] text-[var(--color-secondary-text-dark)] [writing-mode:vertical-lr] rotate-180 h-full flex-1 pt-2">
+                  {format(new Date(session.created_at), 'MMM yyyy')}
+                </span>
+              </div>
+              
+              <div className="flex-1 flex flex-col justify-center">
+                <h3 className="text-xl md:text-2xl font-serif text-[var(--color-primary-text-dark)] group-hover:text-[var(--color-accent-amber)] transition-colors opacity-90 leading-relaxed">
                   {session.title || 'Untitled Fragment'}
                 </h3>
-                <div className="flex items-center gap-1.5 text-[var(--color-secondary-text-dark)] text-[10px] uppercase tracking-widest font-sans shrink-0">
-                  <Clock className="w-3 h-3" />
-                  <span>{format(new Date(session.created_at), 'MMM dd')}</span>
-                </div>
-              </div>
 
-              {session.processing_status === 'woven' && (
-                <div className="mt-4 pt-4 border-t border-white/5 flex items-center gap-2">
-                  <Sparkles className="w-3 h-3 text-[var(--color-accent-amber)]/50" />
-                  <span className="text-[9px] uppercase tracking-widest text-[var(--color-accent-amber)]/50 font-medium">
-                    Analysis Synced
-                  </span>
-                </div>
-              )}
+                {session.processing_status === 'woven' && (
+                  <div className="mt-4 flex items-center gap-2">
+                    <Sparkles className="w-3 h-3 text-[var(--color-accent-amber)]/40" />
+                    <span className="text-[9px] uppercase tracking-[0.2em] text-[var(--color-accent-amber)]/40 font-medium">
+                      Analysis Synced
+                    </span>
+                  </div>
+                )}
+              </div>
             </motion.div>
           );
         })}

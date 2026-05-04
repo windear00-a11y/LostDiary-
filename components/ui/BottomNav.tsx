@@ -58,14 +58,14 @@ export const BottomNav = () => {
   };
 
   return (
-    <div className="fixed bottom-0 inset-x-0 z-[100] border-t border-white/5 bg-[var(--color-bg-dark)] pointer-events-auto pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-      <div className="flex justify-between items-center h-16 max-w-lg mx-auto px-2">
+    <div className="fixed bottom-0 inset-x-0 z-[100] border-t border-white/[0.03] bg-[var(--color-bg-dark)]/90 backdrop-blur-xl pointer-events-auto pb-[env(safe-area-inset-bottom)] shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
+      <div className="flex justify-between items-center h-[72px] max-w-lg mx-auto px-4">
         {/* Menu Button */}
         <button
           onClick={() => setIsBottomSheetOpen(true)}
-          className="flex items-center justify-center w-12 h-12 rounded-full text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)] transition-all hover:bg-white/5 shrink-0 focus:outline-none"
+          className="flex items-center justify-center w-12 h-12 rounded-full text-[var(--color-secondary-text-dark)] hover:text-[var(--color-primary-text-dark)] transition-all hover:bg-white/[0.02] shrink-0 focus:outline-none"
         >
-          <MoreHorizontal className="w-5 h-5 drop-shadow-md" />
+          <MoreHorizontal className="w-5 h-5 drop-shadow-md opacity-60" />
         </button>
 
         {/* Dynamic Tabs */}
