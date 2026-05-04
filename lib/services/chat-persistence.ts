@@ -54,44 +54,5 @@ export const chatPersistence = {
     }
   ) => {
     return await supabase.from('chat_sessions').update(data).eq('id', session_id);
-  },
-  
-  saveChapter: async (
-    supabase: SupabaseClient,
-    data: {
-      user_id: string;
-      volume_id: string | undefined;
-      name: string;
-      narrative: string;
-      created_at: string;
-    }
-  ) => {
-    return await supabase.from('chapters').insert(data).select().single();
-  },
-
-  sealVolume: async (
-    supabase: SupabaseClient,
-    volume_id: string,
-    data: {
-      status: 'completed';
-      epilogue: string | null;
-    }
-  ) => {
-    return await supabase.from('volumes').update(data).eq('id', volume_id);
-  },
-
-  createNewVolume: async (
-    supabase: SupabaseClient,
-    data: {
-      user_id: string;
-      volume_number: number;
-      title: string;
-      prologue?: string;
-      epigraph?: string;
-      aura?: string;
-      status: 'ongoing';
-    }
-  ) => {
-    return await supabase.from('volumes').insert(data);
   }
 };

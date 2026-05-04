@@ -50,29 +50,21 @@ export default function TermsOfUsePage() {
               2. User Content &amp; Ethics
             </h2>
             <p>
-              You are responsible for all content you record or publish. WinDear is a zero-moderation space for your private vault, but we prohibit the following in any public spaces (Bridges, Library):
+              You are responsible for all content you record or publish. WinDear is a zero-moderation space for your private vault, but we prohibit the following:
             </p>
             <ul className="list-disc pl-5 space-y-2 text-sm italic">
-              <li>Harassment or predatory behavior towards other users.</li>
-              <li>Publishing explicit personal identifiers that bypass our Neural Wash.</li>
+              <li>Harassment or predatory behavior online.</li>
+              <li>Publishing explicit personal identifiers.</li>
               <li>Using the platform for illegal activities.</li>
             </ul>
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-              <Handshake className="w-5 h-5 text-amber-400" />
-              3. Bridges &amp; Connections
-            </h2>
-            <p>
-              Bridges are fragile. We do not guarantee the permanence of any connection. A bridge can be dissolved (broken) by either party or by the system if &quot;Resonance&quot; is lost. Once broken, the connection is immutable.
-            </p>
-          </section>
+
 
           <section className="space-y-4">
             <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
               <Scale className="w-5 h-5 text-amber-400" />
-              4. Service Limitations
+              3. Service Limitations
             </h2>
             <p>
               WinDear is an AI-powered experience. The insights provided by our &quot;Mirror&quot; are for self-reflection and artistic value only. We are not a medical or psychological counseling service. If you are in crisis, please seek professional assistance.
@@ -82,7 +74,7 @@ export default function TermsOfUsePage() {
           <section className="space-y-4">
             <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
               <AlertCircle className="w-5 h-5 text-amber-400" />
-              5. Disclaimer
+              4. Disclaimer
             </h2>
             <p>
               We provide WinDear &quot;as is&quot; and without warranties. While we take extreme technical measures to protect your privacy (Row Level Security), you use the service at your own risk.

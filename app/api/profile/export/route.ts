@@ -19,7 +19,7 @@ export async function GET(req: Request) {
 
     // 1. Fetch Profile
     const { data: profile } = await supabase
-      .from("users")
+      .from("profiles")
       .select("*")
       .eq("id", user.id)
       .single();
@@ -35,32 +35,41 @@ export async function GET(req: Request) {
       .select("*")
       .eq("user_id", user.id);
 
-    exportData.vault.chat_history = {
+    exportData.vault.chronicles = {
       sessions: sessions || [],
       messages: messages || [],
     };
 
-    // 3. Fetch Chapters & Volumes
-    const { data: volumes } = await supabase
-      .from("volumes")
+    // 3. Fetch Signals & Patterns
+    const { data: signals } = await supabase
+      .from("extracted_signals")
       .select("*")
       .eq("user_id", user.id);
-    const { data: chapters } = await supabase
-      .from("chapters")
+    const { data: patterns } = await supabase
+      .from("behavior_patterns")
+      .select("*")
+      .eq("user_id", user.id);
+    const { data: insights } = await supabase
+      .from("insights")
       .select("*")
       .eq("user_id", user.id);
 
-    exportData.vault.story = {
-      volumes: volumes || [],
-      chapters: chapters || [],
+    // Purpose Layer
+    const { data: core_values } = await supabase.from("core_values").select("*").eq("user_id", user.id);
+    const { data: energy_maps } = await supabase.from("energy_maps").select("*").eq("user_id", user.id);
+    const { data: direction_insights } = await supabase.from("direction_insights").select("*").eq("user_id", user.id);
+
+    exportData.vault.awareness_engine = {
+      signals: signals || [],
+      patterns: patterns || [],
+      insights: insights || []
     };
 
-    // 4. Fetch Connections (Bridges)
-    const { data: bridges } = await supabase
-      .from("bridges")
-      .select("*")
-      .or(`user_a_id.eq.${user.id},user_b_id.eq.${user.id}`);
-    exportData.vault.connections = bridges || [];
+    exportData.vault.purpose_layer = {
+      core_values: core_values || [],
+      energy_maps: energy_maps || [],
+      direction_insights: direction_insights || [],
+    };
 
     // Return as a downloadable JSON file
     return new NextResponse(JSON.stringify(exportData, null, 2), {
@@ -78,3 +87,4 @@ export async function GET(req: Request) {
     );
   }
 }
+

@@ -28,10 +28,10 @@ const cormorant = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: 'WinDear',
-  description: 'Your private AI-powered diary for reflection and growth',
+  description: 'Your AI Soul Companion—organizing your life experiences to guide, support, and help you grow.',
   openGraph: {
-    title: 'WinDear - Your Private Reflection Sanctuary',
-    description: 'A deeply personal AI-powered space to write, reflect, and share your untold stories anonymously.',
+    title: 'WinDear - Your AI Soul Companion',
+    description: 'A deeply personal AI-powered sanctuary where your memories become wisdom and your experiences lead to growth.',
     url: 'https://windear.app',
     siteName: 'WinDear',
     images: [

@@ -1,10 +1,7 @@
 'use client';
 
 import { ChatInterface } from '@/features/home/ChatInterface';
-import { BookView } from '@/features/story/BookView';
-import { JournalEditor } from '@/features/journal/JournalEditor';
-import { InsightsView } from '@/features/story/InsightsView';
-import { LifeEventsView } from '@/features/story/LifeEventsView';
+import { JournalTimeline } from '@/features/journal/JournalTimeline';
 import { LanguageOnboarding } from '@/features/onboarding/LanguageOnboarding';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useRouter } from 'next/navigation';
@@ -40,65 +37,16 @@ export default function HomePage() {
         </Suspense>
         
         <AnimatePresence mode="wait">
-          {activeView === 'journal' && (
+          {activeView === 'timeline' && (
             <motion.div
-              key="journal-view"
-              initial={{ y: '100dvh' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100dvh' }}
-              drag="y"
-              dragConstraints={{ top: 0 }}
-              dragElastic={0.2}
-              onDragEnd={(_, info) => {
-                if (info.offset.y > 150) {
-                  setActiveView('chat');
-                }
-              }}
-              transition={{ type: 'spring', damping: 35, stiffness: 350 }}
-              className="absolute inset-0 z-[60] bg-neutral-950"
-            >
-              <Suspense fallback={<LoadingSpace />}>
-                <JournalEditor />
-              </Suspense>
-            </motion.div>
-          )}
-
-          {activeView === 'story' && (
-            <motion.div
-              key="story-view"
+              key="timeline-view"
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.3 }}
               className="absolute inset-0 z-[60] bg-neutral-950 overflow-y-auto w-full h-[100dvh]"
             >
-              <BookView />
-            </motion.div>
-          )}
-
-          {activeView === 'reflect' && (
-            <motion.div
-              key="reflect-view"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0 z-[60] bg-neutral-950 overflow-y-auto w-full h-[100dvh]"
-            >
-              <InsightsView />
-            </motion.div>
-          )}
-
-          {activeView === 'events' && (
-            <motion.div
-              key="events-view"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0 z-[60] bg-neutral-950 overflow-y-auto w-full h-[100dvh]"
-            >
-              <LifeEventsView />
+              <JournalTimeline />
             </motion.div>
           )}
         </AnimatePresence>

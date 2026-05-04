@@ -75,24 +75,16 @@ export default function PrivacyPolicyPage() {
               3. How We Use Your Data
             </h2>
             <p>
-              Your raw data is processed exclusively by our AI Engine to provide emotional insights, generate story chapters, and facilitate meaningful bridges. We use <strong>Google Gemini API</strong> under enterprise privacy standards, ensuring your data is not used to train global models.
+              Your raw data is processed exclusively by our AI Engine to provide emotional insights. We use <strong>Google Gemini API</strong> under enterprise privacy standards, ensuring your data is not used to train global models.
             </p>
           </section>
 
-          <section className="space-y-4">
-            <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
-              <Shield className="w-5 h-5 text-amber-400" />
-              4. &quot;Neural Wash&quot; &amp; Public Data
-            </h2>
-            <p>
-              Before any content is moved from your private vault to the &quot;Global Library&quot;, it undergoes a mandatory Neural Wash. This process proactively generalizes personally identifiable information (PII). Once generalized, this content becomes &quot;Public Data&quot; and is visible to other WinDear users under your Pen Name.
-            </p>
-          </section>
+
 
           <section className="space-y-4">
             <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
               <Scale className="w-5 h-5 text-amber-400" />
-              5. Data Governance & Deletion
+              4. Data Governance & Deletion
             </h2>
             <p>
               You maintain total authority over your data.
@@ -106,7 +98,7 @@ export default function PrivacyPolicyPage() {
           <section className="space-y-4">
             <h2 className="text-xl font-serif font-bold text-white flex items-center gap-2 border-b border-white/5 pb-2">
               <MessageSquare className="w-5 h-5 text-amber-400" />
-              6. Contact Us
+              5. Contact Us
             </h2>
             <p>
               If you have any questions regarding your privacy, please contact us at <strong>privacy@windear.com</strong>. We commit to responding to all inquiries within 48 hours.

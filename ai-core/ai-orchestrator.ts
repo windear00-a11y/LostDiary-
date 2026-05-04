@@ -5,7 +5,6 @@ import { isImportantMessage } from "@/lib/utils/importance";
 export interface OrchestrationDecisions {
   shouldExtractEvent: boolean;
   shouldRespond: boolean;
-  shouldTriggerChapter: boolean;
 }
 
 export class AIOrchestrator {
@@ -18,35 +17,28 @@ export class AIOrchestrator {
   private async makeDecisions(
     userId: string,
     message: { content: string; type: string; role: string },
-    options?: { isJournal?: boolean },
-    contextChapters?: string[]
+    options?: { isJournal?: boolean }
   ): Promise<OrchestrationDecisions> {
     if (message.role !== 'user' || !message.content) {
-      return { shouldExtractEvent: false, shouldRespond: false, shouldTriggerChapter: false };
+      return { shouldExtractEvent: false, shouldRespond: false };
     }
 
-    const isFirstInteraction = (!contextChapters || contextChapters.length === 0);
-
     // 1. Should Extract Event?
-    const shouldExtractEvent = options?.isJournal || isFirstInteraction || isImportantMessage({ content: message.content, type: message.type });
+    const shouldExtractEvent = options?.isJournal || isImportantMessage({ content: message.content, type: message.type });
 
     // 2. Should Respond? (Journals don't need instant chat replies)
     const shouldRespond = options?.isJournal ? false : true; 
 
-    // 3. Should Trigger Chapter?
-    const shouldTriggerChapter = options?.isJournal || isFirstInteraction || isImportantMessage({ content: message.content, type: message.type });
-
     return {
       shouldExtractEvent,
-      shouldRespond,
-      shouldTriggerChapter
+      shouldRespond
     };
   }
 
   async processInteraction(input: PipelineInput, options?: { isJournal?: boolean }): Promise<PipelineOutput> {
     console.log("[Orchestrator] Analyzing interaction for user:", input.userId);
     
-    const decisions = await this.makeDecisions(input.userId, input.message, options, input.contextChapters);
+    const decisions = await this.makeDecisions(input.userId, input.message, options);
 
     console.log("[Orchestrator] Decisions:", decisions);
 

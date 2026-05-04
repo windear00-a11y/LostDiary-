@@ -219,7 +219,6 @@ export const ChatInterface = () => {
       const result = await coreService.sendMessage({
         user_id: user.id,
         session_id: sessionId || undefined,
-        type: 'text',
         content: trimmedContent,
         metadata: { 
           language, 
@@ -352,7 +351,7 @@ export const ChatInterface = () => {
       />
       <AuthPromptModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       
-      {/* Narrative Weaving Confirmation Modal */}
+      {/* Session End Confirmation Modal */}
       <AnimatePresence>
         {showWeaveConfirm && (
           <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 bg-neutral-950/60 backdrop-blur-xl">
@@ -370,12 +369,12 @@ export const ChatInterface = () => {
  
               <div className="space-y-3 mb-8">
                 <h3 className="text-xl font-serif text-white tracking-wide">
-                  {language === 'hi' ? 'Is hisse ko kahani mein buna jaye?' : 'Weave this into your story?'}
+                  {language === 'hi' ? 'Is chat ko khatam karein?' : 'Finish this session?'}
                 </h3>
                 <p className="text-sm text-white/40 leading-relaxed font-serif italic">
                   {language === 'hi' 
-                    ? "Session khatam karne se ye aapki LifeBook ka hissa ban jayega. Kya aap tayyar hain?" 
-                    : "Ending this session signals that these whispers are ready to become part of your living narrative."}
+                    ? "Kya aap tayyar hain baatchit khatam karne ke liye?" 
+                    : "Ending this session signals that these whispers are complete."}
                 </p>
               </div>
  
@@ -400,7 +399,7 @@ export const ChatInterface = () => {
                   ) : (
                     <>
                       <Sparkles className="w-3 h-3" />
-                      {language === 'hi' ? 'Bunn do' : 'Weave it'}
+                      {language === 'hi' ? 'Khatam karein' : 'End Session'}
                     </>
                   )}
                 </motion.button>
@@ -578,7 +577,7 @@ export const ChatInterface = () => {
                             msg.processing_status === 'woven' ? 'text-[var(--color-accent-gold)]' : 'text-[#859587]'
                           }`}>
                             <Sparkles className="w-3 h-3" />
-                            {msg.processing_status === 'woven' ? 'Narrative Woven' : 'Moment Saved'}
+                            {msg.processing_status === 'woven' ? 'Captured' : 'Moment Saved'}
                           </div>
                           <span className="text-[10px] font-sans opacity-30 tracking-widest uppercase">
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -612,7 +611,7 @@ export const ChatInterface = () => {
                   className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all text-[10px] uppercase tracking-widest text-white/40 hover:text-white/80 group"
                 >
                   <Bookmark className="w-3 h-3 text-amber-500/50 group-hover:text-amber-500" />
-                  {language === 'hi' ? 'Baatchit khatam karein?' : 'Finish & Weave this session?'}
+                  {language === 'hi' ? 'Baatchit khatam karein?' : 'Finish Session'}
                 </button>
               </motion.div>
             )}

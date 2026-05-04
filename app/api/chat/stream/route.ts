@@ -30,15 +30,21 @@ function determineModelForInput(content: string): string {
 }
 
 const DEFAULT_SYSTEM_INSTRUCTION = `
-You are an AI Diary Assistant named WinDear.
+You are WinDear, an AI powering a "Self-Awareness Operating System".
 
-Your primary role is to help users express their thoughts, emotions, and daily experiences in a safe, non-judgmental, and human-like way.
+Your primary role is to help users shift from **reaction** to **awareness** by helping them observe their thoughts and patterns in a safe, non-judgmental environment.
 
-CORE OBJECTIVE
-- Understand the user's emotional state
-- Respond with empathy, clarity, and relevance
-- Never sound robotic, overly dramatic, or fake
-- Meet the user in their frequency (Hinglish/Urdu/Hindi mix).
+CORE PHILOSOPHY
+- **Two Layers Model:**
+  - *Layer 1: Observer (Real Self)* - Stable, watches without changing.
+  - *Layer 2: Personality (Conditioned Self)* - Reacts, built from past experiences.
+- **The Goal:** Disconnect the user's identity from their temporary experiences. (e.g., "Mujhe gussa aa raha hai" ✔️ vs. "Main gusse wala hoon" ❌).
+- **The System Formula:** Experience → Observe → Pattern → Awareness → Choice → Growth.
+
+CORE OBJECTIVES
+- **Understand Emotional State & Patterns**: Read between the lines. Decode the raw data (the user's venting) to identify underlying triggers and repeating behavioral patterns.
+- **Provide a Mirror, Not a Lecture**: Reflect their patterns back to them so they can observe them, but do so without judging them or giving unsolicited advice. Suggest micro-actions (e.g., "Next time pause for 3 seconds" or "Notice when this happens again").
+- **Human-like Empathy & Safe Space**: Be a judgment-free harbor. Respond with genuine warmth and clarity. Never sound robotic or fake. Remind them: "You are not alone with your thoughts."
 
 SEARCH & KNOWLEDGE PROTOCOL:
 - If asked about recent news, current events, or general knowledge you don't know, use the available search tool to find real-time information.
@@ -55,44 +61,39 @@ Use simple, natural, conversational tone.
 - No unnecessary depth or poetry
 Example style: "Haan, samajh raha hoon. Aaj kaafi heavy lag raha hai tumhe."
 
-2. DEEP / EMPATHETIC MODE (20%)
+2. DEEP / AWARENESS MODE (20%)
 When user expresses emotions like sadness, confusion, stress.
-- Slightly deeper language
-- Emotionally supportive
-- Still grounded and real
-Example style: "Lagta hai tum kaafi kuch andar hi andar handle kar rahe ho. Thoda sa heavy feel ho raha hoga."
+- Slightly deeper language, rooted in awareness
+- Emotionally supportive but encouraging observation
+- Grounded and real
+Example style: "Lagta hai tum kaafi kuch andar hi andar handle kar rahe ho. Aisa karte hain, 3 seconds pause lete hain. Tum yeh feel kar rahe ho, par tum yeh feeling nahi ho."
 
 3. POETIC MODE (10% - LIMITED USE)
 Use ONLY when:
 - User is already expressive/poetic
-- OR at the end of an emotional response (1–2 lines max)
+- OR as a short 1-2 line "soulful" ending to an emotional turn.
 Rules:
 - Never overuse
 - Keep it short and meaningful
 - Avoid cringe or over-dramatic lines
-Example: "Kabhi kabhi lafz kam pad jaate hain, par ehsaas nahi."
 
 STRICT RULES
-- Do NOT use poetic tone in every response
-- Do NOT sound like a motivational speaker
-- Do NOT give long lectures
-- Do NOT invalidate user feelings
-- Avoid corporate or technical language
-- Keep responses concise but meaningful
+- **Not a Therapist, Not a Diary**: You are a Self-Awareness OS. Do not lecture, preach, or control.
+- **No Motivational Speaking**: Do not offer generic positivity or long-winded life coaching.
+- **Help Them Choose**: Guide the user to not just react, but consciously *choose* their response.
+- **Gen-Z Natural**: Use a natural, modern tone that feels authentic, not corporate.
+- **Language**: Meet the user in their frequency (Hindi/English/Urdu mix).
+- **Conciseness**: Keep responses meaningful but not unnecessarily long.
 
 RESPONSE STRUCTURE
-1. Acknowledge feeling
-2. Show understanding
-3. (Optional) Ask a gentle follow-up question
-4. (Optional) Add 1 poetic line if suitable
-
-PERSONALITY
-- Calm, Understanding, Emotionally intelligent
-- Slightly Gen-Z natural tone, never judgmental
+1. Acknowledge and Mirror the feeling (The "Experience")
+2. Prompt them to Observe the trigger (The "Pattern")
+3. Guide them to Label the emotion without identifying with it
+4. (Optional) Suggest a Micro-Action (The "Choice")
 
 GOAL
-User should feel: "Mujhe samjha gaya", "Yeh AI real lagta hai", "Main yahan apni baat bol sakta hoon".
-Always prioritize clarity + emotional connection over style.
+The user should feel: "I am not alone observing my thoughts. My life is a pattern I can understand, not a random story I have to react to."
+Always prioritize shifting the user from reacting to observing.
 `.trim();
 
 export async function POST(req: Request) {
@@ -185,24 +186,11 @@ export async function POST(req: Request) {
 
     // Pre-fetch contexts with error handling
     const [
-      contextChaptersRes,
-      currentVolumeRes,
       recentMessagesRes,
       firstMessageRes,
       sessionCountRes,
+      lifeEventsRes,
     ] = await Promise.all([
-      supabase
-        .from("chapters")
-        .select("narrative")
-        .eq("user_id", user_id)
-        .order("created_at", { ascending: false })
-        .limit(3),
-      supabase
-        .from("volumes")
-        .select("*")
-        .eq("user_id", user_id)
-        .eq("status", "ongoing")
-        .maybeSingle(),
       supabase
         .from("chat_messages")
         .select("content, role")
@@ -221,6 +209,12 @@ export async function POST(req: Request) {
         .from("chat_sessions")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user_id),
+      supabase
+        .from("life_events")
+        .select("summary, emotion, event_score, created_at")
+        .eq("user_id", user_id)
+        .order("created_at", { ascending: false })
+        .limit(5),
     ]);
 
     const recentMessages = (recentMessagesRes.data || []).reverse();
@@ -248,15 +242,11 @@ export async function POST(req: Request) {
             contextMessages: messages.map((m: any) => m.content as string),
             apiKey: apiKey,
             language: language || "en",
-            contextChapters: (contextChaptersRes.data || []).map(
-              (c: any) => c.narrative,
-            ),
           })
           .catch((err) => {
             console.error("Orchestrator error:", err);
             return {
               extractedEvent: null,
-              narrativeUpdate: null,
               personaUpdate: null,
             };
           }),
@@ -301,16 +291,8 @@ export async function POST(req: Request) {
       }
     }
 
-    const contextChapters = (contextChaptersRes.data || []).map(
-      (c: any) => c.narrative,
-    );
-    let activeVolume = currentVolumeRes.data;
-
     // Optimized state resolution
     const analyzedEvent = pipelineOutput.extractedEvent;
-    const isNarrative = !!(
-      pipelineOutput.narrativeUpdate && pipelineOutput.narrativeUpdate.narrative
-    );
     const selectedModel = determineModelForInput(content);
 
     const metadata = body.metadata || {};
@@ -335,9 +317,7 @@ export async function POST(req: Request) {
             importance: analyzedEvent?.score || 0,
             category: analyzedEvent?.category || "General",
           },
-          processing_status: isNarrative
-            ? "woven"
-            : analyzedEvent
+          processing_status: analyzedEvent
               ? "saved"
               : "observed",
           embedding:
@@ -363,10 +343,17 @@ export async function POST(req: Request) {
     const memoriesContext =
       olderContextMessages.length > 0
         ? `
-[RETRIEVED PAST MEMORIES]
+[RETRIEVED PAST MEMORIES (Semantic Search)]
 ${olderContextMessages.map((m: any) => `- [${new Date(m.created_at).toLocaleDateString()}] ${m.content}`).join("\n")}
-(Use these past memories IF they relevantly answer or contextualize the user's current thought. They show you HAVE remembered things from the past.)`
+(Use these past memories IF they relevantly answer or contextualize the user's current thought.)`
         : "";
+
+    const lifeEventsContext = (lifeEventsRes.data || []).length > 0
+      ? `
+[SIGNIFICANT LIFE EVENTS (Structured History)]
+${(lifeEventsRes.data || []).map((e: any) => `- [${new Date(e.created_at).toLocaleDateString()}] ${e.summary} (Emotion: ${e.emotion}, Impact: ${e.event_score}/5)`).join("\n")}
+(These are core events WinDear has organized for the user. Reference them to give targeted guidance or connect patterns.)`
+      : "";
 
     let personaContext = "";
     if (personaMode === "guide") {
@@ -379,11 +366,7 @@ ${olderContextMessages.map((m: any) => `- [${new Date(m.created_at).toLocaleDate
       personaContext += `\n[MODIFIER: BRUTAL HONESTY]\nThe user has explicitly requested brutal honesty. Do not sugarcoat. Be direct, call out excuses, and tell them the hard truth about their situation or behavior if they are avoiding a problem.`;
     }
 
-    let baseInstruction = isNarrative
-      ? DEFAULT_SYSTEM_INSTRUCTION +
-        personaContext +
-        "\n\nMODE: NARRATIVE - You are weaving the user's reflection into an ongoing story. Keep it engaging but straightforward, not overly poetic."
-      : DEFAULT_SYSTEM_INSTRUCTION +
+    let baseInstruction = DEFAULT_SYSTEM_INSTRUCTION +
         personaContext +
         "\n\nMODE: CHAT - Offer a natural reflection or follow-up question. Stay concise, direct, and human-like.";
 
@@ -406,6 +389,7 @@ Total Chat Sessions: ${sessionCountRes.count || 1}
 Current Journey: ${profile.bio || "Starting a new journey."}
 ${intelContext}
 ${patternContext}
+${lifeEventsContext}
 ${memoriesContext}
 (Note: Do not address this backdrop directly. Internalize it to guide your tone.)
 `.trim();
@@ -610,34 +594,16 @@ ${memoriesContext}
                 pipelineOutput.personaUpdate ||
                 profile.personality_summary ||
                 undefined,
-              bio: pipelineOutput.narrativeUpdate
-                ? pipelineOutput.narrativeUpdate!.summary
-                : profile.bio || undefined,
+              bio: profile.bio || undefined,
               intelligence_profile: updatedIntelProfile,
             }),
             session_id
               ? chatPersistence.updateSessionStatus(supabase, session_id, {
-                  processing_status: isNarrative
-                    ? "woven"
-                    : analyzedEvent
+                  processing_status: analyzedEvent
                       ? "saved"
                       : "observed",
-                  impact_percentage: isNarrative ? 90 : analyzedEvent ? 50 : 10,
+                  impact_percentage: analyzedEvent ? 50 : 10,
                 })
-              : Promise.resolve(),
-            isNarrative && pipelineOutput.narrativeUpdate!.narrative
-              ? (async () => {
-                  await chatPersistence.saveChapter(supabase, {
-                    user_id,
-                    volume_id: activeVolume?.id,
-                    name: pipelineOutput.narrativeUpdate!.summary.substring(
-                      0,
-                      50,
-                    ),
-                    narrative: pipelineOutput.narrativeUpdate!.narrative,
-                    created_at: new Date().toISOString(),
-                  });
-                })()
               : Promise.resolve(),
           ]);
         } catch (err) {

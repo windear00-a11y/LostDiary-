@@ -13,9 +13,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   // Define paths that require authentication
   const isAppPage = pathname === '/home' ||
-                    pathname === '/library' ||
-                    pathname === '/profile' ||
-                    pathname.startsWith('/bridge');
+                    pathname === '/profile';
   
   // Define paths that should be inaccessible to logged in users
   const isAuthPage = pathname === '/auth' || pathname.startsWith('/auth/');

@@ -40,13 +40,12 @@ export const BottomNav = () => {
   }, [memorySyncTrigger]);
 
   // Don't show on immersive rooms, onboarding, or landing page
-  if (pathname === '/' || pathname?.startsWith('/bridge') || pathname?.startsWith('/onboarding') || isInputFocused) return null;
+  if (pathname === '/' || pathname?.startsWith('/onboarding') || isInputFocused) return null;
 
   const tabs = [
-    { id: 'sanctuary', label: 'Sanctuary', icon: MessageSquare, path: '/home', active: pathname === '/home' && ['chat', 'journal'].includes(activeView), action: () => setActiveView('chat') },
-    { id: 'chronicles', label: 'Chronicles', icon: BookOpen, path: '/home', active: pathname === '/home' && ['story', 'reflect', 'events'].includes(activeView), action: () => setActiveView('story') },
-    { id: 'cosmos', label: 'Cosmos', icon: Compass, path: '/library', active: pathname === '/library', action: null },
-    { id: 'mirror', label: 'Mirror', icon: Fingerprint, path: '/profile', active: pathname === '/profile', action: null },
+    { id: 'sanctuary', label: 'Capture', icon: MessageSquare, path: '/home', active: pathname === '/home' && ['chat'].includes(activeView), action: () => setActiveView('chat') },
+    { id: 'chronicles', label: 'Timeline', icon: BookOpen, path: '/home', active: pathname === '/home' && ['timeline'].includes(activeView), action: () => setActiveView('timeline') },
+    { id: 'mirror', label: 'Insights', icon: Fingerprint, path: '/profile', active: pathname === '/profile', action: null },
   ];
 
   const handleTabClick = (tab: any) => {
